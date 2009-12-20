@@ -50,6 +50,8 @@ You may insert multiple columns at once
 2
 >>> cf.get_range()
 [('bar', {'column1': 'val3', 'column2': 'val4'}), ('foo', {'column1': 'val2'})]
+>>> cf.get_range(row_count=1)
+[('bar', {'column1': 'val3', 'column2': 'val4'})]
 
 cf.iter_get_range() is faster if you intend to iterate because it doesn't instantiate the list
 >>> for key, columns in cf.iter_get_range():
