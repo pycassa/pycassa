@@ -2,7 +2,7 @@ from cassandra.ttypes import *
 
 import time
 
-__all__ = ['ColumnFamily',
+__all__ = ['gm_timestamp', 'ColumnFamily',
     'ConsistencyLevel', 'InvalidRequestException', 'NotFoundException',
     'UnavailableException', 'TimedOutException']
 
@@ -165,7 +165,7 @@ class ColumnFamily(object):
             return ret
 
         cp = ColumnParent(column_family=self.column_family)
-        sr = SliceRange(start=column_start, finish=column_finish
+        sr = SliceRange(start=column_start, finish=column_finish,
                         reversed=column_reversed, count=column_count)
         sp = SlicePredicate(slice_range=sr, column_names=columns)
 
@@ -188,8 +188,7 @@ class ColumnFamily(object):
 
         Returns
         -------
-        int
-        Count of columns
+        int Count of columns
         """
         cp = ColumnParent(column_family=self.column_family)
         return self.client.get_count(self.keyspace, key, cp,
@@ -294,21 +293,27 @@ class ColumnFamily(object):
             The key to insert or update the columns at
         columns : {'column': 'value'}
             The columns to insert or update
+
+        Returns
+        -------
+        int timestamp
         """
         timestamp = self.timestamp()
         if len(columns) == 1:
             col, val = columns.items()[0]
             cp = ColumnPath(column_family=self.column_family, column=col)
-            return self.client.insert(self.keyspace, key, cp, val,
-                                      timestamp, self.write_consistency_level)
+            self.client.insert(self.keyspace, key, cp, val,
+                               timestamp, self.write_consistency_level)
+            return timestamp
 
         cols = []
         for c, v in columns.iteritems():
             column = Column(name=c, value=v, timestamp=timestamp)
             cols.append(ColumnOrSuperColumn(column=column))
-        return self.client.batch_insert(self.keyspace, key,
-                                        {self.column_family: cols},
-                                        self.write_consistency_level)
+        self.client.batch_insert(self.keyspace, key,
+                                 {self.column_family: cols},
+                                 self.write_consistency_level)
+        return timestamp
 
     def remove(self, key, column=None):
         """
@@ -320,7 +325,13 @@ class ColumnFamily(object):
             The key to remove. If column is not set, remove all columns
         column : str
             If set, remove only this column
+
+        Returns
+        -------
+        int timestamp
         """
         cp = ColumnPath(column_family=self.column_family, column=column)
-        return self.client.remove(self.keyspace, key, cp, self.timestamp(),
-                                  self.write_consistency_level)
+        timestamp = self.timestamp()
+        self.client.remove(self.keyspace, key, cp, timestamp,
+                           self.write_consistency_level)
+        return timestamp

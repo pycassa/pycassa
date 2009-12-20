@@ -6,7 +6,7 @@ from cassandra import Cassandra
 
 __all__ = ['connect']
 
-def connect(host="localhost", port=9160):
+def connect(host='localhost', port=9160):
     """
     Construct a Cassandra connection
 
