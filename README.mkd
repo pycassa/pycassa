@@ -35,7 +35,7 @@ to read usage documentation.
 The value returned by an insert is the timestamp used for insertion.
 
     >>> cf.insert('foo', {'column1': 'val1'})
-1261349837
+    1261349837
     >>> cf.get('foo')
     {'column1': 'val1'}
 
