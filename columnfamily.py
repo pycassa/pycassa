@@ -2,9 +2,7 @@ from cassandra.ttypes import *
 
 import time
 
-__all__ = ['gm_timestamp', 'ColumnFamily',
-    'ConsistencyLevel', 'InvalidRequestException', 'NotFoundException',
-    'UnavailableException', 'TimedOutException']
+__all__ = ['gm_timestamp', 'ColumnFamily']
 
 def gm_timestamp():
     """
@@ -25,6 +23,13 @@ def ColumnOrSuperColumns2dict(list_col_or_super, return_timestamp):
         col = col_or_super.column
         ret[col.name] = Column2base(col, return_timestamp)
     return ret
+
+def create_SlicePredicate(columns, column_start, column_finish, column_reversed, column_count):
+    if columns is not None:
+        return SlicePredicate(column_names=columns)
+    sr = SliceRange(start=column_start, finish=column_finish,
+                    reversed=column_reversed, count=column_count)
+    return SlicePredicate(slice_range=sr)
 
 class ColumnFamily(object):
     def __init__(self, client, keyspace, column_family,
@@ -104,9 +109,8 @@ class ColumnFamily(object):
                 return {}
 
         cp = ColumnParent(column_family=self.column_family)
-        sr = SliceRange(start=column_start, finish=column_finish,
-                        reversed=column_reversed, count=column_count)
-        sp = SlicePredicate(slice_range=sr, column_names=columns)
+        sp = create_SlicePredicate(columns, column_start, column_finish,
+                                   column_reversed, column_count)
 
         lst_col_or_super = self.client.get_slice(self.keyspace, key, cp, sp,
                                                  self.read_consistency_level)
@@ -165,9 +169,8 @@ class ColumnFamily(object):
             return ret
 
         cp = ColumnParent(column_family=self.column_family)
-        sr = SliceRange(start=column_start, finish=column_finish,
-                        reversed=column_reversed, count=column_count)
-        sp = SlicePredicate(slice_range=sr, column_names=columns)
+        sp = create_SlicePredicate(columns, column_start, column_finish,
+                                   column_reversed, column_count)
 
         keymap = self.client.multiget_slice(self.keyspace, keys, cp, sp,
                                             self.read_consistency_level)
@@ -227,9 +230,8 @@ class ColumnFamily(object):
         iterator over ('key', {'column': 'value'})
         """
         cp = ColumnParent(column_family=self.column_family)
-        sr = SliceRange(start=column_start, finish=column_finish,
-                        reversed=column_reversed, count=column_count)
-        sp = SlicePredicate(slice_range=sr, column_names=columns)
+        sp = create_SlicePredicate(columns, column_start, column_finish,
+                                   column_reversed, column_count)
 
         last_key = start
         ignore_first = False
