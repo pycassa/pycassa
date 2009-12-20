@@ -1,0 +1,69 @@
+About
+-----
+Pycasso is a simplified interface to Cassandra. It's intended for easy
+querying, so you can see what data is stored in your data files.
+
+For more applicative uses, I would recommend:
+http://github.com/digg/lazyboy
+
+Requirements
+------------
+thrift: http://incubator.apache.org/thrift/
+(python bindings)
+
+Cassandra: http://incubator.apache.org/cassandra/
+(only tested only 0.5.0-beta2, but should work with some previous versions)
+
+It comes with the Cassandra python files for convenience, but you can replace
+it with your own.
+
+Usage
+-----
+All functions are documented with docstrings.
+In the python interpreter, type:
+
+>>> import pycasso
+>>> help(pycasso.ColumnFamily.get)
+
+to read usage documentation.
+
+>>> cf = pycasso.ColumnFamily(pycasso.connect(), 'Test Keyspace', 'Test ColumnFamily')
+
+The value returned by an insert is the timestamp used for insertion.
+>>> cf.insert('foo', {'column1': 'val1'})
+1261349837
+>>> cf.get('foo')
+{'column1': 'val1'}
+
+Insert also acts to update values
+>>> cf.insert('foo', {'column1': 'val2'})
+1261349910
+>>> cf.get('foo')
+{'column1': 'val2'}
+
+You may insert multiple columns at once
+>>> cf.insert('bar', {'column1': 'val3', 'column2': 'val4'})
+1261350013
+>>> cf.multiget(['foo', 'bar'])
+{'foo': {'column1': 'val2'}, 'bar': {'column1': 'val3', 'column2': 'val4'}}
+>>> cf.get_count('bar')
+2
+>>> cf.get_range()
+[('bar', {'column1': 'val3', 'column2': 'val4'}), ('foo', {'column1': 'val2'})]
+
+cf.iter_get_range() is faster if you intend to iterate because it doesn't instantiate the list
+>>> for key, columns in cf.iter_get_range():
+...   print key, columns
+...
+bar {'column1': 'val3', 'column2': 'val4'}
+foo {'column1': 'val2'}
+
+You can remove entire keys or just a certain column
+>>> cf.remove('bar', column='column1')
+1261350220
+>>> cf.get('bar')
+{'column2': 'val4'}
+>>> cf.remove('bar')
+1261350226
+>>> cf.get('bar')
+{}

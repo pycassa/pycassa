@@ -1,2 +1,2 @@
-from columnfamily import *
-from connection import *
+from pycasso.columnfamily import *
+from pycasso.connection import *
