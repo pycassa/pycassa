@@ -196,7 +196,7 @@ class ColumnFamily(object):
 
     def iter_get_range(self, start="", finish="", columns=None, column_start="",
                        column_finish="", column_reversed=False, column_count=100,
-                       return_timestamp=False):
+                       row_count=None, return_timestamp=False):
         """
         Get an iterator over keys in a specified range
         
@@ -217,6 +217,8 @@ class ColumnFamily(object):
             because columns are converted into a dict.
         column_count = int
             Limit the number of columns fetched per key
+        row_count = int
+            Limit the number of rows fetched
         return_timestamp = bool
             If true, return a (value, timestamp) tuple for each column
 
@@ -231,7 +233,7 @@ class ColumnFamily(object):
 
         last_key = start
         ignore_first = False
-        i = 0
+        i = -1
         while True:
             key_slices = self.client.get_range_slice(self.keyspace, cp, sp, last_key,
                                                      finish, self.get_range_buffer,
@@ -242,16 +244,17 @@ class ColumnFamily(object):
                 # because it will be a duplicate.
                 if i > 0 and j == 0:
                     continue
+                i += 1
+                if row_count is not None and i >= row_count:
+                    return
                 yield (key_slice.key,
-                       ColumnOrSuperColumns2dict(key_slice.columns,
-                                                     return_timestamp))
+                       ColumnOrSuperColumns2dict(key_slice.columns, return_timestamp))
 
             if len(key_slices) > 0:
-                last_key = key_slices[-1]
+                last_key = key_slices[-1].key
                 ignore_first = True
             if len(key_slices) != self.get_range_buffer:
                 return
-            i += 1
 
     def get_range(self, *args, **kwargs):
         """
@@ -274,6 +277,8 @@ class ColumnFamily(object):
             because columns are converted into a dict.
         column_count = int
             Limit the number of columns fetched per key
+        row_count = int
+            Limit the number of rows fetched
         return_timestamp = bool
             If true, return a (value, timestamp) tuple for each column
 

@@ -5,7 +5,7 @@ class TestColumnFamily:
         self.client = connect()
         self.cf = ColumnFamily(self.client, 'Test Keyspace', 'Test UTF8',
                                write_consistency_level=ConsistencyLevel.ONE,
-                               timestamp=self.timestamp)
+                               get_range_buffer=2, timestamp=self.timestamp)
         self.timestamp_n = 0
 
     # Since the timestamp passed to Cassandra will be in the same second
@@ -37,4 +37,15 @@ class TestColumnFamily:
 
         self.cf.insert(key2, d1)
         assert self.cf.multiget([key1, key2]) == {key1: d3, key2: d1}
-        assert self.cf.get_range() == [(key1, d3), (key2, d1)]
+        assert self.cf.get_range(start='bar', finish='foo') == [(key1, d3), (key2, d1)]
+
+    def test_get_range(self):
+        keys = ['range{0}'.format(i) for i in xrange(5)]
+        for key in keys:
+            self.cf.insert(key, {'col1': 'val1'})
+        kv_range = self.cf.get_range(start='range0', finish='range4')
+        assert len(kv_range) == 5
+        for i, kv in enumerate(kv_range):
+            assert kv[0] == 'range{0}'.format(i)
+
+        assert self.cf.get_range(start='range0', row_count=1)[0][0] == 'range0'
