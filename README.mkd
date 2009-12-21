@@ -125,7 +125,7 @@ All the functions are exactly the same, except that they return instances of the
     '1'
     >>> TestMap.multiget([t.key])
     {'maptest': <__main__.Test object at 0x7fac9c85e990>}
-    >>> TestMap.get_range()
+    >>> list(TestMap.get_range())
     [<__main__.Test object at 0x7fac9c85ea90>]
     >>> TestMap.get_count(t.key)
     2
