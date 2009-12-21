@@ -8,7 +8,7 @@ from thrift.transport import TSocket
 from thrift.protocol import TBinaryProtocol
 from cassandra import Cassandra
 
-__all__ = ['connect', 'connect_thread_local']
+__all__ = ['connect', 'connect_thread_local', 'NoServerAvailable']
 
 DEFAULT_SERVER = 'localhost:9160'
 
