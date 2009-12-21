@@ -1,5 +1,3 @@
-from pycasso.columnfamily import ColumnFamily
-
 __all__ = ['ColumnFamilyMap']
 
 def create_instance(cls, **kwargs):
