@@ -35,15 +35,15 @@ For a single connection (which is _not_ thread-safe), pass a list of servers:
     >>> client = pycasso.connect() # Defaults to connecting to the server at 'localhost:9160'
     >>> client = pycasso.connect(['localhost:9160'])
 
-Thread-local connections opens a connection for every thread that calls a Cassandra function. It also automatically balances the number of connections between servers (this feature may be turned off).
+Thread-local connections opens a connection for every thread that calls a Cassandra function. It also automatically balances the number of connections between servers (set *round_robin* to turn it off).
 
     >>> client = pycasso.connect_thread_local() # Defaults to connecting to the server at 'localhost:9160'
     >>> client = pycasso.connect_thread_local(['localhost:9160', 'other_server:9160']) # Round robin connections
     >>> client = pycasso.connect_thread_local(['localhost:9160', 'other_server:9160'], round_robin=False) # Connect in list order
 
-Connections are robust to server failures. Upon a disconnection, it will attempt to connect to each server in the list in turn. If no server is available, it will raise a NoServerAvailable exception.
+Connections are robust to server failures. Upon a disconnection, it will attempt to connect to each server in the list in turn. If no server is available, it will raise a *NoServerAvailable* exception.
 
-To use the standard interface, create a ColumnFamily instance.
+To use the standard interface, create a *ColumnFamily* instance.
 
     >>> cf = pycasso.ColumnFamily(client, 'Test Keyspace', 'Test ColumnFamily')
 
@@ -70,7 +70,7 @@ You may insert multiple columns at once.
     >>> cf.get_count('bar')
     2
 
-get_range() returns an iterable. Call it with list() to convert it to a list.
+*get_range()* returns an iterable. Call it with *list()* to convert it to a list.
 
     >>> list(cf.get_range())
     [('bar', {'column1': 'val3', 'column2': 'val4'}), ('foo', {'column1': 'val2'})]
@@ -93,17 +93,17 @@ You can remove entire keys or just a certain column.
 Class Mapping
 -------------
 
-You can also map existing classes using ColumnFamilyMap.
+You can also map existing classes using *ColumnFamilyMap*.
 
     >>> class Test(object):
     ...     pass
     ...
 
-Map a class to a ColumnFamily. This will naively insert all attributes on insert() and get all columns on get().
+Map a class to a *ColumnFamily*. This will naively insert all attributes on insert() and get all columns on get().
 
     >>> TestMap = pycasso.ColumnFamilyMap(Test, cf)
 
-However, it's often preferable to supply the columns argument. columns is a dictionary mapping columns to their default value. If, for example, there is a schema change, but some old records in the Cassandra database don't have certain columns, fetching them will fill in their default value. The columns argument also indicates what attributes are saved when you call insert(). All other attributes are ignored.
+However, it's often preferable to supply the columns argument. columns is a dictionary mapping columns to their default value. If, for example, there is a schema change, but some old records in the Cassandra database don't have certain columns, fetching them will fill in their default value. The columns argument also indicates what attributes are saved when you call *insert()*. All other attributes are ignored.
 
     >>> TestMap = pycasso.ColumnFamilyMap(Test, cf, columns={'col1': 'default1', 'col2': 'default2'})
 
