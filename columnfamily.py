@@ -61,7 +61,11 @@ class ColumnFamily(object):
             Affects the guaranteed replication factor before returning from
             any write operation
         timestamp : function
-            Replace the default timestamp function with your own
+            The default timestamp function returns:
+            int(time.mktime(time.gmtime()))
+            Or the number of seconds since Unix epoch in GMT.
+            Set timestamp to replace the default timestamp function with your
+            own.
         """
         self.client = client
         self.keyspace = keyspace
@@ -197,7 +201,7 @@ class ColumnFamily(object):
         return self.client.get_count(self.keyspace, key, cp,
                                      self.read_consistency_level)
 
-    def iter_get_range(self, start="", finish="", columns=None, column_start="",
+    def get_range(self, start="", finish="", columns=None, column_start="",
                        column_finish="", column_reversed=False, column_count=100,
                        row_count=None, include_timestamp=False):
         """
@@ -257,38 +261,6 @@ class ColumnFamily(object):
                 ignore_first = True
             if len(key_slices) != self.buffer_size:
                 return
-
-    def get_range(self, *args, **kwargs):
-        """
-        Get a list of keys in a specified range
-        
-        Parameters
-        ----------
-        start : str
-            Start from this key (inclusive)
-        finish : str
-            End at this key (inclusive)
-        columns : [str]
-            Limit the columns fetched to the specified list
-        column_start : str
-            Only fetch when a column is >= column_start
-        column_finish : str
-            Only fetch when a column is <= column_finish
-        column_reversed : bool
-            Fetch the columns in reverse order. Currently this does nothing
-            because columns are converted into a dict.
-        column_count : int
-            Limit the number of columns fetched per key
-        row_count : int
-            Limit the number of rows fetched
-        include_timestamp : bool
-            If true, return a (value, timestamp) tuple for each column
-
-        Returns
-        -------
-        list of ('key', {'column': 'value'})
-        """
-        return list(self.iter_get_range(*args, **kwargs))
 
     def insert(self, key, columns):
         """

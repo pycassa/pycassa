@@ -60,7 +60,7 @@ class TestColumnFamilyMap:
         assert self.map.get('map3').__dict__ == {'key': 'map3', 'col1': '1', 'col2': 'default'}
         assert self.map.get_count('map3') == 1
         assert 'map3' in self.map.multiget(['map3'])
-        map_range = self.map.get_range(start='map1', finish='map3')
+        map_range = list(self.map.get_range(start='map1', finish='map3'))
         assert len(map_range) == 3
         r1, r2 = map_range[0], map_range[1]
         t1dict = t1.__dict__

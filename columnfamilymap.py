@@ -115,7 +115,7 @@ class ColumnFamilyMap(object):
         """
         return self.column_family.get_count(*args, **kwargs)
 
-    def iter_get_range(self, *args, **kwargs):
+    def get_range(self, *args, **kwargs):
         """
         Get an iterator over keys in a specified range
         
@@ -147,42 +147,10 @@ class ColumnFamilyMap(object):
         """
         if self.columns is not None and 'columns' not in kwargs:
             kwargs['columns'] = self.columns.keys()
-        for key, columns in self.column_family.iter_get_range(*args, **kwargs):
+        for key, columns in self.column_family.get_range(*args, **kwargs):
             if self.columns is not None:
                 columns = combine_columns(self.columns, columns)
             yield create_instance(self.cls, key=key, **columns)
-
-    def get_range(self, *args, **kwargs):
-        """
-        Get a list of keys in a specified range
-        
-        Parameters
-        ----------
-        start : str
-            Start from this key (inclusive)
-        finish : str
-            End at this key (inclusive)
-        columns : [str]
-            Limit the columns fetched to the specified list
-        column_start = str
-            Only fetch when a column is >= column_start
-        column_finish = str
-            Only fetch when a column is <= column_finish
-        column_reversed = bool
-            Fetch the columns in reverse order. Currently this does nothing
-            because columns are converted into a dict.
-        column_count = int
-            Limit the number of columns fetched per key
-        row_count = int
-            Limit the number of rows fetched
-        include_timestamp = bool
-            If true, return a (value, timestamp) tuple for each column
-
-        Returns
-        -------
-        list of Class instance
-        """
-        return list(self.iter_get_range(*args, **kwargs))
 
     def insert(self, instance, columns=None):
         """
