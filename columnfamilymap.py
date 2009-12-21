@@ -186,7 +186,7 @@ class ColumnFamilyMap(object):
         -------
         list of Class instance
         """
-        return [instance for instance in self.iter_get_range(*args, **kwargs)]
+        return list(self.iter_get_range(*args, **kwargs))
 
     def insert(self, instance, columns=None):
         """

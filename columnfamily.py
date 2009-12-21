@@ -287,7 +287,7 @@ class ColumnFamily(object):
         -------
         list of ('key', {'column': 'value'})
         """
-        return [kv for kv in self.iter_get_range(*args, **kwargs)]
+        return list(self.iter_get_range(*args, **kwargs))
 
     def insert(self, key, columns):
         """
