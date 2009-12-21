@@ -1,10 +1,13 @@
 pycasso
 =======
 
-pycasso is a simplified interface to Cassandra. It's intended for easy querying, so you can see what data is stored in your data files.
+pycasso is a Cassandra library with the following features:
 
-For more applicative uses, I would recommend:
-http://github.com/digg/lazyboy
+1. Single, Thread-Local, or Queue-Pooled connections
+2. A simplified version of the thrift interface
+3. A method to map an existing class to a Cassandra ColumnFamily.
+
+It currently lacks support for SuperColumns, although you can use the raw connection at any time to perform SuperColumn queries.
 
 Requirements
 ------------
@@ -14,23 +17,39 @@ Requirements
 
 Install thrift with the python bindings.
 
-Cassandra was only tested only 0.5.0-beta2, but should work with some previous versions)
+Cassandra was only tested only 0.5.0-beta2, but should work with some previous versions.
 
-It comes with the Cassandra python files for convenience, but you can replace
-it with your own.
+It comes with the Cassandra python files for convenience, but you can replace it with your own.
 
-Usage
------
+Basic Usage
+-----------
 
 All functions are documented with docstrings.
-In the python interpreter, type:
+To read usage documentation:
 
     >>> import pycasso
     >>> help(pycasso.ColumnFamily.get)
 
-to read usage documentation.
+For a single connection (which is _not_ thread-safe):
 
-    >>> cf = pycasso.ColumnFamily(pycasso.connect(), 'Test Keyspace', 'Test ColumnFamily')
+    >>> client = pycasso.connect() # Defaults to connecting to the server at 'localhost:9160'
+    >>> client = pycasso.connect('localhost:9160')
+
+Thread-local connections opens a connection for each thread that calls a Cassandra function:
+
+    >>> client = pycasso.connect_thread_local() # Defaults to connecting to the server at 'localhost:9160'
+    >>> client = pycasso.connect_thread_local(['localhost:9160', 'other_server:9160']) # Round robin connections
+
+Pooled connections have a fixed number of connections that are shared among threads. It will block if all connections are currently being used.
+
+    >>> client = pycasso.connect_pooled() # Defaults to 5 * ['localhost:9160'], or 5 connections to 'localhost:9160'
+    >>> client = pycasso.connect_pooled(5*['localhost:9160'] + 3*['other_server:9160'])
+
+Thread-local connections and Pooled connections are robust to disconnections. Upon a failed thrift call, it will throw the expected thrift exception and close the connection, but it will attempt to open it again on a later call.
+
+To use the standard interface, create a ColumnFamily instance.
+
+    >>> cf = pycasso.ColumnFamily(client, 'Test Keyspace', 'Test ColumnFamily')
 
 The value returned by an insert is the timestamp used for insertion.
 
@@ -76,4 +95,46 @@ You can remove entire keys or just a certain column
     >>> cf.remove('bar')
     1261350226
     >>> cf.get('bar')
-    {}
+    Traceback (most recent call last):
+    ...
+    pycasso.cassandra.ttypes.NotFoundException: NotFoundException()
+
+Class Mapping
+-------------
+
+You can also map existing classes using ColumnFamilyMap
+
+    >>> class Test(object):
+    ...     pass
+    ...
+
+Map a class to a ColumnFamily. This will naively insert all attributes on insert() and get all columns on get().
+
+    >>> TestMap = pycasso.ColumnFamilyMap(Test, cf)
+
+However, it's often preferable to supply the columns argument. columns is a dictionary mapping columns to their default value. If, for example, there is a schema change, but some old records in the Cassandra database don't have certain columns, fetching them will fill in their default value. The columns argument also indicates what attributes are saved when you call insert(). All other attributes are ignored.
+
+    >>> TestMap = pycasso.ColumnFamilyMap(Test, cf, columns={'col1': 'default1', 'col2': 'default2'})
+
+All the functions are exactly the same, except that they return instances of the supplied class when possible.
+
+    >>> t = Test()
+    >>> t.col1 = '1'
+    >>> t.col2 = '2'
+    >>> t.key = 'maptest'
+    >>> TestMap.insert(t)
+    1261395497
+    >>> TestMap.get(t.key).col1
+    '1'
+    >>> TestMap.multiget([t.key])
+    {'maptest': <__main__.Test object at 0x7fac9c85e990>}
+    >>> TestMap.get_range()
+    [<__main__.Test object at 0x7fac9c85ea90>]
+    >>> TestMap.get_count(t.key)
+    2
+    >>> TestMap.remove(t)
+    1261395603
+    >>> TestMap.get(t.key)
+    Traceback (most recent call last):
+    ...
+    pycasso.cassandra.ttypes.NotFoundException: NotFoundException()
