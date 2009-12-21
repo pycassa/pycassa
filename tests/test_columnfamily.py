@@ -7,7 +7,7 @@ class TestColumnFamily:
         self.client = connect()
         self.cf = ColumnFamily(self.client, 'Test Keyspace', 'Test UTF8',
                                write_consistency_level=ConsistencyLevel.ONE,
-                               get_range_buffer=2, timestamp=self.timestamp)
+                               buffer_size=2, timestamp=self.timestamp)
         self.timestamp_n = 0
 
     # Since the timestamp passed to Cassandra will be in the same second

@@ -155,7 +155,7 @@ All the functions have the exact same functionality as their thrift counterparts
             The Keyspace this ColumnFamily belongs to
         column_family : str
             The name of this ColumnFamily
-        get_range_buffer : int
+        buffer_size : int
             When calling get_range(), the intermediate results need to be
             buffered if we are fetching many rows, otherwise the Cassandra
             server will overallocate memory and fail.  This is the size of

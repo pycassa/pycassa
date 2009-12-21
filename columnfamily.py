@@ -33,7 +33,7 @@ def create_SlicePredicate(columns, column_start, column_finish, column_reversed,
 
 class ColumnFamily(object):
     def __init__(self, client, keyspace, column_family,
-                 get_range_buffer=1024,
+                 buffer_size=1024,
                  read_consistency_level=ConsistencyLevel.ONE,
                  write_consistency_level=ConsistencyLevel.ZERO,
                  timestamp=gm_timestamp):
@@ -48,7 +48,7 @@ class ColumnFamily(object):
             The Keyspace this ColumnFamily belongs to
         column_family : str
             The name of this ColumnFamily
-        get_range_buffer : int
+        buffer_size : int
             When calling get_range(), the intermediate results need to be
             buffered if we are fetching many rows, otherwise the Cassandra
             server will overallocate memory and fail.  This is the size of
@@ -65,7 +65,7 @@ class ColumnFamily(object):
         self.client = client
         self.keyspace = keyspace
         self.column_family = column_family
-        self.get_range_buffer = get_range_buffer
+        self.buffer_size = buffer_size
         self.read_consistency_level = read_consistency_level
         self.write_consistency_level = write_consistency_level
         self.timestamp = timestamp
@@ -237,7 +237,7 @@ class ColumnFamily(object):
         i = -1
         while True:
             key_slices = self.client.get_range_slice(self.keyspace, cp, sp, last_key,
-                                                     finish, self.get_range_buffer,
+                                                     finish, self.buffer_size,
                                                      self.read_consistency_level)
 
             for j, key_slice in enumerate(key_slices):
@@ -254,7 +254,7 @@ class ColumnFamily(object):
             if len(key_slices) > 0:
                 last_key = key_slices[-1].key
                 ignore_first = True
-            if len(key_slices) != self.get_range_buffer:
+            if len(key_slices) != self.buffer_size:
                 return
 
     def get_range(self, *args, **kwargs):
