@@ -74,7 +74,7 @@ class PooledConnection(object):
                 if client is None:
                     client, transport = create_client_transport(server)
                 return getattr(client, attr)(*args, **kwargs)
-            except Thrift.TException, exc:
+            except Thrift.TException as exc:
                 # Connection error, try a new server next time
                 transport.close()
                 client, transport = None, None
@@ -121,7 +121,7 @@ class ThreadLocalConnection(object):
 
             try:
                 return getattr(self.local.client, attr)(*args, **kwargs)
-            except Thrift.TException, exc:
+            except Thrift.TException as exc:
                 # Connection error, try a new server next time
                 self.local.transport.close()
                 self.local.client = None
