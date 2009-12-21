@@ -126,10 +126,10 @@ class ThreadLocalConnection(object):
             try:
                 return getattr(self._local.client, attr)(*args, **kwargs)
             except Thrift.TException as exc:
-                # Connection error, try a new server next time
+                # Connection error, try to connect to all the servers
                 self._local.transport.close()
                 self._local.client = None
-                raise exc
+                self._find_server()
 
         setattr(self, attr, client_call)
         return getattr(self, attr)
