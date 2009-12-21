@@ -120,7 +120,7 @@ class ThreadLocalConnection(object):
 
     def __getattr__(self, attr):
         def client_call(*args, **kwargs):
-            if getattr(self.local, 'client', None) is None:
+            if getattr(self._local, 'client', None) is None:
                 self._find_server()
 
             try:
