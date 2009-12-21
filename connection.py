@@ -73,14 +73,14 @@ class PooledConnection(object):
             try:
                 if client is None:
                     client, transport = create_client_transport(server)
-                ret = getattr(client, attr)(*args, **kwargs)
-                self.queue.put((server, client, transport))
-                return ret
+                return getattr(client, attr)(*args, **kwargs)
             except Thrift.TException, exc:
                 # Connection error, try a new server next time
                 transport.close()
-                self.queue.put((server, None, None))
+                client, transport = None, None
                 raise exc
+            finally:
+                self.queue.put((server, client, transport))
 
         setattr(self, attr, client_call)
         return getattr(self, attr)
