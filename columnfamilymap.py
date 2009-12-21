@@ -215,7 +215,7 @@ class ColumnFamilyMap(object):
                     insert_dict[key] = value
         return self.column_family.insert(instance.key, insert_dict)
 
-    def remove(self, instance, columns=None):
+    def remove(self, instance, column=None):
         """
         Remove this instance
 
@@ -223,8 +223,8 @@ class ColumnFamilyMap(object):
         ----------
         instance : Class instance
             Remove the instance where the key is instance.key
-        columns : ['column']
-            Limit the columns removed to this list
+        column : str
+            If set, remove only this column
 
         Returns
         -------
@@ -232,9 +232,4 @@ class ColumnFamilyMap(object):
         """
         # Hmm, should we only remove the columns specified on construction?
         # It's slower, so we'll leave it out.
-        if columns is None:
-            return self.column_family.remove(instance.key)
-        timestamp = None
-        for column in columns:
-            timestamp = self.column_family.remove(instance.key, column)
-        return timestamp
+        return self.column_family.remove(instance.key, column)
