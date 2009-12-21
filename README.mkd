@@ -3,7 +3,7 @@ pycasso
 
 pycasso is a Cassandra library with the following features:
 
-1. Single, Thread-Local, or Queue-Pooled connections
+1. Auto-failover single or thread-local connections
 2. A simplified version of the thrift interface
 3. A method to map an existing class to a Cassandra ColumnFamily.
 
@@ -30,22 +30,18 @@ To read usage documentation:
     >>> import pycasso
     >>> help(pycasso.ColumnFamily.get)
 
-For a single connection (which is _not_ thread-safe):
+For a single connection (which is _not_ thread-safe), pass a list of servers:
 
     >>> client = pycasso.connect() # Defaults to connecting to the server at 'localhost:9160'
-    >>> client = pycasso.connect('localhost:9160')
+    >>> client = pycasso.connect(['localhost:9160'])
 
-Thread-local connections opens a connection for every thread that calls a Cassandra function.
+Thread-local connections opens a connection for every thread that calls a Cassandra function. It also automatically balances the number of connections between servers (this feature may be turned off).
 
     >>> client = pycasso.connect_thread_local() # Defaults to connecting to the server at 'localhost:9160'
     >>> client = pycasso.connect_thread_local(['localhost:9160', 'other_server:9160']) # Round robin connections
+    >>> client = pycasso.connect_thread_local(['localhost:9160', 'other_server:9160'], round_robin=False) # Connect in list order
 
-Pooled connections have a fixed number of connections that are shared among threads. It will block if all connections are currently being used.
-
-    >>> client = pycasso.connect_pooled() # Defaults to 5 * ['localhost:9160'], or 5 connections to 'localhost:9160'
-    >>> client = pycasso.connect_pooled(5*['localhost:9160'] + 3*['other_server:9160'])
-
-Thread-local connections and Pooled connections are robust to disconnections. Upon a failed thrift call, it will throw the expected thrift exception and close the connection, but it will attempt to open it again on a later call.
+Connections are robust to server failures. Upon a disconnection, it will attempt to connect to each server in the list in turn. If no server is available, it will raise a NoServerAvailable exception.
 
 To use the standard interface, create a ColumnFamily instance.
 
