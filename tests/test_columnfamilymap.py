@@ -11,7 +11,8 @@ class TestColumnFamilyMap:
         self.cf = ColumnFamily(self.client, 'Test Keyspace', 'Test UTF8',
                                write_consistency_level=ConsistencyLevel.ONE,
                                timestamp=self.timestamp)
-        self.map = ColumnFamilyMap(TestUTF8, self.cf, columns=['col1', 'col2'])
+        self.map = ColumnFamilyMap(TestUTF8, self.cf,
+                       columns={'col1': 'default', 'col2': 'default'})
         self.map_nocol = ColumnFamilyMap(TestUTF8, self.cf)
         self.timestamp_n = 0
 
@@ -56,11 +57,11 @@ class TestColumnFamilyMap:
         assert (t5.key, t5.col1, t5.col2) == (t2.key, t2.col1, t2.col2)
 
         self.cf.insert('map3', {'col1': '1'})
-        assert_raises(NotFoundException, self.map.get, 'map3')
+        assert self.map.get('map3').__dict__ == {'key': 'map3', 'col1': '1', 'col2': 'default'}
         assert self.map.get_count('map3') == 1
-        assert self.map.multiget(['map3']) == {}
-        map_range = self.map.get_range()
-        assert len(map_range) == 2
+        assert 'map3' in self.map.multiget(['map3'])
+        map_range = self.map.get_range(start='map1', finish='map3')
+        assert len(map_range) == 3
         r1, r2 = map_range[0], map_range[1]
         t1dict = t1.__dict__
         t1dict.pop('other')

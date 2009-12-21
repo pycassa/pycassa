@@ -9,11 +9,13 @@ def create_instance(cls, **kwargs):
     instance.__dict__.update(kwargs)
     return instance
 
-def is_missing_columns(required, actual):
-    for column in required:
-        if column not in actual:
-            return True
-    return False
+def combine_columns(defaults, columns):
+    if defaults is not None:
+        combined_columns = defaults.copy()
+        combined_columns.update(columns)
+        return combined_columns
+
+    return columns
 
 class ColumnFamilyMap(object):
     def __init__(self, cls, column_family, columns=None):
@@ -26,9 +28,8 @@ class ColumnFamilyMap(object):
             Instances of cls are generated on get*() requests
         column_family: ColumnFamily
             The ColumnFamily to tie with cls
-        columns : ['column']
-            List of columns to require when getting from the Cassandra server.
-            These columns are also the only ones saved when inserting.
+        columns : {'column': 'default_value'}
+            Map of columns to the default value to supply if it's missing
         """
         self.cls = cls
         self.column_family = column_family
@@ -60,10 +61,11 @@ class ColumnFamilyMap(object):
         -------
         Class instance
         """
-        kwargs['columns'] = self.columns
+        if self.columns is not None and 'columns' not in kwargs:
+            kwargs['columns'] = self.columns.keys()
         columns = self.column_family.get(key, *args, **kwargs)
-        if self.columns is not None and is_missing_columns(self.columns, columns):
-            raise NotFoundException
+        if self.columns is not None:
+            columns = combine_columns(self.columns, columns)
         return create_instance(self.cls, key=key, **columns)
 
     def multiget(self, *args, **kwargs):
@@ -92,12 +94,13 @@ class ColumnFamilyMap(object):
         -------
         {'key': Class instance} 
         """
-        kwargs['columns'] = self.columns
+        if self.columns is not None and 'columns' not in kwargs:
+            kwargs['columns'] = self.columns.keys()
         kcmap = self.column_family.multiget(*args, **kwargs)
         ret = {}
         for key, columns in kcmap.iteritems():
-            if self.columns is not None and is_missing_columns(self.columns, columns):
-                break
+            if self.columns is not None:
+                columns = combine_columns(self.columns, columns)
             ret[key] = create_instance(self.cls, key=key, **columns)
         return ret
 
@@ -146,10 +149,11 @@ class ColumnFamilyMap(object):
         -------
         iterator over Class instance
         """
-        kwargs['columns'] = self.columns
+        if self.columns is not None and 'columns' not in kwargs:
+            kwargs['columns'] = self.columns.keys()
         for key, columns in self.column_family.iter_get_range(*args, **kwargs):
-            if self.columns is not None and is_missing_columns(self.columns, columns):
-                continue
+            if self.columns is not None:
+                columns = combine_columns(self.columns, columns)
             yield create_instance(self.cls, key=key, **columns)
 
     def get_range(self, *args, **kwargs):
@@ -200,7 +204,8 @@ class ColumnFamilyMap(object):
         int timestamp
         """
         insert_dict = {}
-        columns = columns or self.columns
+        if columns is None and self.columns is not None:
+            columns = self.columns.keys()
         if columns is not None:
             for column in columns:
                 insert_dict[column] = getattr(instance, column)
@@ -227,7 +232,6 @@ class ColumnFamilyMap(object):
         """
         # Hmm, should we only remove the columns specified on construction?
         # It's slower, so we'll leave it out.
-        # columns = columns or self.columns
         if columns is None:
             return self.column_family.remove(instance.key)
         timestamp = None
