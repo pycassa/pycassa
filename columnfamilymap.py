@@ -1,7 +1,5 @@
 from pycasso.columnfamily import ColumnFamily
 
-from cassandra.ttypes import NotFoundException
-
 __all__ = ['ColumnFamilyMap']
 
 def create_instance(cls, **kwargs):

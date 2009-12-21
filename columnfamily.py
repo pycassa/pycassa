@@ -1,4 +1,5 @@
-from cassandra.ttypes import *
+from cassandra.ttypes import Column, ColumnOrSuperColumn, ColumnParent, \
+    ColumnPath, ConsistencyLevel, NotFoundException, SlicePredicate, SliceRange
 
 import time
 
