@@ -48,7 +48,7 @@ def connect_thread_local(servers=None):
     Cassandra client
     """
 
-   if servers is None:
+    if servers is None:
         servers = [DEFAULT_SERVER]
     return ThreadLocalConnection(servers)
 
