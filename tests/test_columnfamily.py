@@ -1,4 +1,6 @@
-from pycasso import connect, gm_timestamp, ColumnFamily, ConsistencyLevel
+from pycasso import connect, gm_timestamp, ColumnFamily, ConsistencyLevel, NotFoundException
+
+from nose.tools import assert_raises
 
 class TestColumnFamily:
     def setUp(self):
@@ -25,7 +27,7 @@ class TestColumnFamily:
         key2 = 'foo'
         self.cf.remove(key1) # Clear out any remnants of the keys
         self.cf.remove(key2)
-        assert self.cf.get(key1) == {}
+        assert_raises(NotFoundException, self.cf.get, key1)
         # Test client.insert()
         self.cf.insert(key1, d1)
         # Test client.batch_insert()

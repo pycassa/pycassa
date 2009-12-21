@@ -101,12 +101,9 @@ class ColumnFamily(object):
         if columns is not None and len(columns) == 1:
             column = columns[0]
             cp = ColumnPath(column_family=self.column_family, column=column)
-            try:
-                col = self.client.get(self.keyspace, key, cp,
-                                      self.read_consistency_level).column
-                return {col.name: Column2base(col, return_timestamp)}
-            except NotFoundException:
-                return {}
+            col = self.client.get(self.keyspace, key, cp,
+                                  self.read_consistency_level).column
+            return {col.name: Column2base(col, return_timestamp)}
 
         cp = ColumnParent(column_family=self.column_family)
         sp = create_SlicePredicate(columns, column_start, column_finish,
@@ -119,6 +116,8 @@ class ColumnFamily(object):
         for col_or_super in lst_col_or_super:
             col = col_or_super.column
             ret[col.name] = Column2base(col, return_timestamp)
+        if len(ret) == 0:
+            raise NotFoundException()
         return ret
 
     def multiget(self, keys, columns=None, column_start="", column_finish="",

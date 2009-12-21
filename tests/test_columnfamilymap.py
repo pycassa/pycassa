@@ -68,4 +68,4 @@ class TestColumnFamilyMap:
         assert r2.__dict__ == t2.__dict__
 
         self.map.remove(t1)
-        assert self.cf.get(t1.key) == {}
+        assert_raises(NotFoundException, self.cf.get, t1.key)
