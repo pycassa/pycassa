@@ -12,16 +12,16 @@ def gm_timestamp():
     """
     return int(time.mktime(time.gmtime()))
 
-def Column2base(column, return_timestamp):
-    if return_timestamp:
+def Column2base(column, include_timestamp):
+    if include_timestamp:
         return (column.value, column.timestamp)
     return column.value
 
-def ColumnOrSuperColumns2dict(list_col_or_super, return_timestamp):
+def ColumnOrSuperColumns2dict(list_col_or_super, include_timestamp):
     ret = {}
     for col_or_super in list_col_or_super:
         col = col_or_super.column
-        ret[col.name] = Column2base(col, return_timestamp)
+        ret[col.name] = Column2base(col, include_timestamp)
     return ret
 
 def create_SlicePredicate(columns, column_start, column_finish, column_reversed, column_count):
@@ -71,7 +71,7 @@ class ColumnFamily(object):
         self.timestamp = timestamp
 
     def get(self, key, columns=None, column_start="", column_finish="",
-            column_reversed=False, column_count=100, return_timestamp=False):
+            column_reversed=False, column_count=100, include_timestamp=False):
         """
         Fetch a key from a Cassandra server
         
@@ -90,12 +90,12 @@ class ColumnFamily(object):
             because columns are converted into a dict.
         column_count : int
             Limit the number of columns fetched per key
-        return_timestamp : bool
+        include_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
 
         Returns
         -------
-        if return_timestamp == True: {'column': ('value', timestamp)}
+        if include_timestamp == True: {'column': ('value', timestamp)}
         else: {'column': 'value'}
         """
         if columns is not None and len(columns) == 1:
@@ -103,7 +103,7 @@ class ColumnFamily(object):
             cp = ColumnPath(column_family=self.column_family, column=column)
             col = self.client.get(self.keyspace, key, cp,
                                   self.read_consistency_level).column
-            return {col.name: Column2base(col, return_timestamp)}
+            return {col.name: Column2base(col, include_timestamp)}
 
         cp = ColumnParent(column_family=self.column_family)
         sp = create_SlicePredicate(columns, column_start, column_finish,
@@ -115,13 +115,13 @@ class ColumnFamily(object):
         ret = {}
         for col_or_super in lst_col_or_super:
             col = col_or_super.column
-            ret[col.name] = Column2base(col, return_timestamp)
+            ret[col.name] = Column2base(col, include_timestamp)
         if len(ret) == 0:
             raise NotFoundException()
         return ret
 
     def multiget(self, keys, columns=None, column_start="", column_finish="",
-                 column_reversed=False, column_count=100, return_timestamp=False):
+                 column_reversed=False, column_count=100, include_timestamp=False):
         """
         Fetch multiple key from a Cassandra server
         
@@ -140,19 +140,19 @@ class ColumnFamily(object):
             because columns are converted into a dict.
         column_count : int
             Limit the number of columns fetched per key
-        return_timestamp : bool
+        include_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
 
         Returns
         -------
-        if return_timestamp == True: {'key': {'column': ('value', timestamp)}}
+        if include_timestamp == True: {'key': {'column': ('value', timestamp)}}
         else: {'key': {'column': 'value'}}
         """
         if len(keys) == 1:
             key = keys[0]
             cols = self.get(key, columns=columns, column_start=column_start,
                             column_finish=column_finish,
-                            return_timestamp=return_timestamp)
+                            include_timestamp=include_timestamp)
             return {key: cols}
 
         if columns is not None and len(columns) == 1:
@@ -164,7 +164,7 @@ class ColumnFamily(object):
             ret = {}
             for key, col_or_sp in keymap.iteritems():
                 col = col_or_sp.column
-                ret[key] = {col.name: Column2base(col, return_timestamp)}
+                ret[key] = {col.name: Column2base(col, include_timestamp)}
             return ret
 
         cp = ColumnParent(column_family=self.column_family)
@@ -176,7 +176,7 @@ class ColumnFamily(object):
 
         ret = {}
         for key, columns in keymap.iteritems():
-            ret[key] = ColumnOrSuperColumns2dict(columns, return_timestamp)
+            ret[key] = ColumnOrSuperColumns2dict(columns, include_timestamp)
         return ret
 
     def get_count(self, key):
@@ -198,7 +198,7 @@ class ColumnFamily(object):
 
     def iter_get_range(self, start="", finish="", columns=None, column_start="",
                        column_finish="", column_reversed=False, column_count=100,
-                       row_count=None, return_timestamp=False):
+                       row_count=None, include_timestamp=False):
         """
         Get an iterator over keys in a specified range
         
@@ -221,7 +221,7 @@ class ColumnFamily(object):
             Limit the number of columns fetched per key
         row_count : int
             Limit the number of rows fetched
-        return_timestamp : bool
+        include_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
 
         Returns
@@ -249,7 +249,7 @@ class ColumnFamily(object):
                 if row_count is not None and i >= row_count:
                     return
                 yield (key_slice.key,
-                       ColumnOrSuperColumns2dict(key_slice.columns, return_timestamp))
+                       ColumnOrSuperColumns2dict(key_slice.columns, include_timestamp))
 
             if len(key_slices) > 0:
                 last_key = key_slices[-1].key
@@ -280,7 +280,7 @@ class ColumnFamily(object):
             Limit the number of columns fetched per key
         row_count : int
             Limit the number of rows fetched
-        return_timestamp : bool
+        include_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
 
         Returns

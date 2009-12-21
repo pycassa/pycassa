@@ -54,7 +54,7 @@ class ColumnFamilyMap(object):
             because columns are converted into a dict.
         column_count = int
             Limit the number of columns fetched per key
-        return_timestamp = bool
+        include_timestamp = bool
             If true, return a (value, timestamp) tuple for each column
 
         Returns
@@ -87,7 +87,7 @@ class ColumnFamilyMap(object):
             because columns are converted into a dict.
         column_count = int
             Limit the number of columns fetched per key
-        return_timestamp = bool
+        include_timestamp = bool
             If true, return a (value, timestamp) tuple for each column
 
         Returns
@@ -142,7 +142,7 @@ class ColumnFamilyMap(object):
             Limit the number of columns fetched per key
         row_count = int
             Limit the number of rows fetched
-        return_timestamp = bool
+        include_timestamp = bool
             If true, return a (value, timestamp) tuple for each column
 
         Returns
@@ -179,7 +179,7 @@ class ColumnFamilyMap(object):
             Limit the number of columns fetched per key
         row_count = int
             Limit the number of rows fetched
-        return_timestamp = bool
+        include_timestamp = bool
             If true, return a (value, timestamp) tuple for each column
 
         Returns

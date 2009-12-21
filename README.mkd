@@ -185,7 +185,7 @@ All the functions have the exact same functionality as their thrift counterparts
             because columns are converted into a dict.
         column_count : int
             Limit the number of columns fetched per key
-        return_timestamp : bool
+        include_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
 
     ColumnFamily.multiget()
@@ -204,7 +204,7 @@ All the functions have the exact same functionality as their thrift counterparts
             because columns are converted into a dict.
         column_count : int
             Limit the number of columns fetched per key
-        return_timestamp : bool
+        include_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
 
     ColumnFamily.get_count()
@@ -233,7 +233,7 @@ All the functions have the exact same functionality as their thrift counterparts
             Limit the number of columns fetched per key
         row_count : int
             Limit the number of rows fetched
-        return_timestamp : bool
+        include_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
 
     ColumnFamily.get_range()
@@ -256,7 +256,7 @@ All the functions have the exact same functionality as their thrift counterparts
             Limit the number of columns fetched per key
         row_count : int
             Limit the number of rows fetched
-        return_timestamp : bool
+        include_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
 
     ColumnFamily.insert()
