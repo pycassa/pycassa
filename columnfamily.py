@@ -81,16 +81,16 @@ class ColumnFamily(object):
             The key to fetch
         columns : [str]
             Limit the columns fetched to the specified list
-        column_start = str
+        column_start : str
             Only fetch when a column is >= column_start
-        column_finish = str
+        column_finish : str
             Only fetch when a column is <= column_finish
-        column_reversed = bool
+        column_reversed : bool
             Fetch the columns in reverse order. Currently this does nothing
             because columns are converted into a dict.
-        column_count = int
+        column_count : int
             Limit the number of columns fetched per key
-        return_timestamp = bool
+        return_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
 
         Returns
@@ -131,16 +131,16 @@ class ColumnFamily(object):
             A list of keys to fetch
         columns : [str]
             Limit the columns fetched to the specified list
-        column_start = str
+        column_start : str
             Only fetch when a column is >= column_start
-        column_finish = str
+        column_finish : str
             Only fetch when a column is <= column_finish
-        column_reversed = bool
+        column_reversed : bool
             Fetch the columns in reverse order. Currently this does nothing
             because columns are converted into a dict.
-        column_count = int
+        column_count : int
             Limit the number of columns fetched per key
-        return_timestamp = bool
+        return_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
 
         Returns
@@ -210,18 +210,18 @@ class ColumnFamily(object):
             End at this key (inclusive)
         columns : [str]
             Limit the columns fetched to the specified list
-        column_start = str
+        column_start : str
             Only fetch when a column is >= column_start
-        column_finish = str
+        column_finish : str
             Only fetch when a column is <= column_finish
-        column_reversed = bool
+        column_reversed : bool
             Fetch the columns in reverse order. Currently this does nothing
             because columns are converted into a dict.
-        column_count = int
+        column_count : int
             Limit the number of columns fetched per key
-        row_count = int
+        row_count : int
             Limit the number of rows fetched
-        return_timestamp = bool
+        return_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
 
         Returns
@@ -269,18 +269,18 @@ class ColumnFamily(object):
             End at this key (inclusive)
         columns : [str]
             Limit the columns fetched to the specified list
-        column_start = str
+        column_start : str
             Only fetch when a column is >= column_start
-        column_finish = str
+        column_finish : str
             Only fetch when a column is <= column_finish
-        column_reversed = bool
+        column_reversed : bool
             Fetch the columns in reverse order. Currently this does nothing
             because columns are converted into a dict.
-        column_count = int
+        column_count : int
             Limit the number of columns fetched per key
-        row_count = int
+        row_count : int
             Limit the number of rows fetched
-        return_timestamp = bool
+        return_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
 
         Returns

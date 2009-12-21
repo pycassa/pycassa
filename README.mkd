@@ -35,7 +35,7 @@ For a single connection (which is _not_ thread-safe):
     >>> client = pycasso.connect() # Defaults to connecting to the server at 'localhost:9160'
     >>> client = pycasso.connect('localhost:9160')
 
-Thread-local connections opens a connection for each thread that calls a Cassandra function:
+Thread-local connections opens a connection for every thread that calls a Cassandra function.
 
     >>> client = pycasso.connect_thread_local() # Defaults to connecting to the server at 'localhost:9160'
     >>> client = pycasso.connect_thread_local(['localhost:9160', 'other_server:9160']) # Round robin connections
@@ -58,14 +58,14 @@ The value returned by an insert is the timestamp used for insertion.
     >>> cf.get('foo')
     {'column1': 'val1'}
 
-Insert also acts to update values
+Insert also acts to update values.
 
     >>> cf.insert('foo', {'column1': 'val2'})
     1261349910
     >>> cf.get('foo')
     {'column1': 'val2'}
 
-You may insert multiple columns at once
+You may insert multiple columns at once.
 
     >>> cf.insert('bar', {'column1': 'val3', 'column2': 'val4'})
     1261350013
@@ -78,7 +78,7 @@ You may insert multiple columns at once
     >>> cf.get_range(row_count=1)
     [('bar', {'column1': 'val3', 'column2': 'val4'})]
 
-cf.iter_get_range() is faster if you intend to iterate because it doesn't instantiate the list
+cf.iter_get_range() is faster if you intend to iterate because it doesn't instantiate the list.
 
     >>> for key, columns in cf.iter_get_range():
     ...   print key, columns
@@ -86,7 +86,7 @@ cf.iter_get_range() is faster if you intend to iterate because it doesn't instan
     bar {'column1': 'val3', 'column2': 'val4'}
     foo {'column1': 'val2'}
 
-You can remove entire keys or just a certain column
+You can remove entire keys or just a certain column.
 
     >>> cf.remove('bar', column='column1')
     1261350220
@@ -102,7 +102,7 @@ You can remove entire keys or just a certain column
 Class Mapping
 -------------
 
-You can also map existing classes using ColumnFamilyMap
+You can also map existing classes using ColumnFamilyMap.
 
     >>> class Test(object):
     ...     pass
@@ -124,6 +124,8 @@ All the functions are exactly the same, except that they return instances of the
     >>> t.key = 'maptest'
     >>> TestMap.insert(t)
     1261395497
+    >>> TestMap.get(t.key).key
+    'maptest'
     >>> TestMap.get(t.key).col1
     '1'
     >>> TestMap.multiget([t.key])
@@ -138,3 +140,137 @@ All the functions are exactly the same, except that they return instances of the
     Traceback (most recent call last):
     ...
     pycasso.cassandra.ttypes.NotFoundException: NotFoundException()
+
+Extra Documentation
+-------------------
+
+All the functions have the exact same functionality as their thrift counterparts, but it may be hidden as keyword arguments.
+
+    ColumnFamily.__init__()
+        Parameters
+        ----------
+        client   : cassandra.Cassandra.Client
+            Cassandra client with thrift API
+        keyspace : str
+            The Keyspace this ColumnFamily belongs to
+        column_family : str
+            The name of this ColumnFamily
+        get_range_buffer : int
+            When calling get_range(), the intermediate results need to be
+            buffered if we are fetching many rows, otherwise the Cassandra
+            server will overallocate memory and fail.  This is the size of
+            that buffer.
+        read_consistency_level : ConsistencyLevel
+            Affects the guaranteed replication factor before returning from
+            any read operation
+        write_consistency_level : ConsistencyLevel
+            Affects the guaranteed replication factor before returning from
+            any write operation
+        timestamp : function
+            Replace the default timestamp function with your own
+
+    ColumnFamily.get()
+        Parameters
+        ----------
+        key : str
+            The key to fetch
+        columns : [str]
+            Limit the columns fetched to the specified list
+        column_start : str
+            Only fetch when a column is >= column_start
+        column_finish : str
+            Only fetch when a column is <= column_finish
+        column_reversed : bool
+            Fetch the columns in reverse order. Currently this does nothing
+            because columns are converted into a dict.
+        column_count : int
+            Limit the number of columns fetched per key
+        return_timestamp : bool
+            If true, return a (value, timestamp) tuple for each column
+
+    ColumnFamily.multiget()
+        Parameters
+        ----------
+        keys : [str]
+            A list of keys to fetch
+        columns : [str]
+            Limit the columns fetched to the specified list
+        column_start : str
+            Only fetch when a column is >= column_start
+        column_finish : str
+            Only fetch when a column is <= column_finish
+        column_reversed : bool
+            Fetch the columns in reverse order. Currently this does nothing
+            because columns are converted into a dict.
+        column_count : int
+            Limit the number of columns fetched per key
+        return_timestamp : bool
+            If true, return a (value, timestamp) tuple for each column
+
+    ColumnFamily.get_count()
+        Parameters
+        ----------
+        key : str
+            The key with which to count columns
+
+    ColumnFamily.iter_get_range()
+        Parameters
+        ----------
+        start : str
+            Start from this key (inclusive)
+        finish : str
+            End at this key (inclusive)
+        columns : [str]
+            Limit the columns fetched to the specified list
+        column_start : str
+            Only fetch when a column is >= column_start
+        column_finish : str
+            Only fetch when a column is <= column_finish
+        column_reversed : bool
+            Fetch the columns in reverse order. Currently this does nothing
+            because columns are converted into a dict.
+        column_count : int
+            Limit the number of columns fetched per key
+        row_count : int
+            Limit the number of rows fetched
+        return_timestamp : bool
+            If true, return a (value, timestamp) tuple for each column
+
+    ColumnFamily.get_range()
+        Parameters
+        ----------
+        start : str
+            Start from this key (inclusive)
+        finish : str
+            End at this key (inclusive)
+        columns : [str]
+            Limit the columns fetched to the specified list
+        column_start : str
+            Only fetch when a column is >= column_start
+        column_finish : str
+            Only fetch when a column is <= column_finish
+        column_reversed : bool
+            Fetch the columns in reverse order. Currently this does nothing
+            because columns are converted into a dict.
+        column_count : int
+            Limit the number of columns fetched per key
+        row_count : int
+            Limit the number of rows fetched
+        return_timestamp : bool
+            If true, return a (value, timestamp) tuple for each column
+
+    ColumnFamily.insert()
+        Parameters
+        ----------
+        key : str
+            The key to insert or update the columns at
+        columns : {'column': 'value'}
+            The columns to insert or update
+
+    ColumnFamily.remove()
+        Parameters
+        ----------
+        key : str
+            The key to remove. If column is not set, remove all columns
+        column : str
+            If set, remove only this column
