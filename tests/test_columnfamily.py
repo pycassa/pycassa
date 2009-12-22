@@ -90,3 +90,53 @@ class TestColumnFamily:
 
         self.cf.remove(key)
         assert_raises(NotFoundException, self.cf.get, key)
+
+class TestSuperColumnFamily:
+    def setUp(self):
+        self.client = connect()
+        self.cf = ColumnFamily(self.client, 'Test Keyspace', 'Test Super',
+                               write_consistency_level=ConsistencyLevel.ONE,
+                               buffer_size=2, timestamp=self.timestamp,
+                               super=True)
+
+        try:
+            self.timestamp_n = int(self.cf.get('meta')['meta']['timestamp'])
+        except NotFoundException:
+            self.timestamp_n = 0
+        self.clear()
+
+    def tearDown(self):
+        self.cf.insert('meta', {'meta': {'timestamp': str(self.timestamp_n)}})
+
+    # Since the timestamp passed to Cassandra will be in the same second
+    # with the default timestamp function, causing problems with removing
+    # and inserting (Cassandra doesn't know which is later), we supply our own
+    def timestamp(self):
+        self.timestamp_n += 1
+        return self.timestamp_n
+
+    def clear(self):
+        for key, columns in self.cf.get_range(include_timestamp=True):
+            for subcolumns in columns.itervalues():
+                for value, timestamp in subcolumns.itervalues():
+                    self.timestamp_n = max(self.timestamp_n, timestamp)
+            self.cf.remove(key)
+
+    def test_super(self):
+        key = 'key1'
+        columns = {'1': {'sub1': 'val1', 'sub2': 'val2'}, '2': {'sub3': 'val3', 'sub4': 'val4'}}
+        assert_raises(NotFoundException, self.cf.get, key)
+        self.cf.insert(key, columns)
+        assert self.cf.get(key) == columns
+        assert self.cf.multiget([key]) == {key: columns}
+        assert list(self.cf.get_range()) == [(key, columns)]
+
+    def test_super_column_argument(self):
+        key = 'key1'
+        sub12 = {'sub1': 'val1', 'sub2': 'val2'}
+        sub34 = {'sub3': 'val3', 'sub4': 'val4'}
+        columns = {'1': sub12, '2': sub34}
+        self.cf.insert(key, columns)
+        assert self.cf.get(key, super_column='1') == sub12
+        assert self.cf.multiget([key], super_column='1') == {key: sub12}
+        assert list(self.cf.get_range(super_column='1')) == [(key, {'1': sub12})]
