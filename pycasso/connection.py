@@ -15,17 +15,20 @@ DEFAULT_SERVER = 'localhost:9160'
 class NoServerAvailable(Exception):
     pass
 
-def create_client_transport(server):
+def create_client_transport(server, framed_transport=False):
     host, port = server.split(":")
     socket = TSocket.TSocket(host, int(port))
-    transport = TTransport.TBufferedTransport(socket)
+    if framed_transport:
+        transport = TTransport.TFramedTransport(socket)
+    else:
+        transport = TTransport.TBufferedTransport(socket)
     protocol = TBinaryProtocol.TBinaryProtocolAccelerated(transport)
     client = Cassandra.Client(protocol)
     transport.open()
 
     return client, transport
 
-def connect(servers=None):
+def connect(servers=None, framed_transport=False):
     """
     Constructs a single Cassandra connection. Initially connects to the first
     server on the list.
@@ -48,9 +51,9 @@ def connect(servers=None):
 
     if servers is None:
         servers = [DEFAULT_SERVER]
-    return SingleConnection(servers)
+    return SingleConnection(servers, framed_transport)
 
-def connect_thread_local(servers=None, round_robin=True):
+def connect_thread_local(servers=None, round_robin=True, framed_transport=False):
     """
     Constructs a Cassandra connection for each thread. By default, it attempts
     to connect in a round_robin (load-balancing) fashion. Turn it off by
@@ -78,12 +81,13 @@ def connect_thread_local(servers=None, round_robin=True):
 
     if servers is None:
         servers = [DEFAULT_SERVER]
-    return ThreadLocalConnection(servers, round_robin)
+    return ThreadLocalConnection(servers, round_robin, framed_transport)
 
 class SingleConnection(object):
-    def __init__(self, servers):
+    def __init__(self, servers, framed_transport=False):
         self._servers = servers
         self._client = None
+        self._framed_transport = framed_transport
 
     def __getattr__(self, attr):
         def client_call(*args, **kwargs):
@@ -103,20 +107,21 @@ class SingleConnection(object):
     def _find_server(self):
         for server in self._servers:
             try:
-                self._client, self._transport = create_client_transport(server)
+                self._client, self._transport = create_client_transport(server, self._framed_transport)
                 return
             except Thrift.TException, exc:
                 continue
         raise NoServerAvailable()
 
 class ThreadLocalConnection(object):
-    def __init__(self, servers, round_robin):
+    def __init__(self, servers, round_robin, framed_transport=False):
         self._servers = servers
         self._queue = Queue()
         for i in xrange(len(servers)):
             self._queue.put(i)
         self._local = threading.local()
         self._round_robin = round_robin
+        self._framed_transport = framed_transport
 
     def __getattr__(self, attr):
         def client_call(*args, **kwargs):
@@ -143,7 +148,7 @@ class ThreadLocalConnection(object):
 
         for server in servers:
             try:
-                self._local.client, self._local.transport = create_client_transport(server)
+                self._local.client, self._local.transport = create_client_transport(server, self._framed_transport)
                 return
             except Thrift.TException, exc:
                 continue
