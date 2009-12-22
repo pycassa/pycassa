@@ -246,6 +246,9 @@ class ColumnFamily(object):
             key_slices = self.client.get_range_slice(self.keyspace, cp, sp, last_key,
                                                      finish, self.buffer_size,
                                                      self.read_consistency_level)
+            # This may happen if nothing was ever inserted
+            if key_slices is None:
+                return
             for j, key_slice in enumerate(key_slices):
                 # Ignore the first element after the first iteration
                 # because it will be a duplicate.
