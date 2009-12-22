@@ -277,15 +277,16 @@ All the functions have the exact same functionality as their thrift counterparts
             Return columns only in this super_column
 
     ColumnFamily.insert()
+        Insert or update columns for a key
+
         Parameters
         ----------
         key : str
             The key to insert or update the columns at
-        columns : {'column': 'value'}
+        columns : dict
             Column: {'column': 'value'}
             SuperColumn: {'column': {'subcolumn': 'value'}}
             The columns or supercolumns to insert or update
-
 
     ColumnFamily.remove()
         Parameters
