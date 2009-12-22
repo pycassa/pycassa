@@ -146,5 +146,6 @@ class TestSuperColumnFamily:
         columns = {'1': sub12, '2': sub34}
         self.cf.insert(key, columns)
         assert self.cf.get(key, super_column='1') == sub12
+        assert_raises(NotFoundException, self.cf.get, key, super_column='3')
         assert self.cf.multiget([key], super_column='1') == {key: sub12}
         assert list(self.cf.get_range(super_column='1')) == [(key, {'1': sub12})]
