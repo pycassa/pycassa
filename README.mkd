@@ -20,6 +20,18 @@ Cassandra was only tested with version 0.5.0-beta2, but should work with some pr
 
 It comes with the Cassandra python files for convenience, but you can replace them with your own.
 
+Installation
+------------
+
+The simplest way to get started is to copy the pycasso and cassandra directories to your program.
+If you want to install, run setup.py as a superuser.
+
+    python setup.py install
+
+If you also want to install the cassandra python package (if it's not already included on your system):
+
+    python setup.py --cassandra install
+
 Basic Usage
 -----------
 

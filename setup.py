@@ -11,6 +11,17 @@
 """
 
 from distutils.core import setup
+import sys
+
+optional_packages = []
+
+flags = [('--cassandra', 'cassandra'),
+         ('-cassandra', 'cassandra')]
+
+for flag, package in flags:
+    if flag in sys.argv:
+        optional_packages.append(package)
+        sys.argv.remove(flag)
 
 from pycasso import __version__
 
@@ -23,8 +34,8 @@ setup(
       long_description = __doc__,
       url = 'http://github.com/vomjom/pycasso',
       download_url = 'http://github.com/vomjom/pycasso',
-      license = 'BSD',
+      license = 'MIT',
       keywords = 'cassandra client db distributed thrift',
-      packages = ['pycasso', 'cassandra'],
+      packages = ['pycasso']+optional_packages,
       platforms = 'any',
       )
