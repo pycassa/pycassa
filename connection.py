@@ -91,7 +91,7 @@ class SingleConnection(object):
                 self._find_server()
             try:
                 return getattr(self._client, attr)(*args, **kwargs)
-            except Thrift.TException as exc:
+            except Thrift.TException, exc:
                 # Connection error, try to connect to all the servers
                 self._transport.close()
                 self._client = None
@@ -105,7 +105,7 @@ class SingleConnection(object):
             try:
                 self._client, self._transport = create_client_transport(server)
                 return
-            except Thrift.TException as exc:
+            except Thrift.TException, exc:
                 continue
         raise NoServerAvailable()
 
@@ -125,7 +125,7 @@ class ThreadLocalConnection(object):
 
             try:
                 return getattr(self._local.client, attr)(*args, **kwargs)
-            except Thrift.TException as exc:
+            except Thrift.TException, exc:
                 # Connection error, try to connect to all the servers
                 self._local.transport.close()
                 self._local.client = None
@@ -145,6 +145,6 @@ class ThreadLocalConnection(object):
             try:
                 self._local.client, self._local.transport = create_client_transport(server)
                 return
-            except Thrift.TException as exc:
+            except Thrift.TException, exc:
                 continue
         raise NoServerAvailable()
