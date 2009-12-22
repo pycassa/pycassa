@@ -89,7 +89,7 @@ class TestColumnFamilyMap:
         instances = []
         for i in xrange(5):
             instance = TestUTF8()
-            instance.key = 'range{0}'.format(i)
+            instance.key = 'range%i' % i
             instance.col1 = str(i)
             instance.col2 = str(i+1)
             instances.append(instance)

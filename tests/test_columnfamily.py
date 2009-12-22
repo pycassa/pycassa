@@ -69,7 +69,7 @@ class TestColumnFamily:
         assert self.cf.get_count(key) == 2
 
     def test_insert_get_range(self):
-        keys = ['range{0}'.format(i) for i in xrange(5)]
+        keys = ['range%i' % i for i in xrange(5)]
         columns = {'1': 'val1', '2': 'val2'}
         for key in keys:
             self.cf.insert(key, columns)
