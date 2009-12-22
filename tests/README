@@ -2,7 +2,3 @@ To run the tests:
 1. Install python-nose (http://code.google.com/p/python-nose/)
 2. Move the log4j.properties and storage-conf.xml to your Cassandra conf directory
 3. Run nosetests in the top directory
-
-Because of the way timestamps work in Cassandra and are used in the unit tests,
-nosetests will fail if run in quick succession. Give it 10 seconds or so before
-running it again.

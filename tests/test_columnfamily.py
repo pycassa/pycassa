@@ -1,4 +1,4 @@
-from pycasso import connect, gm_timestamp, ColumnFamily, ConsistencyLevel, NotFoundException
+from pycasso import connect, ColumnFamily, ConsistencyLevel, NotFoundException
 
 from nose.tools import assert_raises
 
@@ -8,46 +8,85 @@ class TestColumnFamily:
         self.cf = ColumnFamily(self.client, 'Test Keyspace', 'Test UTF8',
                                write_consistency_level=ConsistencyLevel.ONE,
                                buffer_size=2, timestamp=self.timestamp)
-        self.timestamp_n = 0
+        try:
+            self.timestamp_n = int(self.cf.get('meta')['timestamp'])
+        except NotFoundException:
+            self.timestamp_n = 0
+        self.clear()
+
+    def tearDown(self):
+        self.cf.insert('meta', {'timestamp': str(self.timestamp_n)})
 
     # Since the timestamp passed to Cassandra will be in the same second
     # with the default timestamp function, causing problems with removing
     # and inserting (Cassandra doesn't know which is later), we supply our own
     def timestamp(self):
-        ts = gm_timestamp() + self.timestamp_n
         self.timestamp_n += 1
-        return ts
+        return self.timestamp_n
 
-    def test_insert_get_remove(self):
-        d1 = {'1': 'val1'}
-        d2 = {'2': 'val2', '3': 'val3'}
-        d3 = d1.copy()
-        d3.update(d2)
-        key1 = 'bar'
-        key2 = 'foo'
-        self.cf.remove(key1) # Clear out any remnants of the keys
-        self.cf.remove(key2)
-        assert_raises(NotFoundException, self.cf.get, key1)
-        # Test client.insert()
-        self.cf.insert(key1, d1)
-        # Test client.batch_insert()
-        self.cf.insert(key1, d2)
-        assert self.cf.get(key1) == d3
-        assert self.cf.get(key1, columns=d1.keys()) == d1
-        assert self.cf.get_count(key1) == 3
-        assert self.cf.multiget([key1]) == {key1: d3}
+    def clear(self):
+        for key, columns in self.cf.get_range(include_timestamp=True):
+            for value, timestamp in columns.itervalues():
+                self.timestamp_n = max(self.timestamp_n, timestamp)
+            self.cf.remove(key)
 
-        self.cf.insert(key2, d1)
-        assert self.cf.multiget([key1, key2]) == {key1: d3, key2: d1}
-        assert list(self.cf.get_range(start='bar', finish='foo')) == [(key1, d3), (key2, d1)]
+    def test_empty(self):
+        key = 'random'
+        assert_raises(NotFoundException, self.cf.get, key)
+        assert len(self.cf.multiget([key])) == 0
+        assert len(list(self.cf.get_range())) == 0
 
-    def test_get_range(self):
+    def test_insert_get(self):
+        key = 'key1'
+        columns = {'1': 'val1', '2': 'val2'}
+        assert_raises(NotFoundException, self.cf.get, key)
+        self.cf.insert(key, columns)
+        assert self.cf.get(key) == columns
+
+    def test_insert_multiget(self):
+        key1 = 'key1'
+        columns1 = {'1': 'val1', '2': 'val2'}
+        key2 = 'key2'
+        columns2 = {'3': 'val1', '4': 'val2'}
+        missing_key = 'key3'
+
+        self.cf.insert(key1, columns1)
+        self.cf.insert(key2, columns2)
+        rows = self.cf.multiget([key1, key2, missing_key])
+        assert len(rows) == 2
+        assert rows[key1] == columns1
+        assert rows[key2] == columns2
+        assert missing_key not in rows
+
+    def test_insert_get_count(self):
+        key = 'count'
+        columns = {'1': 'val1', '2': 'val2'}
+        self.cf.insert(key, columns)
+        assert self.cf.get_count(key) == 2
+
+    def test_insert_get_range(self):
         keys = ['range{0}'.format(i) for i in xrange(5)]
+        columns = {'1': 'val1', '2': 'val2'}
         for key in keys:
-            self.cf.insert(key, {'col1': 'val1'})
-        kv_range = list(self.cf.get_range(start='range0', finish='range4'))
-        assert len(kv_range) == 5
-        for i, kv in enumerate(kv_range):
-            assert kv[0] == 'range{0}'.format(i)
+            self.cf.insert(key, columns)
 
-        assert list(self.cf.get_range(start='range0', row_count=1))[0][0] == 'range0'
+        rows = list(self.cf.get_range(start=keys[0], finish=keys[-1]))
+        assert len(rows) == len(keys)
+        for i, (k, c) in enumerate(rows):
+            assert k == keys[i]
+            assert c == columns
+
+        all_rows = list(self.cf.get_range())
+        assert all_rows == rows
+
+    def test_remove(self):
+        key = 'key1'
+        columns = {'1': 'val1', '2': 'val2'}
+        self.cf.insert(key, columns)
+
+        self.cf.remove(key, '2')
+        del columns['2']
+        assert self.cf.get(key) == {'1': 'val1'}
+
+        self.cf.remove(key)
+        assert_raises(NotFoundException, self.cf.get, key)
