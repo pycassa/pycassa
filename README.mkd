@@ -6,8 +6,7 @@ pycasso is a Cassandra library with the following features:
 1. Auto-failover single or thread-local connections
 2. A simplified version of the thrift interface
 3. A method to map an existing class to a Cassandra ColumnFamily.
-
-It currently lacks support for SuperColumns, although you can use the raw connection at any time to perform SuperColumn queries.
+4. Support for SuperColumns
 
 Requirements
 ------------
@@ -132,6 +131,41 @@ All the functions are exactly the same, except that they return instances of the
     ...
     pycasso.cassandra.ttypes.NotFoundException: NotFoundException()
 
+SuperColumns
+------------
+
+To use SuperColumns, first pass super=True to the ColumnFamily constructor.
+
+    >>> cf = pycasso.ColumnFamily(client, 'Test Keyspace', 'Test SuperColumnFamily', super=True)
+    >>> cf.insert('key1', {'1': {'sub1': 'val1', 'sub2': 'val2'}, '2': {'sub3': 'val3', 'sub4': 'val4'}})
+    1261490144
+    >>> cf.get('key1')
+    {'1': {'sub2': 'val2', 'sub1': 'val1'}, '2': {'sub4': 'val4', 'sub3': 'val3'}}
+    >>> cf.remove('key1', '1')
+    1261490176
+    >>> cf.get('key1')
+    {'2': {'sub4': 'val4', 'sub3': 'val3'}}
+    >>> cf.get('key1', super_column='2')
+    {'sub3': 'val3', 'sub4': 'val4'}
+    >>> cf.multiget(['key1'], super_column='2')
+    {'key1': {'sub3': 'val3', 'sub4': 'val4'}}
+    >>> list(cf.get_range(super_column='2'))
+    [('key1', {'2': {'sub3': 'val3', 'sub4': 'val4'}})]
+
+These output values retain the same format as given by the Cassandra thrift interface.
+
+Advanced
+--------
+
+pycasso currently returns Cassandra Columns and SubColumns as python dictionaries. Sometimes, though, you care about the order of elements. If you have access to an ordered dictionary class (such as collections.OrderedDict in python 2.7), then you may pass it to the constructor. All returned values will be of that class.
+
+    >>> cf = pycasso.ColumnFamily(client, 'Test Keyspace', 'Test ColumnFamily',
+                                  row_class=collections.OrderedDict)
+    >>> cf = pycasso.ColumnFamily(client, 'Test Keyspace', 'Test SuperColumnFamily',
+                                  row_class=collections.OrderedDict,
+                                  column_class=collections.OrderedDict,
+                                  super=True)
+
 Extra Documentation
 -------------------
 
@@ -190,8 +224,8 @@ All the functions have the exact same functionality as their thrift counterparts
         column_finish : str
             Only fetch when a column is <= column_finish
         column_reversed : bool
-            Fetch the columns in reverse order. Currently this does nothing
-            because columns are converted into a dict.
+            Fetch the columns in reverse order. This will do nothing unless
+            you passed a row_class or column_class to the constructor.
         column_count : int
             Limit the number of columns fetched per key
         include_timestamp : bool
@@ -211,8 +245,8 @@ All the functions have the exact same functionality as their thrift counterparts
         column_finish : str
             Only fetch when a column is <= column_finish
         column_reversed : bool
-            Fetch the columns in reverse order. Currently this does nothing
-            because columns are converted into a dict.
+            Fetch the columns in reverse order. This will do nothing unless
+            you passed a row_class or column_class to the constructor.
         column_count : int
             Limit the number of columns fetched per key
         include_timestamp : bool
@@ -242,8 +276,8 @@ All the functions have the exact same functionality as their thrift counterparts
         column_finish : str
             Only fetch when a column is <= column_finish
         column_reversed : bool
-            Fetch the columns in reverse order. Currently this does nothing
-            because columns are converted into a dict.
+            Fetch the columns in reverse order. This will do nothing unless
+            you passed a row_class or column_class to the constructor.
         column_count : int
             Limit the number of columns fetched per key
         row_count : int

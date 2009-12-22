@@ -14,8 +14,6 @@ def gm_timestamp():
     """
     return int(time.mktime(time.gmtime()))
 
-
-
 def create_SlicePredicate(columns, column_start, column_finish, column_reversed, column_count):
     if columns is not None:
         return SlicePredicate(column_names=columns)
@@ -95,20 +93,13 @@ class ColumnFamily(object):
             ret[column.name] = self._convert_Column_to_base(column, include_timestamp)
         return ret
 
-    def _convert_ColumnOrSuperColumn_to_base(self, column, include_timestamp):
-        if self.super:
-            return self._convert_SuperColumn_to_base(column, include_timestamp)
-        return self._convert_Column_to_base(column, include_timestamp)
-
     def _convert_ColumnOrSuperColumns_to_row_class(self, list_col_or_super, include_timestamp):
         ret = self.row_class()
-        # It's preferable to check super once rather than on each iteration
-        if self.super:
-            for col_or_super in list_col_or_super:
+        for col_or_super in list_col_or_super:
+            if col_or_super.super_column is not None:
                 col = col_or_super.super_column
                 ret[col.name] = self._convert_SuperColumn_to_base(col, include_timestamp)
-        else:
-            for col_or_super in list_col_or_super:
+            else:
                 col = col_or_super.column
                 ret[col.name] = self._convert_Column_to_base(col, include_timestamp)
         return ret
@@ -130,8 +121,8 @@ class ColumnFamily(object):
         column_finish : str
             Only fetch when a column is <= column_finish
         column_reversed : bool
-            Fetch the columns in reverse order. Currently this does nothing
-            because columns are converted into a dict.
+            Fetch the columns in reverse order. This will do nothing unless
+            you passed a row_class or column_class to the constructor.
         column_count : int
             Limit the number of columns fetched per key
         include_timestamp : bool
@@ -171,8 +162,8 @@ class ColumnFamily(object):
         column_finish : str
             Only fetch when a column is <= column_finish
         column_reversed : bool
-            Fetch the columns in reverse order. Currently this does nothing
-            because columns are converted into a dict.
+            Fetch the columns in reverse order. This will do nothing unless
+            you passed a row_class or column_class to the constructor.
         column_count : int
             Limit the number of columns fetched per key
         include_timestamp : bool
@@ -237,8 +228,8 @@ class ColumnFamily(object):
         column_finish : str
             Only fetch when a column is <= column_finish
         column_reversed : bool
-            Fetch the columns in reverse order. Currently this does nothing
-            because columns are converted into a dict.
+            Fetch the columns in reverse order. This will do nothing unless
+            you passed a row_class or column_class to the constructor.
         column_count : int
             Limit the number of columns fetched per key
         row_count : int

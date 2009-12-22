@@ -92,6 +92,10 @@
        ~ human-readable information about the column family to its definition.
       -->
       <ColumnFamily CompareWith="UTF8Type" Name="Test UTF8"/>
+      <ColumnFamily ColumnType="Super"
+                    CompareWith="UTF8Type"
+                    CompareSubcolumnsWith="UTF8Type"
+                    Name="Test Super"/>
     </Keyspace>
   </Keyspaces>
 
