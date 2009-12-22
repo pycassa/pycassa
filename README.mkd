@@ -134,7 +134,7 @@ All the functions are exactly the same, except that they return instances of the
 SuperColumns
 ------------
 
-To use SuperColumns, first pass super=True to the ColumnFamily constructor.
+To use SuperColumns, pass super=True to the ColumnFamily constructor.
 
     >>> cf = pycasso.ColumnFamily(client, 'Test Keyspace', 'Test SuperColumnFamily', super=True)
     >>> cf.insert('key1', {'1': {'sub1': 'val1', 'sub2': 'val2'}, '2': {'sub3': 'val3', 'sub4': 'val4'}})
