@@ -160,11 +160,7 @@ Advanced
 pycasso currently returns Cassandra Columns and SubColumns as python dictionaries. Sometimes, though, you care about the order of elements. If you have access to an ordered dictionary class (such as collections.OrderedDict in python 2.7), then you may pass it to the constructor. All returned values will be of that class.
 
     >>> cf = pycasso.ColumnFamily(client, 'Test Keyspace', 'Test ColumnFamily',
-                                  row_class=collections.OrderedDict)
-    >>> cf = pycasso.ColumnFamily(client, 'Test Keyspace', 'Test SuperColumnFamily',
-                                  row_class=collections.OrderedDict,
-                                  column_class=collections.OrderedDict,
-                                  super=True)
+                                  dict_class=collections.OrderedDict)
 
 Extra Documentation
 -------------------
@@ -199,18 +195,11 @@ All the functions have the exact same functionality as their thrift counterparts
             own.
         super : bool
             Whether this ColumnFamily has SuperColumns
-        row_class : class (must act like the dict type)
-            The default row_class is dict.
+        dict_class : class (must act like the dict type)
+            The default dict_class is dict.
             If the order of columns matter to you, pass your own dictionary
             class, or python 2.7's new collections.OrderedDict. All returned
-            rows are instances of this.
-        column_class : class (must act like the dict type)
-            Only applies to SuperColumns.
-
-            The default column_class is dict.
-            If the order of subcolumns matter to you, pass your own dictionary
-            class, or python 2.7's new collections.OrderedDict. All returned
-            columns are instances of this.
+            rows and subcolumns are instances of this.
 
     ColumnFamily.get()
         Parameters
@@ -225,7 +214,7 @@ All the functions have the exact same functionality as their thrift counterparts
             Only fetch when a column is <= column_finish
         column_reversed : bool
             Fetch the columns in reverse order. This will do nothing unless
-            you passed a row_class or column_class to the constructor.
+            you passed a dict_class to the constructor.
         column_count : int
             Limit the number of columns fetched per key
         include_timestamp : bool
@@ -246,7 +235,7 @@ All the functions have the exact same functionality as their thrift counterparts
             Only fetch when a column is <= column_finish
         column_reversed : bool
             Fetch the columns in reverse order. This will do nothing unless
-            you passed a row_class or column_class to the constructor.
+            you passed a dict_class to the constructor.
         column_count : int
             Limit the number of columns fetched per key
         include_timestamp : bool
@@ -277,7 +266,7 @@ All the functions have the exact same functionality as their thrift counterparts
             Only fetch when a column is <= column_finish
         column_reversed : bool
             Fetch the columns in reverse order. This will do nothing unless
-            you passed a row_class or column_class to the constructor.
+            you passed a dict_class to the constructor.
         column_count : int
             Limit the number of columns fetched per key
         row_count : int

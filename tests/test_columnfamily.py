@@ -2,12 +2,16 @@ from pycasso import connect, ColumnFamily, ConsistencyLevel, NotFoundException
 
 from nose.tools import assert_raises
 
+class TestDict(dict):
+    pass
+
 class TestColumnFamily:
     def setUp(self):
         self.client = connect()
         self.cf = ColumnFamily(self.client, 'Test Keyspace', 'Test UTF8',
                                write_consistency_level=ConsistencyLevel.ONE,
-                               buffer_size=2, timestamp=self.timestamp)
+                               buffer_size=2, timestamp=self.timestamp,
+                               dict_class=TestDict)
         try:
             self.timestamp_n = int(self.cf.get('meta')['timestamp'])
         except NotFoundException:
@@ -90,6 +94,10 @@ class TestColumnFamily:
 
         self.cf.remove(key)
         assert_raises(NotFoundException, self.cf.get, key)
+
+    def test_dict_class(self):
+        self.cf.insert('key1', {'1': 'val1'})
+        assert isinstance(self.cf.get('key1'), TestDict)
 
 class TestSuperColumnFamily:
     def setUp(self):
