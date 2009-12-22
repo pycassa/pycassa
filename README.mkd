@@ -91,7 +91,7 @@ You can remove entire keys or just a certain column.
     >>> cf.get('bar')
     Traceback (most recent call last):
     ...
-    pycasso.cassandra.ttypes.NotFoundException: NotFoundException()
+    cassandra.ttypes.NotFoundException: NotFoundException()
 
 Class Mapping
 -------------
@@ -133,7 +133,7 @@ All the functions are exactly the same, except that they return instances of the
     >>> TestMap.get(t.key)
     Traceback (most recent call last):
     ...
-    pycasso.cassandra.ttypes.NotFoundException: NotFoundException()
+    cassandra.ttypes.NotFoundException: NotFoundException()
 
 SuperColumns
 ------------
