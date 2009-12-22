@@ -29,10 +29,14 @@ To read usage documentation:
     >>> import pycasso
     >>> help(pycasso.ColumnFamily.get)
 
-For a single connection (which is _not_ thread-safe), pass a list of servers:
+For a single connection (which is _not_ thread-safe), pass a list of servers.
 
     >>> client = pycasso.connect() # Defaults to connecting to the server at 'localhost:9160'
     >>> client = pycasso.connect(['localhost:9160'])
+
+If you need Framed Transport, pass the framed_transport argument.
+
+    >>> client = pycasso.connect(framed_transport=True)
 
 Thread-local connections opens a connection for every thread that calls a Cassandra function. It also automatically balances the number of connections between servers, unless round_robin=False.
 
