@@ -1,5 +1,6 @@
 from cassandra.ttypes import Column, ColumnOrSuperColumn, ColumnParent, \
-    ColumnPath, ConsistencyLevel, NotFoundException, SlicePredicate, SliceRange
+    ColumnPath, ConsistencyLevel, NotFoundException, SlicePredicate, \
+    SliceRange, SuperColumn
 
 import time
 
@@ -13,17 +14,7 @@ def gm_timestamp():
     """
     return int(time.mktime(time.gmtime()))
 
-def Column2base(column, include_timestamp):
-    if include_timestamp:
-        return (column.value, column.timestamp)
-    return column.value
 
-def ColumnOrSuperColumns2dict(list_col_or_super, include_timestamp):
-    ret = {}
-    for col_or_super in list_col_or_super:
-        col = col_or_super.column
-        ret[col.name] = Column2base(col, include_timestamp)
-    return ret
 
 def create_SlicePredicate(columns, column_start, column_finish, column_reversed, column_count):
     if columns is not None:
@@ -37,7 +28,8 @@ class ColumnFamily(object):
                  buffer_size=1024,
                  read_consistency_level=ConsistencyLevel.ONE,
                  write_consistency_level=ConsistencyLevel.ZERO,
-                 timestamp=gm_timestamp):
+                 timestamp=gm_timestamp, super=False,
+                 row_class=dict, column_class=dict):
         """
         Construct a ColumnFamily
 
@@ -66,6 +58,20 @@ class ColumnFamily(object):
             Or the number of seconds since Unix epoch in GMT.
             Set timestamp to replace the default timestamp function with your
             own.
+        super : bool
+            Whether this ColumnFamily has SuperColumns
+        row_class : class (must act like the dict type)
+            The default row_class is dict.
+            If the order of columns matter to you, pass your own dictionary
+            class, or python 2.7's new collections.OrderedDict. All returned
+            rows are instances of this.
+        column_class : class (must act like the dict type)
+            Only applies to SuperColumns.
+
+            The default column_class is dict.
+            If the order of subcolumns matter to you, pass your own dictionary
+            class, or python 2.7's new collections.OrderedDict. All returned
+            columns are instances of this.
         """
         self.client = client
         self.keyspace = keyspace
@@ -74,9 +80,42 @@ class ColumnFamily(object):
         self.read_consistency_level = read_consistency_level
         self.write_consistency_level = write_consistency_level
         self.timestamp = timestamp
+        self.super = super
+        self.row_class = row_class
+        self.column_class = column_class
+
+    def _convert_Column_to_base(self, column, include_timestamp):
+        if include_timestamp:
+            return (column.value, column.timestamp)
+        return column.value
+
+    def _convert_SuperColumn_to_base(self, super_column, include_timestamp):
+        ret = self.column_class()
+        for column in super_column.columns:
+            ret[column.name] = self._convert_Column_to_base(column, include_timestamp)
+        return ret
+
+    def _convert_ColumnOrSuperColumn_to_base(self, column, include_timestamp):
+        if self.super:
+            return self._convert_SuperColumn_to_base(column, include_timestamp)
+        return self._convert_Column_to_base(column, include_timestamp)
+
+    def _convert_ColumnOrSuperColumns_to_row_class(self, list_col_or_super, include_timestamp):
+        ret = self.row_class()
+        # It's preferable to check super once rather than on each iteration
+        if self.super:
+            for col_or_super in list_col_or_super:
+                col = col_or_super.super_column
+                ret[col.name] = self._convert_SuperColumn_to_base(col, include_timestamp)
+        else:
+            for col_or_super in list_col_or_super:
+                col = col_or_super.column
+                ret[col.name] = self._convert_Column_to_base(col, include_timestamp)
+        return ret
 
     def get(self, key, columns=None, column_start="", column_finish="",
-            column_reversed=False, column_count=100, include_timestamp=False):
+            column_reversed=False, column_count=100, include_timestamp=False,
+            super_column=None):
         """
         Fetch a key from a Cassandra server
         
@@ -97,36 +136,27 @@ class ColumnFamily(object):
             Limit the number of columns fetched per key
         include_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
+        super_column : str
+            Return columns only in this super_column
 
         Returns
         -------
         if include_timestamp == True: {'column': ('value', timestamp)}
         else: {'column': 'value'}
         """
-        if columns is not None and len(columns) == 1:
-            column = columns[0]
-            cp = ColumnPath(column_family=self.column_family, column=column)
-            col = self.client.get(self.keyspace, key, cp,
-                                  self.read_consistency_level).column
-            return {col.name: Column2base(col, include_timestamp)}
-
-        cp = ColumnParent(column_family=self.column_family)
+        cp = ColumnParent(column_family=self.column_family, super_column=super_column)
         sp = create_SlicePredicate(columns, column_start, column_finish,
                                    column_reversed, column_count)
 
-        lst_col_or_super = self.client.get_slice(self.keyspace, key, cp, sp,
-                                                 self.read_consistency_level)
-
-        ret = {}
-        for col_or_super in lst_col_or_super:
-            col = col_or_super.column
-            ret[col.name] = Column2base(col, include_timestamp)
-        if len(ret) == 0:
+        list_col_or_super = self.client.get_slice(self.keyspace, key, cp, sp,
+                                                  self.read_consistency_level)
+        if len(list_col_or_super) == 0:
             raise NotFoundException()
-        return ret
+        return self._convert_ColumnOrSuperColumns_to_row_class(list_col_or_super, include_timestamp)
 
     def multiget(self, keys, columns=None, column_start="", column_finish="",
-                 column_reversed=False, column_count=100, include_timestamp=False):
+                 column_reversed=False, column_count=100, include_timestamp=False,
+                 super_column=None):
         """
         Fetch multiple key from a Cassandra server
         
@@ -147,44 +177,28 @@ class ColumnFamily(object):
             Limit the number of columns fetched per key
         include_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
+        super_column : str
+            Return columns only in this super_column
 
         Returns
         -------
         if include_timestamp == True: {'key': {'column': ('value', timestamp)}}
         else: {'key': {'column': 'value'}}
         """
-        if len(keys) == 1:
-            key = keys[0]
-            cols = self.get(key, columns=columns, column_start=column_start,
-                            column_finish=column_finish,
-                            include_timestamp=include_timestamp)
-            return {key: cols}
-
-        if columns is not None and len(columns) == 1:
-            column = columns[0]
-            cp = ColumnPath(column_family=self.column_family, column=column)
-            keymap = self.client.multiget(self.keyspace, keys, cp,
-                                       self.read_consistency_level)
-
-            ret = {}
-            for key, col_or_sp in keymap.iteritems():
-                col = col_or_sp.column
-                ret[key] = {col.name: Column2base(col, include_timestamp)}
-            return ret
-
-        cp = ColumnParent(column_family=self.column_family)
+        cp = ColumnParent(column_family=self.column_family, super_column=super_column)
         sp = create_SlicePredicate(columns, column_start, column_finish,
                                    column_reversed, column_count)
 
         keymap = self.client.multiget_slice(self.keyspace, keys, cp, sp,
                                             self.read_consistency_level)
 
-        ret = {}
+        ret = dict()
         for key, columns in keymap.iteritems():
-            ret[key] = ColumnOrSuperColumns2dict(columns, include_timestamp)
+            if len(columns) > 0:
+                ret[key] = self._convert_ColumnOrSuperColumns_to_row_class(columns, include_timestamp)
         return ret
 
-    def get_count(self, key):
+    def get_count(self, key, super_column=None):
         """
         Count the number of columns for a key
 
@@ -192,18 +206,21 @@ class ColumnFamily(object):
         ----------
         key : str
             The key with which to count columns
+        super_column : str
+            Count the columns only in this super_column
 
         Returns
         -------
         int Count of columns
         """
-        cp = ColumnParent(column_family=self.column_family)
+        cp = ColumnParent(column_family=self.column_family, super_column=super_column)
         return self.client.get_count(self.keyspace, key, cp,
                                      self.read_consistency_level)
 
     def get_range(self, start="", finish="", columns=None, column_start="",
-                       column_finish="", column_reversed=False, column_count=100,
-                       row_count=None, include_timestamp=False):
+                  column_finish="", column_reversed=False, column_count=100,
+                  row_count=None, include_timestamp=False,
+                  super_column=None):
         """
         Get an iterator over keys in a specified range
         
@@ -228,39 +245,39 @@ class ColumnFamily(object):
             Limit the number of rows fetched
         include_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
+        super_column : string
+            Return columns only in this super_column
 
         Returns
         -------
         iterator over ('key', {'column': 'value'})
         """
-        cp = ColumnParent(column_family=self.column_family)
+        cp = ColumnParent(column_family=self.column_family, super_column=super_column)
         sp = create_SlicePredicate(columns, column_start, column_finish,
                                    column_reversed, column_count)
 
+        count = 0
+        i = 0
         last_key = start
-        ignore_first = False
-        i = -1
         while True:
             key_slices = self.client.get_range_slice(self.keyspace, cp, sp, last_key,
                                                      finish, self.buffer_size,
                                                      self.read_consistency_level)
-
             for j, key_slice in enumerate(key_slices):
                 # Ignore the first element after the first iteration
                 # because it will be a duplicate.
-                if i > 0 and j == 0:
+                if (j == 0 and i != 0) or len(key_slice.columns) == 0:
                     continue
-                i += 1
-                if row_count is not None and i >= row_count:
-                    return
                 yield (key_slice.key,
-                       ColumnOrSuperColumns2dict(key_slice.columns, include_timestamp))
+                       self._convert_ColumnOrSuperColumns_to_row_class(key_slice.columns, include_timestamp))
+                count += 1
+                if row_count is not None and count >= row_count:
+                    return
 
-            if len(key_slices) > 0:
-                last_key = key_slices[-1].key
-                ignore_first = True
             if len(key_slices) != self.buffer_size:
                 return
+            last_key = key_slices[-1].key
+            i += 1
 
     def insert(self, key, columns):
         """
@@ -270,25 +287,27 @@ class ColumnFamily(object):
         ----------
         key : str
             The key to insert or update the columns at
-        columns : {'column': 'value'}
-            The columns to insert or update
+        columns : dict
+            Column: {'column': 'value'}
+            SuperColumn: {'column': {'subcolumn': 'value'}}
+            The columns or supercolumns to insert or update
 
         Returns
         -------
         int timestamp
         """
         timestamp = self.timestamp()
-        if len(columns) == 1:
-            col, val = columns.items()[0]
-            cp = ColumnPath(column_family=self.column_family, column=col)
-            self.client.insert(self.keyspace, key, cp, val,
-                               timestamp, self.write_consistency_level)
-            return timestamp
 
         cols = []
         for c, v in columns.iteritems():
-            column = Column(name=c, value=v, timestamp=timestamp)
-            cols.append(ColumnOrSuperColumn(column=column))
+            if self.super:
+                subc = [Column(name=subname, value=subvalue, timestamp=timestamp) \
+                        for subname, subvalue in v.iteritems()]
+                column = SuperColumn(name=c, columns=subc)
+                cols.append(ColumnOrSuperColumn(super_column=column))
+            else:
+                column = Column(name=c, value=v, timestamp=timestamp)
+                cols.append(ColumnOrSuperColumn(column=column))
         self.client.batch_insert(self.keyspace, key,
                                  {self.column_family: cols},
                                  self.write_consistency_level)
@@ -303,13 +322,16 @@ class ColumnFamily(object):
         key : str
             The key to remove. If column is not set, remove all columns
         column : str
-            If set, remove only this column
+            If set, remove only this column or supercolumn
 
         Returns
         -------
         int timestamp
         """
-        cp = ColumnPath(column_family=self.column_family, column=column)
+        if self.super:
+            cp = ColumnPath(column_family=self.column_family, super_column=column)
+        else:
+            cp = ColumnPath(column_family=self.column_family, column=column)
         timestamp = self.timestamp()
         self.client.remove(self.keyspace, key, cp, timestamp,
                            self.write_consistency_level)

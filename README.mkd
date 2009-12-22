@@ -163,6 +163,20 @@ All the functions have the exact same functionality as their thrift counterparts
             Or the number of seconds since Unix epoch in GMT.
             Set timestamp to replace the default timestamp function with your
             own.
+        super : bool
+            Whether this ColumnFamily has SuperColumns
+        row_class : class (must act like the dict type)
+            The default row_class is dict.
+            If the order of columns matter to you, pass your own dictionary
+            class, or python 2.7's new collections.OrderedDict. All returned
+            rows are instances of this.
+        column_class : class (must act like the dict type)
+            Only applies to SuperColumns.
+
+            The default column_class is dict.
+            If the order of subcolumns matter to you, pass your own dictionary
+            class, or python 2.7's new collections.OrderedDict. All returned
+            columns are instances of this.
 
     ColumnFamily.get()
         Parameters
@@ -182,6 +196,8 @@ All the functions have the exact same functionality as their thrift counterparts
             Limit the number of columns fetched per key
         include_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
+        super_column : str
+            Return columns only in this super_column
 
     ColumnFamily.multiget()
         Parameters
@@ -201,12 +217,16 @@ All the functions have the exact same functionality as their thrift counterparts
             Limit the number of columns fetched per key
         include_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
+        super_column : str
+            Return columns only in this super_column
 
     ColumnFamily.get_count()
         Parameters
         ----------
         key : str
             The key with which to count columns
+        super_column : str
+            Count the columns only in this super_column
 
     ColumnFamily.get_range()
         Parameters
@@ -230,6 +250,8 @@ All the functions have the exact same functionality as their thrift counterparts
             Limit the number of rows fetched
         include_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
+        super_column : string
+            Return columns only in this super_column
 
     ColumnFamily.insert()
         Parameters
@@ -237,7 +259,10 @@ All the functions have the exact same functionality as their thrift counterparts
         key : str
             The key to insert or update the columns at
         columns : {'column': 'value'}
-            The columns to insert or update
+            Column: {'column': 'value'}
+            SuperColumn: {'column': {'subcolumn': 'value'}}
+            The columns or supercolumns to insert or update
+
 
     ColumnFamily.remove()
         Parameters
@@ -245,4 +270,4 @@ All the functions have the exact same functionality as their thrift counterparts
         key : str
             The key to remove. If column is not set, remove all columns
         column : str
-            If set, remove only this column
+            If set, remove only this column or supercolumn
