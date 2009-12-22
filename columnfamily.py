@@ -27,7 +27,7 @@ class ColumnFamily(object):
                  read_consistency_level=ConsistencyLevel.ONE,
                  write_consistency_level=ConsistencyLevel.ZERO,
                  timestamp=gm_timestamp, super=False,
-                 row_class=dict, column_class=dict):
+                 dict_class=dict):
         """
         Construct a ColumnFamily
 
@@ -58,18 +58,11 @@ class ColumnFamily(object):
             own.
         super : bool
             Whether this ColumnFamily has SuperColumns
-        row_class : class (must act like the dict type)
-            The default row_class is dict.
+        dict_class : class (must act like the dict type)
+            The default dict_class is dict.
             If the order of columns matter to you, pass your own dictionary
             class, or python 2.7's new collections.OrderedDict. All returned
-            rows are instances of this.
-        column_class : class (must act like the dict type)
-            Only applies to SuperColumns.
-
-            The default column_class is dict.
-            If the order of subcolumns matter to you, pass your own dictionary
-            class, or python 2.7's new collections.OrderedDict. All returned
-            columns are instances of this.
+            rows and subcolumns are instances of this.
         """
         self.client = client
         self.keyspace = keyspace
@@ -79,8 +72,7 @@ class ColumnFamily(object):
         self.write_consistency_level = write_consistency_level
         self.timestamp = timestamp
         self.super = super
-        self.row_class = row_class
-        self.column_class = column_class
+        self.dict_class = dict_class
 
     def _convert_Column_to_base(self, column, include_timestamp):
         if include_timestamp:
@@ -88,13 +80,13 @@ class ColumnFamily(object):
         return column.value
 
     def _convert_SuperColumn_to_base(self, super_column, include_timestamp):
-        ret = self.column_class()
+        ret = self.dict_class()
         for column in super_column.columns:
             ret[column.name] = self._convert_Column_to_base(column, include_timestamp)
         return ret
 
-    def _convert_ColumnOrSuperColumns_to_row_class(self, list_col_or_super, include_timestamp):
-        ret = self.row_class()
+    def _convert_ColumnOrSuperColumns_to_dict_class(self, list_col_or_super, include_timestamp):
+        ret = self.dict_class()
         for col_or_super in list_col_or_super:
             if col_or_super.super_column is not None:
                 col = col_or_super.super_column
@@ -122,7 +114,7 @@ class ColumnFamily(object):
             Only fetch when a column is <= column_finish
         column_reversed : bool
             Fetch the columns in reverse order. This will do nothing unless
-            you passed a row_class or column_class to the constructor.
+            you passed a dict_class to the constructor.
         column_count : int
             Limit the number of columns fetched per key
         include_timestamp : bool
@@ -143,7 +135,7 @@ class ColumnFamily(object):
                                                   self.read_consistency_level)
         if len(list_col_or_super) == 0:
             raise NotFoundException()
-        return self._convert_ColumnOrSuperColumns_to_row_class(list_col_or_super, include_timestamp)
+        return self._convert_ColumnOrSuperColumns_to_dict_class(list_col_or_super, include_timestamp)
 
     def multiget(self, keys, columns=None, column_start="", column_finish="",
                  column_reversed=False, column_count=100, include_timestamp=False,
@@ -163,7 +155,7 @@ class ColumnFamily(object):
             Only fetch when a column is <= column_finish
         column_reversed : bool
             Fetch the columns in reverse order. This will do nothing unless
-            you passed a row_class or column_class to the constructor.
+            you passed a dict_class to the constructor.
         column_count : int
             Limit the number of columns fetched per key
         include_timestamp : bool
@@ -186,7 +178,7 @@ class ColumnFamily(object):
         ret = dict()
         for key, columns in keymap.iteritems():
             if len(columns) > 0:
-                ret[key] = self._convert_ColumnOrSuperColumns_to_row_class(columns, include_timestamp)
+                ret[key] = self._convert_ColumnOrSuperColumns_to_dict_class(columns, include_timestamp)
         return ret
 
     def get_count(self, key, super_column=None):
@@ -229,7 +221,7 @@ class ColumnFamily(object):
             Only fetch when a column is <= column_finish
         column_reversed : bool
             Fetch the columns in reverse order. This will do nothing unless
-            you passed a row_class or column_class to the constructor.
+            you passed a dict_class to the constructor.
         column_count : int
             Limit the number of columns fetched per key
         row_count : int
@@ -260,7 +252,7 @@ class ColumnFamily(object):
                 if (j == 0 and i != 0) or len(key_slice.columns) == 0:
                     continue
                 yield (key_slice.key,
-                       self._convert_ColumnOrSuperColumns_to_row_class(key_slice.columns, include_timestamp))
+                       self._convert_ColumnOrSuperColumns_to_dict_class(key_slice.columns, include_timestamp))
                 count += 1
                 if row_count is not None and count >= row_count:
                     return
