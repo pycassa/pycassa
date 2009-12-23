@@ -105,6 +105,18 @@ You can remove entire keys or just a certain column.
     ...
     cassandra.ttypes.NotFoundException: NotFoundException()
 
+pycasso retains the behavior of Cassandra in that get_range() may return removed keys for a while. Cassandra will eventually delete them, so that they disappear.
+
+    >>> cf.remove('foo')
+    >>> cf.remove('bar')
+    >>> list(cf.get_range())
+    [('bar', {}), ('foo', {})]
+
+    ... After some amount of time
+
+    >>> list(cf.get_range())
+    []
+
 Class Mapping
 -------------
 
@@ -146,6 +158,19 @@ All the functions are exactly the same, except that they return instances of the
     Traceback (most recent call last):
     ...
     cassandra.ttypes.NotFoundException: NotFoundException()
+
+Note that, as mentioned previously, get_range() may continue to return removed rows for some time:
+
+    >>> TestMap.remove(t)
+    1261395603
+    >>> list(TestMap.get_range())
+    [<__main__.Test object at 0x7fac9c85ea90>]
+    >>> list(TestMap.get_range())[0].key
+    'maptest'
+    >>> list(TestMap.get_range())[0].col1
+    >>> 'default1'
+    >>> list(TestMap.get_range())[0].col2
+    >>> 'default2'
 
 SuperColumns
 ------------

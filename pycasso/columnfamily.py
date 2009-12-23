@@ -242,9 +242,13 @@ class ColumnFamily(object):
         count = 0
         i = 0
         last_key = start
+        
+        buffer_size = self.buffer_size
+        if row_count is not None:
+            buffer_size = min(row_count, self.buffer_size)
         while True:
             key_slices = self.client.get_range_slice(self.keyspace, cp, sp, last_key,
-                                                     finish, self.buffer_size,
+                                                     finish, buffer_size,
                                                      self.read_consistency_level)
             # This may happen if nothing was ever inserted
             if key_slices is None:
@@ -252,7 +256,7 @@ class ColumnFamily(object):
             for j, key_slice in enumerate(key_slices):
                 # Ignore the first element after the first iteration
                 # because it will be a duplicate.
-                if (j == 0 and i != 0) or len(key_slice.columns) == 0:
+                if j == 0 and i != 0:
                     continue
                 yield (key_slice.key,
                        self._convert_ColumnOrSuperColumns_to_dict_class(key_slice.columns, include_timestamp))

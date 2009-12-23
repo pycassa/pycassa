@@ -41,15 +41,14 @@ class TestColumnFamilyMap:
             self.cf.remove(key)
 
     def test_empty(self):
-        key = 'random'
+        key = 'TestColumnFamilyMap.random'
         for map in (self.map, self.map_no_columns):
             assert_raises(NotFoundException, map.get, key)
             assert len(map.multiget([key])) == 0
-            assert len(list(map.get_range())) == 0
 
     def test_insert_get(self):
         instance = TestUTF8()
-        instance.key = 'key1'
+        instance.key = 'TestColumnFamilyMap.key1'
         instance.col1 = '1'
         instance.col2 = '2'
         assert_raises(NotFoundException, self.map.get, instance.key)
@@ -58,16 +57,16 @@ class TestColumnFamilyMap:
 
     def test_insert_multiget(self):
         instance1 = TestUTF8()
-        instance1.key = 'key1'
+        instance1.key = 'TestColumnFamilyMap.key1'
         instance1.col1 = '1'
         instance1.col2 = '2'
 
         instance2 = TestUTF8()
-        instance2.key = 'key2'
+        instance2.key = 'TestColumnFamilyMap.key2'
         instance2.col1 = '3'
         instance2.col2 = '4'
 
-        missing_key = 'key3'
+        missing_key = 'TestColumnFamilyMap.key3'
 
         self.map.insert(instance1)
         self.map.insert(instance2)
@@ -79,7 +78,7 @@ class TestColumnFamilyMap:
 
     def test_insert_get_count(self):
         instance = TestUTF8()
-        instance.key = 'key1'
+        instance.key = 'TestColumnFamilyMap.key1'
         instance.col1 = '1'
         instance.col2 = '2'
         self.map.insert(instance)
@@ -89,7 +88,7 @@ class TestColumnFamilyMap:
         instances = []
         for i in xrange(5):
             instance = TestUTF8()
-            instance.key = 'range%s' % i
+            instance.key = 'TestColumnFamilyMap.range%s' % i
             instance.col1 = str(i)
             instance.col2 = str(i+1)
             instances.append(instance)
@@ -101,12 +100,9 @@ class TestColumnFamilyMap:
         assert len(rows) == len(instances)
         assert rows == instances
 
-        all_rows = list(self.map.get_range())
-        assert all_rows == rows
-
     def test_remove(self):
         instance = TestUTF8()
-        instance.key = 'key1'
+        instance.key = 'TestColumnFamilyMap.key1'
         instance.col1 = '1'
         instance.col2 = '2'
 
@@ -116,7 +112,7 @@ class TestColumnFamilyMap:
 
     def test_overlapping_default(self):
         instance = TestUTF8()
-        instance.key = 'default1'
+        instance.key = 'TestColumnFamilyMap.default1'
         instance.col2 = '2'
         instance.col3 = '3'
 
@@ -130,7 +126,7 @@ class TestColumnFamilyMap:
 
     def test_disjoint_default(self):
         instance = TestUTF8()
-        instance.key = 'default1'
+        instance.key = 'TestColumnFamilyMap.default1'
         instance.col3 = '3'
         instance.col4 = '4'
 
