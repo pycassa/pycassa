@@ -168,9 +168,9 @@ Note that, as mentioned previously, get_range() may continue to return removed r
     >>> list(TestMap.get_range())[0].key
     'maptest'
     >>> list(TestMap.get_range())[0].col1
-    >>> 'default1'
+    'default1'
     >>> list(TestMap.get_range())[0].col2
-    >>> 'default2'
+    'default2'
 
 SuperColumns
 ------------
