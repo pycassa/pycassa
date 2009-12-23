@@ -144,6 +144,7 @@ All the functions are exactly the same, except that they return instances of the
     >>> from datetime import datetime
     >>> t.datetime_column = datetime.now()
     >>> Test.objects.insert(t)
+    1261395560
 
     >>> Test.objects.get(t.key).string_column
     'string test'
