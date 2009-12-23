@@ -3,6 +3,7 @@ __version__ = '.'.join([str(v) for v in __version_info__])
 
 from pycasso.columnfamily import *
 from pycasso.columnfamilymap import *
+from pycasso.columntypes import *
 from pycasso.connection import *
 
 from cassandra.ttypes import ConsistencyLevel, InvalidRequestException, \

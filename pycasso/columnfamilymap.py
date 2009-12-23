@@ -1,3 +1,5 @@
+from pycasso.columntypes import Column
+
 __all__ = ['ColumnFamilyMap']
 
 def create_instance(cls, **kwargs):
@@ -5,13 +7,13 @@ def create_instance(cls, **kwargs):
     instance.__dict__.update(kwargs)
     return instance
 
-def combine_columns(defaults, columns):
-    if defaults is not None:
-        combined_columns = defaults.copy()
-        combined_columns.update(columns)
-        return combined_columns
-
-    return columns
+def combine_columns(column_dict, columns):
+    combined_columns = {}
+    for column, type in column_dict.iteritems():
+        combined_columns[column] = type.default
+    for column, value in columns.iteritems():
+        combined_columns[column] = column_dict[column].unpack(value)
+    return combined_columns
 
 class ColumnFamilyMap(object):
     def __init__(self, cls, column_family, columns=None):
@@ -24,12 +26,16 @@ class ColumnFamilyMap(object):
             Instances of cls are generated on get*() requests
         column_family: ColumnFamily
             The ColumnFamily to tie with cls
-        columns : {'column': 'default_value'}
-            Map of columns to the default value to supply if it's missing
         """
         self.cls = cls
         self.column_family = column_family
-        self.columns = columns
+
+        self.columns = {}
+        for name, column in self.cls.__dict__.iteritems():
+            if not isinstance(column, Column):
+                continue
+
+            self.columns[name] = column
 
     def get(self, key, *args, **kwargs):
         """
@@ -57,11 +63,10 @@ class ColumnFamilyMap(object):
         -------
         Class instance
         """
-        if self.columns is not None and 'columns' not in kwargs:
+        if 'columns' not in kwargs:
             kwargs['columns'] = self.columns.keys()
         columns = self.column_family.get(key, *args, **kwargs)
-        if self.columns is not None:
-            columns = combine_columns(self.columns, columns)
+        columns = combine_columns(self.columns, columns)
         return create_instance(self.cls, key=key, **columns)
 
     def multiget(self, *args, **kwargs):
@@ -90,13 +95,12 @@ class ColumnFamilyMap(object):
         -------
         {'key': Class instance} 
         """
-        if self.columns is not None and 'columns' not in kwargs:
+        if 'columns' not in kwargs:
             kwargs['columns'] = self.columns.keys()
         kcmap = self.column_family.multiget(*args, **kwargs)
         ret = {}
         for key, columns in kcmap.iteritems():
-            if self.columns is not None:
-                columns = combine_columns(self.columns, columns)
+            columns = combine_columns(self.columns, columns)
             ret[key] = create_instance(self.cls, key=key, **columns)
         return ret
 
@@ -145,11 +149,10 @@ class ColumnFamilyMap(object):
         -------
         iterator over Class instance
         """
-        if self.columns is not None and 'columns' not in kwargs:
+        if 'columns' not in kwargs:
             kwargs['columns'] = self.columns.keys()
         for key, columns in self.column_family.get_range(*args, **kwargs):
-            if self.columns is not None:
-                columns = combine_columns(self.columns, columns)
+            columns = combine_columns(self.columns, columns)
             yield create_instance(self.cls, key=key, **columns)
 
     def insert(self, instance, columns=None):
@@ -168,15 +171,12 @@ class ColumnFamilyMap(object):
         int timestamp
         """
         insert_dict = {}
-        if columns is None and self.columns is not None:
+        if columns is None:
             columns = self.columns.keys()
-        if columns is not None:
-            for column in columns:
-                insert_dict[column] = getattr(instance, column)
-        else:
-            for key, value in instance.__dict__.iteritems():
-                if key != 'key':
-                    insert_dict[key] = value
+
+        for column in columns:
+            insert_dict[column] = self.columns[column].pack(instance.__dict__[column])
+
         return self.column_family.insert(instance.key, insert_dict)
 
     def remove(self, instance, column=None):

@@ -123,35 +123,35 @@ Class Mapping
 You can also map existing classes using ColumnFamilyMap.
 
     >>> class Test(object):
-    ...     pass
-    ...
+    ...     string_column = pycasso.StringColumn(default='Your Default')
+    ...     int_column = pycasso.Int64Column(default=0)
+    ...     float_column = pycasso.Float64Column(default=0.0)
+    ...     datetime_column = pycasso.DateTimeColumn() # default=None
 
-Map a class to a ColumnFamily. This will naively insert all attributes on insert() and get all columns on get().
+The defaults will be filled in whenever you retrieve instances from the Cassandra server and the column doesn't exist. If, for example, you add columns in the future, you simply add the relevant column and the default will be there when you get old instances.
+
+Int64Column and Float64Column are named as such because they are converted to and from a 64-bit format when communicating with the Cassandra server.
 
     >>> Test.objects = pycasso.ColumnFamilyMap(Test, cf)
-
-However, it's often preferable to supply the columns argument. columns is a dictionary mapping columns to their default value. If, for example, there is a schema change, but some old records in the Cassandra database don't have certain columns, fetching them will fill in their default value. The columns argument also indicates what attributes are saved when you call insert(). All other attributes are ignored.
-
-    >>> Test.objects = pycasso.ColumnFamilyMap(Test, cf, columns={'col1': 'default1', 'col2': 'default2'})
 
 All the functions are exactly the same, except that they return instances of the supplied class when possible.
 
     >>> t = Test()
-    >>> t.col1 = '1'
-    >>> t.col2 = '2'
     >>> t.key = 'maptest'
+    >>> t.string_column = 'string test'
+    >>> t.int_column = 18
+    >>> t.float_column = 35.8
+    >>> from datetime import datetime
+    >>> t.datetime_column = datetime.now()
     >>> Test.objects.insert(t)
-    1261395497
-    >>> Test.objects.get(t.key).key
-    'maptest'
-    >>> Test.objects.get(t.key).col1
-    '1'
+    >>> Test.objects.get(t.key).__dict__
+    {'int_column': 18, 'datetime_column': datetime.datetime(2009, 12, 23, 17, 6, 3), 'float_column': 35.799999999999997, 'key': 'maptest', 'string_column': 'string test'}
     >>> Test.objects.multiget([t.key])
-    {'maptest': <__main__.Test object at 0x7fac9c85e990>}
+    {'maptest': <__main__.Test object at 0x7f8ddde0b9d0>}
     >>> list(Test.objects.get_range())
-    [<__main__.Test object at 0x7fac9c85ea90>]
+    [<__main__.Test object at 0x7f8ddde0b710>]
     >>> Test.objects.get_count(t.key)
-    2
+    4
     >>> Test.objects.remove(t)
     1261395603
     >>> Test.objects.get(t.key)
@@ -165,12 +165,8 @@ Note that, as mentioned previously, get_range() may continue to return removed r
     1261395603
     >>> list(Test.objects.get_range())
     [<__main__.Test object at 0x7fac9c85ea90>]
-    >>> list(Test.objects.get_range())[0].key
-    'maptest'
-    >>> list(Test.objects.get_range())[0].col1
-    'default1'
-    >>> list(Test.objects.get_range())[0].col2
-    'default2'
+    >>> list(Test.objects.get_range())[0].__dict__
+    {'int_column': 0, 'datetime_column': None, 'float_column': 0.0, 'key': 'maptest', 'string_column': 'Your Default'}
 
 SuperColumns
 ------------

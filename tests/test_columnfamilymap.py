@@ -1,8 +1,16 @@
+from datetime import datetime
+
 from pycasso import connect, gm_timestamp, ColumnFamily, ColumnFamilyMap, \
-    ConsistencyLevel, NotFoundException
+    ConsistencyLevel, NotFoundException, StringColumn, Int64Column, \
+    Float64Column, DateTimeColumn
 from nose.tools import assert_raises
 
 class TestUTF8(object):
+    strcol = StringColumn(default='default')
+    intcol = Int64Column(default=0)
+    floatcol = Float64Column(default=0.0)
+    datetimecol = DateTimeColumn(default=None)
+
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
@@ -15,9 +23,7 @@ class TestColumnFamilyMap:
         self.cf = ColumnFamily(self.client, 'Test Keyspace', 'Test UTF8',
                                write_consistency_level=ConsistencyLevel.ONE,
                                timestamp=self.timestamp)
-        self.map = ColumnFamilyMap(TestUTF8, self.cf,
-                       columns={'col1': 'default', 'col2': 'default'})
-        self.map_no_columns = ColumnFamilyMap(TestUTF8, self.cf)
+        self.map = ColumnFamilyMap(TestUTF8, self.cf)
         try:
             self.timestamp_n = int(self.cf.get('meta')['timestamp'])
         except NotFoundException:
@@ -41,32 +47,37 @@ class TestColumnFamilyMap:
             self.cf.remove(key)
 
     def test_empty(self):
-        key = 'TestColumnFamilyMap.random'
-        for map in (self.map, self.map_no_columns):
-            assert_raises(NotFoundException, map.get, key)
-            assert len(map.multiget([key])) == 0
+        key = 'TestColumnFamilyMap.test_empty'
+        assert_raises(NotFoundException, self.map.get, key)
+        assert len(self.map.multiget([key])) == 0
 
     def test_insert_get(self):
         instance = TestUTF8()
-        instance.key = 'TestColumnFamilyMap.key1'
-        instance.col1 = '1'
-        instance.col2 = '2'
+        instance.key = 'TestColumnFamilyMap.test_insert_get'
+        instance.strcol = '1'
+        instance.intcol = 2
+        instance.floatcol = 3.5
+        instance.datetimecol = datetime.now().replace(microsecond=0)
         assert_raises(NotFoundException, self.map.get, instance.key)
         self.map.insert(instance)
         assert self.map.get(instance.key) == instance
 
     def test_insert_multiget(self):
         instance1 = TestUTF8()
-        instance1.key = 'TestColumnFamilyMap.key1'
-        instance1.col1 = '1'
-        instance1.col2 = '2'
+        instance1.key = 'TestColumnFamilyMap.test_insert_multiget1'
+        instance1.strcol = '1'
+        instance1.intcol = 2
+        instance1.floatcol = 3.5
+        instance1.datetimecol = datetime.now().replace(microsecond=0)
 
         instance2 = TestUTF8()
-        instance2.key = 'TestColumnFamilyMap.key2'
-        instance2.col1 = '3'
-        instance2.col2 = '4'
+        instance2.key = 'TestColumnFamilyMap.test_insert_multiget2'
+        instance2.strcol = '1'
+        instance2.intcol = 2
+        instance2.floatcol = 3.5
+        instance2.datetimecol = datetime.now().replace(microsecond=0)
 
-        missing_key = 'TestColumnFamilyMap.key3'
+        missing_key = 'TestColumnFamilyMap.test_insert_multiget3'
 
         self.map.insert(instance1)
         self.map.insert(instance2)
@@ -78,19 +89,23 @@ class TestColumnFamilyMap:
 
     def test_insert_get_count(self):
         instance = TestUTF8()
-        instance.key = 'TestColumnFamilyMap.key1'
-        instance.col1 = '1'
-        instance.col2 = '2'
+        instance.key = 'TestColumnFamilyMap.test_insert_get_count'
+        instance.strcol = '1'
+        instance.intcol = 2
+        instance.floatcol = 3.5
+        instance.datetimecol = datetime.now().replace(microsecond=0)
         self.map.insert(instance)
-        assert self.map.get_count(instance.key) == 2
+        assert self.map.get_count(instance.key) == 4
 
     def test_insert_get_range(self):
         instances = []
         for i in xrange(5):
             instance = TestUTF8()
-            instance.key = 'TestColumnFamilyMap.range%s' % i
-            instance.col1 = str(i)
-            instance.col2 = str(i+1)
+            instance.key = 'TestColumnFamilyMap.test_insert_get_range%s' % i
+            instance.strcol = '1'
+            instance.intcol = 2
+            instance.floatcol = 3.5
+            instance.datetimecol = datetime.now().replace(microsecond=0)
             instances.append(instance)
 
         for instance in instances:
@@ -102,34 +117,39 @@ class TestColumnFamilyMap:
 
     def test_remove(self):
         instance = TestUTF8()
-        instance.key = 'TestColumnFamilyMap.key1'
-        instance.col1 = '1'
-        instance.col2 = '2'
+        instance.key = 'TestColumnFamilyMap.test_remove'
+        instance.strcol = '1'
+        instance.intcol = 2
+        instance.floatcol = 3.5
+        instance.datetimecol = datetime.now().replace(microsecond=0)
 
         self.map.insert(instance)
         self.map.remove(instance)
         assert_raises(NotFoundException, self.map.get, instance.key)
 
-    def test_overlapping_default(self):
+    def test_does_not_insert_extra_column(self):
         instance = TestUTF8()
-        instance.key = 'TestColumnFamilyMap.default1'
-        instance.col2 = '2'
-        instance.col3 = '3'
+        instance.key = 'TestColumnFamilyMap.test_does_not_insert_extra_column'
+        instance.strcol = '1'
+        instance.intcol = 2
+        instance.floatcol = 3.5
+        instance.datetimecol = datetime.now().replace(microsecond=0)
+        instance.othercol = 'Test'
 
-        self.map_no_columns.insert(instance)
-        assert self.map_no_columns.get(instance.key) == instance
+        self.map.insert(instance)
 
         get_instance = self.map.get(instance.key)
-        assert get_instance.col1 == 'default'
-        assert get_instance.col2 == instance.col2
-        assert_raises(AttributeError, getattr, get_instance, 'col3')
+        assert get_instance.strcol == instance.strcol
+        assert get_instance.intcol == instance.intcol
+        assert get_instance.floatcol == instance.floatcol
+        assert get_instance.datetimecol == instance.datetimecol
+        assert_raises(AttributeError, getattr, get_instance, 'othercol')
 
-    def test_disjoint_default(self):
-        instance = TestUTF8()
-        instance.key = 'TestColumnFamilyMap.default1'
-        instance.col3 = '3'
-        instance.col4 = '4'
+    def test_has_defaults(self):
+        key = 'TestColumnFamilyMap.test_has_defaults'
+        self.cf.insert(key, {'strcol': '1'})
+        instance = self.map.get(key)
 
-        self.map_no_columns.insert(instance)
-        # This is perhaps very strange behavior, but I don't see any way of fixing it
-        assert_raises(NotFoundException, self.map.get, instance.key)
+        assert instance.intcol == TestUTF8.intcol.default
+        assert instance.floatcol == TestUTF8.floatcol.default
+        assert instance.datetimecol == TestUTF8.datetimecol.default
