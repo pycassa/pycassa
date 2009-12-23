@@ -128,11 +128,11 @@ You can also map existing classes using ColumnFamilyMap.
 
 Map a class to a ColumnFamily. This will naively insert all attributes on insert() and get all columns on get().
 
-    >>> TestMap = pycasso.ColumnFamilyMap(Test, cf)
+    >>> Test.objects = pycasso.ColumnFamilyMap(Test, cf)
 
 However, it's often preferable to supply the columns argument. columns is a dictionary mapping columns to their default value. If, for example, there is a schema change, but some old records in the Cassandra database don't have certain columns, fetching them will fill in their default value. The columns argument also indicates what attributes are saved when you call insert(). All other attributes are ignored.
 
-    >>> TestMap = pycasso.ColumnFamilyMap(Test, cf, columns={'col1': 'default1', 'col2': 'default2'})
+    >>> Test.objects = pycasso.ColumnFamilyMap(Test, cf, columns={'col1': 'default1', 'col2': 'default2'})
 
 All the functions are exactly the same, except that they return instances of the supplied class when possible.
 
@@ -140,36 +140,36 @@ All the functions are exactly the same, except that they return instances of the
     >>> t.col1 = '1'
     >>> t.col2 = '2'
     >>> t.key = 'maptest'
-    >>> TestMap.insert(t)
+    >>> Test.objects.insert(t)
     1261395497
-    >>> TestMap.get(t.key).key
+    >>> Test.objects.get(t.key).key
     'maptest'
-    >>> TestMap.get(t.key).col1
+    >>> Test.objects.get(t.key).col1
     '1'
-    >>> TestMap.multiget([t.key])
+    >>> Test.objects.multiget([t.key])
     {'maptest': <__main__.Test object at 0x7fac9c85e990>}
-    >>> list(TestMap.get_range())
+    >>> list(Test.objects.get_range())
     [<__main__.Test object at 0x7fac9c85ea90>]
-    >>> TestMap.get_count(t.key)
+    >>> Test.objects.get_count(t.key)
     2
-    >>> TestMap.remove(t)
+    >>> Test.objects.remove(t)
     1261395603
-    >>> TestMap.get(t.key)
+    >>> Test.objects.get(t.key)
     Traceback (most recent call last):
     ...
     cassandra.ttypes.NotFoundException: NotFoundException()
 
 Note that, as mentioned previously, get_range() may continue to return removed rows for some time:
 
-    >>> TestMap.remove(t)
+    >>> Test.objects.remove(t)
     1261395603
-    >>> list(TestMap.get_range())
+    >>> list(Test.objects.get_range())
     [<__main__.Test object at 0x7fac9c85ea90>]
-    >>> list(TestMap.get_range())[0].key
+    >>> list(Test.objects.get_range())[0].key
     'maptest'
-    >>> list(TestMap.get_range())[0].col1
+    >>> list(Test.objects.get_range())[0].col1
     'default1'
-    >>> list(TestMap.get_range())[0].col2
+    >>> list(Test.objects.get_range())[0].col2
     'default2'
 
 SuperColumns
