@@ -144,14 +144,23 @@ All the functions are exactly the same, except that they return instances of the
     >>> from datetime import datetime
     >>> t.datetime_column = datetime.now()
     >>> Test.objects.insert(t)
-    >>> Test.objects.get(t.key).__dict__
-    {'int_column': 18, 'datetime_column': datetime.datetime(2009, 12, 23, 17, 6, 3), 'float_column': 35.799999999999997, 'key': 'maptest', 'string_column': 'string test'}
+
+    >>> Test.objects.get(t.key).string_column
+    'string test'
+    >>> Test.objects.get(t.key).int_column
+    18
+    >>> Test.objects.get(t.key).float_column
+    35.799999999999997
+    >>> Test.objects.get(t.key).datetime_column
+    datetime.datetime(2009, 12, 23, 17, 6, 3)
+
     >>> Test.objects.multiget([t.key])
     {'maptest': <__main__.Test object at 0x7f8ddde0b9d0>}
     >>> list(Test.objects.get_range())
     [<__main__.Test object at 0x7f8ddde0b710>]
     >>> Test.objects.get_count(t.key)
     4
+
     >>> Test.objects.remove(t)
     1261395603
     >>> Test.objects.get(t.key)
@@ -165,8 +174,8 @@ Note that, as mentioned previously, get_range() may continue to return removed r
     1261395603
     >>> list(Test.objects.get_range())
     [<__main__.Test object at 0x7fac9c85ea90>]
-    >>> list(Test.objects.get_range())[0].__dict__
-    {'int_column': 0, 'datetime_column': None, 'float_column': 0.0, 'key': 'maptest', 'string_column': 'Your Default'}
+    >>> list(Test.objects.get_range())[0].string_column
+    'Your Default'
 
 SuperColumns
 ------------
