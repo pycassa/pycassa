@@ -211,12 +211,12 @@ pycasso currently returns Cassandra Columns and SubColumns as python dictionarie
 
 You may also define your own Column types for the mapper. If, for example, you need absolute compatibility with other systems, you could make an integer column that is stored as a string:
 
->>> class IntStringColumn(pycasso.Column):
-...     def pack(self, val):
-...         return str(val)
-...     def unpack(self, val):
-...         return int(val)
-... 
+    >>> class IntStringColumn(pycasso.Column):
+    ...     def pack(self, val):
+    ...         return str(val)
+    ...     def unpack(self, val):
+    ...         return int(val)
+    ... 
 
 Extra Documentation
 -------------------
