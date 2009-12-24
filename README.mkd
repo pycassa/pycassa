@@ -133,7 +133,7 @@ You can also map existing classes using ColumnFamilyMap.
 
 The defaults will be filled in whenever you retrieve instances from the Cassandra server and the column doesn't exist. If, for example, you add columns in the future, you simply add the relevant column and the default will be there when you get old instances.
 
-The difference between IntStringColumn and Int64Column is how it's stored in Cassandra. If you want maximum compatibility with other languages, use IntStringColumn, FloatStringColumn, and DateTimeStringColumn. Int64Column is stored as an int64_t, Float64Column is stored as a double, and DateTimeColumn is stored in the same format as the time() system call (seconds since 1970-01-01 00:00:00). These may end up being more compact and faster than the string representations.
+The difference between IntString and Int64 is how it's stored in Cassandra. If you want maximum compatibility with other languages, use IntString, FloatString, and DateTimeString. Int64 is stored as an int64_t, Float64 is stored as a double, and DateTime is stored in the same format as the time() system call (seconds since 1970-01-01 00:00:00). These may end up being more compact and faster than the string representations.
 
     >>> Test.objects = pycassa.ColumnFamilyMap(Test, cf)
 
