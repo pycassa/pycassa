@@ -17,7 +17,7 @@ class DateTimeColumn(Column):
 
     def pack(self, val):
         if not isinstance(val, datetime):
-            raise ValueError('expected datetime, %s found' % type(val).__name__)
+            raise TypeError('expected datetime, %s found' % type(val).__name__)
         return self.struct.pack(int(time.mktime(val.timetuple())))
 
     def unpack(self, val):
@@ -27,7 +27,7 @@ class DateTimeStringColumn(Column):
     format = '%Y-%m-%d %H:%M:%S'
     def pack(self, val):
         if not isinstance(val, datetime):
-            raise ValueError('expected datetime, %s found' % type(val).__name__)
+            raise TypeError('expected datetime, %s found' % type(val).__name__)
         return val.strftime(self.format)
 
     def unpack(self, val):
@@ -40,7 +40,7 @@ class Float64Column(Column):
 
     def pack(self, val):
         if not isinstance(val, float):
-            raise ValueError('expected float, %s found' % type(val).__name__)
+            raise TypeError('expected float, %s found' % type(val).__name__)
         return self.struct.pack(val)
 
     def unpack(self, val):
@@ -49,7 +49,7 @@ class Float64Column(Column):
 class FloatStringColumn(Column):
     def pack(self, val):
         if not isinstance(val, float):
-            raise ValueError('expected float, %s found' % type(val).__name__)
+            raise TypeError('expected float, %s found' % type(val).__name__)
         return str(val)
 
     def unpack(self, val):
@@ -62,7 +62,7 @@ class Int64Column(Column):
 
     def pack(self, val):
         if not isinstance(val, int):
-            raise ValueError('expected int, %s found' % type(val).__name__)
+            raise TypeError('expected int, %s found' % type(val).__name__)
         return self.struct.pack(val)
 
     def unpack(self, val):
@@ -71,7 +71,7 @@ class Int64Column(Column):
 class IntStringColumn(Column):
     def pack(self, val):
         if not isinstance(val, int):
-            raise ValueError('expected int, %s found' % type(val).__name__)
+            raise TypeError('expected int, %s found' % type(val).__name__)
         return str(val)
 
     def unpack(self, val):
@@ -80,7 +80,7 @@ class IntStringColumn(Column):
 class StringColumn(Column):
     def pack(self, val):
         if not isinstance(val, str) and not isinstance(val, unicode):
-            raise ValueError('expected str or unicode, %s found' % type(val).__name__)
+            raise TypeError('expected str or unicode, %s found' % type(val).__name__)
         return val
 
     def unpack(self, val):
