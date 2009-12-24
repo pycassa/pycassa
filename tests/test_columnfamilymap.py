@@ -2,7 +2,8 @@ from datetime import datetime
 
 from pycasso import connect, gm_timestamp, ColumnFamily, ColumnFamilyMap, \
     ConsistencyLevel, NotFoundException, StringColumn, Int64Column, \
-    Float64Column, DateTimeColumn
+    Float64Column, DateTimeColumn, IntStringColumn, FloatStringColumn, \
+    DateTimeStringColumn
 from nose.tools import assert_raises
 
 class TestUTF8(object):
@@ -10,6 +11,9 @@ class TestUTF8(object):
     intcol = Int64Column(default=0)
     floatcol = Float64Column(default=0.0)
     datetimecol = DateTimeColumn(default=None)
+    intstrcol = IntStringColumn()
+    floatstrcol = FloatStringColumn()
+    datetimestrcol = DateTimeStringColumn()
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
@@ -46,37 +50,33 @@ class TestColumnFamilyMap:
                 self.timestamp_n = max(self.timestamp_n, timestamp)
             self.cf.remove(key)
 
+    def instance(self, key):
+        instance = TestUTF8()
+        instance.key = key
+        instance.strcol = '1'
+        instance.intcol = 2
+        instance.floatcol = 3.5
+        instance.datetimecol = datetime.now().replace(microsecond=0)
+        instance.intstrcol = 8
+        instance.floatstrcol = 4.6
+        instance.datetimestrcol = datetime.now().replace(microsecond=0)
+
+        return instance
+
     def test_empty(self):
         key = 'TestColumnFamilyMap.test_empty'
         assert_raises(NotFoundException, self.map.get, key)
         assert len(self.map.multiget([key])) == 0
 
     def test_insert_get(self):
-        instance = TestUTF8()
-        instance.key = 'TestColumnFamilyMap.test_insert_get'
-        instance.strcol = '1'
-        instance.intcol = 2
-        instance.floatcol = 3.5
-        instance.datetimecol = datetime.now().replace(microsecond=0)
+        instance = self.instance('TestColumnFamilyMap.test_insert_get')
         assert_raises(NotFoundException, self.map.get, instance.key)
         self.map.insert(instance)
         assert self.map.get(instance.key) == instance
 
     def test_insert_multiget(self):
-        instance1 = TestUTF8()
-        instance1.key = 'TestColumnFamilyMap.test_insert_multiget1'
-        instance1.strcol = '1'
-        instance1.intcol = 2
-        instance1.floatcol = 3.5
-        instance1.datetimecol = datetime.now().replace(microsecond=0)
-
-        instance2 = TestUTF8()
-        instance2.key = 'TestColumnFamilyMap.test_insert_multiget2'
-        instance2.strcol = '1'
-        instance2.intcol = 2
-        instance2.floatcol = 3.5
-        instance2.datetimecol = datetime.now().replace(microsecond=0)
-
+        instance1 = self.instance('TestColumnFamilyMap.test_insert_multiget1')
+        instance2 = self.instance('TestColumnFamilyMap.test_insert_multiget2')
         missing_key = 'TestColumnFamilyMap.test_insert_multiget3'
 
         self.map.insert(instance1)
@@ -88,24 +88,14 @@ class TestColumnFamilyMap:
         assert missing_key not in rows
 
     def test_insert_get_count(self):
-        instance = TestUTF8()
-        instance.key = 'TestColumnFamilyMap.test_insert_get_count'
-        instance.strcol = '1'
-        instance.intcol = 2
-        instance.floatcol = 3.5
-        instance.datetimecol = datetime.now().replace(microsecond=0)
+        instance = self.instance('TestColumnFamilyMap.test_insert_get_count')
         self.map.insert(instance)
-        assert self.map.get_count(instance.key) == 4
+        assert self.map.get_count(instance.key) == 7
 
     def test_insert_get_range(self):
         instances = []
         for i in xrange(5):
-            instance = TestUTF8()
-            instance.key = 'TestColumnFamilyMap.test_insert_get_range%s' % i
-            instance.strcol = '1'
-            instance.intcol = 2
-            instance.floatcol = 3.5
-            instance.datetimecol = datetime.now().replace(microsecond=0)
+            instance = self.instance('TestColumnFamilyMap.test_insert_get_range%s' % i)
             instances.append(instance)
 
         for instance in instances:
@@ -116,24 +106,14 @@ class TestColumnFamilyMap:
         assert rows == instances
 
     def test_remove(self):
-        instance = TestUTF8()
-        instance.key = 'TestColumnFamilyMap.test_remove'
-        instance.strcol = '1'
-        instance.intcol = 2
-        instance.floatcol = 3.5
-        instance.datetimecol = datetime.now().replace(microsecond=0)
+        instance = self.instance('TestColumnFamilyMap.test_remove')
 
         self.map.insert(instance)
         self.map.remove(instance)
         assert_raises(NotFoundException, self.map.get, instance.key)
 
     def test_does_not_insert_extra_column(self):
-        instance = TestUTF8()
-        instance.key = 'TestColumnFamilyMap.test_does_not_insert_extra_column'
-        instance.strcol = '1'
-        instance.intcol = 2
-        instance.floatcol = 3.5
-        instance.datetimecol = datetime.now().replace(microsecond=0)
+        instance = self.instance('TestColumnFamilyMap.test_does_not_insert_extra_column')
         instance.othercol = 'Test'
 
         self.map.insert(instance)
@@ -153,3 +133,6 @@ class TestColumnFamilyMap:
         assert instance.intcol == TestUTF8.intcol.default
         assert instance.floatcol == TestUTF8.floatcol.default
         assert instance.datetimecol == TestUTF8.datetimecol.default
+        assert instance.intstrcol == TestUTF8.intstrcol.default
+        assert instance.floatstrcol == TestUTF8.floatstrcol.default
+        assert instance.datetimestrcol == TestUTF8.datetimestrcol.default

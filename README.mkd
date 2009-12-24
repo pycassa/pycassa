@@ -124,13 +124,16 @@ You can also map existing classes using ColumnFamilyMap.
 
     >>> class Test(object):
     ...     string_column = pycasso.StringColumn(default='Your Default')
+    ...     int_str_column = pycasso.IntStringColumn(default=5)
     ...     int_column = pycasso.Int64Column(default=0)
+    ...     float_str_column = pycasso.FloatStringColumn(default=8.0)
     ...     float_column = pycasso.Float64Column(default=0.0)
-    ...     datetime_column = pycasso.DateTimeColumn() # default=None
+    ...     datetime_str_column = pycasso.DateTimeStringColumn() # default=None
+    ...     datetime_column = pycasso.DateTimeColumn()
 
 The defaults will be filled in whenever you retrieve instances from the Cassandra server and the column doesn't exist. If, for example, you add columns in the future, you simply add the relevant column and the default will be there when you get old instances.
 
-Int64Column and Float64Column are named as such because they are converted to and from a 64-bit format when communicating with the Cassandra server. DateTimeColumn is stored in the same format as the time() system call, or the number of seconds since Epoch (00:00:00, January 1, 1970).
+The difference between IntStringColumn and Int64Column is how it's stored in Cassandra. If you want maximum compatibility with other languages, use IntStringColumn, FloatStringColumn, and DateTimeStringColumn. Int64Column is stored as an int64_t, Float64Column is stored as a double, and DateTimeColumn is stored in the same format as the time() system call (seconds since 1970-01-01 00:00:00). These may end up being more compact and faster than the string representations.
 
     >>> Test.objects = pycasso.ColumnFamilyMap(Test, cf)
 
@@ -139,20 +142,20 @@ All the functions are exactly the same, except that they return instances of the
     >>> t = Test()
     >>> t.key = 'maptest'
     >>> t.string_column = 'string test'
-    >>> t.int_column = 18
-    >>> t.float_column = 35.8
+    >>> t.int_column = t.int_str_column = 18
+    >>> t.float_column = t.float_str_column = 35.8
     >>> from datetime import datetime
-    >>> t.datetime_column = datetime.now()
+    >>> t.datetime_column = t.datetime_str_column = datetime.now()
     >>> Test.objects.insert(t)
     1261395560
 
     >>> Test.objects.get(t.key).string_column
     'string test'
-    >>> Test.objects.get(t.key).int_column
+    >>> Test.objects.get(t.key).int_str_column
     18
     >>> Test.objects.get(t.key).float_column
     35.799999999999997
-    >>> Test.objects.get(t.key).datetime_column
+    >>> Test.objects.get(t.key).datetime_str_column
     datetime.datetime(2009, 12, 23, 17, 6, 3)
 
     >>> Test.objects.multiget([t.key])
@@ -160,7 +163,7 @@ All the functions are exactly the same, except that they return instances of the
     >>> list(Test.objects.get_range())
     [<__main__.Test object at 0x7f8ddde0b710>]
     >>> Test.objects.get_count(t.key)
-    4
+    7
 
     >>> Test.objects.remove(t)
     1261395603
@@ -209,7 +212,7 @@ pycasso currently returns Cassandra Columns and SubColumns as python dictionarie
     >>> cf = pycasso.ColumnFamily(client, 'Test Keyspace', 'Test ColumnFamily',
                                   dict_class=collections.OrderedDict)
 
-You may also define your own Column types for the mapper. If, for example, you need absolute compatibility with other systems, you could make an integer column that is stored as a string:
+You may also define your own Column types for the mapper. For example, the IntStringColumn is defined as:
 
     >>> class IntStringColumn(pycasso.Column):
     ...     def pack(self, val):
