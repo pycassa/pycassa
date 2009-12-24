@@ -61,8 +61,8 @@ class Int64Column(Column):
         self.struct = struct.Struct('q')
 
     def pack(self, val):
-        if not isinstance(val, int):
-            raise TypeError('expected int, %s found' % type(val).__name__)
+        if not isinstance(val, (int, long)):
+            raise TypeError('expected int or long, %s found' % type(val).__name__)
         return self.struct.pack(val)
 
     def unpack(self, val):
@@ -70,8 +70,8 @@ class Int64Column(Column):
 
 class IntStringColumn(Column):
     def pack(self, val):
-        if not isinstance(val, int):
-            raise TypeError('expected int, %s found' % type(val).__name__)
+        if not isinstance(val, (int, long)):
+            raise TypeError('expected int or long, %s found' % type(val).__name__)
         return str(val)
 
     def unpack(self, val):
@@ -79,7 +79,7 @@ class IntStringColumn(Column):
 
 class StringColumn(Column):
     def pack(self, val):
-        if not isinstance(val, str) and not isinstance(val, unicode):
+        if not isinstance(val, basestring):
             raise TypeError('expected str or unicode, %s found' % type(val).__name__)
         return val
 
