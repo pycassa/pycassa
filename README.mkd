@@ -212,9 +212,9 @@ pycassa currently returns Cassandra Columns and SuperColumns as python dictionar
     >>> cf = pycassa.ColumnFamily(client, 'Test Keyspace', 'Test ColumnFamily',
                                   dict_class=collections.OrderedDict)
 
-You may also define your own Column types for the mapper. For example, the IntStringColumn is defined as:
+You may also define your own Column types for the mapper. For example, the IntString may be defined as:
 
-    >>> class IntStringColumn(pycassa.Column):
+    >>> class IntString(pycassa.Column):
     ...     def pack(self, val):
     ...         return str(val)
     ...     def unpack(self, val):
