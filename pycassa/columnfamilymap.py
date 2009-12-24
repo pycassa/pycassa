@@ -1,4 +1,4 @@
-from pycassa.columntypes import Column
+from pycassa.types import Column
 
 __all__ = ['ColumnFamilyMap']
 

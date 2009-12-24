@@ -1,19 +1,18 @@
 from datetime import datetime
 
 from pycassa import connect, gm_timestamp, ColumnFamily, ColumnFamilyMap, \
-    ConsistencyLevel, NotFoundException, StringColumn, Int64Column, \
-    Float64Column, DateTimeColumn, IntStringColumn, FloatStringColumn, \
-    DateTimeStringColumn
+    ConsistencyLevel, NotFoundException, String, Int64, Float64, DateTime, \
+    IntString, FloatString, DateTimeString
 from nose.tools import assert_raises
 
 class TestUTF8(object):
-    strcol = StringColumn(default='default')
-    intcol = Int64Column(default=0)
-    floatcol = Float64Column(default=0.0)
-    datetimecol = DateTimeColumn(default=None)
-    intstrcol = IntStringColumn()
-    floatstrcol = FloatStringColumn()
-    datetimestrcol = DateTimeStringColumn()
+    strcol = String(default='default')
+    intcol = Int64(default=0)
+    floatcol = Float64(default=0.0)
+    datetimecol = DateTime(default=None)
+    intstrcol = IntString()
+    floatstrcol = FloatString()
+    datetimestrcol = DateTimeString()
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__

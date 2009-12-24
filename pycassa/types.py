@@ -2,15 +2,14 @@ from datetime import datetime
 import struct
 import time
 
-__all__ = ['Column', 'DateTimeColumn', 'DateTimeStringColumn', 'Float64Column',
-           'FloatStringColumn', 'Int64Column', 'IntStringColumn',
-           'StringColumn']
+__all__ = ['Column', 'DateTime', 'DateTimeString', 'Float64', 'FloatString',
+           'Int64', 'IntString', 'String']
 
 class Column(object):
     def __init__(self, default=None):
         self.default = default
 
-class DateTimeColumn(Column):
+class DateTime(Column):
     def __init__(self, *args, **kwargs):
         Column.__init__(self, *args, **kwargs)
         self.struct = struct.Struct('q')
@@ -23,7 +22,7 @@ class DateTimeColumn(Column):
     def unpack(self, val):
         return datetime.fromtimestamp(self.struct.unpack(val)[0])
 
-class DateTimeStringColumn(Column):
+class DateTimeString(Column):
     format = '%Y-%m-%d %H:%M:%S'
     def pack(self, val):
         if not isinstance(val, datetime):
@@ -33,7 +32,7 @@ class DateTimeStringColumn(Column):
     def unpack(self, val):
         return datetime.strptime(val, self.format)
 
-class Float64Column(Column):
+class Float64(Column):
     def __init__(self, *args, **kwargs):
         Column.__init__(self, *args, **kwargs)
         self.struct = struct.Struct('d')
@@ -46,7 +45,7 @@ class Float64Column(Column):
     def unpack(self, val):
         return self.struct.unpack(val)[0]
 
-class FloatStringColumn(Column):
+class FloatString(Column):
     def pack(self, val):
         if not isinstance(val, float):
             raise TypeError('expected float, %s found' % type(val).__name__)
@@ -55,7 +54,7 @@ class FloatStringColumn(Column):
     def unpack(self, val):
         return float(val)
 
-class Int64Column(Column):
+class Int64(Column):
     def __init__(self, *args, **kwargs):
         Column.__init__(self, *args, **kwargs)
         self.struct = struct.Struct('q')
@@ -68,7 +67,7 @@ class Int64Column(Column):
     def unpack(self, val):
         return self.struct.unpack(val)[0]
 
-class IntStringColumn(Column):
+class IntString(Column):
     def pack(self, val):
         if not isinstance(val, (int, long)):
             raise TypeError('expected int or long, %s found' % type(val).__name__)
@@ -77,7 +76,7 @@ class IntStringColumn(Column):
     def unpack(self, val):
         return int(val)
 
-class StringColumn(Column):
+class String(Column):
     def pack(self, val):
         if not isinstance(val, basestring):
             raise TypeError('expected str or unicode, %s found' % type(val).__name__)
