@@ -123,13 +123,13 @@ Class Mapping
 You can also map existing classes using ColumnFamilyMap.
 
     >>> class Test(object):
-    ...     string_column = pycasso.StringColumn(default='Your Default')
-    ...     int_str_column = pycasso.IntStringColumn(default=5)
-    ...     int_column = pycasso.Int64Column(default=0)
-    ...     float_str_column = pycasso.FloatStringColumn(default=8.0)
-    ...     float_column = pycasso.Float64Column(default=0.0)
+    ...     string_column       = pycasso.StringColumn(default='Your Default')
+    ...     int_str_column      = pycasso.IntStringColumn(default=5)
+    ...     int_column          = pycasso.Int64Column(default=0)
+    ...     float_str_column    = pycasso.FloatStringColumn(default=8.0)
+    ...     float_column        = pycasso.Float64Column(default=0.0)
     ...     datetime_str_column = pycasso.DateTimeStringColumn() # default=None
-    ...     datetime_column = pycasso.DateTimeColumn()
+    ...     datetime_column     = pycasso.DateTimeColumn()
 
 The defaults will be filled in whenever you retrieve instances from the Cassandra server and the column doesn't exist. If, for example, you add columns in the future, you simply add the relevant column and the default will be there when you get old instances.
 
