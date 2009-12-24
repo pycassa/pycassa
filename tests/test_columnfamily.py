@@ -1,4 +1,4 @@
-from pycasso import connect, ColumnFamily, ConsistencyLevel, NotFoundException
+from pycassa import connect, ColumnFamily, ConsistencyLevel, NotFoundException
 
 from nose.tools import assert_raises
 

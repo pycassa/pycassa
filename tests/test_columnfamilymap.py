@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pycasso import connect, gm_timestamp, ColumnFamily, ColumnFamilyMap, \
+from pycassa import connect, gm_timestamp, ColumnFamily, ColumnFamilyMap, \
     ConsistencyLevel, NotFoundException, StringColumn, Int64Column, \
     Float64Column, DateTimeColumn, IntStringColumn, FloatStringColumn, \
     DateTimeStringColumn

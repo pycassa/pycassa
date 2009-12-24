@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 
-"""pycasso is a Cassandra library with the following features:
+"""pycassa is a Cassandra library with the following features:
 
 1. Auto-failover single or thread-local connections
 2. A simplified version of the thrift interface
@@ -23,19 +23,19 @@ for flag, package in flags:
         optional_packages.append(package)
         sys.argv.remove(flag)
 
-from pycasso import __version__
+from pycassa import __version__
 
 setup(
-      name = 'pycasso',
+      name = 'pycassa',
       version = __version__,
       author = 'Jonathan Hseu',
       author_email = 'vomjom@vomjom.net',
       description = 'Simple python library for Cassandra',
       long_description = __doc__,
-      url = 'http://github.com/vomjom/pycasso',
-      download_url = 'http://github.com/vomjom/pycasso',
+      url = 'http://github.com/vomjom/pycassa',
+      download_url = 'http://github.com/vomjom/pycassa',
       license = 'MIT',
       keywords = 'cassandra client db distributed thrift',
-      packages = ['pycasso']+optional_packages,
+      packages = ['pycassa']+optional_packages,
       platforms = 'any',
       )

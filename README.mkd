@@ -1,7 +1,7 @@
-pycasso
+pycassa
 =======
 
-pycasso is a Cassandra library with the following features:
+pycassa is a Cassandra library with the following features:
 
 1. Auto-failover single or thread-local connections
 2. A simplified version of the thrift interface
@@ -23,7 +23,7 @@ It comes with the Cassandra python files for convenience, but you can replace th
 Installation
 ------------
 
-The simplest way to get started is to copy the pycasso and cassandra directories to your program.
+The simplest way to get started is to copy the pycassa and cassandra directories to your program.
 If you want to install, run setup.py as a superuser.
 
     python setup.py install
@@ -38,29 +38,29 @@ Basic Usage
 All functions are documented with docstrings.
 To read usage documentation:
 
-    >>> import pycasso
-    >>> help(pycasso.ColumnFamily.get)
+    >>> import pycassa
+    >>> help(pycassa.ColumnFamily.get)
 
 For a single connection (which is _not_ thread-safe), pass a list of servers.
 
-    >>> client = pycasso.connect() # Defaults to connecting to the server at 'localhost:9160'
-    >>> client = pycasso.connect(['localhost:9160'])
+    >>> client = pycassa.connect() # Defaults to connecting to the server at 'localhost:9160'
+    >>> client = pycassa.connect(['localhost:9160'])
 
 If you need Framed Transport, pass the framed_transport argument.
 
-    >>> client = pycasso.connect(framed_transport=True)
+    >>> client = pycassa.connect(framed_transport=True)
 
 Thread-local connections opens a connection for every thread that calls a Cassandra function. It also automatically balances the number of connections between servers, unless round_robin=False.
 
-    >>> client = pycasso.connect_thread_local() # Defaults to connecting to the server at 'localhost:9160'
-    >>> client = pycasso.connect_thread_local(['localhost:9160', 'other_server:9160']) # Round robin connections
-    >>> client = pycasso.connect_thread_local(['localhost:9160', 'other_server:9160'], round_robin=False) # Connect in list order
+    >>> client = pycassa.connect_thread_local() # Defaults to connecting to the server at 'localhost:9160'
+    >>> client = pycassa.connect_thread_local(['localhost:9160', 'other_server:9160']) # Round robin connections
+    >>> client = pycassa.connect_thread_local(['localhost:9160', 'other_server:9160'], round_robin=False) # Connect in list order
 
 Connections are robust to server failures. Upon a disconnection, it will attempt to connect to each server in the list in turn. If no server is available, it will raise a NoServerAvailable exception.
 
 To use the standard interface, create a ColumnFamily instance.
 
-    >>> cf = pycasso.ColumnFamily(client, 'Test Keyspace', 'Test ColumnFamily')
+    >>> cf = pycassa.ColumnFamily(client, 'Test Keyspace', 'Test ColumnFamily')
 
 The value returned by an insert is the timestamp used for insertion, or int(time.mktime(time.gmtime())). You may replace this function with your own (see Extra Documentation).
 
@@ -105,7 +105,7 @@ You can remove entire keys or just a certain column.
     ...
     cassandra.ttypes.NotFoundException: NotFoundException()
 
-pycasso retains the behavior of Cassandra in that get_range() may return removed keys for a while. Cassandra will eventually delete them, so that they disappear.
+pycassa retains the behavior of Cassandra in that get_range() may return removed keys for a while. Cassandra will eventually delete them, so that they disappear.
 
     >>> cf.remove('foo')
     >>> cf.remove('bar')
@@ -123,19 +123,19 @@ Class Mapping
 You can also map existing classes using ColumnFamilyMap.
 
     >>> class Test(object):
-    ...     string_column       = pycasso.StringColumn(default='Your Default')
-    ...     int_str_column      = pycasso.IntStringColumn(default=5)
-    ...     int_column          = pycasso.Int64Column(default=0)
-    ...     float_str_column    = pycasso.FloatStringColumn(default=8.0)
-    ...     float_column        = pycasso.Float64Column(default=0.0)
-    ...     datetime_str_column = pycasso.DateTimeStringColumn() # default=None
-    ...     datetime_column     = pycasso.DateTimeColumn()
+    ...     string_column       = pycassa.StringColumn(default='Your Default')
+    ...     int_str_column      = pycassa.IntStringColumn(default=5)
+    ...     int_column          = pycassa.Int64Column(default=0)
+    ...     float_str_column    = pycassa.FloatStringColumn(default=8.0)
+    ...     float_column        = pycassa.Float64Column(default=0.0)
+    ...     datetime_str_column = pycassa.DateTimeStringColumn() # default=None
+    ...     datetime_column     = pycassa.DateTimeColumn()
 
 The defaults will be filled in whenever you retrieve instances from the Cassandra server and the column doesn't exist. If, for example, you add columns in the future, you simply add the relevant column and the default will be there when you get old instances.
 
 The difference between IntStringColumn and Int64Column is how it's stored in Cassandra. If you want maximum compatibility with other languages, use IntStringColumn, FloatStringColumn, and DateTimeStringColumn. Int64Column is stored as an int64_t, Float64Column is stored as a double, and DateTimeColumn is stored in the same format as the time() system call (seconds since 1970-01-01 00:00:00). These may end up being more compact and faster than the string representations.
 
-    >>> Test.objects = pycasso.ColumnFamilyMap(Test, cf)
+    >>> Test.objects = pycassa.ColumnFamilyMap(Test, cf)
 
 All the functions are exactly the same, except that they return instances of the supplied class when possible.
 
@@ -186,7 +186,7 @@ SuperColumns
 
 To use SuperColumns, pass super=True to the ColumnFamily constructor.
 
-    >>> cf = pycasso.ColumnFamily(client, 'Test Keyspace', 'Test SuperColumnFamily', super=True)
+    >>> cf = pycassa.ColumnFamily(client, 'Test Keyspace', 'Test SuperColumnFamily', super=True)
     >>> cf.insert('key1', {'1': {'sub1': 'val1', 'sub2': 'val2'}, '2': {'sub3': 'val3', 'sub4': 'val4'}})
     1261490144
     >>> cf.get('key1')
@@ -207,14 +207,14 @@ These output values retain the same format as given by the Cassandra thrift inte
 Advanced
 --------
 
-pycasso currently returns Cassandra Columns and SubColumns as python dictionaries. Sometimes, though, you care about the order of elements. If you have access to an ordered dictionary class (such as collections.OrderedDict in python 2.7), then you may pass it to the constructor. All returned values will be of that class.
+pycassa currently returns Cassandra Columns and SubColumns as python dictionaries. Sometimes, though, you care about the order of elements. If you have access to an ordered dictionary class (such as collections.OrderedDict in python 2.7), then you may pass it to the constructor. All returned values will be of that class.
 
-    >>> cf = pycasso.ColumnFamily(client, 'Test Keyspace', 'Test ColumnFamily',
+    >>> cf = pycassa.ColumnFamily(client, 'Test Keyspace', 'Test ColumnFamily',
                                   dict_class=collections.OrderedDict)
 
 You may also define your own Column types for the mapper. For example, the IntStringColumn is defined as:
 
-    >>> class IntStringColumn(pycasso.Column):
+    >>> class IntStringColumn(pycassa.Column):
     ...     def pack(self, val):
     ...         return str(val)
     ...     def unpack(self, val):

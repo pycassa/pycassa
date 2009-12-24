@@ -156,12 +156,12 @@
    ~ disk.  Keep the data disks and the CommitLog disks separate for best
    ~ performance
   -->
-  <CommitLogDirectory>/tmp/pycasso/commitlog</CommitLogDirectory>
+  <CommitLogDirectory>/tmp/pycassa/commitlog</CommitLogDirectory>
   <DataFileDirectories>
-      <DataFileDirectory>/tmp/pycasso/data</DataFileDirectory>
+      <DataFileDirectory>/tmp/pycassa/data</DataFileDirectory>
   </DataFileDirectories>
-  <CalloutLocation>/tmp/pycasso/callouts</CalloutLocation>
-  <StagingFileDirectory>/tmp/pycasso/staging</StagingFileDirectory>
+  <CalloutLocation>/tmp/pycassa/callouts</CalloutLocation>
+  <StagingFileDirectory>/tmp/pycassa/staging</StagingFileDirectory>
 
 
   <!--

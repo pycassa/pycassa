@@ -1,6 +1,6 @@
 import threading
 
-from pycasso import connect, connect_thread_local
+from pycassa import connect, connect_thread_local
 
 def version_check(connection, version):
     assert connection.get_string_property('version') == version

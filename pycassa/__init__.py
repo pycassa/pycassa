@@ -1,10 +1,10 @@
 __version_info__ = (0, 1)
 __version__ = '.'.join([str(v) for v in __version_info__])
 
-from pycasso.columnfamily import *
-from pycasso.columnfamilymap import *
-from pycasso.columntypes import *
-from pycasso.connection import *
+from pycassa.columnfamily import *
+from pycassa.columnfamilymap import *
+from pycassa.columntypes import *
+from pycassa.connection import *
 
 from cassandra.ttypes import ConsistencyLevel, InvalidRequestException, \
     NotFoundException, UnavailableException, TimedOutException
