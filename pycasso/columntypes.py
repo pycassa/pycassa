@@ -2,20 +2,13 @@ from datetime import datetime
 import struct
 import time
 
-__all__ = ['Column', 'BytesColumn', 'DateTimeColumn', 'DateTimeStringColumn',
-           'Float64Column', 'FloatStringColumn', 'Int64Column',
-           'IntStringColumn', 'StringColumn']
+__all__ = ['Column', 'DateTimeColumn', 'DateTimeStringColumn', 'Float64Column',
+           'FloatStringColumn', 'Int64Column', 'IntStringColumn',
+           'StringColumn']
 
 class Column(object):
     def __init__(self, default=None):
         self.default = default
-
-class BytesColumn(Column):
-    def pack(self, val):
-        return val
-
-    def unpack(self, val):
-        return val
 
 class DateTimeColumn(Column):
     def __init__(self, *args, **kwargs):
@@ -23,6 +16,8 @@ class DateTimeColumn(Column):
         self.struct = struct.Struct('q')
 
     def pack(self, val):
+        if not isinstance(val, datetime):
+            raise ValueError('expected datetime, %s found' % type(val).__name__)
         return self.struct.pack(int(time.mktime(val.timetuple())))
 
     def unpack(self, val):
@@ -31,6 +26,8 @@ class DateTimeColumn(Column):
 class DateTimeStringColumn(Column):
     format = '%Y-%m-%d %H:%M:%S'
     def pack(self, val):
+        if not isinstance(val, datetime):
+            raise ValueError('expected datetime, %s found' % type(val).__name__)
         return val.strftime(self.format)
 
     def unpack(self, val):
@@ -42,6 +39,8 @@ class Float64Column(Column):
         self.struct = struct.Struct('d')
 
     def pack(self, val):
+        if not isinstance(val, float):
+            raise ValueError('expected float, %s found' % type(val).__name__)
         return self.struct.pack(val)
 
     def unpack(self, val):
@@ -49,6 +48,8 @@ class Float64Column(Column):
 
 class FloatStringColumn(Column):
     def pack(self, val):
+        if not isinstance(val, float):
+            raise ValueError('expected float, %s found' % type(val).__name__)
         return str(val)
 
     def unpack(self, val):
@@ -60,6 +61,8 @@ class Int64Column(Column):
         self.struct = struct.Struct('q')
 
     def pack(self, val):
+        if not isinstance(val, int):
+            raise ValueError('expected int, %s found' % type(val).__name__)
         return self.struct.pack(val)
 
     def unpack(self, val):
@@ -67,10 +70,18 @@ class Int64Column(Column):
 
 class IntStringColumn(Column):
     def pack(self, val):
+        if not isinstance(val, int):
+            raise ValueError('expected int, %s found' % type(val).__name__)
         return str(val)
 
     def unpack(self, val):
         return int(val)
 
-class StringColumn(BytesColumn):
-    pass
+class StringColumn(Column):
+    def pack(self, val):
+        if not isinstance(val, str) and not isinstance(val, unicode):
+            raise ValueError('expected str or unicode, %s found' % type(val).__name__)
+        return val
+
+    def unpack(self, val):
+        return val
