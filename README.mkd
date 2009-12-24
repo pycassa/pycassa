@@ -207,7 +207,7 @@ These output values retain the same format as given by the Cassandra thrift inte
 Advanced
 --------
 
-pycassa currently returns Cassandra Columns and SubColumns as python dictionaries. Sometimes, though, you care about the order of elements. If you have access to an ordered dictionary class (such as collections.OrderedDict in python 2.7), then you may pass it to the constructor. All returned values will be of that class.
+pycassa currently returns Cassandra Columns and SuperColumns as python dictionaries. Sometimes, though, you care about the order of elements. If you have access to an ordered dictionary class (such as collections.OrderedDict in python 2.7), then you may pass it to the constructor. All returned values will be of that class.
 
     >>> cf = pycassa.ColumnFamily(client, 'Test Keyspace', 'Test ColumnFamily',
                                   dict_class=collections.OrderedDict)
