@@ -200,7 +200,7 @@ To use SuperColumns, pass super=True to the ColumnFamily constructor.
     >>> cf.multiget(['key1'], super_column='2')
     {'key1': {'sub3': 'val3', 'sub4': 'val4'}}
     >>> list(cf.get_range(super_column='2'))
-    [('key1', {'2': {'sub3': 'val3', 'sub4': 'val4'}})]
+    [('key1', {'sub3': 'val3', 'sub4': 'val4'})]
 
 These output values retain the same format as given by the Cassandra thrift interface.
 
