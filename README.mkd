@@ -12,11 +12,9 @@ Requirements
 ------------
 
     thrift: http://incubator.apache.org/thrift/
-    Cassandra: http://incubator.apache.org/cassandra/
+    Cassandra: http://incubator.apache.org/cassandra/ (0.5.0-rc3 or later)
 
 Install thrift with the python bindings.
-
-Cassandra was only tested with version 0.5.0-beta2, but should work with some previous versions.
 
 It comes with the Cassandra python files for convenience, but you can replace them with your own.
 
