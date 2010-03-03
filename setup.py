@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 #
 
+__version_info__ = (0, 1, 1)
+__version__ = '.'.join([str(v) for v in __version_info__])
+
 """pycassa is a Cassandra library with the following features:
 
 1. Auto-failover single or thread-local connections
@@ -23,8 +26,6 @@ for flag, package in flags:
         optional_packages.append(package)
         sys.argv.remove(flag)
 
-from pycassa import __version__
-
 setup(
       name = 'pycassa',
       version = __version__,
@@ -38,4 +39,5 @@ setup(
       keywords = 'cassandra client db distributed thrift',
       packages = ['pycassa']+optional_packages,
       platforms = 'any',
+      install_requires = ['Thrift']
       )
