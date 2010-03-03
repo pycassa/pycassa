@@ -2,6 +2,8 @@ from exceptions import Exception
 import threading
 from Queue import Queue
 
+import pkg_resources
+pkg_resources.require('Thrift')
 from thrift import Thrift
 from thrift.transport import TTransport
 from thrift.transport import TSocket

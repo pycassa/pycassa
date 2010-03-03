@@ -39,4 +39,5 @@ setup(
       keywords = 'cassandra client db distributed thrift',
       packages = ['pycassa']+optional_packages,
       platforms = 'any',
+      install_requires = ['thrift'],
       )
