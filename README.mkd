@@ -278,6 +278,9 @@ All the functions have the exact same functionality as their thrift counterparts
             If true, return a (value, timestamp) tuple for each column
         super_column : str
             Return columns only in this super_column
+        read_consistency_level : ConsistencyLevel
+            Affects the guaranteed replication factor before returning from
+            any read operation
 
     ColumnFamily.multiget()
         Parameters
@@ -299,6 +302,9 @@ All the functions have the exact same functionality as their thrift counterparts
             If true, return a (value, timestamp) tuple for each column
         super_column : str
             Return columns only in this super_column
+        read_consistency_level : ConsistencyLevel
+            Affects the guaranteed replication factor before returning from
+            any read operation
 
     ColumnFamily.get_count()
         Parameters
@@ -307,6 +313,9 @@ All the functions have the exact same functionality as their thrift counterparts
             The key with which to count columns
         super_column : str
             Count the columns only in this super_column
+        read_consistency_level : ConsistencyLevel
+            Affects the guaranteed replication factor before returning from
+            any read operation
 
     ColumnFamily.get_range()
         Parameters
@@ -332,6 +341,9 @@ All the functions have the exact same functionality as their thrift counterparts
             If true, return a (value, timestamp) tuple for each column
         super_column : string
             Return columns only in this super_column
+        read_consistency_level : ConsistencyLevel
+            Affects the guaranteed replication factor before returning from
+            any read operation
 
     ColumnFamily.insert()
         Insert or update columns for a key
@@ -344,6 +356,9 @@ All the functions have the exact same functionality as their thrift counterparts
             Column: {'column': 'value'}
             SuperColumn: {'column': {'subcolumn': 'value'}}
             The columns or supercolumns to insert or update
+        write_consistency_level : ConsistencyLevel
+            Affects the guaranteed replication factor before returning from
+            any write operation
 
     ColumnFamily.remove()
         Parameters
@@ -352,3 +367,6 @@ All the functions have the exact same functionality as their thrift counterparts
             The key to remove. If column is not set, remove all columns
         column : str
             If set, remove only this column or supercolumn
+        write_consistency_level : ConsistencyLevel
+            Affects the guaranteed replication factor before returning from
+            any write operation

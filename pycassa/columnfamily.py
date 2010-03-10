@@ -137,6 +137,9 @@ class ColumnFamily(object):
             If true, return a (value, timestamp) tuple for each column
         super_column : str
             Return columns only in this super_column
+        read_consistency_level : ConsistencyLevel
+            Affects the guaranteed replication factor before returning from
+            any read operation
 
         Returns
         -------
@@ -179,6 +182,9 @@ class ColumnFamily(object):
             If true, return a (value, timestamp) tuple for each column
         super_column : str
             Return columns only in this super_column
+        read_consistency_level : ConsistencyLevel
+            Affects the guaranteed replication factor before returning from
+            any read operation
 
         Returns
         -------
@@ -208,6 +214,9 @@ class ColumnFamily(object):
             The key with which to count columns
         super_column : str
             Count the columns only in this super_column
+        read_consistency_level : ConsistencyLevel
+            Affects the guaranteed replication factor before returning from
+            any read operation
 
         Returns
         -------
@@ -247,6 +256,9 @@ class ColumnFamily(object):
             If true, return a (value, timestamp) tuple for each column
         super_column : string
             Return columns only in this super_column
+        read_consistency_level : ConsistencyLevel
+            Affects the guaranteed replication factor before returning from
+            any read operation
 
         Returns
         -------
@@ -298,6 +310,9 @@ class ColumnFamily(object):
             Column: {'column': 'value'}
             SuperColumn: {'column': {'subcolumn': 'value'}}
             The columns or supercolumns to insert or update
+        write_consistency_level : ConsistencyLevel
+            Affects the guaranteed replication factor before returning from
+            any write operation
 
         Returns
         -------
@@ -330,6 +345,9 @@ class ColumnFamily(object):
             The key to remove. If column is not set, remove all columns
         column : str
             If set, remove only this column or supercolumn
+        write_consistency_level : ConsistencyLevel
+            Affects the guaranteed replication factor before returning from
+            any write operation
 
         Returns
         -------
