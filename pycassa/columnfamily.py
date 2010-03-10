@@ -98,9 +98,23 @@ class ColumnFamily(object):
                 ret[col.name] = self._convert_Column_to_base(col, include_timestamp)
         return ret
 
+    def _rcl(self, alternative):
+        """Helper function that returns self.read_consistency_level if
+        alternative is None, otherwise returns alternative"""
+        if alternative is None:
+            return self.read_consistency_level
+        return alternative
+
+    def _wcl(self, alternative):
+        """Helper function that returns self.write_consistency_level
+        if alternative is None, otherwise returns alternative"""
+        if alternative is None:
+            return self.write_consistency_level
+        return alternative
+
     def get(self, key, columns=None, column_start="", column_finish="",
             column_reversed=False, column_count=100, include_timestamp=False,
-            super_column=None):
+            super_column=None, read_consistency_level = None):
         """
         Fetch a key from a Cassandra server
         
@@ -134,14 +148,15 @@ class ColumnFamily(object):
                                    column_reversed, column_count)
 
         list_col_or_super = self.client.get_slice(self.keyspace, key, cp, sp,
-                                                  self.read_consistency_level)
+                                                  self._rcl(read_consistency_level))
+
         if len(list_col_or_super) == 0:
             raise NotFoundException()
         return self._convert_ColumnOrSuperColumns_to_dict_class(list_col_or_super, include_timestamp)
 
     def multiget(self, keys, columns=None, column_start="", column_finish="",
                  column_reversed=False, column_count=100, include_timestamp=False,
-                 super_column=None):
+                 super_column=None, read_consistency_level = None):
         """
         Fetch multiple key from a Cassandra server
         
@@ -175,7 +190,7 @@ class ColumnFamily(object):
                                    column_reversed, column_count)
 
         keymap = self.client.multiget_slice(self.keyspace, keys, cp, sp,
-                                            self.read_consistency_level)
+                                            self._rcl(read_consistency_level))
 
         ret = dict()
         for key, columns in keymap.iteritems():
@@ -183,7 +198,7 @@ class ColumnFamily(object):
                 ret[key] = self._convert_ColumnOrSuperColumns_to_dict_class(columns, include_timestamp)
         return ret
 
-    def get_count(self, key, super_column=None):
+    def get_count(self, key, super_column=None, read_consistency_level = None):
         """
         Count the number of columns for a key
 
@@ -200,12 +215,12 @@ class ColumnFamily(object):
         """
         cp = ColumnParent(column_family=self.column_family, super_column=super_column)
         return self.client.get_count(self.keyspace, key, cp,
-                                     self.read_consistency_level)
+                                     self._rcl(read_consistency_level))
 
     def get_range(self, start="", finish="", columns=None, column_start="",
                   column_finish="", column_reversed=False, column_count=100,
                   row_count=None, include_timestamp=False,
-                  super_column=None):
+                  super_column=None, read_consistency_level = None):
         """
         Get an iterator over keys in a specified range
         
@@ -251,7 +266,7 @@ class ColumnFamily(object):
         while True:
             key_slices = self.client.get_range_slice(self.keyspace, cp, sp, last_key,
                                                      finish, buffer_size,
-                                                     self.read_consistency_level)
+                                                     self._rcl(read_consistency_level))
             # This may happen if nothing was ever inserted
             if key_slices is None:
                 return
@@ -271,7 +286,7 @@ class ColumnFamily(object):
             last_key = key_slices[-1].key
             i += 1
 
-    def insert(self, key, columns):
+    def insert(self, key, columns, write_consistency_level = None):
         """
         Insert or update columns for a key
 
@@ -302,10 +317,10 @@ class ColumnFamily(object):
                 cols.append(ColumnOrSuperColumn(column=column))
         self.client.batch_insert(self.keyspace, key,
                                  {self.column_family: cols},
-                                 self.write_consistency_level)
+                                 self._wcl(write_consistency_level))
         return timestamp
 
-    def remove(self, key, column=None):
+    def remove(self, key, column=None, write_consistency_level = None):
         """
         Remove a specified key or column
 
@@ -326,5 +341,5 @@ class ColumnFamily(object):
             cp = ColumnPath(column_family=self.column_family, column=column)
         timestamp = self.timestamp()
         self.client.remove(self.keyspace, key, cp, timestamp,
-                           self.write_consistency_level)
+                           self._wcl(write_consistency_level))
         return timestamp
