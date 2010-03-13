@@ -30,8 +30,8 @@ If you also want to install the cassandra python package (if it's not already in
 
     python setup.py --cassandra install
 
-Basic Usage
------------
+Connecting
+----------
 
 All functions are documented with docstrings.
 To read usage documentation:
@@ -56,7 +56,7 @@ Thread-local connections opens a connection for every thread that calls a Cassan
 
 Connections are robust to server failures. Upon a disconnection, it will attempt to connect to each server in the list in turn. If no server is available, it will raise a NoServerAvailable exception.
 
-Timeouts are also supported and should be used in production to prevent a thread for freezing while waiting for Cassandra to return.
+Timeouts are also supported and should be used in production to prevent a thread from freezing while waiting for Cassandra to return.
 
     >>> client = pycassa.connect(timeout=3.5) # 3.5 second timeout
     (Make some pycassa calls and the connection to the server suddenly is unresponsive)
@@ -64,6 +64,9 @@ Timeouts are also supported and should be used in production to prevent a thread
     Traceback (most recent call last):
     ...
     pycassa.connection.NoServerAvailable
+
+Basic Usage
+-----------
 
 To use the standard interface, create a ColumnFamily instance.
 
