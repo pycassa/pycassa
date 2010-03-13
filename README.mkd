@@ -56,6 +56,15 @@ Thread-local connections opens a connection for every thread that calls a Cassan
 
 Connections are robust to server failures. Upon a disconnection, it will attempt to connect to each server in the list in turn. If no server is available, it will raise a NoServerAvailable exception.
 
+Timeouts are also supported and should be used in production to prevent a thread for freezing while waiting for Cassandra to return.
+
+    >>> client = pycassa.connect(timeout=3.5) # 3.5 second timeout
+    (Make some pycassa calls and the connection to the server suddenly is unresponsive)
+
+    Traceback (most recent call last):
+    ...
+    pycassa.connection.NoServerAvailable
+
 To use the standard interface, create a ColumnFamily instance.
 
     >>> cf = pycassa.ColumnFamily(client, 'Test Keyspace', 'Test ColumnFamily')

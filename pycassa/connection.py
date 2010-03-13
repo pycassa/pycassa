@@ -1,4 +1,5 @@
 from exceptions import Exception
+import socket
 import threading
 from Queue import Queue
 
@@ -17,9 +18,11 @@ DEFAULT_SERVER = 'localhost:9160'
 class NoServerAvailable(Exception):
     pass
 
-def create_client_transport(server, framed_transport):
+def create_client_transport(server, framed_transport, timeout):
     host, port = server.split(":")
     socket = TSocket.TSocket(host, int(port))
+    if timeout is not None:
+        socket.setTimeout(timeout*1000.0)
     if framed_transport:
         transport = TTransport.TFramedTransport(socket)
     else:
@@ -30,7 +33,7 @@ def create_client_transport(server, framed_transport):
 
     return client, transport
 
-def connect(servers=None, framed_transport=False):
+def connect(servers=None, framed_transport=False, timeout=None):
     """
     Constructs a single Cassandra connection. Initially connects to the first
     server on the list.
@@ -47,6 +50,10 @@ def connect(servers=None, framed_transport=False):
               Default: ['localhost:9160']
     framed_transport: bool
               If True, use a TFramedTransport instead of a TBufferedTransport
+    timeout: float
+              Timeout in seconds (e.g. 0.5)
+
+              Default: None (it will stall forever)
 
     Returns
     -------
@@ -55,9 +62,9 @@ def connect(servers=None, framed_transport=False):
 
     if servers is None:
         servers = [DEFAULT_SERVER]
-    return SingleConnection(servers, framed_transport)
+    return SingleConnection(servers, framed_transport, timeout)
 
-def connect_thread_local(servers=None, round_robin=True, framed_transport=False):
+def connect_thread_local(servers=None, round_robin=True, framed_transport=False, timeout=None):
     """
     Constructs a Cassandra connection for each thread. By default, it attempts
     to connect in a round_robin (load-balancing) fashion. Turn it off by
@@ -78,6 +85,10 @@ def connect_thread_local(servers=None, round_robin=True, framed_transport=False)
               in turn.
     framed_transport: bool
               If True, use a TFramedTransport instead of a TBufferedTransport
+    timeout: float
+              Timeout in seconds (e.g. 0.5 for half a second)
+
+              Default: None (it will stall forever)
 
     Returns
     -------
@@ -86,13 +97,14 @@ def connect_thread_local(servers=None, round_robin=True, framed_transport=False)
 
     if servers is None:
         servers = [DEFAULT_SERVER]
-    return ThreadLocalConnection(servers, round_robin, framed_transport)
+    return ThreadLocalConnection(servers, round_robin, framed_transport, timeout)
 
 class SingleConnection(object):
-    def __init__(self, servers, framed_transport=False):
+    def __init__(self, servers, framed_transport, timeout):
         self._servers = servers
         self._client = None
         self._framed_transport = framed_transport
+        self._timeout = timeout
 
     def __getattr__(self, attr):
         def client_call(*args, **kwargs):
@@ -100,11 +112,17 @@ class SingleConnection(object):
                 self._find_server()
             try:
                 return getattr(self._client, attr)(*args, **kwargs)
-            except Thrift.TException, exc:
+            except (Thrift.TException, socket.timeout, socket.error), exc:
                 # Connection error, try to connect to all the servers
                 self._transport.close()
                 self._client = None
                 self._find_server()
+
+                # Try once more, then fail
+                try:
+                    return getattr(self._client, attr)(*args, **kwargs)
+                except (Thrift.TException, socket.timeout, socket.error), exc:
+                    raise NoServerAvailable()
 
         setattr(self, attr, client_call)
         return getattr(self, attr)
@@ -112,14 +130,14 @@ class SingleConnection(object):
     def _find_server(self):
         for server in self._servers:
             try:
-                self._client, self._transport = create_client_transport(server, self._framed_transport)
+                self._client, self._transport = create_client_transport(server, self._framed_transport, self._timeout)
                 return
-            except Thrift.TException, exc:
+            except (Thrift.TException, socket.timeout, socket.error), exc:
                 continue
         raise NoServerAvailable()
 
 class ThreadLocalConnection(object):
-    def __init__(self, servers, round_robin, framed_transport=False):
+    def __init__(self, servers, round_robin, framed_transport, timeout):
         self._servers = servers
         self._queue = Queue()
         for i in xrange(len(servers)):
@@ -127,6 +145,7 @@ class ThreadLocalConnection(object):
         self._local = threading.local()
         self._round_robin = round_robin
         self._framed_transport = framed_transport
+        self._timeout = timeout
 
     def __getattr__(self, attr):
         def client_call(*args, **kwargs):
@@ -135,11 +154,17 @@ class ThreadLocalConnection(object):
 
             try:
                 return getattr(self._local.client, attr)(*args, **kwargs)
-            except Thrift.TException, exc:
+            except (Thrift.TException, socket.timeout, socket.error), exc:
                 # Connection error, try to connect to all the servers
                 self._local.transport.close()
                 self._local.client = None
                 self._find_server()
+
+                # Try once more, then fail
+                try:
+                    return getattr(self._local.client, attr)(*args, **kwargs)
+                except (Thrift.TException, socket.timeout, socket.error), exc:
+                    raise NoServerAvailable()
 
         setattr(self, attr, client_call)
         return getattr(self, attr)
@@ -153,8 +178,8 @@ class ThreadLocalConnection(object):
 
         for server in servers:
             try:
-                self._local.client, self._local.transport = create_client_transport(server, self._framed_transport)
+                self._local.client, self._local.transport = create_client_transport(server, self._framed_transport, self._timeout)
                 return
-            except Thrift.TException, exc:
+            except (Thrift.TException, socket.timeout, socket.error), exc:
                 continue
         raise NoServerAvailable()
