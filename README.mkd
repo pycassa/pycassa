@@ -59,11 +59,13 @@ Connections are robust to server failures. Upon a disconnection, it will attempt
 Timeouts are also supported and should be used in production to prevent a thread from freezing while waiting for Cassandra to return.
 
     >>> client = pycassa.connect(timeout=3.5) # 3.5 second timeout
-    (Make some pycassa calls and the connection to the server suddenly is unresponsive)
+    (Make some pycassa calls and the connection to the server suddenly becomes unresponsive.)
 
     Traceback (most recent call last):
     ...
     pycassa.connection.NoServerAvailable
+
+Note that this only handles socket timeouts. The TimedOutException from Cassandra may still be raised.
 
 Basic Usage
 -----------
