@@ -219,6 +219,27 @@ You may also define your own Column types for the mapper. For example, the IntSt
     ...         return int(val)
     ... 
 
+Meta API
+--------
+
+All of the underlying Cassandra interface functions are available through the connection.
+
+    >>> client = pycassa.connect()
+    >>> client.get_string_property('version')
+    '0.5.1'
+    >>> client.get_string_list_property('keyspaces')
+    ['Test Keyspace', 'system']
+    >>> client.describe_keyspace('system')
+    {'LocationInfo': {'Type': 'Standard', 'CompareWith': 'org.apache.cassandra.db.marshal.UTF8Type', 'Desc': 'persistent metadata for the local node'}, 'HintsColumnFamily': {'CompareSubcolumnsWith': 'org.apache.cassandra.db.marshal.BytesType', 'Type': 'Super', 'CompareWith': 'org.apache.cassandra.db.marshal.UTF8Type', 'Desc': 'hinted handoff data'}}
+
+As of Cassandra 0.5.1, valid arguments for get_string_property() are:
+
+    "cluster name", "config file", "token map", "version"
+
+Valid arguments for get_string_list_property() are:
+
+    "keyspaces"
+
 Extra Documentation
 -------------------
 
