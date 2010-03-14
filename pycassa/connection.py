@@ -116,13 +116,15 @@ class SingleConnection(object):
                 # Connection error, try to connect to all the servers
                 self._transport.close()
                 self._client = None
-                self._find_server()
 
-                # Try once more, then fail
-                try:
-                    return getattr(self._client, attr)(*args, **kwargs)
-                except (Thrift.TException, socket.timeout, socket.error), exc:
-                    raise NoServerAvailable()
+                for server in self._servers:
+                    try:
+                        self._client, self._transport = create_client_transport(server, self._framed_transport, self._timeout)
+                        return getattr(self._client, attr)(*args, **kwargs)
+                    except (Thrift.TException, socket.timeout, socket.error), exc:
+                        continue
+                self._client = None
+                raise NoServerAvailable()
 
         setattr(self, attr, client_call)
         return getattr(self, attr)
@@ -134,6 +136,7 @@ class SingleConnection(object):
                 return
             except (Thrift.TException, socket.timeout, socket.error), exc:
                 continue
+        self._client = None
         raise NoServerAvailable()
 
 class ThreadLocalConnection(object):
@@ -158,23 +161,32 @@ class ThreadLocalConnection(object):
                 # Connection error, try to connect to all the servers
                 self._local.transport.close()
                 self._local.client = None
-                self._find_server()
 
-                # Try once more, then fail
-                try:
-                    return getattr(self._local.client, attr)(*args, **kwargs)
-                except (Thrift.TException, socket.timeout, socket.error), exc:
-                    raise NoServerAvailable()
+                servers = self._round_robin_servers()
+
+                for server in servers:
+                    try:
+                        self._local.client, self._local.transport = create_client_transport(server, self._framed_transport, self._timeout)
+                        return getattr(self._local.client, attr)(*args, **kwargs)
+                    except (Thrift.TException, socket.timeout, socket.error), exc:
+                        continue
+                self._local.client = None
+                raise NoServerAvailable()
 
         setattr(self, attr, client_call)
         return getattr(self, attr)
 
-    def _find_server(self):
+    def _round_robin_servers(self):
         servers = self._servers
         if self._round_robin:
             i = self._queue.get()
             self._queue.put(i)
             servers = servers[i:]+servers[:i]
+
+        return servers
+
+    def _find_server(self):
+        servers = self._round_robin_servers()
 
         for server in servers:
             try:
@@ -182,4 +194,5 @@ class ThreadLocalConnection(object):
                 return
             except (Thrift.TException, socket.timeout, socket.error), exc:
                 continue
+        self._local.client = None
         raise NoServerAvailable()
