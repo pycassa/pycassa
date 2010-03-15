@@ -77,21 +77,21 @@ To use the standard interface, create a ColumnFamily instance.
 The value returned by an insert is the timestamp used for insertion, or int(time.time() * 1e6). You may replace this function with your own (see Extra Documentation).
 
     >>> cf.insert('foo', {'column1': 'val1'})
-    1261349837
+    1261349837816957
     >>> cf.get('foo')
     {'column1': 'val1'}
 
 Insert also acts to update values.
 
     >>> cf.insert('foo', {'column1': 'val2'})
-    1261349910
+    1261349910511572
     >>> cf.get('foo')
     {'column1': 'val2'}
 
 You may insert multiple columns at once.
 
     >>> cf.insert('bar', {'column1': 'val3', 'column2': 'val4'})
-    1261350013
+    1261350013606860
     >>> cf.multiget(['foo', 'bar'])
     {'foo': {'column1': 'val2'}, 'bar': {'column1': 'val3', 'column2': 'val4'}}
     >>> cf.get_count('bar')
@@ -107,11 +107,11 @@ get_range() returns an iterable. Call it with list() to convert it to a list.
 You can remove entire keys or just a certain column.
 
     >>> cf.remove('bar', column='column1')
-    1261350220
+    1261350220106863
     >>> cf.get('bar')
     {'column2': 'val4'}
     >>> cf.remove('bar')
-    1261350226
+    1261350226926859
     >>> cf.get('bar')
     Traceback (most recent call last):
     ...
@@ -159,7 +159,7 @@ All the functions are exactly the same, except that they return instances of the
     >>> from datetime import datetime
     >>> t.datetime_column = t.datetime_str_column = datetime.now()
     >>> Test.objects.insert(t)
-    1261395560
+    1261395560186855
 
     >>> Test.objects.get(t.key).string_column
     'string test'
@@ -178,7 +178,7 @@ All the functions are exactly the same, except that they return instances of the
     7
 
     >>> Test.objects.remove(t)
-    1261395603
+    1261395603906864
     >>> Test.objects.get(t.key)
     Traceback (most recent call last):
     ...
@@ -187,7 +187,7 @@ All the functions are exactly the same, except that they return instances of the
 Note that, as mentioned previously, get_range() may continue to return removed rows for some time:
 
     >>> Test.objects.remove(t)
-    1261395603
+    1261395603756875
     >>> list(Test.objects.get_range())
     [<__main__.Test object at 0x7fac9c85ea90>]
     >>> list(Test.objects.get_range())[0].string_column
@@ -200,11 +200,11 @@ To use SuperColumns, pass super=True to the ColumnFamily constructor.
 
     >>> cf = pycassa.ColumnFamily(client, 'Test Keyspace', 'Test SuperColumnFamily', super=True)
     >>> cf.insert('key1', {'1': {'sub1': 'val1', 'sub2': 'val2'}, '2': {'sub3': 'val3', 'sub4': 'val4'}})
-    1261490144
+    1261490144457132
     >>> cf.get('key1')
     {'1': {'sub2': 'val2', 'sub1': 'val1'}, '2': {'sub4': 'val4', 'sub3': 'val3'}}
     >>> cf.remove('key1', '1')
-    1261490176
+    1261490176976864
     >>> cf.get('key1')
     {'2': {'sub4': 'val4', 'sub3': 'val3'}}
     >>> cf.get('key1', super_column='2')
