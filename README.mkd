@@ -74,7 +74,7 @@ To use the standard interface, create a ColumnFamily instance.
 
     >>> cf = pycassa.ColumnFamily(client, 'Test Keyspace', 'Test ColumnFamily')
 
-The value returned by an insert is the timestamp used for insertion, or int(time.mktime(time.gmtime())). You may replace this function with your own (see Extra Documentation).
+The value returned by an insert is the timestamp used for insertion, or int(time.time() * 1e6). You may replace this function with your own (see Extra Documentation).
 
     >>> cf.insert('foo', {'column1': 'val1'})
     1261349837
