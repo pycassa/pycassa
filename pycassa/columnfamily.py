@@ -14,7 +14,7 @@ def gm_timestamp():
     -------
     int : UNIX epoch time in GMT
     """
-    return int(time.mktime(time.gmtime()))
+    return int(time.time() * 1e6)
 
 def create_SlicePredicate(columns, column_start, column_finish, column_reversed, column_count):
     if columns is not None:
