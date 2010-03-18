@@ -27,7 +27,7 @@ class ColumnFamily(object):
     def __init__(self, client, keyspace, column_family,
                  buffer_size=1024,
                  read_consistency_level=ConsistencyLevel.ONE,
-                 write_consistency_level=ConsistencyLevel.ZERO,
+                 write_consistency_level=ConsistencyLevel.ONE,
                  timestamp=gm_timestamp, super=False,
                  dict_class=dict):
         """
