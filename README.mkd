@@ -137,15 +137,13 @@ You can also map existing classes using ColumnFamilyMap.
     >>> class Test(object):
     ...     string_column       = pycassa.String(default='Your Default')
     ...     int_str_column      = pycassa.IntString(default=5)
-    ...     int_column          = pycassa.Int64(default=0)
     ...     float_str_column    = pycassa.FloatString(default=8.0)
     ...     float_column        = pycassa.Float64(default=0.0)
     ...     datetime_str_column = pycassa.DateTimeString() # default=None
-    ...     datetime_column     = pycassa.DateTime()
 
 The defaults will be filled in whenever you retrieve instances from the Cassandra server and the column doesn't exist. If, for example, you add columns in the future, you simply add the relevant column and the default will be there when you get old instances.
 
-The difference between IntString and Int64 is how it's stored in Cassandra. If you want maximum compatibility with other languages, use IntString, FloatString, and DateTimeString. Int64 is stored as an int64_t, Float64 is stored as a double, and DateTime is stored in the same format as the time() system call (seconds since 1970-01-01 00:00:00). Int64 and Float64 are native-endian. Be aware of any endian issues if you use them on different architectures, and perhaps make your own column type.
+IntString, FloatString, and DateTimeString all use string representations for storage. Float64 is stored as a double and is native-endian. Be aware of any endian issues if you use it on different architectures, or perhaps make your own column type.
 
     >>> Test.objects = pycassa.ColumnFamilyMap(Test, cf)
 
@@ -154,10 +152,10 @@ All the functions are exactly the same, except that they return instances of the
     >>> t = Test()
     >>> t.key = 'maptest'
     >>> t.string_column = 'string test'
-    >>> t.int_column = t.int_str_column = 18
+    >>> t.int_str_column = 18
     >>> t.float_column = t.float_str_column = 35.8
     >>> from datetime import datetime
-    >>> t.datetime_column = t.datetime_str_column = datetime.now()
+    >>> t.datetime_str_column = datetime.now()
     >>> Test.objects.insert(t)
     1261395560186855
 
