@@ -142,3 +142,56 @@ class TestColumnFamilyMap:
         assert instance.intstrcol == TestUTF8.intstrcol.default
         assert instance.floatstrcol == TestUTF8.floatstrcol.default
         assert instance.datetimestrcol == TestUTF8.datetimestrcol.default
+
+class TestSuperColumnFamilyMap:
+    def setUp(self):
+        self.client = connect()
+        self.cf = ColumnFamily(self.client, 'Test Keyspace', 'Test Super',
+                               write_consistency_level=ConsistencyLevel.ONE,
+                               timestamp=self.timestamp,
+                               super=True)
+        self.map = ColumnFamilyMap(TestUTF8, self.cf)
+        try:
+            self.timestamp_n = int(self.cf.get('meta')['meta']['timestamp'])
+        except NotFoundException:
+            self.timestamp_n = 0
+        self.clear()
+
+    def tearDown(self):
+        self.cf.insert('meta', {'meta': {'timestamp': str(self.timestamp_n)}})
+
+    # Since the timestamp passed to Cassandra will be in the same second
+    # with the default timestamp function, causing problems with removing
+    # and inserting (Cassandra doesn't know which is later), we supply our own
+    def timestamp(self):
+        self.timestamp_n += 1
+        return self.timestamp_n
+
+    def clear(self):
+        for key, columns in self.cf.get_range(include_timestamp=True):
+            for subcolumns in columns.itervalues():
+                for value, timestamp in subcolumns.itervalues():
+                    self.timestamp_n = max(self.timestamp_n, timestamp)
+            self.cf.remove(key)
+
+    def instance(self, key, super_column):
+        instance = TestUTF8()
+        instance.key = key
+        instance.super_column = super_column
+        instance.strcol = '1'
+        instance.intcol = 2
+        instance.floatcol = 3.5
+        instance.datetimecol = datetime.now().replace(microsecond=0)
+        instance.intstrcol = 8
+        instance.floatstrcol = 4.6
+        instance.datetimestrcol = datetime.now().replace(microsecond=0)
+
+        return instance
+
+    def test_super(self):
+        instance = self.instance('TestSuperColumnFamilyMap.test_super', 'super1')
+        assert_raises(NotFoundException, self.map.get, instance.key)
+        self.map.insert(instance)
+        assert self.map.get(instance.key)[instance.super_column] == instance
+        assert self.map.multiget([instance.key])[instance.key][instance.super_column] == instance
+        assert list(self.map.get_range(start=instance.key, finish=instance.key)) == [{instance.super_column: instance}]
