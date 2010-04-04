@@ -123,16 +123,16 @@ class ColumnFamily(object):
         key : str
             The key to fetch
         columns : [str]
-            Limit the columns fetched to the specified list
+            Limit the columns or super_columns fetched to the specified list
         column_start : str
-            Only fetch when a column is >= column_start
+            Only fetch when a column or super_column is >= column_start
         column_finish : str
-            Only fetch when a column is <= column_finish
+            Only fetch when a column or super_column is <= column_finish
         column_reversed : bool
-            Fetch the columns in reverse order. This will do nothing unless
-            you passed a dict_class to the constructor.
+            Fetch the columns or super_columns in reverse order. This will do
+            nothing unless you passed a dict_class to the constructor.
         column_count : int
-            Limit the number of columns fetched per key
+            Limit the number of columns or super_columns fetched per key
         include_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
         super_column : str
@@ -168,16 +168,16 @@ class ColumnFamily(object):
         keys : [str]
             A list of keys to fetch
         columns : [str]
-            Limit the columns fetched to the specified list
+            Limit the columns or super_columns fetched to the specified list
         column_start : str
-            Only fetch when a column is >= column_start
+            Only fetch when a column or super_column is >= column_start
         column_finish : str
-            Only fetch when a column is <= column_finish
+            Only fetch when a column or super_column is <= column_finish
         column_reversed : bool
-            Fetch the columns in reverse order. This will do nothing unless
-            you passed a dict_class to the constructor.
+            Fetch the columns or super_columns in reverse order. This will do
+            nothing unless you passed a dict_class to the constructor.
         column_count : int
-            Limit the number of columns fetched per key
+            Limit the number of columns or super_columns fetched per key
         include_timestamp : bool
             If true, return a (value, timestamp) tuple for each column
         super_column : str
@@ -240,16 +240,16 @@ class ColumnFamily(object):
         finish : str
             End at this key (inclusive)
         columns : [str]
-            Limit the columns fetched to the specified list
+            Limit the columns or super_columns fetched to the specified list
         column_start : str
-            Only fetch when a column is >= column_start
+            Only fetch when a column or super_column is >= column_start
         column_finish : str
-            Only fetch when a column is <= column_finish
+            Only fetch when a column or super_column is <= column_finish
         column_reversed : bool
-            Fetch the columns in reverse order. This will do nothing unless
-            you passed a dict_class to the constructor.
+            Fetch the columns or super_columns in reverse order. This will do
+            nothing unless you passed a dict_class to the constructor.
         column_count : int
-            Limit the number of columns fetched per key
+            Limit the number of columns or super_columns fetched per key
         row_count : int
             Limit the number of rows fetched
         include_timestamp : bool
