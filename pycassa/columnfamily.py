@@ -1,5 +1,8 @@
-import pkg_resources
-pkg_resources.require('Thrift')
+try:
+    import pkg_resources
+    pkg_resources.require('Thrift')
+except ImportError:
+    pass
 from cassandra.ttypes import Column, ColumnOrSuperColumn, ColumnParent, \
     ColumnPath, ConsistencyLevel, NotFoundException, SlicePredicate, \
     SliceRange, SuperColumn
