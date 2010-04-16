@@ -18,7 +18,7 @@ def combine_columns(column_dict, columns):
     return combined_columns
 
 class ColumnFamilyMap(object):
-    def __init__(self, cls, column_family, columns=None):
+    def __init__(self, cls, column_family, columns=None, all_columns=False):
         """
         Construct a ObjectFamily
 
@@ -28,10 +28,15 @@ class ColumnFamilyMap(object):
             Instances of cls are generated on get*() requests
         column_family: ColumnFamily
             The ColumnFamily to tie with cls
+        all_columns: boolean
+            Whether all columns should be fetched if none are specified in
+            the get request
         """
         self.cls = cls
         self.column_family = column_family
-
+        
+        self.all_columns = all_columns
+        
         self.columns = {}
         for name, column in self.cls.__dict__.iteritems():
             if not isinstance(column, Column):
@@ -68,7 +73,7 @@ class ColumnFamilyMap(object):
         -------
         Class instance
         """
-        if 'columns' not in kwargs and not self.column_family.super:
+        if 'columns' not in kwargs and not self.column_family.super and not self.all_columns:
             kwargs['columns'] = self.columns.keys()
 
         columns = self.column_family.get(key, *args, **kwargs)
@@ -85,6 +90,7 @@ class ColumnFamilyMap(object):
             return create_instance(self.cls, key=key, super_column=kwargs['super_column'], **combined)
 
         combined = combine_columns(self.columns, columns)
+        combined['_raw_values'] = columns
         return create_instance(self.cls, key=key, **combined)
 
     def multiget(self, *args, **kwargs):
