@@ -5,7 +5,7 @@ except ImportError:
     pass
 from cassandra.ttypes import Column, ColumnOrSuperColumn, ColumnParent, \
     ColumnPath, ConsistencyLevel, NotFoundException, SlicePredicate, \
-    SliceRange, SuperColumn
+    SliceRange, SuperColumn, Mutation
 
 import time
 
@@ -329,12 +329,12 @@ class ColumnFamily(object):
                 subc = [Column(name=subname, value=subvalue, timestamp=timestamp) \
                         for subname, subvalue in v.iteritems()]
                 column = SuperColumn(name=c, columns=subc)
-                cols.append(ColumnOrSuperColumn(super_column=column))
+                cols.append(Mutation(column_or_supercolumn=ColumnOrSuperColumn(super_column=column)))
             else:
                 column = Column(name=c, value=v, timestamp=timestamp)
-                cols.append(ColumnOrSuperColumn(column=column))
-        self.client.batch_insert(self.keyspace, key,
-                                 {self.column_family: cols},
+                cols.append(Mutation(column_or_supercolumn=ColumnOrSuperColumn(column=column)))
+        self.client.batch_mutate(self.keyspace,
+                                 {key: {self.column_family: cols}},
                                  self._wcl(write_consistency_level))
         return timestamp
 
