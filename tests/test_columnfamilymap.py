@@ -23,7 +23,7 @@ class TestUTF8(object):
 class TestColumnFamilyMap:
     def setUp(self):
         self.client = connect()
-        self.cf = ColumnFamily(self.client, 'Test Keyspace', 'Test UTF8',
+        self.cf = ColumnFamily(self.client, 'Keyspace1', 'Standard2',
                                write_consistency_level=ConsistencyLevel.ONE,
                                timestamp=self.timestamp)
         self.map = ColumnFamilyMap(TestUTF8, self.cf)
@@ -146,7 +146,7 @@ class TestColumnFamilyMap:
 class TestSuperColumnFamilyMap:
     def setUp(self):
         self.client = connect()
-        self.cf = ColumnFamily(self.client, 'Test Keyspace', 'Test Super',
+        self.cf = ColumnFamily(self.client, 'Keyspace1', 'Super2',
                                write_consistency_level=ConsistencyLevel.ONE,
                                timestamp=self.timestamp,
                                super=True)

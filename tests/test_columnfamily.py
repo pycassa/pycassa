@@ -8,7 +8,7 @@ class TestDict(dict):
 class TestColumnFamily:
     def setUp(self):
         self.client = connect()
-        self.cf = ColumnFamily(self.client, 'Test Keyspace', 'Test UTF8',
+        self.cf = ColumnFamily(self.client, 'Keyspace1', 'Standard2',
                                write_consistency_level=ConsistencyLevel.ONE,
                                buffer_size=2, timestamp=self.timestamp,
                                dict_class=TestDict)
@@ -101,7 +101,7 @@ class TestColumnFamily:
 class TestSuperColumnFamily:
     def setUp(self):
         self.client = connect()
-        self.cf = ColumnFamily(self.client, 'Test Keyspace', 'Test Super',
+        self.cf = ColumnFamily(self.client, 'Keyspace1', 'Super2',
                                write_consistency_level=ConsistencyLevel.ONE,
                                buffer_size=2, timestamp=self.timestamp,
                                super=True)
