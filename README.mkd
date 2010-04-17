@@ -72,6 +72,12 @@ Timeouts are also supported and should be used in production to prevent a thread
 
 Note that this only handles socket timeouts. The TimedOutException from Cassandra may still be raised.
 
+You can save login credentials with the .login() function.
+
+    >>> client.login('Keyspace1', {'username': 'jsmith', 'password': 'havebadpass'})
+
+These credentials will automatically be re-used on every successful connection. You only need to call login() once.
+
 Basic Usage
 -----------
 

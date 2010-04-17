@@ -13,6 +13,7 @@ from thrift.transport import TTransport
 from thrift.transport import TSocket
 from thrift.protocol import TBinaryProtocol
 from cassandra import Cassandra
+from cassandra.ttypes import AuthenticationRequest
 
 __all__ = ['connect', 'connect_thread_local', 'NoServerAvailable']
 
@@ -21,7 +22,7 @@ DEFAULT_SERVER = 'localhost:9160'
 class NoServerAvailable(Exception):
     pass
 
-def create_client_transport(server, framed_transport, timeout):
+def create_client_transport(server, framed_transport, timeout, logins):
     host, port = server.split(":")
     socket = TSocket.TSocket(host, int(port))
     if timeout is not None:
@@ -34,9 +35,14 @@ def create_client_transport(server, framed_transport, timeout):
     client = Cassandra.Client(protocol)
     transport.open()
 
+    if logins is not None:
+        for keyspace, credentials in logins.iteritems():
+            request = AuthenticationRequest(credentials=credentials)
+            client.login(keyspace, request)
+
     return client, transport
 
-def connect(servers=None, framed_transport=False, timeout=None):
+def connect(servers=None, framed_transport=False, timeout=None, logins=None):
     """
     Constructs a single Cassandra connection. Initially connects to the first
     server on the list.
@@ -57,6 +63,10 @@ def connect(servers=None, framed_transport=False, timeout=None):
               Timeout in seconds (e.g. 0.5)
 
               Default: None (it will stall forever)
+    logins : dict
+              Dictionary of Keyspaces and Credentials
+
+              Example: {'Keyspace1' : {'username':'jsmith', 'password':'havebadpass'}}
 
     Returns
     -------
@@ -65,9 +75,9 @@ def connect(servers=None, framed_transport=False, timeout=None):
 
     if servers is None:
         servers = [DEFAULT_SERVER]
-    return SingleConnection(servers, framed_transport, timeout)
+    return SingleConnection(servers, framed_transport, timeout, logins)
 
-def connect_thread_local(servers=None, round_robin=True, framed_transport=False, timeout=None):
+def connect_thread_local(servers=None, round_robin=True, framed_transport=False, timeout=None, logins=None):
     """
     Constructs a Cassandra connection for each thread. By default, it attempts
     to connect in a round_robin (load-balancing) fashion. Turn it off by
@@ -92,6 +102,10 @@ def connect_thread_local(servers=None, round_robin=True, framed_transport=False,
               Timeout in seconds (e.g. 0.5 for half a second)
 
               Default: None (it will stall forever)
+    logins : dict
+              Dictionary of Keyspaces and Credentials
+
+              Example: {'Keyspace1' : {'username':'jsmith', 'password':'havebadpass'}}
 
     Returns
     -------
@@ -100,14 +114,18 @@ def connect_thread_local(servers=None, round_robin=True, framed_transport=False,
 
     if servers is None:
         servers = [DEFAULT_SERVER]
-    return ThreadLocalConnection(servers, round_robin, framed_transport, timeout)
+    return ThreadLocalConnection(servers, round_robin, framed_transport, timeout, logins)
 
 class SingleConnection(object):
-    def __init__(self, servers, framed_transport, timeout):
+    def __init__(self, servers, framed_transport, timeout, logins):
         self._servers = servers
         self._client = None
         self._framed_transport = framed_transport
         self._timeout = timeout
+        self._logins = logins if logins is not None else {}
+
+    def login(self, keyspace, credentials):
+        self._logins[keyspace] = credentials
 
     def __getattr__(self, attr):
         def client_call(*args, **kwargs):
@@ -122,7 +140,7 @@ class SingleConnection(object):
 
                 for server in self._servers:
                     try:
-                        self._client, self._transport = create_client_transport(server, self._framed_transport, self._timeout)
+                        self._client, self._transport = create_client_transport(server, self._framed_transport, self._timeout, self._logins)
                         return getattr(self._client, attr)(*args, **kwargs)
                     except (Thrift.TException, socket.timeout, socket.error), exc:
                         continue
@@ -135,7 +153,7 @@ class SingleConnection(object):
     def _find_server(self):
         for server in self._servers:
             try:
-                self._client, self._transport = create_client_transport(server, self._framed_transport, self._timeout)
+                self._client, self._transport = create_client_transport(server, self._framed_transport, self._timeout, self._logins)
                 return
             except (Thrift.TException, socket.timeout, socket.error), exc:
                 continue
@@ -143,7 +161,7 @@ class SingleConnection(object):
         raise NoServerAvailable()
 
 class ThreadLocalConnection(object):
-    def __init__(self, servers, round_robin, framed_transport, timeout):
+    def __init__(self, servers, round_robin, framed_transport, timeout, logins):
         self._servers = servers
         self._queue = Queue()
         for i in xrange(len(servers)):
@@ -152,6 +170,10 @@ class ThreadLocalConnection(object):
         self._round_robin = round_robin
         self._framed_transport = framed_transport
         self._timeout = timeout
+        self._logins = logins if logins is not None else {}
+
+    def login(self, keyspace, credentials):
+        self._logins[keyspace] = credentials
 
     def __getattr__(self, attr):
         def client_call(*args, **kwargs):
@@ -169,7 +191,7 @@ class ThreadLocalConnection(object):
 
                 for server in servers:
                     try:
-                        self._local.client, self._local.transport = create_client_transport(server, self._framed_transport, self._timeout)
+                        self._local.client, self._local.transport = create_client_transport(server, self._framed_transport, self._timeout, self._logins)
                         return getattr(self._local.client, attr)(*args, **kwargs)
                     except (Thrift.TException, socket.timeout, socket.error), exc:
                         continue
@@ -193,7 +215,7 @@ class ThreadLocalConnection(object):
 
         for server in servers:
             try:
-                self._local.client, self._local.transport = create_client_transport(server, self._framed_transport, self._timeout)
+                self._local.client, self._local.transport = create_client_transport(server, self._framed_transport, self._timeout, self._logins)
                 return
             except (Thrift.TException, socket.timeout, socket.error), exc:
                 continue

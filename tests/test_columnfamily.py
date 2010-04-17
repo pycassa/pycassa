@@ -1,4 +1,4 @@
-from pycassa import connect, ColumnFamily, ConsistencyLevel, NotFoundException
+from pycassa import connect, connect_thread_local, ColumnFamily, ConsistencyLevel, NotFoundException
 
 from nose.tools import assert_raises
 
@@ -8,6 +8,7 @@ class TestDict(dict):
 class TestColumnFamily:
     def setUp(self):
         self.client = connect()
+        self.client.login('Keyspace1', {'username': 'jsmith', 'password': 'havebadpass'})
         self.cf = ColumnFamily(self.client, 'Keyspace1', 'Standard2',
                                write_consistency_level=ConsistencyLevel.ONE,
                                buffer_size=2, timestamp=self.timestamp,
@@ -100,7 +101,8 @@ class TestColumnFamily:
 
 class TestSuperColumnFamily:
     def setUp(self):
-        self.client = connect()
+        self.client = connect_thread_local()
+        self.client.login('Keyspace1', {'username': 'jsmith', 'password': 'havebadpass'})
         self.cf = ColumnFamily(self.client, 'Keyspace1', 'Super2',
                                write_consistency_level=ConsistencyLevel.ONE,
                                buffer_size=2, timestamp=self.timestamp,
