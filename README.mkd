@@ -426,3 +426,14 @@ All the functions have the exact same functionality as their thrift counterparts
         write_consistency_level : ConsistencyLevel
             Affects the guaranteed replication factor before returning from
             any write operation
+
+    ColumnFamilyMap.__init__()
+        Parameters
+        ----------
+        cls      : class
+            Instances of cls are generated on get*() requests
+        column_family: ColumnFamily
+            The ColumnFamily to tie with cls
+        raw_columns: boolean
+            Whether all columns should be fetched into the raw_columns field in
+            requests

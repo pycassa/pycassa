@@ -7,18 +7,8 @@ def create_instance(cls, **kwargs):
     instance.__dict__.update(kwargs)
     return instance
 
-def combine_columns(column_dict, columns):
-    combined_columns = {}
-    for column, type in column_dict.iteritems():
-        combined_columns[column] = type.default
-    for column, value in columns.iteritems():
-        col_cls = column_dict.get(column, None)
-        if col_cls is not None:
-            combined_columns[column] = col_cls.unpack(value)
-    return combined_columns
-
 class ColumnFamilyMap(object):
-    def __init__(self, cls, column_family, columns=None, all_columns=False):
+    def __init__(self, cls, column_family, columns=None, raw_columns=False):
         """
         Construct a ObjectFamily
 
@@ -28,14 +18,14 @@ class ColumnFamilyMap(object):
             Instances of cls are generated on get*() requests
         column_family: ColumnFamily
             The ColumnFamily to tie with cls
-        all_columns: boolean
-            Whether all columns should be fetched if none are specified in
-            the get request
+        raw_columns: boolean
+            Whether all columns should be fetched into the raw_columns field in
+            requests
         """
         self.cls = cls
         self.column_family = column_family
         
-        self.all_columns = all_columns
+        self.raw_columns = raw_columns
         
         self.columns = {}
         for name, column in self.cls.__dict__.iteritems():
@@ -43,6 +33,20 @@ class ColumnFamilyMap(object):
                 continue
 
             self.columns[name] = column
+
+    def combine_columns(self, columns):
+        combined_columns = {}
+        if self.raw_columns:
+            combined_columns['raw_columns'] = {}
+        for column, type in self.columns.iteritems():
+            combined_columns[column] = type.default
+        for column, value in columns.iteritems():
+            col_cls = self.columns.get(column, None)
+            if col_cls is not None:
+                combined_columns[column] = col_cls.unpack(value)
+            if self.raw_columns:
+                combined_columns['raw_columns'][column] = value
+        return combined_columns
 
     def get(self, key, *args, **kwargs):
         """
@@ -73,7 +77,7 @@ class ColumnFamilyMap(object):
         -------
         Class instance
         """
-        if 'columns' not in kwargs and not self.column_family.super and not self.all_columns:
+        if 'columns' not in kwargs and not self.column_family.super and not self.raw_columns:
             kwargs['columns'] = self.columns.keys()
 
         columns = self.column_family.get(key, *args, **kwargs)
@@ -82,15 +86,14 @@ class ColumnFamilyMap(object):
             if 'super_column' not in kwargs:
                 vals = {}
                 for super_column, subcols in columns.iteritems():
-                    combined = combine_columns(self.columns, subcols)
+                    combined = self.combine_columns(subcols)
                     vals[super_column] = create_instance(self.cls, key=key, super_column=super_column, **combined)
                 return vals
 
-            combined = combine_columns(self.columns, columns)
+            combined = self.combine_columns(columns)
             return create_instance(self.cls, key=key, super_column=kwargs['super_column'], **combined)
 
-        combined = combine_columns(self.columns, columns)
-        combined['_raw_values'] = columns
+        combined = self.combine_columns(columns)
         return create_instance(self.cls, key=key, **combined)
 
     def multiget(self, *args, **kwargs):
@@ -122,7 +125,7 @@ class ColumnFamilyMap(object):
         -------
         {'key': Class instance} 
         """
-        if 'columns' not in kwargs and not self.column_family.super:
+        if 'columns' not in kwargs and not self.column_family.super and not self.raw_columns:
             kwargs['columns'] = self.columns.keys()
         kcmap = self.column_family.multiget(*args, **kwargs)
         ret = {}
@@ -131,14 +134,14 @@ class ColumnFamilyMap(object):
                 if 'super_column' not in kwargs:
                     vals = {}
                     for super_column, subcols in columns.iteritems():
-                        combined = combine_columns(self.columns, subcols)
+                        combined = self.combine_columns(subcols)
                         vals[super_column] = create_instance(self.cls, key=key, super_column=super_column, **combined)
                     ret[key] = vals
                 else:
-                    combined = combine_columns(self.columns, columns)
+                    combined = self.combine_columns(columns)
                     ret[key] = create_instance(self.cls, key=key, super_column=kwargs['super_column'], **combined)
             else:
-                combined = combine_columns(self.columns, columns)
+                combined = self.combine_columns(columns)
                 ret[key] = create_instance(self.cls, key=key, **combined)
         return ret
 
@@ -190,21 +193,21 @@ class ColumnFamilyMap(object):
         -------
         iterator over Class instance
         """
-        if 'columns' not in kwargs and not self.column_family.super:
+        if 'columns' not in kwargs and not self.column_family.super and not self.raw_columns:
             kwargs['columns'] = self.columns.keys()
         for key, columns in self.column_family.get_range(*args, **kwargs):
             if self.column_family.super:
                 if 'super_column' not in kwargs:
                     vals = {}
                     for super_column, subcols in columns.iteritems():
-                        combined = combine_columns(self.columns, subcols)
+                        combined = self.combine_columns(subcols)
                         vals[super_column] = create_instance(self.cls, key=key, super_column=super_column, **combined)
                     yield vals
                 else:
-                    combined = combine_columns(self.columns, columns)
+                    combined = self.combine_columns(columns)
                     yield create_instance(self.cls, key=key, super_column=kwargs['super_column'], **combined)
             else:
-                combined = combine_columns(self.columns, columns)
+                combined = self.combine_columns(columns)
                 yield create_instance(self.cls, key=key, **combined)
 
     def insert(self, instance, columns=None):

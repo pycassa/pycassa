@@ -20,6 +20,9 @@ class TestUTF8(object):
     def __ne__(self, other):
         return self.__dict__ != other.__dict__
 
+class TestEmpty(object):
+    pass
+
 class TestColumnFamilyMap:
     def setUp(self):
         self.client = connect()
@@ -28,6 +31,7 @@ class TestColumnFamilyMap:
                                write_consistency_level=ConsistencyLevel.ONE,
                                timestamp=self.timestamp)
         self.map = ColumnFamilyMap(TestUTF8, self.cf)
+        self.empty_map = ColumnFamilyMap(TestEmpty, self.cf, raw_columns=True)
         try:
             self.timestamp_n = int(self.cf.get('meta')['timestamp'])
         except NotFoundException:
@@ -80,6 +84,7 @@ class TestColumnFamilyMap:
         assert_raises(NotFoundException, self.map.get, instance.key)
         self.map.insert(instance)
         assert self.map.get(instance.key) == instance
+        assert self.empty_map.get(instance.key).raw_columns['intstrcol'] == str(instance.intstrcol)
 
     def test_insert_multiget(self):
         instance1 = self.instance('TestColumnFamilyMap.test_insert_multiget1')
@@ -93,6 +98,7 @@ class TestColumnFamilyMap:
         assert rows[instance1.key] == instance1
         assert rows[instance2.key] == instance2
         assert missing_key not in rows
+        assert self.empty_map.multiget([instance1.key])[instance1.key].raw_columns['intstrcol'] == str(instance1.intstrcol)
 
     def test_insert_get_count(self):
         instance = self.instance('TestColumnFamilyMap.test_insert_get_count')
@@ -111,6 +117,7 @@ class TestColumnFamilyMap:
         rows = list(self.map.get_range(start=instances[0].key, finish=instances[-1].key))
         assert len(rows) == len(instances)
         assert rows == instances
+        assert list(self.empty_map.get_range(start=instances[0].key, finish=instances[0].key))[0].raw_columns['intstrcol'] == str(instances[0].intstrcol)
 
     def test_remove(self):
         instance = self.instance('TestColumnFamilyMap.test_remove')
