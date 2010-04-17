@@ -87,7 +87,7 @@ class TestColumnFamily:
         columns = {'1': 'val1', '2': 'val2'}
         self.cf.insert(key, columns)
 
-        self.cf.remove(key, '2')
+        self.cf.remove(key, columns=['2'])
         del columns['2']
         assert self.cf.get(key) == {'1': 'val1'}
 

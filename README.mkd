@@ -117,7 +117,7 @@ get_range() returns an iterable. Call it with list() to convert it to a list.
 
 You can remove entire keys or just a certain column.
 
-    >>> cf.remove('bar', column='column1')
+    >>> cf.remove('bar', columns=['column1'])
     1261350220106863
     >>> cf.get('bar')
     {'column2': 'val4'}
@@ -212,7 +212,7 @@ To use SuperColumns, pass super=True to the ColumnFamily constructor.
     1261490144457132
     >>> cf.get('key1')
     {'1': {'sub2': 'val2', 'sub1': 'val1'}, '2': {'sub4': 'val4', 'sub3': 'val3'}}
-    >>> cf.remove('key1', '1')
+    >>> cf.remove('key1', super_column='1')
     1261490176976864
     >>> cf.get('key1')
     {'2': {'sub4': 'val4', 'sub3': 'val3'}}
@@ -420,9 +420,11 @@ All the functions have the exact same functionality as their thrift counterparts
         Parameters
         ----------
         key : str
-            The key to remove. If column is not set, remove all columns
-        column : str
-            If set, remove only this column or supercolumn
+            The key to remove. If columns is not set, remove all columns
+        columns : list
+            Delete the columns or super_columns in this list
+        super_column : str
+            Delete the columns from this super_column
         write_consistency_level : ConsistencyLevel
             Affects the guaranteed replication factor before returning from
             any write operation

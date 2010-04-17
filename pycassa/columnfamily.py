@@ -5,7 +5,7 @@ except ImportError:
     pass
 from cassandra.ttypes import Column, ColumnOrSuperColumn, ColumnParent, \
     ColumnPath, ConsistencyLevel, NotFoundException, SlicePredicate, \
-    SliceRange, SuperColumn, Mutation
+    SliceRange, SuperColumn, Mutation, Deletion
 
 import time
 
@@ -338,16 +338,18 @@ class ColumnFamily(object):
                                  self._wcl(write_consistency_level))
         return timestamp
 
-    def remove(self, key, column=None, write_consistency_level = None):
+    def remove(self, key, columns=None, super_column=None, write_consistency_level = None):
         """
-        Remove a specified key or column
+        Remove a specified key or columns
 
         Parameters
         ----------
         key : str
-            The key to remove. If column is not set, remove all columns
-        column : str
-            If set, remove only this column or supercolumn
+            The key to remove. If columns is not set, remove all columns
+        columns : list
+            Delete the columns or super_columns in this list
+        super_column : str
+            Delete the columns from this super_column
         write_consistency_level : ConsistencyLevel
             Affects the guaranteed replication factor before returning from
             any write operation
@@ -356,11 +358,18 @@ class ColumnFamily(object):
         -------
         int timestamp
         """
-        if self.super:
-            cp = ColumnPath(column_family=self.column_family, super_column=column)
-        else:
-            cp = ColumnPath(column_family=self.column_family, column=column)
         timestamp = self.timestamp()
-        self.client.remove(self.keyspace, key, cp, timestamp,
-                           self._wcl(write_consistency_level))
+        if columns is not None:
+            # Deletion doesn't support SliceRange predicates as of Cassandra 0.6.0,
+            # so we can't add column_start, column_finish, etc... yet
+            sp = SlicePredicate(column_names=columns)
+            deletion = Deletion(timestamp=timestamp, super_column=super_column, predicate=sp)
+            mutation = Mutation(deletion=deletion)
+            self.client.batch_mutate(self.keyspace,
+                                     {key: {self.column_family: [mutation]}},
+                                     self._wcl(write_consistency_level))
+        else:
+            cp = ColumnPath(column_family=self.column_family, super_column=super_column)
+            self.client.remove(self.keyspace, key, cp, timestamp,
+                               self._wcl(write_consistency_level))
         return timestamp
