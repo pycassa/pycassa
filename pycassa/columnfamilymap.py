@@ -232,7 +232,7 @@ class ColumnFamilyMap(object):
             columns = self.columns.keys()
 
         for column in columns:
-            if instance.__dict__.has_key(column):
+            if instance.__dict__.has_key(column) and instance.__dict__[column] is not None:
                 insert_dict[column] = self.columns[column].pack(instance.__dict__[column])
 
         if self.column_family.super:
