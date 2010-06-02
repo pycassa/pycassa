@@ -17,7 +17,7 @@ Requirements
 ------------
 
     thrift: http://incubator.apache.org/thrift/
-    Cassandra: http://incubator.apache.org/cassandra/
+    Cassandra: http://cassandra.apache.org
 
 Install thrift with the python bindings.
 
@@ -83,7 +83,7 @@ Basic Usage
 
 To use the standard interface, create a ColumnFamily instance.
 
-    >>> cf = pycassa.ColumnFamily(client, 'Test Keyspace', 'Test ColumnFamily')
+    >>> cf = pycassa.ColumnFamily(client, 'Test ColumnFamily')
 
 The value returned by an insert is the timestamp used for insertion, or int(time.time() * 1e6). You may replace this function with your own (see Extra Documentation).
 
@@ -207,7 +207,7 @@ SuperColumns
 
 To use SuperColumns, pass super=True to the ColumnFamily constructor.
 
-    >>> cf = pycassa.ColumnFamily(client, 'Test Keyspace', 'Test SuperColumnFamily', super=True)
+    >>> cf = pycassa.ColumnFamily(client, 'Test SuperColumnFamily', super=True)
     >>> cf.insert('key1', {'1': {'sub1': 'val1', 'sub2': 'val2'}, '2': {'sub3': 'val3', 'sub4': 'val4'}})
     1261490144457132
     >>> cf.get('key1')
@@ -246,7 +246,7 @@ Advanced
 
 pycassa currently returns Cassandra Columns and SuperColumns as python dictionaries. Sometimes, though, you care about the order of elements. If you have access to an ordered dictionary class (such as collections.OrderedDict in python 2.7), then you may pass it to the constructor. All returned values will be of that class.
 
-    >>> cf = pycassa.ColumnFamily(client, 'Test Keyspace', 'Test ColumnFamily',
+    >>> cf = pycassa.ColumnFamily(client, 'Test ColumnFamily',
                                   dict_class=collections.OrderedDict)
 
 You may also define your own Column types for the mapper. For example, the IntString may be defined as:
@@ -264,20 +264,13 @@ Meta API
 All of the underlying Cassandra interface functions are available through the connection.
 
     >>> client = pycassa.connect()
-    >>> client.get_string_property('version')
-    '0.5.1'
-    >>> client.get_string_list_property('keyspaces')
+    >>> client.describe_version()
+    '8.1.0'
+    >>> client.describe_keyspaces()
     ['Test Keyspace', 'system']
     >>> client.describe_keyspace('system')
     {'LocationInfo': {'Type': 'Standard', 'CompareWith': 'org.apache.cassandra.db.marshal.UTF8Type', 'Desc': 'persistent metadata for the local node'}, 'HintsColumnFamily': {'CompareSubcolumnsWith': 'org.apache.cassandra.db.marshal.BytesType', 'Type': 'Super', 'CompareWith': 'org.apache.cassandra.db.marshal.UTF8Type', 'Desc': 'hinted handoff data'}}
 
-As of Cassandra 0.5.1, valid arguments for get_string_property() are:
-
-    "cluster name", "config file", "token map", "version"
-
-Valid arguments for get_string_list_property() are:
-
-    "keyspaces"
 
 Extra Documentation
 -------------------
@@ -289,8 +282,6 @@ All the functions have the exact same functionality as their thrift counterparts
         ----------
         client   : cassandra.Cassandra.Client
             Cassandra client with thrift API
-        keyspace : str
-            The Keyspace this ColumnFamily belongs to
         column_family : str
             The name of this ColumnFamily
         buffer_size : int

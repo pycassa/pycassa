@@ -1,6 +1,8 @@
 To run the tests:
 1. Install python-nose (http://code.google.com/p/python-nose/)
-2. Copy the storage-conf.xml to your Cassandra conf directory
-3. Run Cassandra with:
+2. Copy cassandra.yaml to your Cassandra conf directory
+3. Invoke the loadSchemaFromYAML JMX operation
+(see http://wiki.apache.org/cassandra/LiveSchemaUpdates).
+4. Run Cassandra with:
 sudo bin/cassandra -f -Dpasswd.properties=conf/passwd.properties -Daccess.properties=conf/access.properties
-3. Run nosetests in the top directory
+5. Run nosetests in the top directory
