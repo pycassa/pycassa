@@ -26,8 +26,9 @@ class ColumnFamilyMap(object):
         self.column_family = column_family
         
         self.raw_columns = raw_columns
+        self.dict_class = self.column_family.dict_class
+        self.columns = self.dict_class()
         
-        self.columns = {}
         for name, column in self.cls.__dict__.iteritems():
             if not isinstance(column, Column):
                 continue
@@ -35,9 +36,9 @@ class ColumnFamilyMap(object):
             self.columns[name] = column
 
     def combine_columns(self, columns):
-        combined_columns = {}
+        combined_columns = self.dict_class()
         if self.raw_columns:
-            combined_columns['raw_columns'] = {}
+            combined_columns['raw_columns'] = self.dict_class()
         for column, type in self.columns.iteritems():
             combined_columns[column] = type.default
         for column, value in columns.iteritems():
@@ -84,10 +85,11 @@ class ColumnFamilyMap(object):
 
         if self.column_family.super:
             if 'super_column' not in kwargs:
-                vals = {}
+                vals = self.dict_class()
                 for super_column, subcols in columns.iteritems():
                     combined = self.combine_columns(subcols)
                     vals[super_column] = create_instance(self.cls, key=key, super_column=super_column, **combined)
+
                 return vals
 
             combined = self.combine_columns(columns)
@@ -128,11 +130,11 @@ class ColumnFamilyMap(object):
         if 'columns' not in kwargs and not self.column_family.super and not self.raw_columns:
             kwargs['columns'] = self.columns.keys()
         kcmap = self.column_family.multiget(*args, **kwargs)
-        ret = {}
+        ret = self.dict_class()
         for key, columns in kcmap.iteritems():
             if self.column_family.super:
                 if 'super_column' not in kwargs:
-                    vals = {}
+                    vals = self.dict_class()
                     for super_column, subcols in columns.iteritems():
                         combined = self.combine_columns(subcols)
                         vals[super_column] = create_instance(self.cls, key=key, super_column=super_column, **combined)
@@ -198,7 +200,7 @@ class ColumnFamilyMap(object):
         for key, columns in self.column_family.get_range(*args, **kwargs):
             if self.column_family.super:
                 if 'super_column' not in kwargs:
-                    vals = {}
+                    vals = self.dict_class()
                     for super_column, subcols in columns.iteritems():
                         combined = self.combine_columns(subcols)
                         vals[super_column] = create_instance(self.cls, key=key, super_column=super_column, **combined)
