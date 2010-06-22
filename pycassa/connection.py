@@ -3,11 +3,6 @@ import socket
 import threading
 from Queue import Queue
 
-try:
-    import pkg_resources
-    pkg_resources.require('Thrift')
-except ImportError:
-    pass
 from thrift import Thrift
 from thrift.transport import TTransport
 from thrift.transport import TSocket
