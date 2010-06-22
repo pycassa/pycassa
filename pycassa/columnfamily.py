@@ -203,6 +203,7 @@ class ColumnFamily(object):
                 ret[key] = self._convert_ColumnOrSuperColumns_to_dict_class(columns, include_timestamp)
         return ret
 
+    MAX_COUNT = 2**31-1
     def get_count(self, key, super_column=None, read_consistency_level = None):
         """
         Count the number of columns for a key
@@ -224,7 +225,7 @@ class ColumnFamily(object):
         cp = ColumnParent(column_family=self.column_family, super_column=super_column)
         sp = SlicePredicate(slice_range=SliceRange(start='',
                                                    finish='',
-                                                   count=sys.maxint))
+                                                   count=self.MAX_COUNT))
         return self.client.get_count(key, cp, sp,
                                      self._rcl(read_consistency_level))
 
