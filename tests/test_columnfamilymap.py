@@ -67,13 +67,6 @@ class TestColumnFamilyMap:
 
         return instance
 
-    def test_will_not_insert_none(self):
-        for column in ('strcol', 'intcol', 'floatcol', 'datetimecol',
-                       'intstrcol', 'floatstrcol', 'datetimestrcol'):
-            instance = self.instance('TestColumnFamilyMap.test_will_not_insert_none')
-            setattr(instance, column, None)
-            assert_raises(TypeError, self.map.insert, instance)
-
     def test_empty(self):
         key = 'TestColumnFamilyMap.test_empty'
         assert_raises(NotFoundException, self.map.get, key)
