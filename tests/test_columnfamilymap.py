@@ -27,7 +27,7 @@ class TestColumnFamilyMap:
     def setUp(self):
         self.client = connect()
         self.client.login('Keyspace1', {'username': 'jsmith', 'password': 'havebadpass'})
-        self.cf = ColumnFamily(self.client, 'Keyspace1', 'Standard2',
+        self.cf = ColumnFamily(self.client, 'Standard2',
                                write_consistency_level=ConsistencyLevel.ONE,
                                timestamp=self.timestamp)
         self.map = ColumnFamilyMap(TestUTF8, self.cf)
@@ -155,7 +155,7 @@ class TestSuperColumnFamilyMap:
     def setUp(self):
         self.client = connect_thread_local()
         self.client.login('Keyspace1', {'username': 'jsmith', 'password': 'havebadpass'})
-        self.cf = ColumnFamily(self.client, 'Keyspace1', 'Super2',
+        self.cf = ColumnFamily(self.client, 'Super2',
                                write_consistency_level=ConsistencyLevel.ONE,
                                timestamp=self.timestamp,
                                super=True)

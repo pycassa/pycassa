@@ -37,8 +37,9 @@ def create_client_transport(server, framed_transport, timeout, logins):
 
     if logins is not None:
         for keyspace, credentials in logins.iteritems():
+            client.set_keyspace(keyspace)
             request = AuthenticationRequest(credentials=credentials)
-            client.login(keyspace, request)
+            client.login(request)
 
     return client, transport
 
