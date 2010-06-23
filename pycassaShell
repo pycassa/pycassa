@@ -26,6 +26,8 @@ parser = optparse.OptionParser(usage='Usage: %prog [OPTIONS]')
 parser.add_option('-k', '--keyspace', help='Cassandra keyspace name.')
 parser.add_option('-H', '--host', help='Hostname.')
 parser.add_option('-p', '--port', type="int", help='Thrift port number.')
+parser.add_option('-u', '--user', help='Username (for simple auth).')
+parser.add_option('-P', '--passwd', help='Password (for simple auth).')
 
 (options, args) = parser.parse_args()
 
@@ -35,8 +37,19 @@ if not options.keyspace:
 
 hostname = options.host and options.host or 'localhost'
 port = options.port and options.port or 9160
+credentials = None
 
-CLIENT = pycassa.connect(options.keyspace, ['%s:%d' % (hostname, port)])
+if options.user or options.passwd:
+    if options.user and (not options.passwd):
+        print >>stderr, "You must supply a password for username", options.user
+        exit(1)
+    if options.passwd and (not options.user):
+        print >>stderr, "You need a user to go with that password!"
+        exit(1)
+    credentials = {'username': options.user, 'password': options.passwd}
+
+CLIENT = pycassa.connect(options.keyspace, ['%s:%d' % (hostname, port)],
+                         credentials=credentials)
 
 print """
 Cassandra Interactive Python Shell
