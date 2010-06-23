@@ -46,24 +46,24 @@ To read usage documentation:
 
 For a single connection (which is _not_ thread-safe), pass a list of servers.
 
-    >>> client = pycassa.connect() # Defaults to connecting to the server at 'localhost:9160'
-    >>> client = pycassa.connect(['localhost:9160'])
+    >>> client = pycassa.connect('Keyspace1') # Defaults to connecting to the server at 'localhost:9160'
+    >>> client = pycassa.connect('Keyspace1', ['localhost:9160'])
 
 If you need Framed Transport, pass the framed_transport argument.
 
-    >>> client = pycassa.connect(framed_transport=True)
+    >>> client = pycassa.connect('Keyspace1', framed_transport=True)
 
 Thread-local connections opens a connection for every thread that calls a Cassandra function. It also automatically balances the number of connections between servers, unless round_robin=False.
 
-    >>> client = pycassa.connect_thread_local() # Defaults to connecting to the server at 'localhost:9160'
-    >>> client = pycassa.connect_thread_local(['localhost:9160', 'other_server:9160']) # Round robin connections
-    >>> client = pycassa.connect_thread_local(['localhost:9160', 'other_server:9160'], round_robin=False) # Connect in list order
+    >>> client = pycassa.connect_thread_local('Keyspace1') # Defaults to connecting to the server at 'localhost:9160'
+    >>> client = pycassa.connect_thread_local('Keyspace1', ['localhost:9160', 'other_server:9160']) # Round robin connections
+    >>> client = pycassa.connect_thread_local('Keyspace1', ['localhost:9160', 'other_server:9160'], round_robin=False) # Connect in list order
 
 Connections are robust to server failures. Upon a disconnection, it will attempt to connect to each server in the list in turn. If no server is available, it will raise a NoServerAvailable exception.
 
 Timeouts are also supported and should be used in production to prevent a thread from freezing while waiting for Cassandra to return.
 
-    >>> client = pycassa.connect(timeout=3.5) # 3.5 second timeout
+    >>> client = pycassa.connect('Keyspace1', timeout=3.5) # 3.5 second timeout
     (Make some pycassa calls and the connection to the server suddenly becomes unresponsive.)
 
     Traceback (most recent call last):
@@ -72,11 +72,10 @@ Timeouts are also supported and should be used in production to prevent a thread
 
 Note that this only handles socket timeouts. The TimedOutException from Cassandra may still be raised.
 
-You can save login credentials with the .login() function.
+If simple authentication is in use, you can pass in a dict of credentials using the credentials keyword.
 
-    >>> client.login('Keyspace1', {'username': 'jsmith', 'password': 'havebadpass'})
-
-These credentials will automatically be re-used on every successful connection. You only need to call login() once.
+    >>> credentials = {'username': 'jsmith', 'password': 'havebadpass'}
+    >>> client = pycassa.connect('Keyspace1', credentials=credentials)
 
 Basic Usage
 -----------

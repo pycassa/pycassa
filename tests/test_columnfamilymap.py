@@ -25,8 +25,8 @@ class TestEmpty(object):
 
 class TestColumnFamilyMap:
     def setUp(self):
-        self.client = connect()
-        self.client.login('Keyspace1', {'username': 'jsmith', 'password': 'havebadpass'})
+        credentials = {'username': 'jsmith', 'password': 'havebadpass'}
+        self.client = connect('Keyspace1', credentials=credentials)
         self.cf = ColumnFamily(self.client, 'Standard2',
                                write_consistency_level=ConsistencyLevel.ONE,
                                timestamp=self.timestamp)
@@ -146,8 +146,8 @@ class TestColumnFamilyMap:
 
 class TestSuperColumnFamilyMap:
     def setUp(self):
-        self.client = connect_thread_local()
-        self.client.login('Keyspace1', {'username': 'jsmith', 'password': 'havebadpass'})
+        credentials = {'username': 'jsmith', 'password': 'havebadpass'}
+        self.client = connect_thread_local('Keyspace1', credentials=credentials)
         self.cf = ColumnFamily(self.client, 'Super2',
                                write_consistency_level=ConsistencyLevel.ONE,
                                timestamp=self.timestamp,

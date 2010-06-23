@@ -6,9 +6,9 @@ def version_check(connection, version):
     assert connection.describe_version() == version
 
 def test_connections():
-    version = connect().describe_version()
+    version = connect('Keyspace1').describe_version()
 
-    thread_local = connect_thread_local()
+    thread_local = connect_thread_local('Keyspace1')
     threads = []
     for i in xrange(10):
         threads.append(threading.Thread(target=version_check,

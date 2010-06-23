@@ -36,7 +36,7 @@ if not options.keyspace:
 hostname = options.host and options.host or 'localhost'
 port = options.port and options.port or 9160
 
-CLIENT = pycassa.connect(['%s:%d' % (hostname, port)])
+CLIENT = pycassa.connect(options.keyspace, ['%s:%d' % (hostname, port)])
 
 print """
 Cassandra Interactive Python Shell
@@ -46,7 +46,7 @@ Cassandra Interactive Python Shell
 Available column family instances:""" % (options.keyspace, hostname, port)
 
 for cfname in CLIENT.describe_keyspace(options.keyspace).keys():
-    cfinstance = pycassa.ColumnFamily(CLIENT, options.keyspace, cfname)
+    cfinstance = pycassa.ColumnFamily(CLIENT, cfname)
     exec('%s = cfinstance' % cfname.upper())
     print " *", cfname.upper()
 
