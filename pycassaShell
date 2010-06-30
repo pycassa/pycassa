@@ -28,6 +28,8 @@ parser.add_option('-H', '--host', help='Hostname.')
 parser.add_option('-p', '--port', type="int", help='Thrift port number.')
 parser.add_option('-u', '--user', help='Username (for simple auth).')
 parser.add_option('-P', '--passwd', help='Password (for simple auth).')
+parser.add_option('-F', '--framed', action="store_true",
+                  help='Use framed transport.')
 
 (options, args) = parser.parse_args()
 
@@ -49,7 +51,8 @@ if options.user or options.passwd:
     credentials = {'username': options.user, 'password': options.passwd}
 
 CLIENT = pycassa.connect(options.keyspace, ['%s:%d' % (hostname, port)],
-                         credentials=credentials)
+                         credentials=credentials,
+                         framed_transport=options.framed)
 
 print """
 Cassandra Interactive Python Shell
