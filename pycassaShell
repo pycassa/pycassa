@@ -15,9 +15,9 @@ def runshell():
     os.environ['PYTHONINSPECT'] = '1'
 
 try:
-    __IPYTHON__
-except NameError:
     runshell = IPShellEmbed([])
+except NameError:
+    pass
 
 import pycassa, optparse
 from sys import stderr, exit
