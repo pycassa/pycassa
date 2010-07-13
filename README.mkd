@@ -1,3 +1,5 @@
+# Note: This documentation only applies to the git version and the SVN version of Cassandra.  Read the README.mkd file that comes with pycassa 0.3.0 to learn how to that version.
+
 pycassa
 =======
 
