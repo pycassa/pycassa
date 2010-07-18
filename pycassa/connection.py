@@ -38,7 +38,7 @@ def create_client_transport(keyspace, server, framed_transport, timeout, credent
 
     return client, transport
 
-def connect(keyspace, servers=None, framed_transport=False, timeout=None, credentials=None):
+def connect(keyspace, servers=None, framed_transport=True, timeout=None, credentials=None):
     """
     Constructs a single Cassandra connection. Initially connects to the first
     server on the list.
@@ -75,7 +75,7 @@ def connect(keyspace, servers=None, framed_transport=False, timeout=None, creden
         servers = [DEFAULT_SERVER]
     return SingleConnection(keyspace, servers, framed_transport, timeout, credentials)
 
-def connect_thread_local(keyspace, servers=None, round_robin=True, framed_transport=False, timeout=None, credentials=None):
+def connect_thread_local(keyspace, servers=None, round_robin=True, framed_transport=True, timeout=None, credentials=None):
     """
     Constructs a Cassandra connection for each thread. By default, it attempts
     to connect in a round_robin (load-balancing) fashion. Turn it off by
