@@ -19,9 +19,11 @@ Requirements
     thrift: http://incubator.apache.org/thrift/
     Cassandra: http://cassandra.apache.org
 
-Install thrift with the python bindings.
+To install thrift's python bindings:
 
-It comes with the Cassandra python files for convenience, but you can replace them with your own.
+    easy_install thrift
+
+pycassa comes with the Cassandra python files for convenience, but you can replace them with your own.
 
 Installation
 ------------
@@ -49,9 +51,9 @@ For a single connection (which is _not_ thread-safe), pass a list of servers.
     >>> client = pycassa.connect('Keyspace1') # Defaults to connecting to the server at 'localhost:9160'
     >>> client = pycassa.connect('Keyspace1', ['localhost:9160'])
 
-If you need Framed Transport, pass the framed_transport argument.
+Framed transport is the default in Cassandra 0.7 and pycassa. You may disable it by passing framed_transport=False.
 
-    >>> client = pycassa.connect('Keyspace1', framed_transport=True)
+    >>> client = pycassa.connect('Keyspace1', framed_transport=False)
 
 Thread-local connections opens a connection for every thread that calls a Cassandra function. It also automatically balances the number of connections between servers, unless round_robin=False.
 

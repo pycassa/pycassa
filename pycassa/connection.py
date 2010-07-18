@@ -54,7 +54,7 @@ class ClientTransport(object):
             self.recycle = None
 
 
-def connect(keyspace, servers=None, framed_transport=False, timeout=None,
+def connect(keyspace, servers=None, framed_transport=True, timeout=None,
             credentials=None, retry_time=60, recycle=None, round_robin=None):
     """
     Constructs a single Cassandra connection. Connects to a randomly chosen
