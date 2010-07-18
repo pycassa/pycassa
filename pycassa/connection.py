@@ -156,9 +156,7 @@ class ThreadLocalConnection(object):
         self._timeout = timeout
         self._recycle = recycle
         self._credentials = credentials
-        self._conn = None
         self._local = threading.local()
-        self._local.conn = None
 
     def __getattr__(self, attr):
         def _client_call(*args, **kwargs):
@@ -183,12 +181,12 @@ class ThreadLocalConnection(object):
 
     def connect(self):
         """Create new connection unless we already have one."""
-        if not self._local.conn:
+        if not getattr(self._local, 'conn', None):
             try:
                 server = self._servers.get()
                 log.debug('Connecting to %s', server)
                 self._local.conn = ClientTransport(self._keyspace, server, self._framed_transport,
-                                                   self._timeout, self._logins, self._recycle)
+                                                   self._timeout, self._credentials, self._recycle)
             except (Thrift.TException, socket.timeout, socket.error):
                 log.warning('Connection to %s failed.', server)
                 self._servers.mark_dead(server)
