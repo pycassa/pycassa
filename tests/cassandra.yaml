@@ -399,3 +399,10 @@ keyspaces:
           compare_with: LongType
           compare_subcolumns_with: BytesType
           gc_grace_seconds: 0
+
+# Indexed column family
+        - name: Indexed1
+          column_metadata:
+            - name: birthdate
+              validator_class: LongType
+              index_type: KEYS

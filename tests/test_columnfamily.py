@@ -1,6 +1,8 @@
-from pycassa import connect, connect_thread_local, ColumnFamily, ConsistencyLevel, NotFoundException
+from pycassa import connect, connect_thread_local, index, ColumnFamily, ConsistencyLevel, NotFoundException
 
 from nose.tools import assert_raises
+
+import struct
 
 class TestDict(dict):
     pass
@@ -81,6 +83,21 @@ class TestColumnFamily:
         for i, (k, c) in enumerate(rows):
             assert k == keys[i]
             assert c == columns
+
+    def test_insert_get_indexed_slice(self):
+        indexed_cf = ColumnFamily(self.client, 'Indexed1',
+                               write_consistency_level=ConsistencyLevel.ONE,
+                               buffer_size=2, timestamp=self.timestamp,
+                               dict_class=TestDict)
+        key = 'Indexed1.test_insert_get_indexed_slice'
+        columns = {'birthdate': struct.pack('>q', 1)}
+        indexed_cf.insert(key, columns)
+        
+        expr = index.create_index_expression(column_name='birthdate', value=struct.pack('>q', 1))
+        clause = index.create_index_clause([expr])
+        result = indexed_cf.get_indexed_slices(clause)
+        assert len(result) == 1
+        assert result.get(key) == columns
 
     def test_remove(self):
         key = 'TestColumnFamily.test_remove'

@@ -126,6 +126,12 @@ class ColumnFamily(object):
                 ret[self._unpack(col.name)] = self._convert_Column_to_base(col, include_timestamp)
         return ret
 
+    def _convert_KeySlice_list_to_dict_class(self, keyslice_list, include_timestamp):
+        ret = self.dict_class()
+        for keyslice in keyslice_list:
+            ret[keyslice.key] = self._convert_ColumnOrSuperColumns_to_dict_class(keyslice.columns, include_timestamp)
+        return ret
+
     def _rcl(self, alternative):
         """Helper function that returns self.read_consistency_level if
         alternative is None, otherwise returns alternative"""
@@ -243,6 +249,65 @@ class ColumnFamily(object):
         if len(list_col_or_super) == 0:
             raise NotFoundException()
         return self._convert_ColumnOrSuperColumns_to_dict_class(list_col_or_super, include_timestamp)
+
+    def get_indexed_slices(self, index_clause, columns=None, column_start="", column_finish="",
+                          column_reversed=False, column_count=100, include_timestamp=False,
+                          super_column=None, read_consistency_level=None):
+        """
+        Fetches a list of KeySlices from a Cassandra server based on an index clause
+        
+        Parameters
+        ----------
+        index_clause : IndexClause
+            Limits the keys that are returned based on expressions that compare
+            the value of a column to a given value.  At least one of the
+            expressions in the IndexClause must be on an indexed column.
+            See index_clause.create_index_clause() and create_index_expression().
+        columns : [str]
+            Limit the columns or super_columns fetched to the specified list
+        column_start : str
+            Only fetch when a column or super_column is >= column_start
+        column_finish : str
+            Only fetch when a column or super_column is <= column_finish
+        column_reversed : bool
+            Fetch the columns or super_columns in reverse order. This will do
+            nothing unless you passed a dict_class to the constructor.
+        column_count : int
+            Limit the number of columns or super_columns fetched per key
+        include_timestamp : bool
+            If true, return a (value, timestamp) tuple for each column
+        super_column : str
+            Return columns only in this super_column
+        read_consistency_level : ConsistencyLevel
+            Affects the guaranteed replication factor before returning from
+            any read operation
+
+        Returns
+        -------
+        if include_timestamp == True: {key : {column : (value, timestamp)}}
+        else: {key : {column : value}}
+        """
+
+        if super_column != '': super_column = self._pack(super_column, is_supercol_name=True)
+        if column_start != '': column_start = self._pack(column_start, is_supercol_name=self.super)
+        if column_finish != '': column_finish = self._pack(column_finish, is_supercol_name=self.super) 
+
+        packed_cols = None
+        if columns is not None:
+            packed_cols = []
+            for col in columns:
+                packed_cols.append(self._pack(col, is_supercol_name=self.super))
+
+        cp = ColumnParent(column_family=self.column_family, super_column=super_column)
+        sp = create_SlicePredicate(packed_cols, column_start, column_finish,
+                                   column_reversed, column_count)
+
+        keyslice_list = self.client.get_indexed_slices(cp, index_clause, sp,
+                                                  self._rcl(read_consistency_level))
+
+        if len(keyslice_list) == 0:
+            raise NotFoundException()
+        return self._convert_KeySlice_list_to_dict_class(keyslice_list, include_timestamp)
 
     def multiget(self, keys, columns=None, column_start="", column_finish="",
                  column_reversed=False, column_count=100, include_timestamp=False,
