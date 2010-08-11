@@ -84,20 +84,27 @@ class TestColumnFamily:
             assert k == keys[i]
             assert c == columns
 
-    def test_insert_get_indexed_slice(self):
-        indexed_cf = ColumnFamily(self.client, 'Indexed1',
-                               write_consistency_level=ConsistencyLevel.ONE,
-                               buffer_size=2, timestamp=self.timestamp,
-                               dict_class=TestDict)
-        key = 'Indexed1.test_insert_get_indexed_slice'
-        columns = {'birthdate': struct.pack('>q', 1)}
-        indexed_cf.insert(key, columns)
-        
-        expr = index.create_index_expression(column_name='birthdate', value=struct.pack('>q', 1))
+    def test_insert_get_indexed_slices(self):
+        indexed_cf = ColumnFamily(self.client, 'Indexed1')
+
+        columns = {'birthdate': struct.pack('>q', 1L)}
+
+        key = 'key1'
+        indexed_cf.insert(key, columns, write_consistency_level=ConsistencyLevel.ONE)
+
+        key = 'key2'
+        indexed_cf.insert(key, columns, write_consistency_level=ConsistencyLevel.ONE)
+
+        key = 'key3'
+        indexed_cf.insert(key, columns, write_consistency_level=ConsistencyLevel.ONE)
+
+        expr = index.create_index_expression(column_name='birthdate', value=struct.pack('>q', 1L))
         clause = index.create_index_clause([expr])
         result = indexed_cf.get_indexed_slices(clause)
-        assert len(result) == 1
-        assert result.get(key) == columns
+        assert len(result) == 3
+        assert result.get('key1') == columns
+        assert result.get('key2') == columns
+        assert result.get('key3') == columns
 
     def test_remove(self):
         key = 'TestColumnFamily.test_remove'

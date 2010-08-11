@@ -84,7 +84,7 @@ class TestAutoPacking:
         lex_col = {uuid.UUID(bytes='abc abc abc abcd'): VALS[0]}
         ascii_col = {'foo': VALS[0]}
         utf8_col = {u'\u0020'.encode('utf8'): VALS[0]}
-        bytes_col = {'foo': VALS[0]}
+        bytes_col = {'bytes': VALS[0]}
 
         self.cf_long.insert(KEYS[0], long_col)
         self.cf_int.insert(KEYS[0], int_col)

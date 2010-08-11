@@ -1,9 +1,5 @@
 from cassandra.ttypes import IndexClause, IndexExpression, IndexOperator
 
-from struct import Struct
-
-_packer = Struct('>q')
-
 def create_index_clause(expr_list, start_key='', count=100):
     """
     Constructs an IndexClause for use with get_indexed_slices()
