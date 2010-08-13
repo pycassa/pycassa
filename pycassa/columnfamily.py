@@ -79,14 +79,19 @@ class ColumnFamily(object):
         # so that packing/unpacking doesn't need to be done manually
         self.col_name_data_type = None
         self.supercol_name_data_type = None
-        description = client.describe_keyspace(client._keyspace)
-        col_fam = description.get(self.column_family)
+
+        col_fam = None
+        try:
+            col_fam = client.get_keyspace_description()[self.column_family]
+        except KeyError:
+           raise NotFoundException('Column family %s not found.' % self.column_family)
+
         if col_fam is not None:
             if not self.super:
-                self.col_name_data_type = col_fam.get('CompareWith')
+                self.col_name_data_type = col_fam.comparator_type
             else:
-                self.supercol_name_data_type = col_fam.get('CompareWith')
-                self.col_name_data_type = col_fam.get('CompareSubcolumnsWith')
+                self.supercol_name_data_type = col_fam.comparator_type
+                self.col_name_data_type = col_fam.subcomparator_type
                 self.supercol_name_data_type = self._extract_type_name(self.supercol_name_data_type)
 
             index = self.col_name_data_type = self._extract_type_name(self.col_name_data_type)

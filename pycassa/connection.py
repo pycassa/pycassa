@@ -199,4 +199,31 @@ class ThreadLocalConnection(object):
             self._local.conn.transport.close()
         self._local.conn = None
 
+    def get_keyspace_description(self, keyspace=None):
+        """
+        Describes the given keyspace.
+        
+        Parameters
+        ----------
+        keyspace: str
+                  Defaults to the current keyspace.
 
+        Returns
+        -------
+        {column_family_name: CfDef}
+        where a CfDef has many attributes describing the column family, including
+        the dictionary column_metadata = {column_name: ColumnDef}
+        """
+        if keyspace is None:
+            keyspace = self._keyspace
+
+        ks_def = self.describe_keyspace(keyspace)
+        cf_defs = dict()
+        for cf_def in ks_def.cf_defs:
+            cf_defs[cf_def.name] = cf_def
+            old_metadata = cf_def.column_metadata
+            new_metadata = dict()
+            for datum in old_metadata:
+                new_metadata[datum.name] = datum
+            cf_def.column_metadata = new_metadata
+        return cf_defs
