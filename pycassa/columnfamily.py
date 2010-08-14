@@ -626,7 +626,7 @@ class ColumnFamily(object):
                                self._wcl(write_consistency_level))
         return clock.timestamp
 
-    def truncate(self)
+    def truncate(self):
         """
         Marks the entire ColumnFamily as deleted.
         From the user's perspective a successful call to truncate will result complete data deletion from cfname.
