@@ -1,4 +1,5 @@
 from pycassa.types import Column
+from cassandra.ttypes import IndexExpression
 
 __all__ = ['ColumnFamilyMap']
 
@@ -98,7 +99,7 @@ class ColumnFamilyMap(object):
         combined = self.combine_columns(columns)
         return create_instance(self.cls, key=key, **combined)
 
-    def get_indexed_slices(self, *args, **kwargs):
+    def get_indexed_slices(self, instance=None, *args, **kwargs):
         """
         Fetches a list of KeySlices from a Cassandra server based on an index clause
         
@@ -135,6 +136,15 @@ class ColumnFamilyMap(object):
 
         if 'columns' not in kwargs and not self.column_family.super and not self.raw_columns:
             kwargs['columns'] = self.columns.keys()
+
+        # Autopack the index clause's values
+        if instance is not None:
+            new_exprs = []
+            for expr in kwargs['index_clause'].expressions:
+                new_expr = IndexExpression(expr.column_name, expr.op, 
+                        value=self.columns[expr.column_name].pack(instance.__dict__[expr.column_name]))
+                new_exprs.append(new_expr)
+            kwargs['index_clause'].expressions = new_exprs
 
         keyslice_map = self.column_family.get_indexed_slices(*args, **kwargs)
 

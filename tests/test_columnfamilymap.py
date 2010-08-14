@@ -40,8 +40,12 @@ class TestColumnFamilyMap:
         self.client = connect('Keyspace1', credentials=credentials)
         self.cf = ColumnFamily(self.client, 'Standard2',
                                write_consistency_level=ConsistencyLevel.ONE,
-                               timestamp=self.timestamp)
-        self.indexed_cf = ColumnFamily(self.client, 'Indexed1')
+                               timestamp=self.timestamp,
+                               autopack_names=False,
+                               autopack_values=False)
+        self.indexed_cf = ColumnFamily(self.client, 'Indexed1',
+                                       autopack_names=False,
+                                       autopack_values=False)
         self.map = ColumnFamilyMap(TestUTF8, self.cf)
         self.indexed_map = ColumnFamilyMap(TestIndex, self.indexed_cf)
         self.empty_map = ColumnFamilyMap(TestEmpty, self.cf, raw_columns=True)
@@ -102,9 +106,9 @@ class TestColumnFamilyMap:
         instance.key = 'key3'
         self.indexed_map.insert(instance)
 
-        expr = index.create_index_expression(column_name='birthdate', value=struct.pack('q', 1L))
+        expr = index.create_index_expression(column_name='birthdate', value=1L)
         clause = index.create_index_clause([expr])
-        result = self.indexed_map.get_indexed_slices(clause)
+        result = self.indexed_map.get_indexed_slices(instance, index_clause=clause)
         assert len(result) == 3
         assert result.get('key3') == instance
 

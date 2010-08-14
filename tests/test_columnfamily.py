@@ -87,7 +87,7 @@ class TestColumnFamily:
     def test_insert_get_indexed_slices(self):
         indexed_cf = ColumnFamily(self.client, 'Indexed1')
 
-        columns = {'birthdate': struct.pack('>q', 1L)}
+        columns = {'birthdate': 1L}
 
         key = 'key1'
         indexed_cf.insert(key, columns, write_consistency_level=ConsistencyLevel.ONE)
@@ -98,7 +98,7 @@ class TestColumnFamily:
         key = 'key3'
         indexed_cf.insert(key, columns, write_consistency_level=ConsistencyLevel.ONE)
 
-        expr = index.create_index_expression(column_name='birthdate', value=struct.pack('>q', 1L))
+        expr = index.create_index_expression(column_name='birthdate', value=1L)
         clause = index.create_index_clause([expr])
         result = indexed_cf.get_indexed_slices(clause)
         assert len(result) == 3

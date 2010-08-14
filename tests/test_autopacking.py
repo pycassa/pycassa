@@ -43,6 +43,14 @@ class TestAutoPacking:
         self.cf_suplong_subutf8  = ColumnFamily(self.client, 'SuperLongSubUTF8', super=True)
         self.cf_suplong_subbytes = ColumnFamily(self.client, 'SuperLongSubBytes', super=True)
         
+        self.cf_valid_long = ColumnFamily(self.client, 'ValidatorLong')
+        self.cf_valid_int = ColumnFamily(self.client, 'ValidatorInt')
+        self.cf_valid_time = ColumnFamily(self.client, 'ValidatorTime')
+        self.cf_valid_lex = ColumnFamily(self.client, 'ValidatorLex')
+        self.cf_valid_ascii = ColumnFamily(self.client, 'ValidatorAscii')
+        self.cf_valid_utf8 = ColumnFamily(self.client, 'ValidatorUTF8')
+        self.cf_valid_bytes = ColumnFamily(self.client, 'ValidatorBytes')
+
         self.cfs = [self.cf_long, self.cf_int, self.cf_time, self.cf_lex,
                     self.cf_ascii, self.cf_utf8, self.cf_bytes,
                     self.cf_suplong, self.cf_supint, self.cf_suptime,
@@ -51,7 +59,10 @@ class TestAutoPacking:
                     self.cf_suplong_subint, self.cf_suplong_subint,
                     self.cf_suplong_subtime, self.cf_suplong_sublex,
                     self.cf_suplong_subascii, self.cf_suplong_subutf8,
-                    self.cf_suplong_subbytes]
+                    self.cf_suplong_subbytes,
+                    self.cf_valid_long, self.cf_valid_int, self.cf_valid_time,
+                    self.cf_valid_lex, self.cf_valid_ascii, self.cf_valid_utf8,
+                    self.cf_valid_bytes]
 
         try:
             self.timestamp_n = int(self.cf.get('meta')['timestamp'])
@@ -455,3 +466,37 @@ class TestAutoPacking:
             res = group.get('cf').get_range(start=KEYS[0], super_column=123L)
             for sub_res in res:
                 assert sub_res[1] == group.get('dict').get(123L)
+
+    def test_validated_columns(self):
+        self.clear()
+
+        key = 'key1'
+
+        col = {'subcol':1L}
+        self.cf_valid_long.insert(key, col)
+        assert self.cf_valid_long.get(key) == col
+
+        col = {'subcol':1}
+        self.cf_valid_int.insert(key, col)
+        assert self.cf_valid_int.get(key) == col
+
+        col = {'subcol':TIME1}
+        self.cf_valid_time.insert(key, col)
+        assert self.cf_valid_time.get(key) == col
+
+        col = {'subcol':uuid.UUID(bytes='aaa aaa aaa aaaa')}
+        self.cf_valid_lex.insert(key, col)
+        assert self.cf_valid_lex.get(key) == col
+
+        col = {'subcol':'aaa'}
+        self.cf_valid_ascii.insert(key, col)
+        assert self.cf_valid_ascii.get(key) == col
+
+        col = {'subcol':u'a\u0020'.encode('utf8')}
+        self.cf_valid_utf8.insert(key, col)
+        assert self.cf_valid_utf8.get(key) == col
+
+        col = {'subcol':'aaa'}
+        self.cf_valid_bytes.insert(key, col)
+        assert self.cf_valid_bytes.get(key) == col
+

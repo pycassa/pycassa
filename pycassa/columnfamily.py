@@ -1,6 +1,7 @@
 from cassandra.ttypes import Column, ColumnOrSuperColumn, ColumnParent, \
     ColumnPath, ConsistencyLevel, NotFoundException, SlicePredicate, \
-    SliceRange, SuperColumn, Mutation, Deletion, Clock, KeyRange
+    SliceRange, SuperColumn, Mutation, Deletion, Clock, KeyRange, \
+    IndexExpression, IndexClause
 
 import time
 import sys
@@ -31,7 +32,8 @@ class ColumnFamily(object):
                  read_consistency_level=ConsistencyLevel.ONE,
                  write_consistency_level=ConsistencyLevel.ONE,
                  timestamp=gm_timestamp, super=False,
-                 dict_class=dict):
+                 dict_class=dict, autopack_names=True,
+                 autopack_values=True):
         """
         Construct a ColumnFamily
 
@@ -65,6 +67,15 @@ class ColumnFamily(object):
             If the order of columns matter to you, pass your own dictionary
             class, or python 2.7's new collections.OrderedDict. All returned
             rows and subcolumns are instances of this.
+        autopack_names : bool
+            Whether column and supercolumn names should be packed automatically
+            based on the comparator and subcomparator for the column
+            family.  This does not typically work when used with
+            ColumnFamilyMaps.
+        autopack_values : bool
+            Whether column values should be packed automatically based on
+            the validator_class for a given column.  This should probably
+            be set to False when used with a ColumnFamilyMap.       
         """
         self.client = client
         self.column_family = column_family
@@ -74,27 +85,35 @@ class ColumnFamily(object):
         self.timestamp = timestamp
         self.super = super
         self.dict_class = dict_class
+        self.autopack_names = autopack_names
+        self.autopack_values = autopack_values
 
         # Determine the ColumnFamily type to allow for auto conversion
         # so that packing/unpacking doesn't need to be done manually
         self.col_name_data_type = None
         self.supercol_name_data_type = None
+        self.col_type_dict = dict()
 
         col_fam = None
         try:
             col_fam = client.get_keyspace_description()[self.column_family]
         except KeyError:
-           raise NotFoundException('Column family %s not found.' % self.column_family)
+            raise NotFoundException('Column family %s not found.' % self.column_family)
 
         if col_fam is not None:
-            if not self.super:
-                self.col_name_data_type = col_fam.comparator_type
-            else:
-                self.supercol_name_data_type = col_fam.comparator_type
-                self.col_name_data_type = col_fam.subcomparator_type
-                self.supercol_name_data_type = self._extract_type_name(self.supercol_name_data_type)
+            if self.autopack_names:
+                if not self.super:
+                    self.col_name_data_type = col_fam.comparator_type
+                else:
+                    self.supercol_name_data_type = col_fam.comparator_type
+                    self.col_name_data_type = col_fam.subcomparator_type
+                    self.supercol_name_data_type = self._extract_type_name(self.supercol_name_data_type)
 
-            index = self.col_name_data_type = self._extract_type_name(self.col_name_data_type)
+                index = self.col_name_data_type = self._extract_type_name(self.col_name_data_type)
+            if self.autopack_values:
+                for name, cdef in col_fam.column_metadata.items():
+                    self.col_type_dict[name] = self._extract_type_name(cdef.validation_class)
+            
 
     def _extract_type_name(self, string):
 
@@ -110,14 +129,15 @@ class ColumnFamily(object):
         return string
 
     def _convert_Column_to_base(self, column, include_timestamp):
+        value = self._unpack_value(column.value, column.name)
         if include_timestamp:
-            return (column.value, column.clock.timestamp)
-        return column.value
+            return (value, column.clock.timestamp)
+        return value
 
     def _convert_SuperColumn_to_base(self, super_column, include_timestamp):
         ret = self.dict_class()
         for column in super_column.columns:
-            ret[self._unpack(column.name)] = self._convert_Column_to_base(column, include_timestamp)
+            ret[self._unpack_name(column.name)] = self._convert_Column_to_base(column, include_timestamp)
         return ret
 
     def _convert_ColumnOrSuperColumns_to_dict_class(self, list_col_or_super, include_timestamp):
@@ -125,10 +145,10 @@ class ColumnFamily(object):
         for col_or_super in list_col_or_super:
             if col_or_super.super_column is not None:
                 col = col_or_super.super_column
-                ret[self._unpack(col.name, is_supercol_name=True)] = self._convert_SuperColumn_to_base(col, include_timestamp)
+                ret[self._unpack_name(col.name, is_supercol_name=True)] = self._convert_SuperColumn_to_base(col, include_timestamp)
             else:
                 col = col_or_super.column
-                ret[self._unpack(col.name)] = self._convert_Column_to_base(col, include_timestamp)
+                ret[self._unpack_name(col.name)] = self._convert_Column_to_base(col, include_timestamp)
         return ret
 
     def _convert_KeySlice_list_to_dict_class(self, keyslice_list, include_timestamp):
@@ -151,11 +171,9 @@ class ColumnFamily(object):
             return self.write_consistency_level
         return alternative
 
-    def _pack(self, value, is_supercol_name=False):
-        """
-        Packs a value into the expected sequence of bytes that Cassandra expects.
-        """
-        
+    def _pack_name(self, value, is_supercol_name=False):
+        if not self.autopack_names:
+            return value
         if value is None: return
 
         if is_supercol_name:
@@ -163,23 +181,11 @@ class ColumnFamily(object):
         else:
             d_type = self.col_name_data_type
 
-        if d_type == 'LongType':
-            return struct.pack('>q', long(value))  # q is 'long long'
-        elif d_type == 'IntegerType':
-            return struct.pack('>i', int(value))
-        elif d_type == 'AsciiType' or d_type == 'UTF8Type':
-            return struct.pack(">%ds" % len(value), value)
-        elif d_type == 'TimeUUIDType' or d_type == 'LexicalUUIDType':
-            return struct.pack('>16s', value.bytes)
-        else: 
-            return value
+        return self._pack(value, d_type)
 
-    def _unpack(self, b, is_supercol_name=False):
-        """
-        Unpacks Cassandra's byte-representation of values into their Python
-        equivalents.
-        """
-
+    def _unpack_name(self, b, is_supercol_name=False):
+        if not self.autopack_names:
+            return b
         if b is None: return
 
         if is_supercol_name:
@@ -187,13 +193,55 @@ class ColumnFamily(object):
         else:
             d_type = self.col_name_data_type
 
-        if d_type == 'LongType':
+        return self._unpack(b, d_type)
+
+    def _pack_value(self, value, col_name):
+        if not self.autopack_values or \
+                col_name not in self.col_type_dict.keys():
+            return value
+        data_type = self.col_type_dict[col_name]
+        if data_type is not None:
+            value = self._pack(value, data_type)
+        return value
+
+    def _unpack_value(self, value, col_name):
+        if not self.autopack_values or \
+                col_name not in self.col_type_dict.keys():
+            return value
+        data_type = self.col_type_dict[col_name]
+        if data_type is not None:
+            value = self._unpack(value, data_type)
+        return value
+
+    def _pack(self, value, data_type):
+        """
+        Packs a value into the expected sequence of bytes that Cassandra expects.
+        """
+        
+        if data_type == 'LongType':
+            return struct.pack('>q', long(value))  # q is 'long long'
+        elif data_type == 'IntegerType':
+            return struct.pack('>i', int(value))
+        elif data_type == 'AsciiType' or data_type == 'UTF8Type':
+            return struct.pack(">%ds" % len(value), value)
+        elif data_type == 'TimeUUIDType' or data_type == 'LexicalUUIDType':
+            return struct.pack('>16s', value.bytes)
+        else: 
+            return value
+
+    def _unpack(self, b, data_type):
+        """
+        Unpacks Cassandra's byte-representation of values into their Python
+        equivalents.
+        """
+
+        if data_type == 'LongType':
             return struct.unpack('>q', b)[0]
-        elif d_type == 'IntegerType':
+        elif data_type == 'IntegerType':
             return struct.unpack('>i', b)[0]
-        elif d_type == 'AsciiType' or d_type == 'UTF8Type':
+        elif data_type == 'AsciiType' or data_type == 'UTF8Type':
             return struct.unpack('>%ds' % len(b), b)[0]
-        elif d_type == 'LexicalUUIDType' or d_type == 'TimeUUIDType':
+        elif data_type == 'LexicalUUIDType' or data_type == 'TimeUUIDType':
             temp_bytes = struct.unpack('>16s', b)[0]
             return uuid.UUID(bytes=temp_bytes)
         else: # BytesType
@@ -234,15 +282,15 @@ class ColumnFamily(object):
         else: {'column': 'value'}
         """
 
-        if super_column != '': super_column = self._pack(super_column, is_supercol_name=True)
-        if column_start != '': column_start = self._pack(column_start, is_supercol_name=self.super)
-        if column_finish != '': column_finish = self._pack(column_finish, is_supercol_name=self.super) 
+        if super_column != '': super_column = self._pack_name(super_column, is_supercol_name=True)
+        if column_start != '': column_start = self._pack_name(column_start, is_supercol_name=self.super)
+        if column_finish != '': column_finish = self._pack_name(column_finish, is_supercol_name=self.super) 
 
         packed_cols = None
         if columns is not None:
             packed_cols = []
             for col in columns:
-                packed_cols.append(self._pack(col, is_supercol_name=self.super))
+                packed_cols.append(self._pack_name(col, is_supercol_name=self.super))
 
         cp = ColumnParent(column_family=self.column_family, super_column=super_column)
         sp = create_SlicePredicate(packed_cols, column_start, column_finish,
@@ -293,19 +341,26 @@ class ColumnFamily(object):
         else: {key : {column : value}}
         """
 
-        if super_column != '': super_column = self._pack(super_column, is_supercol_name=True)
-        if column_start != '': column_start = self._pack(column_start, is_supercol_name=self.super)
-        if column_finish != '': column_finish = self._pack(column_finish, is_supercol_name=self.super) 
+        if super_column != '': super_column = self._pack_name(super_column, is_supercol_name=True)
+        if column_start != '': column_start = self._pack_name(column_start, is_supercol_name=self.super)
+        if column_finish != '': column_finish = self._pack_name(column_finish, is_supercol_name=self.super) 
 
         packed_cols = None
         if columns is not None:
             packed_cols = []
             for col in columns:
-                packed_cols.append(self._pack(col, is_supercol_name=self.super))
+                packed_cols.append(self._pack_name(col, is_supercol_name=self.super))
 
         cp = ColumnParent(column_family=self.column_family, super_column=super_column)
         sp = create_SlicePredicate(packed_cols, column_start, column_finish,
                                    column_reversed, column_count)
+
+        # Pack the values in the index clause expressions
+        new_exprs = []
+        for expr in index_clause.expressions:
+            new_exprs.append(IndexExpression(self._pack_name(expr.column_name), expr.op, \
+                            self._pack_value(expr.value, expr.column_name)))
+        index_clause.expressions = new_exprs
 
         keyslice_list = self.client.get_indexed_slices(cp, index_clause, sp,
                                                   self._rcl(read_consistency_level))
@@ -349,15 +404,15 @@ class ColumnFamily(object):
         else: {'key': {'column': 'value'}}
         """
 
-        if super_column != '': super_column = self._pack(super_column, is_supercol_name=True)
-        if column_start != '': column_start = self._pack(column_start, is_supercol_name=self.super)
-        if column_finish != '': column_finish = self._pack(column_finish, is_supercol_name=self.super) 
+        if super_column != '': super_column = self._pack_name(super_column, is_supercol_name=True)
+        if column_start != '': column_start = self._pack_name(column_start, is_supercol_name=self.super)
+        if column_finish != '': column_finish = self._pack_name(column_finish, is_supercol_name=self.super) 
 
         packed_cols = None
         if columns is not None:
             packed_cols = []
             for col in columns:
-                packed_cols.append(self._pack(col, is_supercol_name=self.super))
+                packed_cols.append(self._pack_name(col, is_supercol_name=self.super))
 
         cp = ColumnParent(column_family=self.column_family, super_column=super_column)
         sp = create_SlicePredicate(packed_cols, column_start, column_finish,
@@ -393,7 +448,7 @@ class ColumnFamily(object):
         """
 
         if super_column != '':
-            super_column = self._pack(super_column, is_supercol_name=True)
+            super_column = self._pack_name(super_column, is_supercol_name=True)
 
         cp = ColumnParent(column_family=self.column_family, super_column=super_column)
         sp = SlicePredicate(slice_range=SliceRange(start='',
@@ -442,17 +497,17 @@ class ColumnFamily(object):
         """
 
         if super_column != '':
-            super_column = self._pack(super_column, is_supercol_name=True)
+            super_column = self._pack_name(super_column, is_supercol_name=True)
         if column_start != '':
-            column_start = self._pack(column_start, is_supercol_name=self.super)
+            column_start = self._pack_name(column_start, is_supercol_name=self.super)
         if column_finish != '':
-            column_finish = self._pack(column_finish, is_supercol_name=self.super)
+            column_finish = self._pack_name(column_finish, is_supercol_name=self.super)
         
         packed_cols = None
         if columns is not None:
             packed_cols = []
             for col in columns:
-                packed_cols.append(self._pack(col, is_supercol_name=self.super))
+                packed_cols.append(self._pack_name(col, is_supercol_name=self.super))
 
         cp = ColumnParent(column_family=self.column_family, super_column=super_column)
         sp = create_SlicePredicate(packed_cols, column_start, column_finish,
@@ -488,7 +543,7 @@ class ColumnFamily(object):
             last_key = key_slices[-1].key
             i += 1
 
-    def insert(self, key, columns, write_consistency_level = None):
+    def insert(self, key, columns, write_consistency_level=None):
         """
         Insert or update columns for a key
 
@@ -514,12 +569,13 @@ class ColumnFamily(object):
         cols = []
         for c, v in columns.iteritems():
             if self.super:
-                subc = [Column(name=self._pack(subname), value=subvalue, clock=clock) \
+                subc = [Column(name=self._pack_name(subname), \
+                               value=self._pack_value(subvalue, subname), clock=clock) \
                         for subname, subvalue in v.iteritems()]
-                column = SuperColumn(name=self._pack(c, is_supercol_name=True), columns=subc)
+                column = SuperColumn(name=self._pack_name(c, is_supercol_name=True), columns=subc)
                 cols.append(Mutation(column_or_supercolumn=ColumnOrSuperColumn(super_column=column)))
             else:
-                column = Column(name=self._pack(c), value=v, clock=clock)
+                column = Column(name=self._pack_name(c), value=self._pack_value(v, c), clock=clock)
                 cols.append(Mutation(column_or_supercolumn=ColumnOrSuperColumn(column=column)))
         self.client.batch_mutate({key: {self.column_family: cols}},
                                  self._wcl(write_consistency_level))
@@ -550,10 +606,10 @@ class ColumnFamily(object):
         if columns is not None:
             packed_cols = []
             for col in columns:
-                packed_cols.append(self._pack(col, is_supercol_name = self.super))
+                packed_cols.append(self._pack_name(col, is_supercol_name = self.super))
 
         if super_column != '':
-            super_column = self._pack(super_column, is_supercol_name=True)
+            super_column = self._pack_name(super_column, is_supercol_name=True)
 
         clock = Clock(timestamp=self.timestamp())
         if packed_cols is not None:
