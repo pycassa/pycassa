@@ -625,3 +625,14 @@ class ColumnFamily(object):
             self.client.remove(key, cp, clock,
                                self._wcl(write_consistency_level))
         return clock.timestamp
+
+    def truncate(self)
+        """
+        Marks the entire ColumnFamily as deleted.
+        From the user's perspective a successful call to truncate will result complete data deletion from cfname.
+        Internally, however, disk space will not be immediatily released, as with all deletes in cassandra, this one
+        only marks the data as deleted.
+        The operation succeeds only if all hosts in the cluster at available and will throw an UnavailableException if
+        some hosts are down.
+        """
+        self.client.truncate(self.column_family)
