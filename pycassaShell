@@ -28,8 +28,11 @@ parser.add_option('-H', '--host', help='Hostname.')
 parser.add_option('-p', '--port', type="int", help='Thrift port number.')
 parser.add_option('-u', '--user', help='Username (for simple auth).')
 parser.add_option('-P', '--passwd', help='Password (for simple auth).')
-parser.add_option('-F', '--framed', action="store_true",
-                  help='Use framed transport.')
+parser.add_option('-S', '--streaming', help='Using streaming transport.',
+                  action="store_false", dest='framed')
+parser.add_option('-F', '--framed', 
+                  help='Use framed transport.  Default transport.',
+                  action="store_true", dest='framed')
 
 (options, args) = parser.parse_args()
 
@@ -39,6 +42,8 @@ if not options.keyspace:
 
 hostname = options.host and options.host or 'localhost'
 port = options.port and options.port or 9160
+print 'options.framed: ', options.framed
+framed = True if options.framed is None else options.framed
 credentials = None
 
 if options.user or options.passwd:
@@ -52,7 +57,7 @@ if options.user or options.passwd:
 
 CLIENT = pycassa.connect(options.keyspace, ['%s:%d' % (hostname, port)],
                          credentials=credentials,
-                         framed_transport=options.framed)
+                         framed_transport=framed)
 
 print """
 Cassandra Interactive Python Shell
@@ -61,7 +66,7 @@ Cassandra Interactive Python Shell
 
 Available column family instances:""" % (options.keyspace, hostname, port)
 
-for cfname in CLIENT.describe_keyspace(options.keyspace).keys():
+for cfname in CLIENT.get_keyspace_description(options.keyspace).keys():
     cfinstance = pycassa.ColumnFamily(CLIENT, cfname)
     exec('%s = cfinstance' % cfname.upper())
     print " *", cfname.upper()
