@@ -406,3 +406,46 @@ keyspaces:
             - name: birthdate
               validator_class: LongType
               index_type: KEYS
+
+# Validator tests
+        - name: ValidatorLong
+          column_type: Standard
+          column_metadata:
+            - name: subcol
+              validator_class: LongType
+
+        - name: ValidatorInt
+          column_type: Standard
+          column_metadata:
+            - name: subcol
+              validator_class: IntegerType
+
+        - name: ValidatorTime
+          column_type: Standard
+          column_metadata:
+            - name: subcol
+              validator_class: TimeUUIDType
+
+        - name: ValidatorLex
+          column_type: Standard
+          column_metadata:
+            - name: subcol
+              validator_class: LexicalUUIDType
+
+        - name: ValidatorAscii
+          column_type: Standard
+          column_metadata:
+            - name: subcol
+              validator_class: AsciiType
+
+        - name: ValidatorUTF8
+          column_type: Standard
+          column_metadata:
+            - name: subcol
+              validator_class: UTF8Type
+
+        - name: ValidatorBytes
+          column_type: Standard
+          column_metadata:
+            - name: subcol
+              validator_class: BytesType
