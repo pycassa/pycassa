@@ -316,21 +316,8 @@ class ColumnFamily(object):
         -------
         int timestamp
         """
-        clock = Clock(timestamp=self.timestamp())
-
-        cols = []
-        for c, v in columns.iteritems():
-            if self.super:
-                subc = [Column(name=subname, value=subvalue, clock=clock) \
-                        for subname, subvalue in v.iteritems()]
-                column = SuperColumn(name=c, columns=subc)
-                cols.append(Mutation(column_or_supercolumn=ColumnOrSuperColumn(super_column=column)))
-            else:
-                column = Column(name=c, value=v, clock=clock)
-                cols.append(Mutation(column_or_supercolumn=ColumnOrSuperColumn(column=column)))
-        self.client.batch_mutate({key: {self.column_family: cols}},
-                                 self._wcl(write_consistency_level))
-        return clock.timestamp
+        return self.batch_insert({row: columns},
+                                 write_consistency_level = write_consistency_level)
 
     def batch_insert(self, rows, write_consistency_level = None):
         """
