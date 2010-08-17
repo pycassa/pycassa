@@ -24,7 +24,7 @@ authenticator: org.apache.cassandra.auth.SimpleAuthenticator
 # org.apache.cassandra.dht.RandomPartitioner
 # org.apache.cassandra.dht.OrderPreservingPartitioner, and
 # org.apache.cassandra.dht.CollatingOrderPreservingPartitioner.
-partitioner: org.apache.cassandra.dht.OrderPreservingPartitioner
+partitioner: org.apache.cassandra.dht.CollatingOrderPreservingPartitioner
 
 # directories where Cassandra should store data on disk.
 data_file_directories:
@@ -133,7 +133,7 @@ rpc_timeout_in_ms: 10000
 # phi_convict_threshold: 8
 
 # time to wait before garbage collecting tombstones (deletion markers)
-gc_grace_seconds: 864000
+#gc_grace_seconds: 864000
 
 # endpoint_snitch -- Set this to a class that implements
 # IEndpointSnitch, which will let Cassandra know enough
@@ -277,3 +277,175 @@ keyspaces:
           column_type: Super
           compare_with: LongType
           comment: 'A column family with supercolumns, whose column names are Longs (8 bytes)'
+
+# CFs for autopacking tests
+
+        - name: StdBytes
+          compare_with: BytesType
+          comment: 'A standard column family with column names that are Longs (8 bytes)'
+          gc_grace_seconds: 0
+
+        - name: StdLong
+          compare_with: LongType
+          comment: 'A standard column family with column names that are Longs (8 bytes)'
+          gc_grace_seconds: 0
+
+        - name: StdInteger
+          compare_with: IntegerType
+          comment: 'A standard column family with column names that are Integers (4 bytes)'
+          gc_grace_seconds: 0
+
+        - name: StdAscii
+          compare_with: AsciiType
+          comment: 'A standard column family with column names that are ASCII strings'
+          gc_grace_seconds: 0
+
+        - name: StdUTF8
+          compare_with: UTF8Type
+          comment: 'A standard column family with column names that are UTF8 strings'
+          gc_grace_seconds: 0
+
+        - name: StdLexicalUUID
+          compare_with: LexicalUUIDType
+          comment: 'A standard column family with column names that are lexical UUIDs (16 bytes)'
+          gc_grace_seconds: 0
+
+        - name: StdTimeUUID
+          compare_with: TimeUUIDType
+          comment: 'A standard column family with column names that are time UUIDs (16 bytes)'
+          gc_grace_seconds: 0
+
+        - name: SuperBytes
+          column_type: Super
+          compare_with: BytesType
+          compare_subcolumns_with: BytesType
+          gc_grace_seconds: 0
+
+        - name: SuperLong
+          column_type: Super
+          compare_with: LongType
+          compare_subcolumns_with: BytesType
+          gc_grace_seconds: 0
+
+        - name: SuperInt
+          column_type: Super
+          compare_with: IntegerType
+          compare_subcolumns_with: BytesType
+          gc_grace_seconds: 0
+
+        - name: SuperAscii
+          column_type: Super
+          compare_with: AsciiType
+          compare_subcolumns_with: BytesType
+          gc_grace_seconds: 0
+
+        - name: SuperUTF8
+          column_type: Super
+          compare_with: UTF8Type
+          compare_subcolumns_with: BytesType
+          gc_grace_seconds: 0
+
+        - name: SuperLex
+          column_type: Super
+          compare_with: LexicalUUIDType
+          compare_subcolumns_with: BytesType
+          gc_grace_seconds: 0
+
+        - name: SuperTime
+          column_type: Super
+          compare_with: TimeUUIDType
+          compare_subcolumns_with: BytesType
+          gc_grace_seconds: 0
+
+# Supercols with different subcol types
+        - name: SuperLongSubLong
+          column_type: Super
+          compare_with: LongType
+          compare_subcolumns_with: LongType
+          gc_grace_seconds: 0
+
+        - name: SuperLongSubInt
+          column_type: Super
+          compare_with: LongType
+          compare_subcolumns_with: IntegerType
+          gc_grace_seconds: 0
+
+        - name: SuperLongSubTime
+          column_type: Super
+          compare_with: LongType
+          compare_subcolumns_with: TimeUUIDType
+          gc_grace_seconds: 0
+
+        - name: SuperLongSubLex
+          column_type: Super
+          compare_with: LongType
+          compare_subcolumns_with: LexicalUUIDType
+          gc_grace_seconds: 0
+
+        - name: SuperLongSubAscii
+          column_type: Super
+          compare_with: LongType
+          compare_subcolumns_with: AsciiType
+          gc_grace_seconds: 0
+
+        - name: SuperLongSubUTF8
+          column_type: Super
+          compare_with: LongType
+          compare_subcolumns_with: UTF8Type
+          gc_grace_seconds: 0
+
+        - name: SuperLongSubBytes
+          column_type: Super
+          compare_with: LongType
+          compare_subcolumns_with: BytesType
+          gc_grace_seconds: 0
+
+# Indexed column family
+        - name: Indexed1
+          column_metadata:
+            - name: birthdate
+              validator_class: LongType
+              index_type: KEYS
+
+# Validator tests
+        - name: ValidatorLong
+          column_type: Standard
+          column_metadata:
+            - name: subcol
+              validator_class: LongType
+
+        - name: ValidatorInt
+          column_type: Standard
+          column_metadata:
+            - name: subcol
+              validator_class: IntegerType
+
+        - name: ValidatorTime
+          column_type: Standard
+          column_metadata:
+            - name: subcol
+              validator_class: TimeUUIDType
+
+        - name: ValidatorLex
+          column_type: Standard
+          column_metadata:
+            - name: subcol
+              validator_class: LexicalUUIDType
+
+        - name: ValidatorAscii
+          column_type: Standard
+          column_metadata:
+            - name: subcol
+              validator_class: AsciiType
+
+        - name: ValidatorUTF8
+          column_type: Standard
+          column_metadata:
+            - name: subcol
+              validator_class: UTF8Type
+
+        - name: ValidatorBytes
+          column_type: Standard
+          column_metadata:
+            - name: subcol
+              validator_class: BytesType

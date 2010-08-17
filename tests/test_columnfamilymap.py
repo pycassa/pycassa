@@ -1,9 +1,11 @@
 from datetime import datetime
 
-from pycassa import connect, connect_thread_local, gm_timestamp, ColumnFamily, \
+from pycassa import index, connect, connect_thread_local, gm_timestamp, ColumnFamily, \
     ColumnFamilyMap, ConsistencyLevel, NotFoundException, String, Int64, \
     Float64, DateTime, IntString, FloatString, DateTimeString
 from nose.tools import assert_raises
+
+import struct
 
 class TestUTF8(object):
     strcol = String(default='default')
@@ -20,6 +22,15 @@ class TestUTF8(object):
     def __ne__(self, other):
         return self.__dict__ != other.__dict__
 
+class TestIndex(object):
+    birthdate = Int64(default=0)
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return self.__dict__ != other.__dict__
+
 class TestEmpty(object):
     pass
 
@@ -29,8 +40,14 @@ class TestColumnFamilyMap:
         self.client = connect('Keyspace1', credentials=credentials)
         self.cf = ColumnFamily(self.client, 'Standard2',
                                write_consistency_level=ConsistencyLevel.ONE,
-                               timestamp=self.timestamp)
+                               timestamp=self.timestamp,
+                               autopack_names=False,
+                               autopack_values=False)
+        self.indexed_cf = ColumnFamily(self.client, 'Indexed1',
+                                       autopack_names=False,
+                                       autopack_values=False)
         self.map = ColumnFamilyMap(TestUTF8, self.cf)
+        self.indexed_map = ColumnFamilyMap(TestIndex, self.indexed_cf)
         self.empty_map = ColumnFamilyMap(TestEmpty, self.cf, raw_columns=True)
         try:
             self.timestamp_n = int(self.cf.get('meta')['timestamp'])
@@ -78,6 +95,22 @@ class TestColumnFamilyMap:
         self.map.insert(instance)
         assert self.map.get(instance.key) == instance
         assert self.empty_map.get(instance.key).raw_columns['intstrcol'] == str(instance.intstrcol)
+
+    def test_insert_get_indexed_slices(self):
+        instance = TestIndex()
+        instance.key = 'key'
+        instance.birthdate = 1L
+        self.indexed_map.insert(instance)
+        instance.key = 'key2'
+        self.indexed_map.insert(instance)
+        instance.key = 'key3'
+        self.indexed_map.insert(instance)
+
+        expr = index.create_index_expression(column_name='birthdate', value=1L)
+        clause = index.create_index_clause([expr])
+        result = self.indexed_map.get_indexed_slices(instance, index_clause=clause)
+        assert len(result) == 3
+        assert result.get('key3') == instance
 
     def test_insert_multiget(self):
         instance1 = self.instance('TestColumnFamilyMap.test_insert_multiget1')
