@@ -223,7 +223,7 @@ class ColumnFamily(object):
         elif data_type == 'IntegerType':
             return struct.pack('>i', int(value))
         elif data_type == 'AsciiType' or data_type == 'UTF8Type':
-            return struct.pack(">%ds" % len(value.encode('utf8')), value.encode('utf8'))
+            return struct.pack(">%ds" % len(value), value)
         elif data_type == 'TimeUUIDType' or data_type == 'LexicalUUIDType':
             return struct.pack('>16s', value.bytes)
         else: 
