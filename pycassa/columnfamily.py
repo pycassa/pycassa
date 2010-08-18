@@ -563,22 +563,50 @@ class ColumnFamily(object):
         -------
         int timestamp
         """
+        return self.batch_insert({row: columns},
+                                 write_consistency_level = write_consistency_level)
 
+    def batch_insert(self, rows, write_consistency_level = None):
+        """
+        Insert or update columns for multiple keys
+
+        Parameters
+        ----------
+        rows : dict
+            Column: {'row': {'column': 'value'}}
+            SuperColumn: {'row': {'column': {'subcolumn': 'value'}}}
+        write_consistency_level : ConsistencyLevel
+            Affects the guaranteed replication factor before returning from
+            any write operation
+
+        Returns
+        -------
+        int timestamp
+        """
         clock = Clock(timestamp=self.timestamp())
 
-        cols = []
-        for c, v in columns.iteritems():
-            if self.super:
-                subc = [Column(name=self._pack_name(subname), \
-                               value=self._pack_value(subvalue, subname), clock=clock) \
-                        for subname, subvalue in v.iteritems()]
-                column = SuperColumn(name=self._pack_name(c, is_supercol_name=True), columns=subc)
-                cols.append(Mutation(column_or_supercolumn=ColumnOrSuperColumn(super_column=column)))
-            else:
-                column = Column(name=self._pack_name(c), value=self._pack_value(v, c), clock=clock)
-                cols.append(Mutation(column_or_supercolumn=ColumnOrSuperColumn(column=column)))
-        self.client.batch_mutate({key: {self.column_family: cols}},
+        mutation_map = {}
+
+        for row, cs in rows.iteritems():
+            cols = []
+
+            for c, v in cs.iteritems():
+                if self.super:
+                    subc = [Column(name=self._pack_name(subname), \
+                                       value=self._pack_value(subvalue, subname), clock=clock) \
+                                for subname, subvalue in v.iteritems()]
+                    column = SuperColumn(name=self._pack_name(c, is_supercol_name=True), columns=subc)
+                    cols.append(Mutation(column_or_supercolumn=ColumnOrSuperColumn(super_column=column)))
+                else:
+                    column = Column(name=self._pack_name(c), value=self._pack_value(v, c), clock=clock)
+                    cols.append(Mutation(column_or_supercolumn=ColumnOrSuperColumn(column=column)))
+
+            if cols:
+                mutation_map[row] = {self.column_family: cols}
+
+        self.client.batch_mutate(mutation_map,
                                  self._wcl(write_consistency_level))
+
         return clock.timestamp
 
     def remove(self, key, columns=None, super_column=None, write_consistency_level = None):
