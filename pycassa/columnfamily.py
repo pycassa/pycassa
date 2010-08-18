@@ -563,7 +563,7 @@ class ColumnFamily(object):
         -------
         int timestamp
         """
-        return self.batch_insert({row: columns},
+        return self.batch_insert({key: columns},
                                  write_consistency_level = write_consistency_level)
 
     def batch_insert(self, rows, write_consistency_level = None):
