@@ -1,12 +1,13 @@
 from cassandra.ttypes import Column, ColumnOrSuperColumn, ColumnParent, \
     ColumnPath, ConsistencyLevel, NotFoundException, SlicePredicate, \
-    SliceRange, SuperColumn, Mutation, Deletion, Clock, KeyRange, \
-    IndexExpression, IndexClause
+    SliceRange, SuperColumn, Clock, KeyRange, IndexExpression, IndexClause
 
 import time
 import sys
 import uuid
 import struct
+
+from batch import CfMutator
 
 __all__ = ['gm_timestamp', 'ColumnFamily']
 _TYPES = ['BytesType', 'LongType', 'IntegerType', 'UTF8Type', 'AsciiType',
@@ -75,7 +76,7 @@ class ColumnFamily(object):
         autopack_values : bool
             Whether column values should be packed automatically based on
             the validator_class for a given column.  This should probably
-            be set to False when used with a ColumnFamilyMap.       
+            be set to False when used with a ColumnFamilyMap.
         """
         self.client = client
         self.column_family = column_family
@@ -113,7 +114,7 @@ class ColumnFamily(object):
             if self.autopack_values:
                 for name, cdef in col_fam.column_metadata.items():
                     self.col_type_dict[name] = self._extract_type_name(cdef.validation_class)
-            
+
 
     def _extract_type_name(self, string):
 
@@ -217,7 +218,7 @@ class ColumnFamily(object):
         """
         Packs a value into the expected sequence of bytes that Cassandra expects.
         """
-        
+
         if data_type == 'LongType':
             return struct.pack('>q', long(value))  # q is 'long long'
         elif data_type == 'IntegerType':
@@ -226,7 +227,7 @@ class ColumnFamily(object):
             return struct.pack(">%ds" % len(value), value)
         elif data_type == 'TimeUUIDType' or data_type == 'LexicalUUIDType':
             return struct.pack('>16s', value.bytes)
-        else: 
+        else:
             return value
 
     def _unpack(self, b, data_type):
@@ -252,7 +253,7 @@ class ColumnFamily(object):
             super_column=None, read_consistency_level = None):
         """
         Fetch a key from a Cassandra server
-        
+
         Parameters
         ----------
         key : str
@@ -284,7 +285,7 @@ class ColumnFamily(object):
 
         if super_column != '': super_column = self._pack_name(super_column, is_supercol_name=True)
         if column_start != '': column_start = self._pack_name(column_start, is_supercol_name=self.super)
-        if column_finish != '': column_finish = self._pack_name(column_finish, is_supercol_name=self.super) 
+        if column_finish != '': column_finish = self._pack_name(column_finish, is_supercol_name=self.super)
 
         packed_cols = None
         if columns is not None:
@@ -308,7 +309,7 @@ class ColumnFamily(object):
                           super_column=None, read_consistency_level=None):
         """
         Fetches a list of KeySlices from a Cassandra server based on an index clause
-        
+
         Parameters
         ----------
         index_clause : IndexClause
@@ -343,7 +344,7 @@ class ColumnFamily(object):
 
         if super_column != '': super_column = self._pack_name(super_column, is_supercol_name=True)
         if column_start != '': column_start = self._pack_name(column_start, is_supercol_name=self.super)
-        if column_finish != '': column_finish = self._pack_name(column_finish, is_supercol_name=self.super) 
+        if column_finish != '': column_finish = self._pack_name(column_finish, is_supercol_name=self.super)
 
         packed_cols = None
         if columns is not None:
@@ -374,7 +375,7 @@ class ColumnFamily(object):
                  super_column=None, read_consistency_level = None):
         """
         Fetch multiple key from a Cassandra server
-        
+
         Parameters
         ----------
         keys : [str]
@@ -406,7 +407,7 @@ class ColumnFamily(object):
 
         if super_column != '': super_column = self._pack_name(super_column, is_supercol_name=True)
         if column_start != '': column_start = self._pack_name(column_start, is_supercol_name=self.super)
-        if column_finish != '': column_finish = self._pack_name(column_finish, is_supercol_name=self.super) 
+        if column_finish != '': column_finish = self._pack_name(column_finish, is_supercol_name=self.super)
 
         packed_cols = None
         if columns is not None:
@@ -463,7 +464,7 @@ class ColumnFamily(object):
                   super_column=None, read_consistency_level = None):
         """
         Get an iterator over keys in a specified range
-        
+
         Parameters
         ----------
         start : str
@@ -502,7 +503,7 @@ class ColumnFamily(object):
             column_start = self._pack_name(column_start, is_supercol_name=self.super)
         if column_finish != '':
             column_finish = self._pack_name(column_finish, is_supercol_name=self.super)
-        
+
         packed_cols = None
         if columns is not None:
             packed_cols = []
@@ -516,7 +517,7 @@ class ColumnFamily(object):
         count = 0
         i = 0
         last_key = start
-        
+
         buffer_size = self.buffer_size
         if row_count is not None:
             buffer_size = min(row_count, self.buffer_size)
@@ -543,7 +544,8 @@ class ColumnFamily(object):
             last_key = key_slices[-1].key
             i += 1
 
-    def insert(self, key, columns, write_consistency_level=None):
+    def insert(self, key, columns, clock=None, ttl=None,
+               write_consistency_level=None):
         """
         Insert or update columns for a key
 
@@ -563,10 +565,10 @@ class ColumnFamily(object):
         -------
         int timestamp
         """
-        return self.batch_insert({key: columns},
-                                 write_consistency_level = write_consistency_level)
+        return self.batch_insert({key: columns}, clock=clock, ttl=ttl,
+                                 write_consistency_level=write_consistency_level)
 
-    def batch_insert(self, rows, write_consistency_level = None):
+    def batch_insert(self, rows, clock=None, ttl=None, write_consistency_level = None):
         """
         Insert or update columns for multiple keys
 
@@ -584,29 +586,10 @@ class ColumnFamily(object):
         int timestamp
         """
         clock = Clock(timestamp=self.timestamp())
-
-        mutation_map = {}
-
-        for row, cs in rows.iteritems():
-            cols = []
-
-            for c, v in cs.iteritems():
-                if self.super:
-                    subc = [Column(name=self._pack_name(subname), \
-                                       value=self._pack_value(subvalue, subname), clock=clock) \
-                                for subname, subvalue in v.iteritems()]
-                    column = SuperColumn(name=self._pack_name(c, is_supercol_name=True), columns=subc)
-                    cols.append(Mutation(column_or_supercolumn=ColumnOrSuperColumn(super_column=column)))
-                else:
-                    column = Column(name=self._pack_name(c), value=self._pack_value(v, c), clock=clock)
-                    cols.append(Mutation(column_or_supercolumn=ColumnOrSuperColumn(column=column)))
-
-            if cols:
-                mutation_map[row] = {self.column_family: cols}
-
-        self.client.batch_mutate(mutation_map,
-                                 self._wcl(write_consistency_level))
-
+        batch = self.batch(write_consistency_level=write_consistency_level)
+        for key, columns in rows.iteritems():
+            batch.insert(key, columns, clock=clock, ttl=ttl)
+        batch.send()
         return clock.timestamp
 
     def remove(self, key, columns=None, super_column=None, write_consistency_level = None):
@@ -629,30 +612,32 @@ class ColumnFamily(object):
         -------
         int timestamp
         """
-
-        packed_cols = None
-        if columns is not None:
-            packed_cols = []
-            for col in columns:
-                packed_cols.append(self._pack_name(col, is_supercol_name = self.super))
-
-        if super_column != '':
-            super_column = self._pack_name(super_column, is_supercol_name=True)
-
         clock = Clock(timestamp=self.timestamp())
-        if packed_cols is not None:
-            # Deletion doesn't support SliceRange predicates as of Cassandra 0.6.0,
-            # so we can't add column_start, column_finish, etc... yet
-            sp = SlicePredicate(column_names=packed_cols)
-            deletion = Deletion(clock=clock, super_column=super_column, predicate=sp)
-            mutation = Mutation(deletion=deletion)
-            self.client.batch_mutate({key: {self.column_family: [mutation]}},
-                                     self._wcl(write_consistency_level))
-        else:
-            cp = ColumnPath(column_family=self.column_family, super_column=super_column)
-            self.client.remove(key, cp, clock,
-                               self._wcl(write_consistency_level))
+        batch = self.batch(write_consistency_level=write_consistency_level)
+        batch.remove(key, columns, super_column, clock)
+        batch.send()
         return clock.timestamp
+
+    def batch(self, queue_size=100, write_consistency_level=None):
+        """
+        Create batch mutator for doing multiple insert,update,remove
+        operations using as few roundtrips as possible.
+
+        Parameters
+        ----------
+        queue_size : int
+            Max number of mutations per request
+        write_consistency_level: ConsistencyLevel
+            Consistency level used for mutations.
+
+        Returns
+        -------
+        CfMutator mutator
+        """
+        if write_consistency_level is None:
+            write_consistency_level = self.write_consistency_level
+        return CfMutator(self, queue_size=queue_size,
+                         write_consistency_level=write_consistency_level)
 
     def truncate(self):
         """

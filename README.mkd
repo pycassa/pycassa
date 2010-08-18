@@ -244,6 +244,59 @@ You may also use a ColumnFamilyMap with SuperColumns:
 
 These output values retain the same format as given by the Cassandra thrift interface.
 
+Batch Mutations
+---------------
+
+The batch interface allows insert/update/remove operations to be performed in
+batches. This allows a convenient mechanism for streaming updates or doing a large number of operations while reducing number of RPC roundtrips.
+
+Batch mutator objects are synchronized and can be safely passed around threads.
+
+    >>> b = cf.batch(queue_size=10)
+    >>> b.insert('key1', {'col1':'value11', 'col2':'value21'})
+    >>> b.insert('key2', {'col1':'value12', 'col2':'value22'}, ttl=15)
+    >>> b.remove('key1', ['col2'])
+    >>> b.remove('key2')
+    >>> b.send()
+
+One can use the `queue_size` argument to control how many mutations will be
+queued before an automatic `send` is performed. This allows simple streaming of
+updates. If set to `None`, automatic checkpoints are disabled. Default is 100.
+
+Supercolumns are supported:
+
+    >>> b = scf.batch()
+    >>> b.insert('key1', {'supercol1': {'colA':'value1a', 'colB':'value1b'}
+                         {'supercol2': {'colA':'value2a', 'colB':'value2b'}})
+    >>> b.remove('key1', ['colA'], 'supercol1')
+    >>> b.send()
+
+You may also create a batch mutator from a client instance, allowing operations
+on multiple column families:
+
+    >>> b = client.batch()
+    >>> b.insert(cf, 'key1', {'col1':'value1', 'col2':'value2'})
+    >>> b.insert(supercf, 'key1', {'subkey1': {'col1':'value1', 'col2':'value2'}})
+    >>> b.send()
+
+Note: This interface does not implement atomic operations across coLUMN
+      families. All the limitations of the `batch_mutate` Thrift API call
+      applies. Remember, a mutation in Cassandra is always atomic per key per
+      column family only.
+
+Note: If a single operation in a batch fails, the whole batch fails.
+
+In Python >= 2.5, mutators can be used as context managers, where an implicit
+`send` will be called upon exit.
+
+    >>> with cf.batch() as b:
+    >>>     b.insert('key1', {'col1':'value11', 'col2':'value21'})
+    >>>     b.insert('key2', {'col1':'value12', 'col2':'value22'})
+
+Calls to `insert` and `remove` can also be chained:
+
+    >>> cf.batch().remove('foo').remove('bar').send()
+
 Advanced
 --------
 
