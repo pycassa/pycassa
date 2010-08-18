@@ -222,8 +222,11 @@ class ColumnFamily(object):
             return struct.pack('>q', long(value))  # q is 'long long'
         elif data_type == 'IntegerType':
             return struct.pack('>i', int(value))
-        elif data_type == 'AsciiType' or data_type == 'UTF8Type':
+        elif data_type == 'AsciiType':
             return struct.pack(">%ds" % len(value), value)
+        elif data_type == 'UTF8Type':
+            st = value.encode('utf-8')
+            return struct.pack(">%ds" % len(st), st)
         elif data_type == 'TimeUUIDType' or data_type == 'LexicalUUIDType':
             return struct.pack('>16s', value.bytes)
         else: 
@@ -239,8 +242,11 @@ class ColumnFamily(object):
             return struct.unpack('>q', b)[0]
         elif data_type == 'IntegerType':
             return struct.unpack('>i', b)[0]
-        elif data_type == 'AsciiType' or data_type == 'UTF8Type':
+        elif data_type == 'AsciiType':
             return struct.unpack('>%ds' % len(b), b)[0]
+        elif data_type == 'UTF8Type':
+            unic = struct.unpack('>%ds' % len(b), b)[0]
+            return unic.decode('utf-8')
         elif data_type == 'LexicalUUIDType' or data_type == 'TimeUUIDType':
             temp_bytes = struct.unpack('>16s', b)[0]
             return uuid.UUID(bytes=temp_bytes)

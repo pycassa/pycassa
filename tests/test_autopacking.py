@@ -94,7 +94,7 @@ class TestAutoPacking:
         time_col = {TIME1: VALS[0]}
         lex_col = {uuid.UUID(bytes='abc abc abc abcd'): VALS[0]}
         ascii_col = {'foo': VALS[0]}
-        utf8_col = {u'\u0020'.encode('utf8'): VALS[0]}
+        utf8_col = {u'\u0020': VALS[0]}
         bytes_col = {'bytes': VALS[0]}
 
         self.cf_long.insert(KEYS[0], long_col)
@@ -118,7 +118,7 @@ class TestAutoPacking:
         self.cf_suptime.insert(KEYS[0],  {TIME1: bytes_col})
         self.cf_suplex.insert(KEYS[0],   {uuid.UUID(bytes='aaa aaa aaa aaaa'): bytes_col})
         self.cf_supascii.insert(KEYS[0], {'aaaa': bytes_col})
-        self.cf_suputf8.insert(KEYS[0],  {u'a\u0020'.encode('utf8'): bytes_col})
+        self.cf_suputf8.insert(KEYS[0],  {u'a\u0020': bytes_col})
         self.cf_supbytes.insert(KEYS[0], {'aaaa': bytes_col})
 
         self.cf_suplong_sublong.insert(KEYS[0], {123L: long_col})
@@ -162,7 +162,7 @@ class TestAutoPacking:
         ascii_cols = ['aaaa', 'bbbb', 'cccc']
         type_groups.append(self.make_group(self.cf_ascii, ascii_cols))
 
-        utf8_cols = [u'a\u0020'.encode('utf8'), u'b\u0020'.encode('utf8'), u'c\u0020'.encode('utf8')]
+        utf8_cols = [u'a\u0020', u'b\u0020', u'c\u0020']
         type_groups.append(self.make_group(self.cf_utf8, utf8_cols))
 
         bytes_cols = ['aaaa', 'bbbb', 'cccc']
@@ -280,7 +280,7 @@ class TestAutoPacking:
         ascii_cols = ['aaaa', 'bbbb', 'cccc']
         type_groups.append(self.make_super_group(self.cf_supascii, ascii_cols))
 
-        utf8_cols = [u'a\u0020'.encode('utf8'), u'b\u0020'.encode('utf8'), u'c\u0020'.encode('utf8')]
+        utf8_cols = [u'a\u0020', u'b\u0020', u'c\u0020']
         type_groups.append(self.make_super_group(self.cf_suputf8, utf8_cols))
 
         bytes_cols = ['aaaa', 'bbbb', 'cccc']
@@ -399,7 +399,7 @@ class TestAutoPacking:
         ascii_cols = ['aaaa', 'bbbb', 'cccc']
         type_groups.append(self.make_sub_group(self.cf_suplong_subascii, ascii_cols))
 
-        utf8_cols = [u'a\u0020'.encode('utf8'), u'b\u0020'.encode('utf8'), u'c\u0020'.encode('utf8')]
+        utf8_cols = [u'a\u0020', u'b\u0020', u'c\u0020']
         type_groups.append(self.make_sub_group(self.cf_suplong_subutf8, utf8_cols))
 
         bytes_cols = ['aaaa', 'bbbb', 'cccc']
@@ -492,7 +492,7 @@ class TestAutoPacking:
         self.cf_valid_ascii.insert(key, col)
         assert self.cf_valid_ascii.get(key) == col
 
-        col = {'subcol':u'a\u0020'.encode('utf8')}
+        col = {'subcol':u'a\u0020'}
         self.cf_valid_utf8.insert(key, col)
         assert self.cf_valid_utf8.get(key) == col
 
