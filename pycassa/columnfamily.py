@@ -228,6 +228,8 @@ class ColumnFamily(object):
             st = value.encode('utf-8')
             return struct.pack(">%ds" % len(st), st)
         elif data_type == 'TimeUUIDType' or data_type == 'LexicalUUIDType':
+            if not hasattr(value, 'bytes'):
+                raise TypeError("%s not valid for %s" % (value, data_type))
             return struct.pack('>16s', value.bytes)
         else: 
             return value
