@@ -10,6 +10,7 @@ from thrift.transport import TTransport
 from thrift.transport import TSocket
 from thrift.protocol import TBinaryProtocol
 from cassandra import Cassandra
+from cassandra.constants import VERSION
 from cassandra.ttypes import AuthenticationRequest
 
 __all__ = ['connect', 'connect_thread_local', 'NoServerAvailable']
@@ -20,7 +21,6 @@ log = logging.getLogger('pycassa')
 
 class NoServerAvailable(Exception):
     pass
-
 
 class ClientTransport(object):
     """Encapsulation of a client session."""
@@ -37,6 +37,11 @@ class ClientTransport(object):
         protocol = TBinaryProtocol.TBinaryProtocolAccelerated(transport)
         client = Cassandra.Client(protocol)
         transport.open()
+
+        server_version = client.describe_version()
+        assert server_version == VERSION, \
+                "Thrift API version mismatch. " \
+                 "(Client: %s, Server: %s)" % (VERSION, server_version)
 
         client.set_keyspace(keyspace)
 
