@@ -16,6 +16,7 @@ from cassandra.ttypes import AuthenticationRequest
 __all__ = ['connect', 'connect_thread_local', 'NoServerAvailable']
 
 DEFAULT_SERVER = 'localhost:9160'
+API_VERSION = VERSION.split('.')
 
 log = logging.getLogger('pycassa')
 
@@ -38,10 +39,10 @@ class ClientTransport(object):
         client = Cassandra.Client(protocol)
         transport.open()
 
-        server_version = client.describe_version()
-        assert server_version == VERSION, \
+        server_api_version = client.describe_version().split('.', 1)
+        assert server_api_version[0] == API_VERSION[0], \
                 "Thrift API version mismatch. " \
-                 "(Client: %s, Server: %s)" % (VERSION, server_version)
+                 "(Client: %s, Server: %s)" % (API_VERSION[0], server_api_version[0])
 
         client.set_keyspace(keyspace)
 
