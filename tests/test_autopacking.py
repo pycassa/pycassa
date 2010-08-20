@@ -34,7 +34,7 @@ class TestAutoPacking:
         self.cf_supascii = ColumnFamily(self.client, 'SuperAscii', super=True)
         self.cf_suputf8  = ColumnFamily(self.client, 'SuperUTF8', super=True)
         self.cf_supbytes = ColumnFamily(self.client, 'SuperBytes', super=True)
- 
+
         self.cf_suplong_sublong  = ColumnFamily(self.client, 'SuperLongSubLong', super=True)
         self.cf_suplong_subint   = ColumnFamily(self.client, 'SuperLongSubInt', super=True)
         self.cf_suplong_subtime  = ColumnFamily(self.client, 'SuperLongSubTime', super=True)
@@ -42,7 +42,7 @@ class TestAutoPacking:
         self.cf_suplong_subascii = ColumnFamily(self.client, 'SuperLongSubAscii', super=True)
         self.cf_suplong_subutf8  = ColumnFamily(self.client, 'SuperLongSubUTF8', super=True)
         self.cf_suplong_subbytes = ColumnFamily(self.client, 'SuperLongSubBytes', super=True)
-        
+
         self.cf_valid_long = ColumnFamily(self.client, 'ValidatorLong')
         self.cf_valid_int = ColumnFamily(self.client, 'ValidatorInt')
         self.cf_valid_time = ColumnFamily(self.client, 'ValidatorTime')
@@ -82,7 +82,7 @@ class TestAutoPacking:
             for value, timestamp in columns.itervalues():
                 self.timestamp_n = max(self.timestamp_n, timestamp)
             self.cf.remove(key)
-        
+
         for cf in self.cfs:
             for key, columns in cf.get_range():
                 cf.remove(key)
@@ -133,7 +133,7 @@ class TestAutoPacking:
         diction = { cols[0]: VALS[0],
                     cols[1]: VALS[1],
                     cols[2]: VALS[2]}
-        return { 'cf': cf, 'cols': cols, 'dict': diction}  
+        return { 'cf': cf, 'cols': cols, 'dict': diction}
 
     def test_standard_column_family(self):
         self.clear()
@@ -226,7 +226,7 @@ class TestAutoPacking:
             res = group.get('cf').multiget(KEYS[:], column_start=group.get('cols')[0], column_finish=group.get('cols')[2])
             for j in range(3):
                 assert res.get(KEYS[j]) == group.get('dict')
-            
+
             # A start and end that are the same
             res = group.get('cf').multiget(KEYS[:], column_start=group.get('cols')[0], column_finish=group.get('cols')[0])
             for j in range(3):
@@ -238,7 +238,7 @@ class TestAutoPacking:
             res = group.get('cf').get_range(start=KEYS[0])
             for sub_res in res:
                 assert sub_res[1] == group.get('dict')
-            
+
             res = group.get('cf').get_range(start=KEYS[0], column_start=group.get('cols')[0], column_finish=group.get('cols')[2])
             for sub_res in res:
                 assert sub_res[1] == group.get('dict')
@@ -251,11 +251,11 @@ class TestAutoPacking:
         diction = { cols[0]: {'bytes': VALS[0]},
                     cols[1]: {'bytes': VALS[1]},
                     cols[2]: {'bytes': VALS[2]}}
-        return { 'cf': cf, 'cols': cols, 'dict': diction}  
+        return { 'cf': cf, 'cols': cols, 'dict': diction}
 
     def test_super_column_families(self):
         self.clear()
-      
+
         # For each data type, create a group that includes its column family,
         # a set of column names, and a dictionary that maps from the column
         # names to values.
@@ -344,7 +344,7 @@ class TestAutoPacking:
             res = group.get('cf').multiget(KEYS[:], column_start=group.get('cols')[0], column_finish=group.get('cols')[2])
             for j in range(3):
                 assert res.get(KEYS[j]) == group.get('dict')
-            
+
             # A start and end that are the same
             res = group.get('cf').multiget(KEYS[:], column_start=group.get('cols')[0], column_finish=group.get('cols')[0])
             for j in range(3):
@@ -356,7 +356,7 @@ class TestAutoPacking:
             res = group.get('cf').get_range(start=KEYS[0])
             for sub_res in res:
                 assert sub_res[1] == group.get('dict')
-            
+
             res = group.get('cf').get_range(start=KEYS[0], column_start=group.get('cols')[0], column_finish=group.get('cols')[2])
             for sub_res in res:
                 assert sub_res[1] == group.get('dict')
@@ -370,11 +370,11 @@ class TestAutoPacking:
         diction = {123L: {cols[0]: VALS[0],
                           cols[1]: VALS[1],
                           cols[2]: VALS[2]}}
-        return { 'cf': cf, 'cols': cols, 'dict': diction}  
+        return { 'cf': cf, 'cols': cols, 'dict': diction}
 
     def test_super_column_family_subs(self):
         self.clear()
-      
+
         # For each data type, create a group that includes its column family,
         # a set of column names, and a dictionary that maps from the column
         # names to values.
@@ -436,7 +436,7 @@ class TestAutoPacking:
 
             res = group.get('cf').multiget(KEYS[2:])
             assert res.get(KEYS[2]) == group.get('dict')
- 
+
             res = group.get('cf').multiget(KEYS[:], columns=[123L])
             for i in range(3):
                 assert res.get(KEYS[i]) == group.get('dict')
@@ -448,13 +448,13 @@ class TestAutoPacking:
             res = group.get('cf').multiget(KEYS[:], column_start=123L, column_finish=123L)
             for j in range(3):
                 assert res.get(KEYS[j]) == group.get('dict')
-            
+
             ### get_range() tests ###
 
             res = group.get('cf').get_range(start=KEYS[0])
             for sub_res in res:
                 assert sub_res[1] == group.get('dict')
-            
+
             res = group.get('cf').get_range(start=KEYS[0], column_start=123L, column_finish=123L)
             for sub_res in res:
                 assert sub_res[1] == group.get('dict')
@@ -500,3 +500,45 @@ class TestAutoPacking:
         self.cf_valid_bytes.insert(key, col)
         assert self.cf_valid_bytes.get(key) == col
 
+    def test_time_to_uuid(self):
+        self.clear()
+
+        key = 'key1'
+
+        from datetime import datetime
+        from time import sleep
+        from uuid import uuid1
+
+        timeline = []
+
+        timeline.append(datetime.now())
+        time1 = uuid1()
+        col1 = {time1:'0'}
+        self.cf_time.insert(key, col1)
+        sleep(1)
+
+        timeline.append(datetime.now())
+        time2 = uuid1()
+        col2 = {time2:'1'}
+        self.cf_time.insert(key, col2)
+        sleep(1)
+
+        timeline.append(datetime.now())
+
+        assert self.cf_time.get(key, column_start=timeline[0]) == \
+                {time1:'0', time2:'1'}
+
+        assert self.cf_time.get(key, column_finish=timeline[2]) == \
+                {time1:'0', time2:'1'}
+
+        assert self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) == \
+                {time1:'0', time2:'1'}
+
+        assert self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) == \
+                {time1:'0', time2:'1'}
+
+        assert self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[1]) == \
+                {time1:'0'}
+
+        assert self.cf_time.get(key, column_start=timeline[1], column_finish=timeline[2]) == \
+                {time2:'1'}
