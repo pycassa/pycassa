@@ -127,6 +127,9 @@ class Pool(log.Identified):
         if self._use_threadlocal and hasattr(self._threadconns, "current"):
             del self._threadconns.current
         self._do_return_conn(record)
+        if self._on_checkin:
+            for l in self._on_checkin:
+                l.checkin(record)
 
     def get(self):
         return self._do_get()
@@ -181,10 +184,10 @@ class _ConnectionRecord(object):
         ls = pool.__dict__.pop('_on_first_connect', None)
         if ls is not None:
             for l in ls:
-                l.first_connect(self.connection, self)
+                l.first_connect(self)
         if pool._on_connect:
             for l in pool._on_connect:
-                l.connect(self.connection, self)
+                l.connect(self)
 
     def close(self):
         if self.connection is not None:
@@ -339,7 +342,7 @@ class QueuePool(Pool):
           begins with no connections; once this number of connections
           is requested, that number of connections will remain.
           ``pool_size`` can be set to 0 to indicate no size limit; to
-          disable pooling, use a :class:`~sqlalchemy.pool.NullPool`
+          disable pooling, use a :class:`~pycassa.pool.NullPool`
           instead.
 
         :param max_overflow: The maximum overflow size of the
@@ -384,7 +387,7 @@ class QueuePool(Pool):
           Disable at your own peril.  Defaults to True.
 
         :param listeners: A list of
-          :class:`~sqlalchemy.interfaces.PoolListener`-like objects or
+          :class:`PoolListener`-like objects or
           dictionaries of callables that receive events when Cassandra
           connections are created, checked out and checked in to the
           pool.
@@ -428,7 +431,12 @@ class QueuePool(Pool):
         try:
             wait = self._max_overflow > -1 and \
                         self._overflow >= self._max_overflow
-            return self._pool.get(wait, self._timeout)
+            con = self._pool.get(wait, self._timeout)
+            # If successful, Notify listeners
+            if self._on_checkout:
+                for l in self._on_checkout:
+                    l.checkout(con)
+            return con
         except pool_queue.Empty:
             if self._max_overflow > -1 and \
                         self._overflow >= self._max_overflow:
@@ -455,6 +463,12 @@ class QueuePool(Pool):
             finally:
                 if self._overflow_lock is not None:
                     self._overflow_lock.release()
+
+            # Notify listeners
+            if self._on_checkout:
+                for l in self._on_checkout:
+                    l.checkout(con)
+
             return con
 
     def dispose(self):
@@ -690,7 +704,7 @@ class PoolListener(object):
 
         """
 
-    def checkout(self, conn_record, conn_proxy):
+    def checkout(self, conn_record):
         """Called when a connection is retrieved from the Pool.
 
         conn_record
