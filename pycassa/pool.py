@@ -13,7 +13,7 @@ usage scenarios and thread behavior requirements imposed by the
 application.
 """
 
-import weakref, time, threading
+import weakref, time, threading, random
 
 import log, connection
 import queue as pool_queue
@@ -33,9 +33,10 @@ class Pool(log.Identified):
         :param keyspace: The keyspace this connection pool will
           make all connections to.
 
-        :param server_list: A list of servers in the form 'host:port' that
+        :param server_list: A sequence of servers in the form 'host:port' that
           the pool will connect to.  The list will be randomly permuted before
-          being used.
+          being used. server_list may also be a function that returns the
+          sequence of servers.
 
         :param credentials: A dictionary containing 'username' and 'password'
           keys and appropriate string values.
@@ -90,15 +91,26 @@ class Pool(log.Identified):
         self.keyspace = keyspace
         self.credentials = credentials
         self.echo = echo
-        self.listeners = []
         self._creator = self.create
+        self._list_position = 0
+
+        # Listener groups
+        self.listeners = []
         self._on_connect = []
         self._on_first_connect = []
         self._on_checkout = []
         self._on_checkin = []
-        self._list_position = 0
+        self._on_close = []
+        self._on_server_list = []
+        self._on_pool_recreate = []
+        self._on_pool_dispose = []
+        self._on_pool_max = []
 
-        self.server_list = list(server_list)
+        if callable(server_list):
+            self.server_list = list(server_list())
+        else:
+            self.server_list = list(server_list)
+
         # Randomly permute the array (trust me, it's uniformly random)
         n = len(self.server_list)
         for i in range(0, n):
@@ -110,6 +122,10 @@ class Pool(log.Identified):
         if listeners:
             for l in listeners:
                 self.add_listener(l)
+
+        if self._on_server_list:
+            for l in self._on_server_list:
+                l.obtained_server_list(self.server_list)
 
     def _create_connection(self):
         return _ConnectionRecord(self)
@@ -161,7 +177,9 @@ class Pool(log.Identified):
         """
 
         listener = as_interface(listener,
-            methods=('connect', 'first_connect', 'checkout', 'checkin'))
+            methods=('connect', 'first_connect', 'checkout', 'checkin',
+                     'close', 'obtained_server_list', 'pool_recreated',
+                     'pool_disposed', 'close', 'pool_max'))
 
         self.listeners.append(listener)
         if hasattr(listener, 'connect'):
@@ -172,6 +190,16 @@ class Pool(log.Identified):
             self._on_checkout.append(listener)
         if hasattr(listener, 'checkin'):
             self._on_checkin.append(listener)
+        if hasattr(listener, 'close'):
+            self._on_close.append(listener)
+        if hasattr(listener, 'obtained_server_list'):
+            self._on_server_list.append(listener)
+        if hasattr(listener, 'pool_recreated'):
+            self._on_pool_recreate.append(listener)
+        if hasattr(listener, 'pool_disposed'):
+            self._on_pool_dispose.append(listener)
+        if hasattr(listener, 'pool_max'):
+            self._on_pool_max.append(listener)
 
     def create(self):
         """Creates a new pycassa/Thrift connection."""
@@ -180,6 +208,27 @@ class Pool(log.Identified):
         return connection.connect(keyspace=self.keyspace, servers=[server],
                                   credentials=self.credentials)
 
+    def _notify_on_pool_recreate(self):
+        if self._on_pool_recreate:
+            for l in self._on_pool_recreate:
+                l.pool_recreated()
+
+    def _notify_on_pool_dispose(self):
+        if self._on_pool_dispose:
+            for l in self._on_pool_dispose:
+                l.pool_disposed()
+
+    def _notify_on_pool_max(self):
+        if self._on_pool_max:
+            for l in self._on_pool_max:
+                l.pool_max()
+
+    def _notify_on_close(self, conn_record, e):
+        if self._on_close:
+            for l in self._on_close:
+                l.close(conn_record, e)
+
+
 class _ConnectionRecord(object):
     """
     Contains a pycassa/Thrift connection throughout its lifecycle.
@@ -187,7 +236,7 @@ class _ConnectionRecord(object):
     """
     def __init__(self, pool):
         self.__pool = pool
-        self.connection = self.__connect()
+        self._connection = self.__connect()
         self.info = {}
         ls = pool.__dict__.pop('_on_first_connect', None)
         if ls is not None:
@@ -197,58 +246,53 @@ class _ConnectionRecord(object):
             for l in pool._on_connect:
                 l.connect(self)
 
-    def close(self):
-        if self.connection is not None:
-            self.__pool.logger.debug("Closing connection %r", self.connection)
-            try:
-                self.connection.close()
-            except (SystemExit, KeyboardInterrupt):
-                raise
-            except:
-                self.__pool.logger.debug("Exception closing connection %r",
-                                self.connection)
+    def close(self, e=None):
+        """Closes the Record's connection; it will be reopened when
+        ``get_connection()`` is called.
 
-    def invalidate(self, e=None):
+        ``info`` will persist until ``get_connection()`` is called.
+
+        """
         if e is not None:
-            self.__pool.logger.info(
-                "Invalidate connection %r (reason: %s:%s)",
-                self.connection, e.__class__.__name__, e)
+            msg = "Closing connection %r (reason: %s:%s)" % \
+                self._connection, e.__class__.__name__, e
         else:
-            self.__pool.logger.info(
-                "Invalidate connection %r", self.connection)
+            msg = "Closing connection %r" % self._connection 
+        self.__pool.logger.info(msg)
+        self.__pool._notify_on_close(self, msg)
         self.__close()
-        self.connection = None
+        self._connection = None
 
     def get_connection(self):
-        if self.connection is None:
-            self.connection = self.__connect()
+        if self._connection is None:
+            self._connection = self.__connect()
             self.info.clear()
             if self.__pool._on_connect:
                 for l in self.__pool._on_connect:
-                    l.connect(self.connection, self)
+                    l.connect(self._connection, self)
         elif self.__pool._recycle > -1 and \
                 time.time() - self.starttime > self.__pool._recycle:
             self.__pool.logger.info(
                     "Connection %r exceeded timeout; recycling",
-                    self.connection)
+                    self._connection)
             self.__close()
-            self.connection = self.__connect()
+            self._connection = self.__connect()
             self.info.clear()
             if self.__pool._on_connect:
                 for l in self.__pool._on_connect:
-                    l.connect(self.connection, self)
-        return self.connection
+                    l.connect(self._connection, self)
+        return self._connection
 
     def __close(self):
         try:
-            self.__pool.logger.debug("Closing connection %r", self.connection)
-            self.connection.close()
+            self.__pool.logger.debug("Closing connection %r", self._connection)
+            self._connection.close()
         except (SystemExit, KeyboardInterrupt):
             raise
         except Exception, e:
             self.__pool.logger.debug(
                         "Connection %r threw an error on close: %s",
-                        self.connection, e)
+                        self._connection, e)
 
     def __connect(self):
         try:
@@ -283,6 +327,7 @@ class SingletonThreadPool(Pool):
 
     def recreate(self):
         self.logger.info("Pool recreating")
+        self._notify_on_pool_recreate()
         return SingletonThreadPool( 
             pool_size=self.size, 
             keyspace=self.keyspace,
@@ -304,6 +349,7 @@ class SingletonThreadPool(Pool):
                 raise
         
         self._all_conns.clear()
+        self._notify_on_pool_dispose()
             
     def dispose_local(self):
         if hasattr(self._conn, 'current'):
@@ -333,6 +379,7 @@ class SingletonThreadPool(Pool):
         self._conn.current = weakref.ref(c)
         self._all_conns.add(c)
         if len(self._all_conns) > self.size:
+            self._notify_on_pool_max()
             self.cleanup()
         return c
 
@@ -411,6 +458,7 @@ class QueuePool(Pool):
 
     def recreate(self):
         self.logger.info("Pool recreating")
+        self._notify_on_pool_recreate()
         return QueuePool(pool_size=self._pool.maxsize, 
                           max_overflow=self._max_overflow,
                           timeout=self._timeout, 
@@ -451,6 +499,7 @@ class QueuePool(Pool):
                 if not wait:
                     return self._do_get()
                 else:
+                    self._notify_on_pool_max()
                     raise TimeoutError(
                             "QueuePool limit of size %d overflow %d reached, "
                             "connection timed out, timeout %d" % 
@@ -488,6 +537,7 @@ class QueuePool(Pool):
                 break
 
         self._overflow = 0 - self.size()
+        self._notify_on_pool_dispose()
         self.logger.info("Pool disposed. %s", self.status())
 
     def status(self):
@@ -536,6 +586,7 @@ class NullPool(Pool):
 
     def recreate(self):
         self.logger.info("Pool recreating")
+        self._notify_on_pool_recreate()
 
         return NullPool(keyspace=self.keyspace,
             server_list=self.server_list,
@@ -547,7 +598,7 @@ class NullPool(Pool):
             listeners=self.listeners)
 
     def dispose(self):
-        pass
+        self._notify_on_pool_dispose()
 
 
 class StaticPool(Pool):
@@ -575,9 +626,11 @@ class StaticPool(Pool):
         if '_conn' in self.__dict__:
             self._conn.close()
             self._conn = None
+        self._notify_on_pool_dispose()
 
     def recreate(self):
         self.logger.info("Pool recreating")
+        self._notify_on_pool_recreate()
         return self.__class__(keyspace=self.keyspace,
                               server_list=self.server_list,
                               credentials=self.credentials,
@@ -632,9 +685,11 @@ class AssertionPool(Pool):
         self._checked_out = False
         if self._conn:
             self._conn.close()
+        self._notify_on_pool_dispose()
 
     def recreate(self):
         self.logger.info("Pool recreating")
+        self._notify_on_pool_recreate()
         return AssertionPool(keyspace=self.keyspace,
                              server_list=self.server_list,
                              credentials=self.credentials,
@@ -644,6 +699,7 @@ class AssertionPool(Pool):
         
     def _do_get(self):
         if self._checked_out:
+            self._notify_on_pool_max()
             raise AssertionError("connection is already checked out")
             
         if not self._conn:
@@ -723,12 +779,41 @@ class PoolListener(object):
     def checkin(self, conn_record):
         """Called when a connection returns to the pool.
 
-        Note that the connection may be closed, and may be None if the
-        connection has been invalidated.  ``checkin`` will not be called
-        for detached connections.  (They do not return to the pool.)
+        Note that the connection may be None if the connection has been closed.
 
         conn_record
           The ``_ConnectionRecord`` that persistently manages the connection
+
+        """
+ 
+    def close(self, conn_record, err):
+        """Called when a connection is closed.
+
+        conn_record
+            The ``_ConnectionRecord`` that persistently manages the connection
+
+        err
+            A reason for closing the connection, if any.
+
+        """
+
+    def server_list_obtained(self, server_list):
+        """Called when the pool finalizes its server list.
+        
+        server_list
+            The randomly permuted list of servers.
+        """
+
+    def pool_recreated(self):
+        """Called when a pool is recreated."""
+
+    def pool_disposed(self):
+        """Called when a pool is recreated."""
+
+    def pool_max(self):
+        """
+        Called when an attempt is made to get a new connection from the
+        pool, but the pool is already at its max size. 
 
         """
 
