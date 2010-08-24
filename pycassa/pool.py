@@ -87,7 +87,6 @@ class Pool(log.Identified):
         self._recycle = recycle
         self._use_threadlocal = use_threadlocal
         self._reset_on_return = reset_on_return
-        self.server_list = server_list
         self.keyspace = keyspace
         self.credentials = credentials
         self.echo = echo
@@ -98,6 +97,15 @@ class Pool(log.Identified):
         self._on_checkout = []
         self._on_checkin = []
         self._list_position = 0
+
+        self.server_list = list(server_list)
+        # Randomly permute the array (trust me, it's uniformly random)
+        n = len(self.server_list)
+        for i in range(0, n):
+            j = random.randint(i, n-1)
+            temp = self.server_list[j]
+            self.server_list[j] = self.server_list[i]
+            self.server_list[i] = temp
 
         if listeners:
             for l in listeners:
