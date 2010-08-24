@@ -30,14 +30,10 @@ pycassa comes with the Cassandra python files for convenience, but you can repla
 Installation
 ------------
 
-The simplest way to get started is to copy the pycassa and cassandra directories to your program.
+The simplest way to get started is to copy the pycassa directories to your program.
 If you want to install, run setup.py as a superuser.
 
     python setup.py install
-
-If you also want to install the cassandra python package (if it's not already included on your system):
-
-    python setup.py --cassandra install
 
 Connecting
 ----------
