@@ -1,10 +1,12 @@
 import threading
 import unittest
+import time
 
 from nose.tools import assert_raises, assert_equal
 from pycassa import connect, connect_thread_local, NullPool, StaticPool,\
                     AssertionPool, SingletonThreadPool, QueuePool,\
-                    ColumnFamily, PoolListener, TimeoutError
+                    ColumnFamily, PoolListener, TimeoutError,\
+                    NoConnectionAvailable
 
 _credentials = {'username':'jsmith', 'password':'havebadpass'}
 _pools = [NullPool, StaticPool, AssertionPool, SingletonThreadPool, QueuePool]
@@ -31,15 +33,13 @@ class PoolingCase(unittest.TestCase):
         pool = NullPool(keyspace='Keyspace1', server_list=_get_list,
                         listeners=[listener])
         assert_equal(listener.serv_list, ['foo:bar'])
+        assert_equal(listener.list_count, 1)
 
     def test_queue_pool(self):
         listener = _TestListener()
         pool = QueuePool(keyspace='Keyspace1', credentials=_credentials,
                          pool_size=5, max_overflow=5, timeout=1,
                          listeners=[listener])
-
-        assert_equal(listener.list_count, 1)
-
         conns = []
         for i in range(10):
             conns.append(pool.get())
@@ -94,6 +94,40 @@ class PoolingCase(unittest.TestCase):
         assert_equal(listener.dispose_count, 1)
         pool.recreate()
         assert_equal(listener.recreate_count, 1)
+
+    def test_singleton_thread_pool(self):
+        listener = _TestListener()
+        pool = SingletonThreadPool(keyspace='Keyspace1',
+                         credentials=_credentials, pool_size=5,
+                         listeners=[listener])
+
+        # Make sure we get the same connection every time
+        conn = pool.get()
+        assert_equal(pool.get(), conn)
+        for i in range(10):
+            conn = pool.get()
+        assert_equal(listener.connect_count, 1)
+
+        pool.return_conn(conn)
+
+        conn = pool.get()
+        assert_equal(pool.get(), conn)
+        assert_equal(listener.connect_count, 2)
+        pool.return_conn(conn)
+
+        def get_return():
+            conn = pool.get()
+            print pool.status()
+
+        threads = []
+        for i in range(5):
+            threads.append(threading.Thread(target=get_return))
+            threads[-1].start()
+        for thread in threads:
+            thread.join()
+        assert_equal(listener.connect_count, 7)
+
+        assert_raises(NoConnectionAvailable, pool.get)
 
 class _TestListener(PoolListener):
 

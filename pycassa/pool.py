@@ -148,8 +148,6 @@ class Pool(log.Identified):
 
     def return_conn(self, record):
         """Returns a ConnectionRecord to the pool."""
-        if self._use_threadlocal and hasattr(self._threadconns, "current"):
-            del self._threadconns.current
         self._do_return_conn(record)
         if self._on_checkin:
             for l in self._on_checkin:
@@ -350,22 +348,16 @@ class SingletonThreadPool(Pool):
         
         self._all_conns.clear()
         self._notify_on_pool_dispose()
-            
-    def dispose_local(self):
-        if hasattr(self._conn, 'current'):
-            conn = self._conn.current()
-            self._all_conns.discard(conn)
-            del self._conn.current
-
-    def cleanup(self):
-        while len(self._all_conns) > self.size:
-            self._all_conns.pop()
 
     def status(self):
         return "SingletonThreadPool id:%d size: %d" % \
                             (id(self), len(self._all_conns))
 
     def _do_return_conn(self, conn):
+        if hasattr(self._conn, 'current'):
+            conn = self._conn.current()
+            self._all_conns.discard(conn)
+            del self._conn.current
         pass
 
     def _do_get(self):
@@ -375,12 +367,13 @@ class SingletonThreadPool(Pool):
                 return c
         except AttributeError:
             pass
-        c = self._create_connection()
-        self._conn.current = weakref.ref(c)
-        self._all_conns.add(c)
-        if len(self._all_conns) > self.size:
+        if len(self._all_conns) >= self.size:
             self._notify_on_pool_max()
-            self.cleanup()
+            raise NoConnectionAvailable()
+        else:
+            c = self._create_connection()
+            self._conn.current = weakref.ref(c)
+            self._all_conns.add(c)
         return c
 
 class QueuePool(Pool):
@@ -828,6 +821,9 @@ class DisconnectionError(Exception):
 
 class TimeoutError(Exception):
     """Raised when a connection pool times out on getting a connection."""
+
+class NoConnectionAvailable(Exception):
+    """Raised when there are no connections left in a pool."""
 
 
 class InvalidRequestError(Exception):
