@@ -25,7 +25,7 @@ class Pool(object):
 
     def __init__(self, keyspace, server_list=['localhost:9160'],
                  credentials=None, recycle=-1, logging_name=None,
-                 use_threadlocal=False, listeners=None):
+                 use_threadlocal=True, listeners=None):
         """
         Construct a Pool.
 
@@ -77,6 +77,7 @@ class Pool(object):
         self.keyspace = keyspace
         self.credentials = credentials
         self._creator = self.create
+        self._tlocal = threading.local()
 
         # Listener groups
         self.listeners = []
@@ -136,9 +137,14 @@ class Pool(object):
     def create(self):
         """Creates a new pycassa/Thrift connection."""
         server = self.server_list[self._list_position % len(self.server_list)]
-        self._list_position = self._list_position + 1
-        return connection.connect(keyspace=self.keyspace, servers=[server],
-                                  credentials=self.credentials)
+        self._list_position += 1
+        if self._use_threadlocal:
+            return connection.connect(keyspace=self.keyspace, servers=[server],
+                                      credentials=self.credentials)
+        else:
+            return connection.connect_unique(keyspace=self.keyspace,
+                                             servers=[server],
+                                             credentials=self.credentials)
 
     def recreate(self):
         """Return a new instance with identical creation arguments."""
@@ -159,7 +165,6 @@ class Pool(object):
     def return_conn(self, record):
         """Returns a ConnectionRecord to the pool."""
         self._do_return_conn(record)
-        self._notify_on_checkin(record)
 
     def get(self):
         return self._do_get()
@@ -361,7 +366,6 @@ class SingletonThreadPool(Pool):
     def __init__(self, pool_size=5, **kw):
         kw['use_threadlocal'] = True
         Pool.__init__(self, **kw)
-        self._tlocal = threading.local()
         self._all_conns = set()
         self.size = pool_size
 
@@ -398,6 +402,7 @@ class SingletonThreadPool(Pool):
             conn = self._tlocal.current()
             self._all_conns.discard(conn)
             del self._tlocal.current
+            self._notify_on_checkin(conn)
         pass
 
     def _do_get(self):
@@ -412,8 +417,8 @@ class SingletonThreadPool(Pool):
             raise NoConnectionAvailable()
         else:
             c = self._create_connection()
-            self._tlocal.current = weakref.ref(c)
             c.ensure_connection()
+            self._tlocal.current = weakref.ref(c)
             self._all_conns.add(c)
         return c
 
@@ -494,7 +499,16 @@ class QueuePool(Pool):
 
     def _do_return_conn(self, conn):
         try:
-            self._pool.put(conn, False)
+            if self._use_threadlocal:
+                if hasattr(self._tlocal, 'current'):
+                    if self._tlocal.current:
+                        conn = self._tlocal.current()
+                        self._notify_on_checkin(conn)
+                        self._pool.put(conn, False)
+                    self._tlocal.current = None
+            else:
+                self._notify_on_checkin(conn)
+                self._pool.put(conn, False)
         except pool_queue.Full:
             if self._overflow_lock is None:
                 self._overflow -= 1
@@ -506,12 +520,22 @@ class QueuePool(Pool):
                     self._overflow_lock.release()
 
     def _do_get(self):
+        if self._use_threadlocal:
+            try:
+                conn = None
+                if self._tlocal.current:
+                    conn = self._tlocal.current()
+                if conn:
+                    return conn
+            except AttributeError:
+                pass
         try:
             wait = self._max_overflow > -1 and \
                         self._overflow >= self._max_overflow
             conn = self._pool.get(wait, self._timeout)
-            # If successful, Notify listeners
             conn.ensure_connection()
+            if self._use_threadlocal:
+                self._tlocal.current = weakref.ref(conn)
             self._notify_on_checkout(conn)
             return conn
         except pool_queue.Empty:
@@ -545,6 +569,8 @@ class QueuePool(Pool):
 
             # Notify listeners
             conn.ensure_connection()
+            if self._use_threadlocal:
+                self._tlocal.current = weakref.ref(conn)
             self._notify_on_checkout(conn)
 
             return conn
@@ -597,6 +623,7 @@ class NullPool(Pool):
 
     def _do_return_conn(self, conn):
         conn.close()
+        self._notify_on_checkin(conn)
 
     def _do_get(self):
         conn = self._create_connection()
@@ -659,6 +686,7 @@ class StaticPool(Pool):
         return self._conn
 
     def _do_return_conn(self, conn):
+        self._notify_on_checkin(conn)
         pass
 
     def _do_get(self):
@@ -688,6 +716,7 @@ class AssertionPool(Pool):
         if not self._checked_out:
             raise AssertionError("connection is not checked out")
         self._checked_out = False
+        self._notify_on_checkin(conn)
         assert conn is self._conn
 
     def dispose(self):
