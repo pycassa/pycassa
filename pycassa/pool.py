@@ -319,6 +319,11 @@ class _ConnectionRecord(object):
             self.__pool._notify_on_connect(self)
         return self._connection
 
+    def ensure_connection(self):
+        if self._connection is None:
+            self.get_connection()
+        self._connection._ensure_connection()
+
     def __close(self):
         try:
             if self._connection:
@@ -408,6 +413,7 @@ class SingletonThreadPool(Pool):
         else:
             c = self._create_connection()
             self._tlocal.current = weakref.ref(c)
+            c.ensure_connection()
             self._all_conns.add(c)
         return c
 
@@ -505,6 +511,7 @@ class QueuePool(Pool):
                         self._overflow >= self._max_overflow
             conn = self._pool.get(wait, self._timeout)
             # If successful, Notify listeners
+            conn.ensure_connection()
             self._notify_on_checkout(conn)
             return conn
         except pool_queue.Empty:
@@ -537,6 +544,7 @@ class QueuePool(Pool):
                     self._overflow_lock.release()
 
             # Notify listeners
+            conn.ensure_connection()
             self._notify_on_checkout(conn)
 
             return conn
@@ -592,12 +600,12 @@ class NullPool(Pool):
 
     def _do_get(self):
         conn = self._create_connection()
+        conn.ensure_connection()
         self._notify_on_checkout(conn)
         return conn
 
     def recreate(self):
         self._notify_on_pool_recreate()
-
         return NullPool(keyspace=self.keyspace,
             server_list=self.server_list,
             credentials=self.credentials, 
@@ -655,6 +663,7 @@ class StaticPool(Pool):
 
     def _do_get(self):
         self._notify_on_checkout(self.connection)
+        self.connection.ensure_connection()
         return self.connection
 
 class AssertionPool(Pool):
@@ -704,6 +713,7 @@ class AssertionPool(Pool):
             self._conn = self._create_connection()
         
         self._checked_out = True
+        self._conn.ensure_connection()
         self._notify_on_checkout(self._conn)
         return self._conn
 
