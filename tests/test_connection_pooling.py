@@ -2,7 +2,7 @@ import threading
 import unittest
 import time
 
-from nose.tools import assert_raises, assert_equal
+from nose.tools import assert_raises, assert_equal, assert_not_equal
 from pycassa import connect, connect_thread_local, NullPool, StaticPool,\
                     AssertionPool, SingletonThreadPool, QueuePool,\
                     ColumnFamily, PoolListener, TimeoutError,\
@@ -128,6 +128,63 @@ class PoolingCase(unittest.TestCase):
         assert_equal(listener.connect_count, 7)
 
         assert_raises(NoConnectionAvailable, pool.get)
+        assert_equal(listener.max_count, 1)
+
+    def test_static_pool(self):
+        listener = _TestListener()
+        pool = StaticPool(keyspace='Keyspace1', credentials=_credentials,
+                          listeners=[listener])
+
+        orig_conn = pool.get()
+        def compare():
+            conn = pool.get()
+            assert_equal(orig_conn, conn)
+
+        threads = []
+        for i in range(5):
+            threads.append(threading.Thread(target=compare))
+            threads[-1].start()
+        for thread in threads:
+            thread.join()
+        assert_equal(listener.checkout_count, 6)
+
+    def test_assertion_pool(self):
+        listener = _TestListener()
+        pool = AssertionPool(keyspace='Keyspace1', credentials=_credentials,
+                          listeners=[listener])
+        
+        conn = pool.get()
+        assert_raises(AssertionError, pool.get)
+
+        def return_c():
+            pool.return_conn(conn)
+
+        pool.return_conn(conn)
+        assert_raises(AssertionError, return_c)
+
+        conn = pool.get()
+
+        def thread_get():
+            assert_raises(AssertionError, pool.get)
+
+        t = threading.Thread(target=thread_get)
+        t.start()
+        t.join()
+        pool.return_conn(conn)
+
+        assert_equal(listener.checkout_count, 2)
+        assert_equal(listener.max_count, 2)
+        assert_equal(listener.checkin_count, 2)
+
+    def test_null_pool(self):
+        listener = _TestListener()
+        pool = NullPool(keyspace='Keyspace1', credentials=_credentials,
+                          listeners=[listener])
+
+        conn = pool.get()
+        pool.return_conn(conn)
+        assert_equal(listener.checkout_count, 1)
+        assert_equal(listener.checkin_count, 1)
 
 class _TestListener(PoolListener):
 
