@@ -46,7 +46,6 @@ class PoolingCase(unittest.TestCase):
 
         assert_equal(listener.connect_count, 10)
         assert_equal(listener.checkout_count, 10)
-        assert_equal(listener.first_connect_count, 1)
 
         # Pool is maxed out now
         assert_raises(TimeoutError, pool.get)
@@ -81,6 +80,7 @@ class PoolingCase(unittest.TestCase):
 
         assert_equal(listener.close_count, 0)
         for i in range(10):
+            conns[i].get_connection()
             conns[i].close()
         assert_equal(listener.close_count, 10)
 
@@ -133,7 +133,6 @@ class _TestListener(PoolListener):
 
     def __init__(self):
         self.connect_count = 0
-        self.first_connect_count = 0
         self.checkout_count = 0
         self.checkin_count = 0
         self.close_count = 0
@@ -143,30 +142,27 @@ class _TestListener(PoolListener):
         self.max_count = 0
         self.serv_list = []
 
-    def connect(self, conn_record):
+    def connect(self, dic):
         self.connect_count += 1
 
-    def first_connect(self, conn_record):
-        self.first_connect_count += 1
-
-    def checkout(self, conn_record):
+    def checkout(self, dic):
         self.checkout_count += 1
 
-    def checkin(self, conn_record):
+    def checkin(self, dic):
         self.checkin_count += 1
 
-    def close(self, conn_record, msg):
+    def close(self, dic):
         self.close_count += 1
 
-    def obtained_server_list(self, serv_list):
+    def obtained_server_list(self, dic):
         self.list_count += 1
-        self.serv_list = serv_list
+        self.serv_list = dic.get('server_list')
 
-    def pool_recreated(self):
+    def pool_recreated(self, dic):
         self.recreate_count += 1
 
-    def pool_disposed(self):
+    def pool_disposed(self, dic):
         self.dispose_count += 1
 
-    def pool_max(self):
+    def pool_max(self, dic):
         self.max_count += 1
