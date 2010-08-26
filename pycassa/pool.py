@@ -522,7 +522,7 @@ class QueuePool(Pool):
                 else:
                     self._notify_on_pool_max(
                             pool_max=self.size() + self.overflow())
-                    raise TimeoutError(
+                    raise NoConnectionAvailable(
                             "QueuePool limit of size %d overflow %d reached, "
                             "connection timed out, timeout %d" % 
                             (self.size(), self.overflow(), self._timeout))
@@ -826,9 +826,6 @@ class DisconnectionError(Exception):
     be raised by a ``PoolListener`` so that the host pool forces a disconnect.
 
     """
-
-class TimeoutError(Exception):
-    """Raised when a connection pool times out on getting a connection."""
 
 class NoConnectionAvailable(Exception):
     """Raised when there are no connections left in a pool."""

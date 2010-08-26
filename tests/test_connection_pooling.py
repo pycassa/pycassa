@@ -5,7 +5,7 @@ import time
 from nose.tools import assert_raises, assert_equal, assert_not_equal
 from pycassa import connect, connect_thread_local, NullPool, StaticPool,\
                     AssertionPool, SingletonThreadPool, QueuePool,\
-                    ColumnFamily, PoolListener, TimeoutError,\
+                    ColumnFamily, PoolListener,\
                     NoConnectionAvailable
 
 _credentials = {'username':'jsmith', 'password':'havebadpass'}
@@ -48,7 +48,7 @@ class PoolingCase(unittest.TestCase):
         assert_equal(listener.checkout_count, 10)
 
         # Pool is maxed out now
-        assert_raises(TimeoutError, pool.get)
+        assert_raises(NoConnectionAvailable, pool.get)
         assert_equal(listener.connect_count, 10)
         assert_equal(listener.max_count, 1)
 
