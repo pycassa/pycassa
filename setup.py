@@ -16,16 +16,6 @@ __version__ = '.'.join([str(v) for v in __version_info__])
 from distutils.core import setup
 import sys
 
-optional_packages = []
-
-flags = [('--cassandra', 'cassandra'),
-         ('-cassandra', 'cassandra')]
-
-for flag, package in flags:
-    if flag in sys.argv:
-        optional_packages.append(package)
-        sys.argv.remove(flag)
-
 setup(
       name = 'pycassa',
       version = __version__,
@@ -37,7 +27,7 @@ setup(
       download_url = 'http://github.com/vomjom/pycassa',
       license = 'MIT',
       keywords = 'cassandra client db distributed thrift',
-      packages = ['pycassa']+optional_packages,
+      packages = ['pycassa'],
       platforms = 'any',
       install_requires = ['thrift'],
       scripts=['pycassaShell'],
