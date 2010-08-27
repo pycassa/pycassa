@@ -286,29 +286,21 @@ class _ConnectionRecord(object):
     Contains a pycassa/Thrift connection throughout its lifecycle.
 
     """
+
+    _IN_QUEUE = 0
+    _CHECKED_OUT = 1
+    _DISPOSED = 2
+
     def __init__(self, pool):
         self.__pool = pool
+        self._lock = threading.Lock()
+        self._state = _ConnectionRecord._CHECKED_OUT
         self._connection = self.__connect()
         self.info = {}
         self.__pool._notify_on_connect(self)
 
-    def close(self, e=None):
-        """Closes the Record's connection; it will be reopened when
-        ``get_connection()`` is called.
-
-        ``info`` will persist until ``get_connection()`` is called.
-        Unless you have a specific reason to close this connection,
-        simply return it to the pool.
-
-        """
-        if e is not None:
-            msg = "Closing connection %r (reason: %s:%s)" % \
-                self._connection, e.__class__.__name__, e
-        else:
-            msg = "Closing connection %r" % self._connection 
-        self.__close()
-        self._connection = None
-        self.__pool._notify_on_close(self, msg=msg)
+    def return_to_pool(self):
+        self.__pool.return_conn(self)
 
     def get_connection(self):
         if self._connection is None:
@@ -318,7 +310,7 @@ class _ConnectionRecord(object):
         elif self.__pool._recycle > -1 and \
                 time.time() - self.starttime > self.__pool._recycle:
             self.__pool._notify_on_recycle(self)
-            self.__close()
+            self._close()
             self._connection = self.__connect()
             self.info.clear()
             self.__pool._notify_on_connect(self)
@@ -329,7 +321,59 @@ class _ConnectionRecord(object):
             self.get_connection()
         self._connection._ensure_connection()
 
-    def __close(self):
+    def _checkin(self):
+        try:
+            self._lock.acquire()
+            if self._state != _ConnectionRecord._CHECKED_OUT:
+                raise InvalidRequestError("A connection has been returned to "
+                        "the connection pool twice.")
+            self._state = _ConnectionRecord._IN_QUEUE
+        finally:
+            self._lock.release()
+
+    def _checkout(self):
+        try:
+            self._lock.acquire()
+            if self._state != _ConnectionRecord._IN_QUEUE:
+                raise InvalidRequestError("A connection has been checked "
+                        "out twice.")
+            self._state = _ConnectionRecord._CHECKED_OUT
+        finally:
+            self._lock.release()
+
+    def _dispose(self):
+        try:
+            self._lock.acquire()
+            if self._state == _ConnectionRecord._DISPOSED:
+                raise InvalidRequestError("A connection has been disposed "
+                        "twice.")
+            self._state = _ConnectionRecord._DISPOSED
+        finally:
+            self._lock.release()
+
+    def _in_queue(self):
+        try:
+            self._lock.acquire()
+            ret = self._state == _ConnectionRecord._IN_QUEUE
+        finally:
+            self._lock.release()
+        return ret
+
+    def _close(self, e=None):
+        """Closes the Record's connection; it will be reopened when
+        ``get_connection()`` is called.
+
+        ``info`` will persist until ``get_connection()`` is called.
+
+        """
+        self._dispose()
+
+        if e is not None:
+            msg = "Closing connection %r (reason: %s:%s)" % \
+                self._connection, e.__class__.__name__, e
+        else:
+            msg = "Closing connection %r" % self._connection 
+
         try:
             if self._connection:
                 self._connection.close()
@@ -338,6 +382,9 @@ class _ConnectionRecord(object):
         except Exception, e:
             self.__pool._notify_on_close(self, error=e)
             raise
+
+        self._connection = None
+        self.__pool._notify_on_close(self, msg=msg)
 
     def __connect(self):
         try:
@@ -386,7 +433,7 @@ class SingletonThreadPool(Pool):
 
         for conn in self._all_conns:
             try:
-                conn.close()
+                conn._close()
             except (SystemExit, KeyboardInterrupt):
                 raise
         
@@ -477,7 +524,7 @@ class QueuePool(Pool):
 
         """
         Pool.__init__(self, **kw)
-        self._pool = pool_queue.Queue(pool_size)
+        self._q = pool_queue.Queue(pool_size)
         self._overflow = 0 - pool_size
         self._max_overflow = max_overflow
         self._timeout = timeout
@@ -486,7 +533,7 @@ class QueuePool(Pool):
 
     def recreate(self):
         self._notify_on_pool_recreate()
-        return QueuePool(pool_size=self._pool.maxsize, 
+        return QueuePool(pool_size=self._q.maxsize, 
                           max_overflow=self._max_overflow,
                           timeout=self._timeout, 
                           keyspace=self.keyspace,
@@ -503,19 +550,25 @@ class QueuePool(Pool):
                 if hasattr(self._tlocal, 'current'):
                     if self._tlocal.current:
                         conn = self._tlocal.current()
+                        self._tlocal.current = None
+                        self._q.put(conn, False)
                         self._notify_on_checkin(conn)
-                        self._pool.put(conn, False)
-                    self._tlocal.current = None
             else:
+                self._q.put(conn, False)
                 self._notify_on_checkin(conn)
-                self._pool.put(conn, False)
         except pool_queue.Full:
+            if conn._in_queue():
+                raise InvalidRequestError("A connection was returned to "
+                        " the connection pool pull twice.")
+            conn._close()
             if self._overflow_lock is None:
                 self._overflow -= 1
+                self._notify_on_checkin(conn)
             else:
                 self._overflow_lock.acquire()
                 try:
                     self._overflow -= 1
+                    self._notify_on_checkin(conn)
                 finally:
                     self._overflow_lock.release()
 
@@ -532,7 +585,7 @@ class QueuePool(Pool):
         try:
             wait = self._max_overflow > -1 and \
                         self._overflow >= self._max_overflow
-            conn = self._pool.get(wait, self._timeout)
+            conn = self._q.get(wait, self._timeout)
             conn.ensure_connection()
             if self._use_threadlocal:
                 self._tlocal.current = weakref.ref(conn)
@@ -578,8 +631,8 @@ class QueuePool(Pool):
     def dispose(self):
         while True:
             try:
-                conn = self._pool.get(False)
-                conn.close()
+                conn = self._q.get(False)
+                conn._close()
             except pool_queue.Empty:
                 break
 
@@ -595,16 +648,16 @@ class QueuePool(Pool):
                                     self.checkedout())
 
     def size(self):
-        return self._pool.maxsize
+        return self._q.maxsize
 
     def checkedin(self):
-        return self._pool.qsize()
+        return self._q.qsize()
 
     def overflow(self):
         return self._overflow
 
     def checkedout(self):
-        return self._pool.maxsize - self._pool.qsize() + self._overflow
+        return self._q.maxsize - self._q.qsize() + self._overflow
 
 class NullPool(Pool):
     """A Pool which does not pool connections.
@@ -622,7 +675,7 @@ class NullPool(Pool):
         return "NullPool"
 
     def _do_return_conn(self, conn):
-        conn.close()
+        conn._close()
         self._notify_on_checkin(conn)
 
     def _do_get(self):
@@ -668,7 +721,7 @@ class StaticPool(Pool):
 
     def dispose(self):
         if '_conn' in self.__dict__:
-            self._conn.close()
+            self._conn._close()
             self._conn = None
         self._notify_on_pool_dispose()
 
@@ -722,7 +775,7 @@ class AssertionPool(Pool):
     def dispose(self):
         self._checked_out = False
         if self._conn:
-            self._conn.close()
+            self._conn._close()
         self._notify_on_pool_dispose()
 
     def recreate(self):

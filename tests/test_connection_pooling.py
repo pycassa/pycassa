@@ -5,7 +5,7 @@ import time
 from nose.tools import assert_raises, assert_equal, assert_not_equal
 from pycassa import connect, connect_thread_local, NullPool, StaticPool,\
                     AssertionPool, SingletonThreadPool, QueuePool,\
-                    ColumnFamily, PoolListener,\
+                    ColumnFamily, PoolListener, InvalidRequestError,\
                     NoConnectionAvailable
 
 _credentials = {'username':'jsmith', 'password':'havebadpass'}
@@ -54,12 +54,12 @@ class PoolingCase(unittest.TestCase):
 
         for i in range(0, 5):
             pool.return_conn(conns[i])
-
+        assert_equal(listener.close_count, 0)
         assert_equal(listener.checkin_count, 5)
 
         for i in range(5, 10):
             pool.return_conn(conns[i])
-
+        assert_equal(listener.close_count, 5)
         assert_equal(listener.checkin_count, 10)
 
         conns = []
@@ -67,28 +67,26 @@ class PoolingCase(unittest.TestCase):
         # These connections should come from the pool
         for i in range(5):
             conns.append(pool.get())
-
         assert_equal(listener.connect_count, 10)
         assert_equal(listener.checkout_count, 15)
 
         # But these will need to be made
         for i in range(5):
             conns.append(pool.get())
-
         assert_equal(listener.connect_count, 15)
         assert_equal(listener.checkout_count, 20)
 
-        assert_equal(listener.close_count, 0)
+        assert_equal(listener.close_count, 5)
         for i in range(10):
-            conns[i].get_connection()
-            conns[i].close()
+            conns[i].return_to_pool()
+        assert_equal(listener.checkin_count, 20)
         assert_equal(listener.close_count, 10)
 
-        # Checkin closed connections
-        assert_equal(listener.checkin_count, 10)
-        for i in range(10):
-            pool.return_conn(conns[i])
+        assert_raises(InvalidRequestError, conns[0].return_to_pool)
+        assert_raises(InvalidRequestError, conns[-1].return_to_pool)
+
         assert_equal(listener.checkin_count, 20)
+        assert_equal(listener.close_count, 10)
 
         pool.dispose()
         assert_equal(listener.dispose_count, 1)

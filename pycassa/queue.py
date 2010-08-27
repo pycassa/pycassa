@@ -99,6 +99,7 @@ class Queue:
                     if remaining <= 0.0:
                         raise Full
                     self.not_full.wait(remaining)
+            item._checkin()
             self._put(item)
             self.not_empty.notify()
         finally:
@@ -142,6 +143,7 @@ class Queue:
                         raise Empty
                     self.not_empty.wait(remaining)
             item = self._get()
+            item._checkout()
             self.not_full.notify()
             return item
         finally:
