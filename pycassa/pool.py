@@ -15,7 +15,7 @@ application.
 
 import weakref, time, threading, random
 
-import connection
+from connection import Connection
 import queue as pool_queue
 from util import threading, as_interface, memoized_property
 from logger import PycassaLogger
@@ -76,7 +76,6 @@ class Pool(object):
         self._use_threadlocal = use_threadlocal
         self.keyspace = keyspace
         self.credentials = credentials
-        self._creator = self.create
         self._tlocal = threading.local()
 
         # Listener groups
@@ -132,19 +131,9 @@ class Pool(object):
 
 
     def _create_connection(self):
-        return _ConnectionRecord(self)
-
-    def create(self):
-        """Creates a new pycassa/Thrift connection."""
         server = self.server_list[self._list_position % len(self.server_list)]
         self._list_position += 1
-        if self._use_threadlocal:
-            return connection.connect(keyspace=self.keyspace, servers=[server],
-                                      credentials=self.credentials)
-        else:
-            return connection.connect_unique(keyspace=self.keyspace,
-                                             servers=[server],
-                                             credentials=self.credentials)
+        return _ConnectionWrapper(self, self.keyspace, [server], credentials=self.credentials, use_threadlocal=self._use_threadlocal)
 
     def recreate(self):
         """Return a new instance with identical creation arguments."""
@@ -281,7 +270,8 @@ class Pool(object):
         return {'pool_type': self.__class__,
                 'pool_id': self.logging_name}
 
-class _ConnectionRecord(object):
+
+class _ConnectionWrapper(Connection):
     """
     Contains a pycassa/Thrift connection throughout its lifecycle.
 
@@ -291,82 +281,69 @@ class _ConnectionRecord(object):
     _CHECKED_OUT = 1
     _DISPOSED = 2
 
-    def __init__(self, pool):
-        self.__pool = pool
+    def __init__(self, pool, *args, **kwargs):
+        self._pool = pool
         self._lock = threading.Lock()
-        self._state = _ConnectionRecord._CHECKED_OUT
-        self._connection = self.__connect()
         self.info = {}
-        self.__pool._notify_on_connect(self)
+        self.starttime = time.time()
+        self._state = _ConnectionWrapper._CHECKED_OUT
+        super(_ConnectionWrapper, self).__init__(*args, **kwargs)
+        self._pool._notify_on_connect(self)
 
     def return_to_pool(self):
-        self.__pool.return_conn(self)
+        self._pool.return_conn(self)
 
-    def get_connection(self):
-        if self._connection is None:
-            self._connection = self.__connect()
-            self.info.clear()
-            self.__pool._notify_on_connect(self)
-        elif self.__pool._recycle > -1 and \
-                time.time() - self.starttime > self.__pool._recycle:
-            self.__pool._notify_on_recycle(self)
-            self._close()
-            self._connection = self.__connect()
-            self.info.clear()
-            self.__pool._notify_on_connect(self)
-        return self._connection
-
-    def ensure_connection(self):
-        if self._connection is None:
-            self.get_connection()
-        self._connection._ensure_connection()
+#    def get_connection(self):
+#        if self._connection is None:
+#            self._connection = self.__connect()
+#            self.info.clear()
+#            self.__pool._notify_on_connect(self)
+#        elif self.__pool._recycle > -1 and \
+#                time.time() - self.starttime > self.__pool._recycle:
+#            self.__pool._notify_on_recycle(self)
+#            self._close()
+#            self._connection = self.__connect()
+#            self.info.clear()
+#            self.__pool._notify_on_connect(self)
+#        return self._connection
 
     def _checkin(self):
         try:
             self._lock.acquire()
-            if self._state != _ConnectionRecord._CHECKED_OUT:
+            if self._state != _ConnectionWrapper._CHECKED_OUT:
                 raise InvalidRequestError("A connection has been returned to "
                         "the connection pool twice.")
-            self._state = _ConnectionRecord._IN_QUEUE
+            self._state = _ConnectionWrapper._IN_QUEUE
         finally:
             self._lock.release()
 
     def _checkout(self):
         try:
             self._lock.acquire()
-            if self._state != _ConnectionRecord._IN_QUEUE:
+            if self._state != _ConnectionWrapper._IN_QUEUE:
                 raise InvalidRequestError("A connection has been checked "
                         "out twice.")
-            self._state = _ConnectionRecord._CHECKED_OUT
-        finally:
-            self._lock.release()
-
-    def _dispose(self):
-        try:
-            self._lock.acquire()
-            if self._state == _ConnectionRecord._DISPOSED:
-                raise InvalidRequestError("A connection has been disposed "
-                        "twice.")
-            self._state = _ConnectionRecord._DISPOSED
+            self._state = _ConnectionWrapper._CHECKED_OUT
         finally:
             self._lock.release()
 
     def _in_queue(self):
         try:
             self._lock.acquire()
-            ret = self._state == _ConnectionRecord._IN_QUEUE
+            ret = self._state == _ConnectionWrapper._IN_QUEUE
         finally:
             self._lock.release()
         return ret
 
-    def _close(self, e=None):
-        """Closes the Record's connection; it will be reopened when
-        ``get_connection()`` is called.
-
-        ``info`` will persist until ``get_connection()`` is called.
-
-        """
-        self._dispose()
+    def _dispose_wrapper(self, e=None):
+        try:
+            self._lock.acquire()
+            if self._state == _ConnectionWrapper._DISPOSED:
+                raise InvalidRequestError("A connection has been disposed "
+                        "twice.")
+            self._state = _ConnectionWrapper._DISPOSED
+        finally:
+            self._lock.release()
 
         if e is not None:
             msg = "Closing connection %r (reason: %s:%s)" % \
@@ -374,28 +351,8 @@ class _ConnectionRecord(object):
         else:
             msg = "Closing connection %r" % self._connection 
 
-        try:
-            if self._connection:
-                self._connection.close()
-        except (SystemExit, KeyboardInterrupt):
-            raise
-        except Exception, e:
-            self.__pool._notify_on_close(self, error=e)
-            raise
-
-        self._connection = None
-        self.__pool._notify_on_close(self, msg=msg)
-
-    def __connect(self):
-        try:
-            self.starttime = time.time()
-            connection = self.__pool._creator()
-            connection.connect()
-            return connection
-        except Exception, e:
-            self.__pool._notify_on_connect(self, error=e)
-            raise
-
+        self.close()
+        self._pool._notify_on_close(self, msg=msg)
 
 class SingletonThreadPool(Pool):
     """A Pool that maintains one connection per thread.
@@ -433,7 +390,7 @@ class SingletonThreadPool(Pool):
 
         for conn in self._all_conns:
             try:
-                conn._close()
+                conn._dispose_wrapper()
             except (SystemExit, KeyboardInterrupt):
                 raise
         
@@ -464,7 +421,7 @@ class SingletonThreadPool(Pool):
             raise NoConnectionAvailable()
         else:
             c = self._create_connection()
-            c.ensure_connection()
+            c._ensure_connection()
             self._tlocal.current = weakref.ref(c)
             self._all_conns.add(c)
         return c
@@ -560,7 +517,7 @@ class QueuePool(Pool):
             if conn._in_queue():
                 raise InvalidRequestError("A connection was returned to "
                         " the connection pool pull twice.")
-            conn._close()
+            conn._dispose_wrapper()
             if self._overflow_lock is None:
                 self._overflow -= 1
                 self._notify_on_checkin(conn)
@@ -586,7 +543,7 @@ class QueuePool(Pool):
             wait = self._max_overflow > -1 and \
                         self._overflow >= self._max_overflow
             conn = self._q.get(wait, self._timeout)
-            conn.ensure_connection()
+            conn._ensure_connection()
             if self._use_threadlocal:
                 self._tlocal.current = weakref.ref(conn)
             self._notify_on_checkout(conn)
@@ -621,7 +578,7 @@ class QueuePool(Pool):
                     self._overflow_lock.release()
 
             # Notify listeners
-            conn.ensure_connection()
+            conn._ensure_connection()
             if self._use_threadlocal:
                 self._tlocal.current = weakref.ref(conn)
             self._notify_on_checkout(conn)
@@ -632,7 +589,7 @@ class QueuePool(Pool):
         while True:
             try:
                 conn = self._q.get(False)
-                conn._close()
+                conn._dispose_wrapper()
             except pool_queue.Empty:
                 break
 
@@ -675,12 +632,12 @@ class NullPool(Pool):
         return "NullPool"
 
     def _do_return_conn(self, conn):
-        conn._close()
+        conn._dispose_wrapper()
         self._notify_on_checkin(conn)
 
     def _do_get(self):
         conn = self._create_connection()
-        conn.ensure_connection()
+        conn._ensure_connection()
         self._notify_on_checkout(conn)
         return conn
 
@@ -708,20 +665,16 @@ class StaticPool(Pool):
 
     """
 
-    @memoized_property
-    def _conn(self):
-        return self._creator()
+    def __init__(self, **kw):
+        Pool.__init__(self, **kw)
+        self._conn = self._create_connection()
 
-    @memoized_property
-    def connection(self):
-        return _ConnectionRecord(self)
-        
     def status(self):
         return "StaticPool"
 
     def dispose(self):
         if '_conn' in self.__dict__:
-            self._conn._close()
+            self._conn._dispose_wrapper()
             self._conn = None
         self._notify_on_pool_dispose()
 
@@ -735,17 +688,14 @@ class StaticPool(Pool):
                               logging_name=self._orig_logging_name,
                               listeners=self.listeners)
 
-    def _create_connection(self):
-        return self._conn
-
     def _do_return_conn(self, conn):
         self._notify_on_checkin(conn)
         pass
 
     def _do_get(self):
-        self._notify_on_checkout(self.connection)
-        self.connection.ensure_connection()
-        return self.connection
+        self._notify_on_checkout(self._conn)
+        self._conn._ensure_connection()
+        return self._conn
 
 class AssertionPool(Pool):
     """A Pool that allows at most one checked out connection at any given
@@ -775,7 +725,7 @@ class AssertionPool(Pool):
     def dispose(self):
         self._checked_out = False
         if self._conn:
-            self._conn._close()
+            self._conn._dispose_wrapper()
         self._notify_on_pool_dispose()
 
     def recreate(self):
@@ -795,7 +745,7 @@ class AssertionPool(Pool):
             self._conn = self._create_connection()
         
         self._checked_out = True
-        self._conn.ensure_connection()
+        self._conn._ensure_connection()
         self._notify_on_checkout(self._conn)
         return self._conn
 
@@ -826,9 +776,9 @@ class PoolListener(object):
     ``checkin`` events.  (If a ``Connection`` is detached from its
     pool via the ``detach()`` method, it won't be checked back in.)
 
-    Events receive a ``_ConnectionRecord``, a long-lived internal
+    Events receive a ``_ConnectionWrapper``, a long-lived internal
     ``Pool`` object that basically represents a "slot" in the
-    connection pool.  ``_ConnectionRecord`` objects have one public
+    connection pool.  ``_ConnectionWrapper`` objects have one public
     attribute of note: ``info``, a dictionary whose contents are
     scoped to the lifetime of the Cassandra connection managed by the
     record.  You can use this shared storage area however you like.
@@ -847,7 +797,7 @@ class PoolListener(object):
         """Called once for each new Cassandra connection or Pool's ``creator()``.
 
         conn_record
-          The ``_ConnectionRecord`` that persistently manages the connection
+          The ``_ConnectionWrapper`` that persistently manages the connection
 
         """
 
@@ -855,7 +805,7 @@ class PoolListener(object):
         """Called when a connection is retrieved from the Pool.
 
         conn_record
-          The ``_ConnectionRecord`` that persistently manages the connection
+          The ``_ConnectionWrapper`` that persistently manages the connection
 
         """
 
@@ -865,7 +815,7 @@ class PoolListener(object):
         Note that the connection may be None if the connection has been closed.
 
         conn_record
-          The ``_ConnectionRecord`` that persistently manages the connection
+          The ``_ConnectionWrapper`` that persistently manages the connection
 
         """
  
@@ -873,7 +823,7 @@ class PoolListener(object):
         """Called when a connection is closed.
 
         conn_record
-            The ``_ConnectionRecord`` that persistently manages the connection
+            The ``_ConnectionWrapper`` that persistently manages the connection
 
         err
             A reason for closing the connection, if any.

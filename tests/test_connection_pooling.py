@@ -22,11 +22,11 @@ class PoolingCase(unittest.TestCase):
             pool = pool_cls(keyspace='Keyspace1', credentials=_credentials)
             pool.dispose()
             pool = pool.recreate()
-            conn_record = pool.get()
-            cf = ColumnFamily(conn_record.get_connection(), 'Standard1')
+            conn = pool.get()
+            cf = ColumnFamily(conn, 'Standard1')
             cf.insert('key1', {'col':'val'})
             pool.status()
-            pool.return_conn(conn_record)
+            pool.return_conn(conn)
 
     def test_server_list_func(self):
         listener = _TestListener()
