@@ -17,14 +17,14 @@ import weakref, time, threading, random
 
 from connection import Connection
 import queue as pool_queue
-from util import threading, as_interface, memoized_property
+from util import threading, as_interface
 from logger import PycassaLogger
 
 class Pool(object):
     """Abstract base class for connection pools."""
 
     def __init__(self, keyspace, server_list=['localhost:9160'],
-                 credentials=None, recycle=-1, logging_name=None,
+                 credentials=None, logging_name=None,
                  use_threadlocal=True, listeners=None):
         """
         Construct a Pool.
@@ -39,11 +39,6 @@ class Pool(object):
 
         :param credentials: A dictionary containing 'username' and 'password'
           keys and appropriate string values.
-
-        :param recycle: If set to non -1, number of seconds between
-          connection recycling, which means upon checkout, if this
-          timeout is surpassed the connection will be closed and
-          replaced with a newly opened connection. Defaults to -1.
 
         :param logging_name:  String identifier which will be used within
           the "name" field of logging records generated within the 
@@ -72,8 +67,7 @@ class Pool(object):
             self._orig_logging_name = None
             self.logging_name = id(self)
             
-        self._recycle = recycle
-        self._use_threadlocal = use_threadlocal
+        self._pool_threadlocal = use_threadlocal
         self.keyspace = keyspace
         self.credentials = credentials
         self._tlocal = threading.local()
@@ -84,6 +78,7 @@ class Pool(object):
         self._on_checkout = []
         self._on_checkin = []
         self._on_close = []
+        self._on_recycle = []
         self._on_server_list = []
         self._on_pool_recreate = []
         self._on_pool_dispose = []
@@ -133,7 +128,9 @@ class Pool(object):
     def _create_connection(self):
         server = self.server_list[self._list_position % len(self.server_list)]
         self._list_position += 1
-        return _ConnectionWrapper(self, self.keyspace, [server], credentials=self.credentials, use_threadlocal=self._use_threadlocal)
+        return _ConnectionWrapper(self, self.keyspace, [server],
+                                  credentials=self.credentials,
+                                  use_threadlocal=self._pool_threadlocal)
 
     def recreate(self):
         """Return a new instance with identical creation arguments."""
@@ -177,9 +174,9 @@ class Pool(object):
         """
 
         listener = as_interface(listener,
-            methods=('connect', 'checkout', 'checkin', 'close',
+            methods=('connect', 'checkout', 'checkin', 'close', 'recycle',
                      'obtained_server_list', 'pool_recreated',
-                     'pool_disposed', 'close', 'pool_max'))
+                     'pool_disposed', 'pool_max'))
 
         self.listeners.append(listener)
         if hasattr(listener, 'connect'):
@@ -190,6 +187,8 @@ class Pool(object):
             self._on_checkin.append(listener)
         if hasattr(listener, 'close'):
             self._on_close.append(listener)
+        if hasattr(listener, 'recycle'):
+            self._on_recycle.append(listener)
         if hasattr(listener, 'obtained_server_list'):
             self._on_server_list.append(listener)
         if hasattr(listener, 'pool_recreated'):
@@ -236,6 +235,15 @@ class Pool(object):
             for l in self._on_close:
                 l.close(dic)
 
+    def _notify_on_recycle(self, old_conn, new_conn):
+        if self._on_recycle:
+            dic = self._get_dic()
+            dic['level'] = 'info'
+            dic['old_conn'] = old_conn
+            dic['new_conn'] = new_conn
+        for l in self._on_recycle:
+            l.recycle(dic)
+
     def _notify_on_connect(self, conn_record, msg="", error=None):
         if self._on_connect:
             dic = self._get_dic()
@@ -267,7 +275,7 @@ class Pool(object):
 
 
     def _get_dic(self):
-        return {'pool_type': self.__class__,
+        return {'pool_type': self.__class__.__name__,
                 'pool_id': self.logging_name}
 
 
@@ -288,24 +296,11 @@ class _ConnectionWrapper(Connection):
         self.starttime = time.time()
         self._state = _ConnectionWrapper._CHECKED_OUT
         super(_ConnectionWrapper, self).__init__(*args, **kwargs)
+        self.connect()
         self._pool._notify_on_connect(self)
 
     def return_to_pool(self):
         self._pool.return_conn(self)
-
-#    def get_connection(self):
-#        if self._connection is None:
-#            self._connection = self.__connect()
-#            self.info.clear()
-#            self.__pool._notify_on_connect(self)
-#        elif self.__pool._recycle > -1 and \
-#                time.time() - self.starttime > self.__pool._recycle:
-#            self.__pool._notify_on_recycle(self)
-#            self._close()
-#            self._connection = self.__connect()
-#            self.info.clear()
-#            self.__pool._notify_on_connect(self)
-#        return self._connection
 
     def _checkin(self):
         try:
@@ -335,7 +330,7 @@ class _ConnectionWrapper(Connection):
             self._lock.release()
         return ret
 
-    def _dispose_wrapper(self, e=None):
+    def _dispose_wrapper(self, reason=None):
         try:
             self._lock.acquire()
             if self._state == _ConnectionWrapper._DISPOSED:
@@ -345,14 +340,8 @@ class _ConnectionWrapper(Connection):
         finally:
             self._lock.release()
 
-        if e is not None:
-            msg = "Closing connection %r (reason: %s:%s)" % \
-                self._connection, e.__class__.__name__, e
-        else:
-            msg = "Closing connection %r" % self._connection 
-
         self.close()
-        self._pool._notify_on_close(self, msg=msg)
+        self._pool._notify_on_close(self, msg=reason)
 
 class SingletonThreadPool(Pool):
     """A Pool that maintains one connection per thread.
@@ -380,9 +369,8 @@ class SingletonThreadPool(Pool):
             keyspace=self.keyspace,
             server_list=self.server_list,
             credentials=self.credentials,
-            recycle=self._recycle, 
             logging_name=self._orig_logging_name,
-            use_threadlocal=self._use_threadlocal, 
+            use_threadlocal=self._pool_threadlocal, 
             listeners=self.listeners)
 
     def dispose(self):
@@ -430,7 +418,7 @@ class QueuePool(Pool):
     """A Pool that imposes a limit on the number of open connections."""
 
     def __init__(self, pool_size=5, max_overflow=10, timeout=30,
-                 **kw):
+                 recycle=10000, prefill=True, **kw):
         """
         Construct a QueuePool.
 
@@ -459,34 +447,31 @@ class QueuePool(Pool):
         :param timeout: The number of seconds to wait before giving up
           on returning a connection. Defaults to 30.
 
-        :param recycle: If set to non -1, number of seconds between
-          connection recycling, which means upon checkout, if this
-          timeout is surpassed the connection will be closed and
-          replaced with a newly opened connection. Defaults to -1.
+        :param recycle: If set to non -1, number of operations between
+          connection recycling, which means upon checkin, if this
+          this many thrift operations have been performed,
+          the connection will be closed and replaced with a newly opened
+          connection if necessary. Defaults to 10000.
 
-        :param use_threadlocal: If set to True, repeated calls to
-          :meth:`connect` within the same application thread will be
-          guaranteed to return the same connection object, if one has
-          already been retrieved from the pool and has not been
-          returned yet.  Offers a slight performance advantage at the
-          cost of individual transactions by default.  The
-          :meth:`unique_connection` method is provided to bypass the
-          threadlocal behavior installed into :meth:`connect`.
-
-        :param listeners: A list of
-          :class:`PoolListener`-like objects or
-          dictionaries of callables that receive events when Cassandra
-          connections are created, checked out and checked in to the
-          pool.
+        :param prefill: If True, the pool creates ``pool_size`` connections
+          upon creation and adds them to the queue.  Default is True.
 
         """
         Pool.__init__(self, **kw)
+        self._pool_size = pool_size
         self._q = pool_queue.Queue(pool_size)
-        self._overflow = 0 - pool_size
         self._max_overflow = max_overflow
         self._timeout = timeout
+        self._recycle = recycle
+        self._prefill = prefill
         self._overflow_lock = self._max_overflow > -1 and \
                                     threading.Lock() or None
+        if prefill:
+            self._overflow = 0
+            for i in range(pool_size):
+                self._q.put(self._create_connection(), False)
+        else:
+            self._overflow = 0 - pool_size
 
     def recreate(self):
         self._notify_on_pool_recreate()
@@ -497,21 +482,22 @@ class QueuePool(Pool):
                           server_list=self.server_list,
                           credentials=self.credentials,
                           recycle=self._recycle, 
+                          prefill=self._prefill,
                           logging_name=self._orig_logging_name,
-                          use_threadlocal=self._use_threadlocal,
+                          use_threadlocal=self._pool_threadlocal,
                           listeners=self.listeners)
 
     def _do_return_conn(self, conn):
         try:
-            if self._use_threadlocal:
+            if self._pool_threadlocal:
                 if hasattr(self._tlocal, 'current'):
                     if self._tlocal.current:
                         conn = self._tlocal.current()
                         self._tlocal.current = None
-                        self._q.put(conn, False)
+                        conn = self._put_conn(conn)
                         self._notify_on_checkin(conn)
             else:
-                self._q.put(conn, False)
+                conn = self._put_conn(conn)
                 self._notify_on_checkin(conn)
         except pool_queue.Full:
             if conn._in_queue():
@@ -529,8 +515,20 @@ class QueuePool(Pool):
                 finally:
                     self._overflow_lock.release()
 
+    def _put_conn(self, conn):
+        """Put a connection in the queue, recycling if needed."""
+        if self._recycle > -1 and conn.operation_count > self._recycle:
+            new_conn = self._create_connection()
+            self._notify_on_recycle(conn, new_conn)
+            conn._dispose_wrapper(reason="recyling connection")
+            self._q.put(new_conn, False)
+            return new_conn
+        else:
+            self._q.put(conn, False)
+            return conn
+
     def _do_get(self):
-        if self._use_threadlocal:
+        if self._pool_threadlocal:
             try:
                 conn = None
                 if self._tlocal.current:
@@ -544,7 +542,7 @@ class QueuePool(Pool):
                         self._overflow >= self._max_overflow
             conn = self._q.get(wait, self._timeout)
             conn._ensure_connection()
-            if self._use_threadlocal:
+            if self._pool_threadlocal:
                 self._tlocal.current = weakref.ref(conn)
             self._notify_on_checkout(conn)
             return conn
@@ -579,7 +577,7 @@ class QueuePool(Pool):
 
             # Notify listeners
             conn._ensure_connection()
-            if self._use_threadlocal:
+            if self._pool_threadlocal:
                 self._tlocal.current = weakref.ref(conn)
             self._notify_on_checkout(conn)
 
@@ -619,12 +617,8 @@ class QueuePool(Pool):
 class NullPool(Pool):
     """A Pool which does not pool connections.
 
-    Instead it literally opens and closes the underlying Cassandra connection
-    per each connection open/close.
-
-    Reconnect-related functions such as ``recycle`` and connection
-    invalidation are not supported by this Pool implementation, since
-    no connections are held persistently.
+    Instead, it opens and closes the underlying Cassandra connection
+    per each get()/return().
 
     """
 
@@ -646,9 +640,8 @@ class NullPool(Pool):
         return NullPool(keyspace=self.keyspace,
             server_list=self.server_list,
             credentials=self.credentials, 
-            recycle=self._recycle, 
             logging_name=self._orig_logging_name,
-            use_threadlocal=self._use_threadlocal, 
+            use_threadlocal=self._pool_threadlocal, 
             listeners=self.listeners)
 
     def dispose(self):
@@ -657,11 +650,6 @@ class NullPool(Pool):
 
 class StaticPool(Pool):
     """A Pool of exactly one connection, used for all requests.
-
-    Reconnect-related functions such as ``recycle`` and connection
-    invalidation (which is also used to support auto-reconnect) are not
-    currently supported by this Pool implementation but may be implemented
-    in a future release.
 
     """
 
@@ -683,8 +671,7 @@ class StaticPool(Pool):
         return self.__class__(keyspace=self.keyspace,
                               server_list=self.server_list,
                               credentials=self.credentials,
-                              recycle=self._recycle,
-                              use_threadlocal=self._use_threadlocal,
+                              use_threadlocal=self._pool_threadlocal,
                               logging_name=self._orig_logging_name,
                               listeners=self.listeners)
 
@@ -701,8 +688,8 @@ class AssertionPool(Pool):
     """A Pool that allows at most one checked out connection at any given
     time.
 
-    This will raise an exception if more than one connection is checked out
-    at a time.  Useful for debugging code that is using more connections
+    This will raise an AssertionError if more than one connection is checked
+    out at a time.  Useful for debugging code that is using more connections
     than desired.
 
     """
@@ -827,6 +814,16 @@ class PoolListener(object):
 
         err
             A reason for closing the connection, if any.
+
+        """
+    def recycle(self, old_conn, new_conn):
+        """Called when a connection is recycled.
+
+        old_conn
+            The ``_ConnectionWrapper`` that is being recycled
+
+        new_conn
+            The ``_ConnectionWrapper`` that is replacing it
 
         """
 

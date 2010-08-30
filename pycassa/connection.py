@@ -165,6 +165,7 @@ class Connection(object):
         self._recycle = recycle
         self._credentials = credentials
         self._use_threadlocal = use_threadlocal
+        self.operation_count = 0
         if self._use_threadlocal:
             self._local = threading.local()
         else:
@@ -174,12 +175,12 @@ class Connection(object):
         """Create new connection unless we already have one."""
         try:
             server = self._servers.get()
-            if self.use_threadlocal and not getattr(self._local, 'conn', None):
+            if self._use_threadlocal and not getattr(self._local, 'conn', None):
                 self._local.conn = ClientTransport(self._keyspace,
                                                    server, self._framed_transport,
                                                    self._timeout, self._credentials,
                                                    self._recycle)
-            elif not self.use_threadlocal and not self._connection:
+            elif not self._use_threadlocal and not self._connection:
                 self._connection = ClientTransport(self._keyspace,
                                                    server, self._framed_transport,
                                                    self._timeout, self._credentials,
@@ -188,24 +189,25 @@ class Connection(object):
             log.warning('Connection to %s failed', server)
             self._servers.mark_dead(server)
             return self.connect()
-        if self.use_threadlocal:
+        if self._use_threadlocal is True:
             return self._local.conn
         else:
             return self._connection
 
     def close(self):
         """If a connection is open, close its transport."""
-        if self.use_threadlocal and hasattr(self._local, 'conn'):
+        if self._use_threadlocal and hasattr(self._local, 'conn'):
             if self._local.conn:
                 self._local.conn.transport.close()
             self._local.conn = None
-        elif not self.use_threadlocal:
+        elif not self._use_threadlocal:
             if self._connection:
                 self._connection.transport.close()
             self._connection = None
 
     def __getattr__(self, attr):
         def _client_call(*args, **kwargs):
+            self.operation_count += 1
             try:
                 conn = self._ensure_connection()
                 return getattr(conn.client, attr)(*args, **kwargs)

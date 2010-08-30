@@ -100,10 +100,11 @@ class PoolingCase(unittest.TestCase):
                          listeners=[listener], use_threadlocal=True)
         conns = []
 
+        assert_equal(listener.connect_count, 5)
         # These connections should all be the same
         for i in range(10):
             conns.append(pool.get())
-        assert_equal(listener.connect_count, 1)
+        assert_equal(listener.connect_count, 5)
         assert_equal(listener.checkout_count, 1)
 
         for i in range(0, 5):
@@ -115,11 +116,11 @@ class PoolingCase(unittest.TestCase):
 
         conns = []
 
+        assert_equal(listener.connect_count, 5)
         # A single connection should come from the pool
         for i in range(5):
             conns.append(pool.get())
-
-        assert_equal(listener.connect_count, 1)
+        assert_equal(listener.connect_count, 5)
         assert_equal(listener.checkout_count, 2)
 
         for conn in conns:
@@ -139,7 +140,7 @@ class PoolingCase(unittest.TestCase):
         for thread in threads:
             thread.join()
 
-        assert_equal(listener.connect_count, 4) # Still was one conn in pool
+        assert_equal(listener.connect_count, 0) # Still 5 connections in pool
         assert_equal(listener.checkout_count, 5)
         assert_equal(listener.checkin_count, 5)
 
@@ -150,11 +151,42 @@ class PoolingCase(unittest.TestCase):
             threads[-1].start()
         for thread in threads:
             thread.join()
-        assert_equal(listener.connect_count, 4)
+        assert_equal(listener.connect_count, 0)
         assert_equal(listener.checkout_count, 10)
         assert_equal(listener.checkin_count, 10)
 
         pool.dispose()
+
+    def test_queue_pool_recycle(self):
+        listener = _TestListener()
+        pool = QueuePool(keyspace='Keyspace1', credentials=_credentials,
+                         pool_size=5, max_overflow=5, timeout=1, recycle=10,
+                         listeners=[listener], use_threadlocal=False)
+
+        conn = pool.get()
+        cf = ColumnFamily(conn, 'Standard1')
+        for i in range(10):
+            cf.insert('key', {'col': 'val'})
+
+        conn.return_to_pool()
+        assert_equal(listener.recycle_count, 1)
+
+        pool.dispose()
+        listener.reset()
+
+        # Try with threadlocal=True
+        pool = QueuePool(keyspace='Keyspace1', credentials=_credentials,
+                         pool_size=5, max_overflow=5, timeout=1, recycle=10,
+                         listeners=[listener], use_threadlocal=True)
+
+        conn = pool.get()
+        cf = ColumnFamily(conn, 'Standard1')
+        for i in range(10):
+            cf.insert('key', {'col': 'val'})
+
+        conn.return_to_pool()
+        assert_equal(listener.recycle_count, 1)
+
 
     def test_singleton_thread_pool(self):
         listener = _TestListener()
@@ -310,6 +342,7 @@ class _TestListener(PoolListener):
         self.checkout_count = 0
         self.checkin_count = 0
         self.close_count = 0
+        self.recycle_count = 0
         self.list_count = 0
         self.recreate_count = 0
         self.dispose_count = 0
@@ -326,6 +359,9 @@ class _TestListener(PoolListener):
 
     def close(self, dic):
         self.close_count += 1
+
+    def recycle(self, dic):
+        self.recycle_count += 1
 
     def obtained_server_list(self, dic):
         self.list_count += 1
