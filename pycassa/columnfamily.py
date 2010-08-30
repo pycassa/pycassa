@@ -288,7 +288,10 @@ class ColumnFamily(object):
         elif data_type == 'AsciiType':
             return struct.pack(">%ds" % len(value), value)
         elif data_type == 'UTF8Type':
-            st = value.encode('utf-8')
+            try:
+                st = value.encode('utf-8')
+            except:
+                st = value
             return struct.pack(">%ds" % len(st), st)
         elif data_type == 'TimeUUIDType' or data_type == 'LexicalUUIDType':
             if not hasattr(value, 'bytes'):
