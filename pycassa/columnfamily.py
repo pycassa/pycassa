@@ -290,7 +290,8 @@ class ColumnFamily(object):
         elif data_type == 'UTF8Type':
             try:
                 st = value.encode('utf-8')
-            except:
+            except UnicodeDecodeError:
+                # value is already utf-8 encoded
                 st = value
             return struct.pack(">%ds" % len(st), st)
         elif data_type == 'TimeUUIDType' or data_type == 'LexicalUUIDType':
