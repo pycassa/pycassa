@@ -22,46 +22,46 @@ class PycassaLogger:
 
     ### Connection Pool Logging ###
 
-    def connect(self, dic):
+    def connection_created(self, dic):
         level = PycassaLogger._levels[dic.get('level', 'info')]
         if level <= logging.INFO:
             self.pool_logger.log(level,
                     "Connection %s opened for %s (id = %s)",
-                    id(dic.get('conn_record')), dic.get('pool_type'), dic.get('pool_id'))
+                    id(dic.get('connection')), dic.get('pool_type'), dic.get('pool_id'))
         else:
             self.pool_logger.log(level,
                     "Error opening connection for %s (id = %s): %s",
                     dic.get('pool_type'), dic.get('pool_id'),
                     dic.get('error'))
 
-    def checkout(self, dic):
+    def connection_checked_out(self, dic):
         level = PycassaLogger._levels[dic.get('level', 'info')]
         self.pool_logger.log(level,
                 "Connection %s was checked out from %s (id = %s)",
-                id(dic.get('conn_record')), dic.get('pool_type'), dic.get('pool_id'))
+                id(dic.get('connection')), dic.get('pool_type'), dic.get('pool_id'))
 
-    def checkin(self, dic):
+    def connection_checked_in(self, dic):
         level = PycassaLogger._levels[dic.get('level', 'info')]
         self.pool_logger.log(level,
                 "Connection %s was checked in to %s (id = %s)",
-                id(dic.get('conn_record')), dic.get('pool_type'), dic.get('pool_id'))
+                id(dic.get('connection')), dic.get('pool_type'), dic.get('pool_id'))
  
-    def close(self, dic):
+    def connection_disposed(self, dic):
         level = PycassaLogger._levels[dic.get('level', 'info')]
         if level <= logging.INFO:
             self.pool_logger.log(level,
                     "Connection %s was closed; pool %s (id = %s), reason: %s",
-                    id(dic.get('conn_record')), dic.get('pool_type'),
+                    id(dic.get('connection')), dic.get('pool_type'),
                     dic.get('pool_id'), dic.get('message'))
         else:
             error = dic.get('error')
             self.pool_logger.log(level,
                     "Error closing connection %s in %s (id = %s), "
                     "reason: %s, error: %s %s",
-                    id(dic.get('conn_record')), dic.get('pool_type'), dic.get('pool_id'),
+                    id(dic.get('connection')), dic.get('pool_type'), dic.get('pool_id'),
                     dic.get('message'), error.__class__, error)
 
-    def recycle(self, dic):
+    def connection_recycled(self, dic):
         level = PycassaLogger._levels[dic.get('level', 'info')]
         old_conn = dic.get('old_conn')
         self.pool_logger.log(level,
@@ -88,7 +88,7 @@ class PycassaLogger:
                 "%s (id = %s) was disposed",
                 dic.get('pool_type'), dic.get('pool_id'))
 
-    def pool_max(self, dic):
+    def pool_at_max(self, dic):
         level = PycassaLogger._levels[dic.get('level', 'info')]
         self.pool_logger.log(level,
                 "%s (id = %s) had a checkout request but was already "

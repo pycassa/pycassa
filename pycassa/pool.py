@@ -77,7 +77,7 @@ class Pool(object):
         self._on_connect = []
         self._on_checkout = []
         self._on_checkin = []
-        self._on_close = []
+        self._on_dispose = []
         self._on_recycle = []
         self._on_server_list = []
         self._on_pool_recreate = []
@@ -174,20 +174,21 @@ class Pool(object):
         """
 
         listener = as_interface(listener,
-            methods=('connect', 'checkout', 'checkin', 'close', 'recycle',
-                     'obtained_server_list', 'pool_recreated',
-                     'pool_disposed', 'pool_max'))
+            methods=('connection_created', 'connection_checked_out',
+                     'connection_checked_in', 'connection_disposed',
+                     'connection_recycled', 'obtained_server_list',
+                     'pool_recreated', 'pool_disposed', 'pool_at_max'))
 
         self.listeners.append(listener)
-        if hasattr(listener, 'connect'):
+        if hasattr(listener, 'connection_created'):
             self._on_connect.append(listener)
-        if hasattr(listener, 'checkout'):
+        if hasattr(listener, 'connection_checked_out'):
             self._on_checkout.append(listener)
-        if hasattr(listener, 'checkin'):
+        if hasattr(listener, 'connection_checked_in'):
             self._on_checkin.append(listener)
-        if hasattr(listener, 'close'):
-            self._on_close.append(listener)
-        if hasattr(listener, 'recycle'):
+        if hasattr(listener, 'connection_disposed'):
+            self._on_dispose.append(listener)
+        if hasattr(listener, 'connection_recycled'):
             self._on_recycle.append(listener)
         if hasattr(listener, 'obtained_server_list'):
             self._on_server_list.append(listener)
@@ -195,7 +196,7 @@ class Pool(object):
             self._on_pool_recreate.append(listener)
         if hasattr(listener, 'pool_disposed'):
             self._on_pool_dispose.append(listener)
-        if hasattr(listener, 'pool_max'):
+        if hasattr(listener, 'pool_at_max'):
             self._on_pool_max.append(listener)
 
     def _notify_on_pool_recreate(self):
@@ -220,20 +221,20 @@ class Pool(object):
             dic['level'] = 'info'
             dic['pool_max'] = pool_max
             for l in self._on_pool_max:
-                l.pool_max(dic)
+                l.pool_at_max(dic)
 
-    def _notify_on_close(self, conn_record, msg="", error=None):
-        if self._on_close:
+    def _notify_on_dispose(self, conn_record, msg="", error=None):
+        if self._on_dispose:
             dic = self._get_dic()
             dic['level'] = 'info'
-            dic['conn_record'] = conn_record
+            dic['connection'] = conn_record
             if msg:
                 dic['message'] = msg
             if error:
                 dic['error'] = error
                 dic['level'] = 'warn'
-            for l in self._on_close:
-                l.close(dic)
+            for l in self._on_dispose:
+                l.connection_disposed(dic)
 
     def _notify_on_recycle(self, old_conn, new_conn):
         if self._on_recycle:
@@ -242,37 +243,36 @@ class Pool(object):
             dic['old_conn'] = old_conn
             dic['new_conn'] = new_conn
         for l in self._on_recycle:
-            l.recycle(dic)
+            l.connection_recycled(dic)
 
     def _notify_on_connect(self, conn_record, msg="", error=None):
         if self._on_connect:
             dic = self._get_dic()
             dic['level'] = 'info'
-            dic['conn_record'] = conn_record
+            dic['connection'] = conn_record
             if msg:
                 dic['message'] = msg
             if error:
                 dic['error'] = error
                 dic['level'] = 'warn'
             for l in self._on_connect:
-                l.connect(dic)
+                l.connection_created(dic)
 
     def _notify_on_checkin(self, conn_record):
         if self._on_checkin:
             dic = self._get_dic()
             dic['level'] = 'info'
-            dic['conn_record'] = conn_record
+            dic['connection'] = conn_record
             for l in self._on_checkin:
-                l.checkin(dic)
+                l.connection_checked_in(dic)
 
     def _notify_on_checkout(self, conn_record):
         if self._on_checkout:
             dic = self._get_dic()
             dic['level'] = 'info'
-            dic['conn_record'] = conn_record
+            dic['connection'] = conn_record
             for l in self._on_checkout:
-                l.checkout(dic)
-
+                l.connection_checked_out(dic)
 
     def _get_dic(self):
         return {'pool_type': self.__class__.__name__,
@@ -341,7 +341,7 @@ class _ConnectionWrapper(Connection):
             self._lock.release()
 
         self.close()
-        self._pool._notify_on_close(self, msg=reason)
+        self._pool._notify_on_dispose(self, msg=reason)
 
 class SingletonThreadPool(Pool):
     """A Pool that maintains one connection per thread.
@@ -743,7 +743,7 @@ class PoolListener(object):
     Usage::
     
         class MyListener(PoolListener):
-            def connect(self, conn_record):
+            def connect(self, dic):
                 '''perform connect operations'''
             # etc. 
             
@@ -758,17 +758,10 @@ class PoolListener(object):
     creation, pool check-out and check-in.  There are no events fired
     when a connection closes.
 
-    For any given Cassandra connection, there will be one ``connect``
-    event, `n` number of ``checkout`` events, and either `n` or `n - 1`
-    ``checkin`` events.  (If a ``Connection`` is detached from its
-    pool via the ``detach()`` method, it won't be checked back in.)
-
-    Events receive a ``_ConnectionWrapper``, a long-lived internal
-    ``Pool`` object that basically represents a "slot" in the
-    connection pool.  ``_ConnectionWrapper`` objects have one public
-    attribute of note: ``info``, a dictionary whose contents are
-    scoped to the lifetime of the Cassandra connection managed by the
-    record.  You can use this shared storage area however you like.
+    Listeners receive a dictionary that contains event information and
+    is indexed by a string describing that piece of info.  For example,
+    all event dictionaries include 'level', so dic['level'] will return
+    the prescribed logging level.
 
     There is no need to subclass ``PoolListener`` to handle events.
     Any class that implements one or more of these methods can be used
@@ -780,70 +773,174 @@ class PoolListener(object):
     
     """
 
-    def connect(self, conn_record):
-        """Called once for each new Cassandra connection or Pool's ``creator()``.
+    def connection_created(self, dic):
+        """Called once for each new Cassandra connection.
 
-        conn_record
+        dic['connection']
           The ``_ConnectionWrapper`` that persistently manages the connection
+
+        dic['message']
+            A reason for closing the connection, if any.
+
+        dic['error']
+            An error that occured while closing the connection, if any.
+
+        dic['pool_type']
+          The type of pool the connection was created in; e.g. QueuePool
+
+        dic['pool_id']
+          The logging name of the connection's pool (defaults to id(pool))
+
+        dic['level']
+          The prescribed logging level for this event.  Can be 'debug', 'info',
+          'warn', 'error', or 'critical'.
 
         """
 
-    def checkout(self, conn_record):
+    def connection_checked_out(self, dic):
         """Called when a connection is retrieved from the Pool.
 
-        conn_record
+        dic['connection']
           The ``_ConnectionWrapper`` that persistently manages the connection
+
+        dic['pool_type']
+          The type of pool the connection was created in; e.g. QueuePool
+
+        dic['pool_id']
+          The logging name of the connection's pool (defaults to id(pool))
+
+        dic['level']
+          The prescribed logging level for this event.  Can be 'debug', 'info',
+          'warn', 'error', or 'critical'.
 
         """
 
-    def checkin(self, conn_record):
+    def connection_checked_in(self, dic):
         """Called when a connection returns to the pool.
 
         Note that the connection may be None if the connection has been closed.
 
-        conn_record
+        dic['connection']
           The ``_ConnectionWrapper`` that persistently manages the connection
+
+        dic['pool_type']
+          The type of pool the connection was created in; e.g. QueuePool
+
+        dic['pool_id']
+          The logging name of the connection's pool (defaults to id(pool))
+
+        dic['level']
+          The prescribed logging level for this event.  Can be 'debug', 'info',
+          'warn', 'error', or 'critical'.
 
         """
  
-    def close(self, conn_record, err):
+    def connection_disposed(self, dic):
         """Called when a connection is closed.
 
-        conn_record
+        dic['connection']
             The ``_ConnectionWrapper`` that persistently manages the connection
 
-        err
+        dic['message']
             A reason for closing the connection, if any.
 
+        dic['error']
+            An error that occured while closing the connection, if any.
+
+        dic['pool_type']
+          The type of pool the connection was created in; e.g. QueuePool
+
+        dic['pool_id']
+          The logging name of the connection's pool (defaults to id(pool))
+
+        dic['level']
+          The prescribed logging level for this event.  Can be 'debug', 'info',
+          'warn', 'error', or 'critical'.
+
         """
-    def recycle(self, old_conn, new_conn):
+    def connection_recycled(self, dic):
         """Called when a connection is recycled.
 
-        old_conn
+        dic['old_conn']
             The ``_ConnectionWrapper`` that is being recycled
 
-        new_conn
+        dic['new_conn']
             The ``_ConnectionWrapper`` that is replacing it
 
+        dic['pool_type']
+          The type of pool the connection was created in; e.g. QueuePool
+
+        dic['pool_id']
+          The logging name of the connection's pool (defaults to id(pool))
+
+        dic['level']
+          The prescribed logging level for this event.  Can be 'debug', 'info',
+          'warn', 'error', or 'critical'.
+
         """
 
-    def server_list_obtained(self, server_list):
+    def server_list_obtained(self, dic):
         """Called when the pool finalizes its server list.
         
-        server_list
+        dic['server_list']
             The randomly permuted list of servers.
+ 
+        dic['pool_type']
+          The type of pool the connection was created in; e.g. QueuePool
+
+        dic['pool_id']
+          The logging name of the connection's pool (defaults to id(pool))
+
+        dic['level']
+          The prescribed logging level for this event.  Can be 'debug', 'info',
+          'warn', 'error', or 'critical'.
+
+       """
+
+    def pool_recreated(self, dic):
+        """Called when a pool is recreated.
+
+        dic['pool_type']
+          The type of pool the connection was created in; e.g. QueuePool
+
+        dic['pool_id']
+          The logging name of the connection's pool (defaults to id(pool))
+
+        dic['level']
+          The prescribed logging level for this event.  Can be 'debug', 'info',
+          'warn', 'error', or 'critical'.
+
         """
 
-    def pool_recreated(self):
-        """Called when a pool is recreated."""
+    def pool_disposed(self, dic):
+        """Called when a pool is recreated.
 
-    def pool_disposed(self):
-        """Called when a pool is recreated."""
+        dic['pool_type']
+          The type of pool the connection was created in; e.g. QueuePool
 
-    def pool_max(self):
+        dic['pool_id']
+          The logging name of the connection's pool (defaults to id(pool))
+
+        dic['level']
+          The prescribed logging level for this event.  Can be 'debug', 'info',
+          'warn', 'error', or 'critical'.
+
+        """
+
+    def pool_at_max(self, dic):
         """
         Called when an attempt is made to get a new connection from the
         pool, but the pool is already at its max size. 
+
+        dic['pool_type']
+          The type of pool the connection was created in; e.g. QueuePool
+
+        dic['pool_id']
+          The logging name of the connection's pool (defaults to id(pool))
+
+        dic['level']
+          The prescribed logging level for this event.  Can be 'debug', 'info',
+          'warn', 'error', or 'critical'.
 
         """
 

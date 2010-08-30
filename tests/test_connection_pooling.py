@@ -348,19 +348,19 @@ class _TestListener(PoolListener):
         self.dispose_count = 0
         self.max_count = 0
 
-    def connect(self, dic):
+    def connection_created(self, dic):
         self.connect_count += 1
 
-    def checkout(self, dic):
+    def connection_checked_out(self, dic):
         self.checkout_count += 1
 
-    def checkin(self, dic):
+    def connection_checked_in(self, dic):
         self.checkin_count += 1
 
-    def close(self, dic):
+    def connection_disposed(self, dic):
         self.close_count += 1
 
-    def recycle(self, dic):
+    def connection_recycled(self, dic):
         self.recycle_count += 1
 
     def obtained_server_list(self, dic):
@@ -373,5 +373,5 @@ class _TestListener(PoolListener):
     def pool_disposed(self, dic):
         self.dispose_count += 1
 
-    def pool_max(self, dic):
+    def pool_at_max(self, dic):
         self.max_count += 1
