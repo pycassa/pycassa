@@ -1,6 +1,7 @@
-from cassandra.ttypes import Column, ColumnOrSuperColumn, ColumnParent, \
-    ColumnPath, ConsistencyLevel, NotFoundException, SlicePredicate, \
-    SliceRange, SuperColumn, Clock, KeyRange, IndexExpression, IndexClause
+from pycassa.cassandra.ttypes import Column, ColumnOrSuperColumn,\
+    ColumnParent, ColumnPath, ConsistencyLevel, NotFoundException,\
+    SlicePredicate, SliceRange, SuperColumn, Clock, KeyRange,\
+    IndexExpression, IndexClause
 
 import time
 import sys

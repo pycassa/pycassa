@@ -9,9 +9,9 @@ from thrift import Thrift
 from thrift.transport import TTransport
 from thrift.transport import TSocket
 from thrift.protocol import TBinaryProtocol
-from cassandra import Cassandra
-from cassandra.constants import VERSION
-from cassandra.ttypes import AuthenticationRequest
+from pycassa.cassandra import Cassandra
+from pycassa.cassandra.constants import VERSION
+from pycassa.cassandra.ttypes import AuthenticationRequest
 
 from batch import Mutator
 

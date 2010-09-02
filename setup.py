@@ -27,7 +27,7 @@ setup(
       download_url = 'http://github.com/vomjom/pycassa',
       license = 'MIT',
       keywords = 'cassandra client db distributed thrift',
-      packages = ['pycassa'],
+      packages = ['pycassa', 'pycassa.cassandra'],
       platforms = 'any',
       install_requires = ['thrift'],
       scripts=['pycassaShell'],

@@ -1,6 +1,7 @@
 import threading
-from cassandra.ttypes import (Clock, Column, ColumnOrSuperColumn, ConsistencyLevel,
-                              Deletion, Mutation, SlicePredicate, SuperColumn)
+from pycassa.cassandra.ttypes import (Clock, Column, ColumnOrSuperColumn,
+                                      ConsistencyLevel, Deletion, Mutation,
+                                      SlicePredicate, SuperColumn)
 
 
 class Mutator(object):

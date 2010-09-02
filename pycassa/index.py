@@ -1,4 +1,5 @@
-from cassandra.ttypes import IndexClause, IndexExpression, IndexOperator
+from pycassa.cassandra.ttypes import IndexClause, IndexExpression,\
+                                     IndexOperator
 
 def create_index_clause(expr_list, start_key='', count=100):
     """

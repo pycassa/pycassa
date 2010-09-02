@@ -4,5 +4,6 @@ from pycassa.types import *
 from pycassa.connection import *
 from pycassa.index import *
 
-from cassandra.ttypes import ConsistencyLevel, InvalidRequestException, \
-    NotFoundException, UnavailableException, TimedOutException
+from pycassa.cassandra.ttypes import ConsistencyLevel,\
+    InvalidRequestException, NotFoundException, UnavailableException,\
+    TimedOutException
