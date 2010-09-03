@@ -449,3 +449,11 @@ keyspaces:
           column_metadata:
             - name: subcol
               validator_class: BytesType
+
+# Default validator test
+        - name: DefaultValidator
+          column_type: Standard
+          default_validation_class: LongType
+          column_metadata:
+            - name: subcol
+              validator_class: TimeUUIDType

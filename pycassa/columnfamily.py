@@ -93,6 +93,7 @@ class ColumnFamily(object):
 
         # Determine the ColumnFamily type to allow for auto conversion
         # so that packing/unpacking doesn't need to be done manually
+        self.cf_data_type = None
         self.col_name_data_type = None
         self.supercol_name_data_type = None
         self.col_type_dict = dict()
@@ -108,12 +109,12 @@ class ColumnFamily(object):
                 if not self.super:
                     self.col_name_data_type = col_fam.comparator_type
                 else:
-                    self.supercol_name_data_type = col_fam.comparator_type
                     self.col_name_data_type = col_fam.subcomparator_type
-                    self.supercol_name_data_type = self._extract_type_name(self.supercol_name_data_type)
+                    self.supercol_name_data_type = self._extract_type_name(col_fam.comparator_type)
 
                 index = self.col_name_data_type = self._extract_type_name(self.col_name_data_type)
             if self.autopack_values:
+                self.cf_data_type = self._extract_type_name(col_fam.default_validation_class)
                 for name, cdef in col_fam.column_metadata.items():
                     self.col_type_dict[name] = self._extract_type_name(cdef.validation_class)
 
@@ -216,23 +217,21 @@ class ColumnFamily(object):
 
         return self._unpack(b, d_type)
 
+    def _get_data_type_for_col(self, col_name):
+        if col_name not in self.col_type_dict.keys(): 
+            return self.cf_data_type
+        return self.col_type_dict[col_name]
+
     def _pack_value(self, value, col_name):
-        if not self.autopack_values or \
-                col_name not in self.col_type_dict.keys():
+        if not self.autopack_values:
             return value
-        data_type = self.col_type_dict[col_name]
-        if data_type is not None:
-            value = self._pack(value, data_type)
-        return value
+        return self._pack(value, self._get_data_type_for_col(col_name))
 
     def _unpack_value(self, value, col_name):
-        if not self.autopack_values or \
-                col_name not in self.col_type_dict.keys():
+        if not self.autopack_values:
             return value
-        data_type = self.col_type_dict[col_name]
-        if data_type is not None:
-            value = self._unpack(value, data_type)
-        return value
+        return self._unpack(value, self._get_data_type_for_col(col_name))
+
 
     def _convert_time_to_uuid(self, datetime, lowest_val):
         """
@@ -280,7 +279,6 @@ class ColumnFamily(object):
         """
         Packs a value into the expected sequence of bytes that Cassandra expects.
         """
-
         if data_type == 'LongType':
             return struct.pack('>q', long(value))  # q is 'long long'
         elif data_type == 'IntegerType':

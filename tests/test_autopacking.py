@@ -3,6 +3,7 @@ import uuid
 from pycassa import connect, connect_thread_local, ColumnFamily, NotFoundException
 
 from nose.tools import assert_raises
+from nose.tools import assert_equal
 
 TIME1 = uuid.UUID(hex='ddc6118e-a003-11df-8abf-00234d21610a')
 TIME2 = uuid.UUID(hex='40ad6d4c-a004-11df-8abf-00234d21610a')
@@ -51,18 +52,25 @@ class TestAutoPacking:
         self.cf_valid_utf8 = ColumnFamily(self.client, 'ValidatorUTF8')
         self.cf_valid_bytes = ColumnFamily(self.client, 'ValidatorBytes')
 
+        self.cf_def_valid = ColumnFamily(self.client, 'DefaultValidator')
+
         self.cfs = [self.cf_long, self.cf_int, self.cf_time, self.cf_lex,
                     self.cf_ascii, self.cf_utf8, self.cf_bytes,
+                    #
                     self.cf_suplong, self.cf_supint, self.cf_suptime,
                     self.cf_suplex, self.cf_supascii, self.cf_suputf8,
                     self.cf_supbytes,
+                    #
                     self.cf_suplong_subint, self.cf_suplong_subint,
                     self.cf_suplong_subtime, self.cf_suplong_sublex,
                     self.cf_suplong_subascii, self.cf_suplong_subutf8,
                     self.cf_suplong_subbytes,
+                    #
                     self.cf_valid_long, self.cf_valid_int, self.cf_valid_time,
                     self.cf_valid_lex, self.cf_valid_ascii, self.cf_valid_utf8,
-                    self.cf_valid_bytes]
+                    self.cf_valid_bytes,
+                    #
+                    self.cf_def_valid,]
 
         try:
             self.timestamp_n = int(self.cf.get('meta')['timestamp'])
@@ -500,6 +508,25 @@ class TestAutoPacking:
         self.cf_valid_bytes.insert(key, col)
         assert self.cf_valid_bytes.get(key) == col
 
+    def test_default_validated_columns(self):
+        self.clear()
+
+        key = 'key1'
+
+        col_cf  = {'aaaaaa':1L}
+        col_cm  = {'subcol':TIME1}
+        col_ncf = {'aaaaaa':TIME1}
+        col_ncm = {'subcol':1L}
+
+        # Both of these inserts work, as cf allows
+        #  longs and cm for 'subcol' allows TIMEUUIDs.
+        self.cf_def_valid.insert(key, col_cf)
+        self.cf_def_valid.insert(key, col_cm)
+        assert self.cf_def_valid.get(key) == col_cf.update(col_cm)
+          
+        assert_raises(TypeError, self.cf_def_valid.insert, key,col_ncf)
+        assert_raises(TypeError, self.cf_def_valid.insert, key,col_ncm)
+
     def test_time_to_uuid(self):
         self.clear()
 
@@ -525,20 +552,12 @@ class TestAutoPacking:
 
         timeline.append(datetime.now())
 
-        assert self.cf_time.get(key, column_start=timeline[0]) == \
-                {time1:'0', time2:'1'}
+        import pdb; pdb.set_trace()
+        cols = col1.update(col2)
 
-        assert self.cf_time.get(key, column_finish=timeline[2]) == \
-                {time1:'0', time2:'1'}
-
-        assert self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) == \
-                {time1:'0', time2:'1'}
-
-        assert self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) == \
-                {time1:'0', time2:'1'}
-
-        assert self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[1]) == \
-                {time1:'0'}
-
-        assert self.cf_time.get(key, column_start=timeline[1], column_finish=timeline[2]) == \
-                {time2:'1'}
+        assert_equal(self.cf_time.get(key, column_start=timeline[0])                            , cols)
+        assert_equal(self.cf_time.get(key,                           column_finish=timeline[2]) , cols)
+        assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
+        assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
+        assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[1]) , col1)
+        assert_equal(self.cf_time.get(key, column_start=timeline[1], column_finish=timeline[2]) , col2)
