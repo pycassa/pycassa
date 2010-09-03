@@ -1,5 +1,5 @@
 from pycassa.types import Column
-from cassandra.ttypes import IndexExpression
+from pycassa.cassandra.ttypes import IndexExpression
 
 __all__ = ['ColumnFamilyMap']
 
