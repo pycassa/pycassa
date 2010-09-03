@@ -15,6 +15,31 @@ _pools = [NullPool, StaticPool, AssertionPool, SingletonThreadPool, QueuePool]
 def _get_list():
     return ['foo:bar']
 
+def _timeout(*args, **kwargs):
+    raise TimedOutException()
+
+def _five_tlocal_fails(pool, key, column):
+    conn = pool.get()
+    cf = ColumnFamily(conn, 'Standard1')
+    for i in range(0,5):
+        setattr(cf.client._local.conn.client, 'batch_mutate', _timeout)
+
+        # The first insert attempt should fail, but failover should occur
+        # and the insert should succeed
+        cf.insert(key, column)
+        cf.get(key)
+
+def _five_fails(pool, key, column):
+    conn = pool.get()
+    cf = ColumnFamily(conn, 'Standard1')
+    for i in range(0,5):
+        setattr(cf.client._connection.client, 'batch_mutate', _timeout)
+
+        # The first insert attempt should fail, but failover should occur
+        # and the insert should succeed
+        cf.insert(key, column)
+        cf.get(key)
+
 class PoolingCase(unittest.TestCase):
 
     def test_basic_pools(self):
@@ -459,10 +484,6 @@ class PoolingCase(unittest.TestCase):
         conn = pool.get()
         cf = ColumnFamily(conn, 'Standard1')
 
-        def _timeout(*args, **kwargs):
-            print 'exception raised'
-            raise TimedOutException()
-
         for i in range(1,5):
             setattr(cf.client._connection.client, 'batch_mutate', _timeout)
 
@@ -471,6 +492,24 @@ class PoolingCase(unittest.TestCase):
             cf.insert('key', {'col': 'val'})
             assert_equal(listener.failure_count, i)
             cf.get('key')
+
+        pool.dispose()
+        listener.reset()
+
+        pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
+                         prefill=True,
+                         keyspace='Keyspace1', credentials=_credentials,
+                         listeners=[listener], use_threadlocal=False,
+                         server_list=['localhost:9160', 'localhost:9160'])
+        threads = []
+        args = (pool, 'key', {'col':'val'})
+        for i in range(0, 5):
+            threads.append(threading.Thread(target=_five_fails, args=args))
+            threads[-1].start()
+        for thread in threads:
+            thread.join()
+
+        assert_equal(listener.failure_count, 25)
 
         pool.dispose()
         listener.reset()
@@ -494,6 +533,25 @@ class PoolingCase(unittest.TestCase):
             assert_equal(listener.failure_count, i)
             cf.get('key')
 
+        pool.dispose()
+        listener.reset()
+
+        pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
+                         prefill=True,
+                         keyspace='Keyspace1', credentials=_credentials,
+                         listeners=[listener], use_threadlocal=True,
+                         server_list=['localhost:9160', 'localhost:9160'])
+        threads = []
+        args = (pool, 'key', {'col':'val'})
+        for i in range(0, 5):
+            threads.append(threading.Thread(target=_five_tlocal_fails, args=args))
+            threads[-1].start()
+        for thread in threads:
+            thread.join()
+
+        assert_equal(listener.failure_count, 25)
+        pool.dispose()
+
     def test_null_pool_failover(self):
         listener = _TestListener()
         pool = NullPool(keyspace='Keyspace1', credentials=_credentials,
@@ -502,10 +560,6 @@ class PoolingCase(unittest.TestCase):
 
         conn = pool.get()
         cf = ColumnFamily(conn, 'Standard1')
-
-        def _timeout(*args, **kwargs):
-            print 'exception raised'
-            raise TimedOutException()
 
         for i in range(1,5):
             setattr(cf.client._connection.client, 'batch_mutate', _timeout)
@@ -516,6 +570,22 @@ class PoolingCase(unittest.TestCase):
             assert_equal(listener.failure_count, i)
             cf.get('key')
 
+        pool.dispose()
+        listener.reset()
+
+        pool = NullPool(keyspace='Keyspace1', credentials=_credentials,
+                        listeners=[listener], use_threadlocal=False,
+                        server_list=['localhost:9160', 'localhost:9160'])
+
+        threads = []
+        args = (pool, 'key', {'col':'val'})
+        for i in range(0, 5):
+            threads.append(threading.Thread(target=_five_fails, args=args))
+            threads[-1].start()
+        for thread in threads:
+            thread.join()
+
+        assert_equal(listener.failure_count, 25)
         pool.dispose()
 
     def test_singleton_thread_failover(self):
@@ -528,10 +598,6 @@ class PoolingCase(unittest.TestCase):
         conn = pool.get()
         cf = ColumnFamily(conn, 'Standard1')
 
-        def _timeout(*args, **kwargs):
-            print 'exception raised'
-            raise TimedOutException()
-
         for i in range(1,5):
             setattr(cf.client._local.conn.client, 'batch_mutate', _timeout)
 
@@ -542,6 +608,22 @@ class PoolingCase(unittest.TestCase):
             cf.get('key')
 
         pool.dispose()
+        listener.reset()
+
+        pool = SingletonThreadPool(pool_size=5,
+                                   keyspace='Keyspace1', credentials=_credentials,
+                                   listeners=[listener],
+                                   server_list=['localhost:9160', 'localhost:9160'])
+
+        threads = []
+        args = (pool, 'key', {'col':'val'})
+        for j in range(0,5):
+            threads.append(threading.Thread(target=_five_tlocal_fails, args=args))
+            threads[-1].start()
+        for thread in threads:
+            thread.join()
+
+        assert_equal(listener.failure_count, 25)
 
     def test_assertion_failover(self):
         listener = _TestListener()
@@ -551,10 +633,6 @@ class PoolingCase(unittest.TestCase):
 
         conn = pool.get()
         cf = ColumnFamily(conn, 'Standard1')
-
-        def _timeout(*args, **kwargs):
-            print 'exception raised'
-            raise TimedOutException()
 
         for i in range(1,5):
             setattr(cf.client._local.conn.client, 'batch_mutate', _timeout)
@@ -575,10 +653,6 @@ class PoolingCase(unittest.TestCase):
 
         conn = pool.get()
         cf = ColumnFamily(conn, 'Standard1')
-
-        def _timeout(*args, **kwargs):
-            print 'exception raised'
-            raise TimedOutException()
 
         for i in range(1,5):
             setattr(cf.client._connection.client, 'batch_mutate', _timeout)

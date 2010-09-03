@@ -141,10 +141,11 @@ class Pool(object):
         failure_count = 0
         while failure_count < 2 * len(self.server_list):
             try:
-                wrapper = self._get_new_wrapper(self._get_next_server())
+                server = self._get_next_server()
+                wrapper = self._get_new_wrapper(server)
                 return wrapper
             except (Exception), exc: #TODO should be able to catch NoServerAvailable
-                self._notify_on_failure(exc)
+                self._notify_on_failure(exc, server)
                 failure_count += 1
         raise AllServersUnavailable('An attempt was made to connect to each of the servers '
                 'twice, but none of the attempts succeeded.')
@@ -298,11 +299,13 @@ class Pool(object):
             for l in self._on_checkout:
                 l.connection_checked_out(dic)
 
-    def _notify_on_failure(self, error):
+    def _notify_on_failure(self, error, server, connection=None):
         if self._on_failure:
             dic = self._get_dic()
             dic['level'] = 'info'
             dic['error'] = error
+            dic['server'] = server
+            dic['connection'] = connection
             for l in self._on_failure:
                 l.connection_failed(dic)
 
@@ -396,7 +399,8 @@ class ImmutableConnectionWrapper(ConnectionWrapper):
                 conn = self._ensure_connection()
                 return getattr(conn.client, attr)(*args, **kwargs)
             except (TimedoutException, UnavailableException, Thrift.TException), exc:
-                self._pool._notify_on_failure(exc)
+                self._pool._notify_on_failure(exc, server=self._servers._servers[0],
+                                              connection=self)
                 raise
         setattr(self, attr, _client_call)
         return getattr(self, attr)
@@ -426,7 +430,8 @@ class ReplaceableConnectionWrapper(ConnectionWrapper):
                 conn = self._ensure_connection()
                 return getattr(conn.client, attr)(*args, **kwargs)
             except TimedOutException, exc:
-                self._pool._notify_on_failure(exc)
+                self._pool._notify_on_failure(exc, server=self._servers._servers[0],
+                                              connection=self)
                 self._retry_count += 1
                 if self._retry_count > self._retry_times:
                     raise MaximumRetryException('Retried %d times' % self._retry_count)
@@ -456,7 +461,8 @@ class MutableConnectionWrapper(ConnectionWrapper):
                 super(MutableConnectionWrapper, self)._replace(new_conn)
                 return
             except (TimedOutException, UnavailableException, Thrift.TException), exc:
-                self._pool._notify_on_failure(exc)
+                self._pool._notify_on_failure(exc, server=new_serv, 
+                                              connection=new_conn)
                 failure_count += 1
         raise AllServersUnavailable('An attempt was made to connect to each of the servers '
                 'twice, but none of the attempts succeeded.')
@@ -468,7 +474,8 @@ class MutableConnectionWrapper(ConnectionWrapper):
                 conn = self._ensure_connection()
                 return getattr(conn.client, attr)(*args, **kwargs)
             except TimedOutException, exc:
-                self._pool._notify_on_failure(exc)
+                self._pool._notify_on_failure(exc, server=self._servers._servers[0],
+                                              connection=self)
                 self._retry_count += 1
                 if self._retry_count > self._retry_times:
                     raise MaximumRetryException('Retried %d times' % self._retry_count)

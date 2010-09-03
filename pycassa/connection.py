@@ -220,7 +220,7 @@ class Connection(object):
         """Make certain we have a valid connection and return it."""
         conn = self.connect()
         if conn.recycle and conn.recycle < time.time():
-            log.info('Client session expired after %is. Recycling.', self._recycle) #TODO not info
+            log.debug('Client session expired after %is. Recycling.', self._recycle)
             self.close()
             conn = self.connect()
         return conn
@@ -235,9 +235,6 @@ class Connection(object):
         self._use_threadlocal = new_conn._use_threadlocal
         if self._use_threadlocal:
             self._local = new_conn.local
-            #self._local = threading.local()
-            #self._local.conn = new_conn._local.conn
-            # TODO
         else:
             self._connection = new_conn._connection
 
