@@ -15,7 +15,7 @@ application.
 
 import weakref, time, threading, random
 
-from connection import Connection, NoServerAvailable
+import connection
 import queue as pool_queue
 import threading
 from util import as_interface
@@ -144,7 +144,7 @@ class Pool(object):
                 server = self._get_next_server()
                 wrapper = self._get_new_wrapper(server)
                 return wrapper
-            except (Exception), exc: #TODO should be able to catch NoServerAvailable
+            except connection.NoServerAvailable, exc:
                 self._notify_on_failure(exc, server)
                 failure_count += 1
         raise AllServersUnavailable('An attempt was made to connect to each of the servers '
@@ -314,7 +314,7 @@ class Pool(object):
                 'pool_id': self.logging_name}
 
 
-class ConnectionWrapper(Connection):
+class ConnectionWrapper(connection.Connection):
     """
     Wraps a pycassa.connection.Connection object, adding pooling
     related functionality while still allowing access to the
@@ -454,7 +454,7 @@ class MutableConnectionWrapper(ConnectionWrapper):
             try:
                 new_serv = self._pool._get_next_server()
                 self.close()
-                new_conn = Connection(self._pool.keyspace, [new_serv],
+                new_conn = connection.Connection(self._pool.keyspace, [new_serv],
                                       credentials=self._pool.credentials,
                                       use_threadlocal=self._pool._pool_threadlocal)
                 new_conn.connect()
@@ -650,7 +650,7 @@ class QueuePool(Pool):
                     self._overflow_lock.release()
         try:
             conn._ensure_connection()
-        except NoServerAvailable:
+        except connection.NoServerAvailable:
             self._q.put(self._create_connection(), False)
             return self._do_get()
 
@@ -848,7 +848,7 @@ class StaticPool(Pool):
         self._notify_on_checkout(self._conn)
         try:
             self._conn._ensure_connection()
-        except NoServerAvailable:
+        except connection.NoServerAvailable:
             self._conn = self._create_connection()
         return self._conn
 
@@ -908,7 +908,7 @@ class AssertionPool(Pool):
         else:
             try:
                 self._conn._ensure_connection()
-            except NoServerAvailable:
+            except connection.NoServerAvailable:
                 self._conn = self._create_connection()
 
         self._checked_out = True
