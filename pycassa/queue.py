@@ -9,7 +9,7 @@ condition."""
 
 from collections import deque
 from time import time as _time
-from util import threading
+import threading
 
 __all__ = ['Empty', 'Full', 'Queue']
 

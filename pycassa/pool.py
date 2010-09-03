@@ -15,16 +15,20 @@ application.
 
 import weakref, time, threading, random
 
-from connection import Connection
+from connection import Connection, NoServerAvailable
 import queue as pool_queue
-from util import threading, as_interface
+import threading
+from util import as_interface
 from logger import PycassaLogger
+from cassandra.ttypes import TimedOutException, UnavailableException
+
+from thrift import Thrift
 
 class Pool(object):
     """Abstract base class for connection pools."""
 
     def __init__(self, keyspace, server_list=['localhost:9160'],
-                 credentials=None, logging_name=None,
+                 credentials=None, retry_times=-1, logging_name=None,
                  use_threadlocal=True, listeners=None):
         """
         Construct a Pool.
@@ -66,6 +70,7 @@ class Pool(object):
         self._pool_threadlocal = use_threadlocal
         self.keyspace = keyspace
         self.credentials = credentials
+        self.retry_times = retry_times
         self._tlocal = threading.local()
 
         # Listener groups
@@ -75,6 +80,7 @@ class Pool(object):
         self._on_checkin = []
         self._on_dispose = []
         self._on_recycle = []
+        self._on_failure = []
         self._on_server_list = []
         self._on_pool_recreate = []
         self._on_pool_dispose = []
@@ -87,6 +93,8 @@ class Pool(object):
                 self.add_listener(l)
 
         self.set_server_list(server_list)
+        if self.retry_times == -1:
+            self.retry_times = 2 * len(self.server_list)
 
     def set_server_list(self, server_list):
         """
@@ -104,6 +112,8 @@ class Pool(object):
         else:
             self.server_list = list(server_list)
 
+        assert len(self.server_list) > 0
+
         # Randomly permute the array (trust me, it's uniformly random)
         n = len(self.server_list)
         for i in range(0, n):
@@ -120,15 +130,27 @@ class Pool(object):
             for l in self._on_server_list:
                 l.obtained_server_list(dic)
 
+    def _get_next_server(self):
+        server = self.server_list[self._list_position % len(self.server_list)]
+        self._list_position += 1
+        return server
 
     def _create_connection(self):
         """Creates a ConnectionWrapper, which opens a
         pycassa.connection.Connection."""
-        server = self.server_list[self._list_position % len(self.server_list)]
-        self._list_position += 1
-        return ConnectionWrapper(self, self.keyspace, [server],
-                                  credentials=self.credentials,
-                                  use_threadlocal=self._pool_threadlocal)
+        failure_count = 0
+        while failure_count < 2 * len(self.server_list):
+            try:
+                wrapper = self._get_new_wrapper(self._get_next_server())
+                return wrapper
+            except (Exception), exc: #TODO should be able to catch NoServerAvailable
+                self._notify_on_failure(exc)
+                failure_count += 1
+        raise AllServersUnavailable('An attempt was made to connect to each of the servers '
+                'twice, but none of the attempts succeeded.')
+
+    def _get_new_wrapper(self, server):
+        raise NotImplementedError()
 
     def recreate(self):
         """Return a new instance with identical creation arguments."""
@@ -175,8 +197,9 @@ class Pool(object):
         listener = as_interface(listener,
             methods=('connection_created', 'connection_checked_out',
                      'connection_checked_in', 'connection_disposed',
-                     'connection_recycled', 'obtained_server_list',
-                     'pool_recreated', 'pool_disposed', 'pool_at_max'))
+                     'connection_recycled', 'connection_failed',
+                     'obtained_server_list', 'pool_recreated',
+                     'pool_disposed', 'pool_at_max'))
 
         self.listeners.append(listener)
         if hasattr(listener, 'connection_created'):
@@ -189,6 +212,8 @@ class Pool(object):
             self._on_dispose.append(listener)
         if hasattr(listener, 'connection_recycled'):
             self._on_recycle.append(listener)
+        if hasattr(listener, 'connection_failed'):
+            self._on_failure.append(listener)
         if hasattr(listener, 'obtained_server_list'):
             self._on_server_list.append(listener)
         if hasattr(listener, 'pool_recreated'):
@@ -273,6 +298,14 @@ class Pool(object):
             for l in self._on_checkout:
                 l.connection_checked_out(dic)
 
+    def _notify_on_failure(self, error):
+        if self._on_failure:
+            dic = self._get_dic()
+            dic['level'] = 'info'
+            dic['error'] = error
+            for l in self._on_failure:
+                l.connection_failed(dic)
+
     def _get_dic(self):
         return {'pool_type': self.__class__.__name__,
                 'pool_id': self.logging_name}
@@ -283,6 +316,9 @@ class ConnectionWrapper(Connection):
     Wraps a pycassa.connection.Connection object, adding pooling
     related functionality while still allowing access to the
     thrift API calls.
+
+    These should not be created directly, only obtained through
+    Pool's get() method.
 
     """
 
@@ -295,6 +331,7 @@ class ConnectionWrapper(Connection):
         self._lock = threading.Lock()
         self.info = {}
         self.starttime = time.time()
+        self.operation_count = 0
         self._state = ConnectionWrapper._CHECKED_OUT
         super(ConnectionWrapper, self).__init__(*args, **kwargs)
         self.connect()
@@ -344,11 +381,107 @@ class ConnectionWrapper(Connection):
         self.close()
         self._pool._notify_on_dispose(self, msg=reason)
 
+    def __getattr__(self, attr):
+        raise NotImplementedError()
+
+class ImmutableConnectionWrapper(ConnectionWrapper):
+
+    def __init__(self, pool, *args, **kwargs):
+        super(ImmutableConnectionWrapper, self).__init__(pool, *args, **kwargs)
+
+    def __getattr__(self, attr):
+        def _client_call(*args, **kwargs):
+            self.operation_count += 1
+            try:
+                conn = self._ensure_connection()
+                return getattr(conn.client, attr)(*args, **kwargs)
+            except (TimedoutException, UnavailableException, Thrift.TException), exc:
+                self._pool._notify_on_failure(exc)
+                raise
+        setattr(self, attr, _client_call)
+        return getattr(self, attr)
+
+class ReplaceableConnectionWrapper(ConnectionWrapper):
+
+    def __init__(self, pool, retry_times, *args, **kwargs):
+        super(ReplaceableConnectionWrapper, self).__init__(pool, *args, **kwargs)
+        self._retry_count = 0
+        self._retry_times = 5 # TODO reset on return conn
+
+    def _replace(self, new_conn_wrapper):
+        super(ConnectionWrapper, self)._replace(new_conn_wrapper)
+        self._pool = new_conn_wrapper._pool
+        self._lock = new_conn_wrapper._lock
+        self._info = new_conn_wrapper.info
+        self._starttime = new_conn_wrapper.starttime
+        self.operation_count = new_conn_wrapper.operation_count
+        self._state = ConnectionWrapper._CHECKED_OUT
+        if hasattr(self._pool, '_wrapper_replaced'):
+            self._pool._wrapper_replaced()
+
+    def __getattr__(self, attr):
+        def _client_call(*args, **kwargs):
+            self.operation_count += 1
+            try:
+                conn = self._ensure_connection()
+                return getattr(conn.client, attr)(*args, **kwargs)
+            except TimedOutException, exc:
+                self._pool._notify_on_failure(exc)
+                self._retry_count += 1
+                if self._retry_count > self._retry_times:
+                    raise MaximumRetryException('Retried %d times' % self._retry_count)
+                self.close()
+                self._replace(self._pool.get())
+                return self.__getattr__(attr)(*args, **kwargs)
+        setattr(self, attr, _client_call)
+        return getattr(self, attr)
+
+class MutableConnectionWrapper(ConnectionWrapper):
+
+    def __init__(self, pool, retry_times, *args, **kwargs):
+        super(MutableConnectionWrapper, self).__init__(pool, *args, **kwargs)
+        self._retry_count = 0
+        self._retry_times = 5 # TODO reset on return conn
+
+    def _replace_conn(self):
+        failure_count = 0
+        while failure_count < 2 * len(self._pool.server_list):
+            try:
+                new_serv = self._pool._get_next_server()
+                self.close()
+                new_conn = Connection(self._pool.keyspace, [new_serv],
+                                      credentials=self._pool.credentials,
+                                      use_threadlocal=self._pool._pool_threadlocal)
+                new_conn.connect()
+                super(MutableConnectionWrapper, self)._replace(new_conn)
+                return
+            except (TimedOutException, UnavailableException, Thrift.TException), exc:
+                self._pool._notify_on_failure(exc)
+                failure_count += 1
+        raise AllServersUnavailable('An attempt was made to connect to each of the servers '
+                'twice, but none of the attempts succeeded.')
+
+    def __getattr__(self, attr):
+        def _client_call(*args, **kwargs):
+            self.operation_count += 1
+            try:
+                conn = self._ensure_connection()
+                return getattr(conn.client, attr)(*args, **kwargs)
+            except TimedOutException, exc:
+                self._pool._notify_on_failure(exc)
+                self._retry_count += 1
+                if self._retry_count > self._retry_times:
+                    raise MaximumRetryException('Retried %d times' % self._retry_count)
+                self._replace_conn()
+                return self.__getattr__(attr)(*args, **kwargs)
+        setattr(self, attr, _client_call)
+        return getattr(self, attr)
+
 class QueuePool(Pool):
     """A Pool that maintains a queue of open connections."""
 
-    def __init__(self, pool_size=5, max_overflow=10, timeout=30,
-                 recycle=10000, prefill=True, **kw):
+    def __init__(self, pool_size=5, max_overflow=10,
+                 timeout=30, recycle=10000, prefill=True, **kw):
         """
         Construct a QueuePool.
 
@@ -406,11 +539,25 @@ class QueuePool(Pool):
                           keyspace=self.keyspace,
                           server_list=self.server_list,
                           credentials=self.credentials,
+                          retry_times=self.retry_times,
                           recycle=self._recycle,
                           prefill=self._prefill,
                           logging_name=self._orig_logging_name,
                           use_threadlocal=self._pool_threadlocal,
                           listeners=self.listeners)
+
+    def _get_new_wrapper(self, server):
+        return ReplaceableConnectionWrapper(self, self.retry_times,
+                                            self.keyspace, [server],
+                                            credentials=self.credentials,
+                                            use_threadlocal=self._pool_threadlocal)
+
+    def _wrapper_replaced(self):
+        """Not the most efficient, but try to replace the connection."""
+        try:
+            self._q.put(self._create_connection(), False)
+        except pool_queue.Full:
+            pass
 
     def _do_return_conn(self, conn):
         try:
@@ -466,11 +613,6 @@ class QueuePool(Pool):
             wait = self._max_overflow > -1 and \
                         self._overflow >= self._max_overflow
             conn = self._q.get(wait, self._timeout)
-            conn._ensure_connection()
-            if self._pool_threadlocal:
-                self._tlocal.current = weakref.ref(conn)
-            self._notify_on_checkout(conn)
-            return conn
         except pool_queue.Empty:
             if self._max_overflow > -1 and \
                         self._overflow >= self._max_overflow:
@@ -499,20 +641,23 @@ class QueuePool(Pool):
             finally:
                 if self._overflow_lock is not None:
                     self._overflow_lock.release()
-
-            # Notify listeners
+        try:
             conn._ensure_connection()
-            if self._pool_threadlocal:
-                self._tlocal.current = weakref.ref(conn)
-            self._notify_on_checkout(conn)
+        except NoServerAvailable:
+            self._q.put(self._create_connection(), False)
+            return self._do_get()
 
-            return conn
+        if self._pool_threadlocal:
+            self._tlocal.current = weakref.ref(conn)
+        self._notify_on_checkout(conn)
+        return conn
 
     def dispose(self):
         while True:
             try:
                 conn = self._q.get(False)
-                conn._dispose_wrapper()
+                conn._dispose_wrapper(
+                        reason="Pool %s is being disposed" % id(self))
             except pool_queue.Empty:
                 break
 
@@ -565,6 +710,7 @@ class SingletonThreadPool(Pool):
             keyspace=self.keyspace,
             server_list=self.server_list,
             credentials=self.credentials,
+            retry_times=self.retry_times,
             logging_name=self._orig_logging_name,
             use_threadlocal=self._pool_threadlocal,
             listeners=self.listeners)
@@ -584,6 +730,12 @@ class SingletonThreadPool(Pool):
     def status(self):
         return "SingletonThreadPool id:%d size: %d" % \
                             (id(self), len(self._all_conns))
+
+    def _get_new_wrapper(self, server):
+        return MutableConnectionWrapper(self, self.retry_times,
+                                        self.keyspace, [server],
+                                        credentials=self.credentials,
+                                        use_threadlocal=self._pool_threadlocal)
 
     def _do_return_conn(self, conn):
         if hasattr(self._tlocal, 'current'):
@@ -605,7 +757,6 @@ class SingletonThreadPool(Pool):
             raise NoConnectionAvailable()
         else:
             c = self._create_connection()
-            c._ensure_connection()
             self._tlocal.current = weakref.ref(c)
             self._all_conns.add(c)
         return c
@@ -621,13 +772,18 @@ class NullPool(Pool):
     def status(self):
         return "NullPool"
 
+    def _get_new_wrapper(self, server):
+        return ReplaceableConnectionWrapper(self, self.retry_times,
+                                            self.keyspace, [server],
+                                            credentials=self.credentials,
+                                            use_threadlocal=self._pool_threadlocal)
+
     def _do_return_conn(self, conn):
         conn._dispose_wrapper()
         self._notify_on_checkin(conn)
 
     def _do_get(self):
         conn = self._create_connection()
-        conn._ensure_connection()
         self._notify_on_checkout(conn)
         return conn
 
@@ -636,6 +792,7 @@ class NullPool(Pool):
         return NullPool(keyspace=self.keyspace,
             server_list=self.server_list,
             credentials=self.credentials,
+            retry_times=self.retry_times,
             logging_name=self._orig_logging_name,
             use_threadlocal=self._pool_threadlocal,
             listeners=self.listeners)
@@ -665,9 +822,16 @@ class StaticPool(Pool):
         return self.__class__(keyspace=self.keyspace,
                               server_list=self.server_list,
                               credentials=self.credentials,
+                              retry_times=self.retry_times,
                               use_threadlocal=self._pool_threadlocal,
                               logging_name=self._orig_logging_name,
                               listeners=self.listeners)
+
+    def _get_new_wrapper(self, server):
+        return ImmutableConnectionWrapper(self, self.keyspace, [server],
+                                  credentials=self.credentials,
+                                  use_threadlocal=self._pool_threadlocal)
+
 
     def _do_return_conn(self, conn):
         self._notify_on_checkin(conn)
@@ -675,7 +839,10 @@ class StaticPool(Pool):
 
     def _do_get(self):
         self._notify_on_checkout(self._conn)
-        self._conn._ensure_connection()
+        try:
+            self._conn._ensure_connection()
+        except NoServerAvailable:
+            self._conn = self._create_connection()
         return self._conn
 
 class AssertionPool(Pool):
@@ -696,6 +863,12 @@ class AssertionPool(Pool):
     def status(self):
         return "AssertionPool"
 
+    def _get_new_wrapper(self, server):
+        return MutableConnectionWrapper(self, self.retry_times,
+                                        self.keyspace, [server],
+                                        credentials=self.credentials,
+                                        use_threadlocal=self._pool_threadlocal)
+
     def _do_return_conn(self, conn):
         if not self._checked_out:
             raise AssertionError("connection is not checked out")
@@ -714,6 +887,7 @@ class AssertionPool(Pool):
         return AssertionPool(keyspace=self.keyspace,
                              server_list=self.server_list,
                              credentials=self.credentials,
+                             retry_times=self.retry_times,
                              logging_name=self._orig_logging_name,
                              listeners=self.listeners)
 
@@ -724,9 +898,13 @@ class AssertionPool(Pool):
 
         if not self._conn:
             self._conn = self._create_connection()
+        else:
+            try:
+                self._conn._ensure_connection()
+            except NoServerAvailable:
+                self._conn = self._create_connection()
 
         self._checked_out = True
-        self._conn._ensure_connection()
         self._notify_on_checkout(self._conn)
         return self._conn
 
@@ -852,6 +1030,7 @@ class PoolListener(object):
           'warn', 'error', or 'critical'.
 
         """
+
     def connection_recycled(self, dic):
         """Called when a connection is recycled.
 
@@ -873,6 +1052,23 @@ class PoolListener(object):
 
         """
 
+    def connection_failed(self, dic):
+        """Called when a connection to a single server fails.
+
+        dic['error']
+          The connection error (Exception).
+
+        dic['pool_type']
+          The type of pool the connection was created in; e.g. QueuePool
+
+        dic['pool_id']
+          The logging name of the connection's pool (defaults to id(pool))
+
+        dic['level']
+          The prescribed logging level for this event.  Can be 'debug', 'info',
+          'warn', 'error', or 'critical'.
+
+        """
     def server_list_obtained(self, dic):
         """Called when the pool finalizes its server list.
 
@@ -946,10 +1142,15 @@ class DisconnectionError(Exception):
     be raised by a ``PoolListener`` so that the host pool forces a disconnect.
 
     """
+class AllServersUnavailable(Exception):
+    """Raised when none of the servers given to a pool can be connected to."""
 
 class NoConnectionAvailable(Exception):
     """Raised when there are no connections left in a pool."""
 
+class MaximumRetryException(Exception):
+    """Raised when a single connection has retried an operation the maximum
+    allowed times."""
 
 class InvalidRequestError(Exception):
     """Pycassa was asked to do something it can't do.

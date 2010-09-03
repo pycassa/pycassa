@@ -449,3 +449,46 @@ keyspaces:
           column_metadata:
             - name: subcol
               validator_class: BytesType
+
+# Duplicate CFS for simplified pool testing
+
+        - name: StandardQueuePool
+          column_type: Standard
+          compare_with: UTF8Type
+
+        - name: StandardSingletonThreadPool
+          column_type: Standard
+          compare_with: UTF8Type
+
+        - name: StandardStaticPool
+          column_type: Standard
+          compare_with: UTF8Type
+
+        - name: StandardNullPool
+          column_type: Standard
+          compare_with: UTF8Type
+
+        - name: StandardAssertionPool
+          column_type: Standard
+          compare_with: UTF8Type
+
+        - name: SuperQueuePool
+          column_type: Super
+          compare_subcolumns_with: UTF8Type
+ 
+        - name: SuperSingletonThreadPool
+          column_type: Super
+          compare_subcolumns_with: UTF8Type
+ 
+        - name: SuperStaticPool
+          column_type: Super
+          compare_subcolumns_with: UTF8Type
+ 
+        - name: SuperNullPool
+          column_type: Super
+          compare_subcolumns_with: UTF8Type
+ 
+        - name: SuperAssertionPool
+          column_type: Super
+          compare_subcolumns_with: UTF8Type
+ 

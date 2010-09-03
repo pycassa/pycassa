@@ -165,7 +165,6 @@ class Connection(object):
         self._recycle = recycle
         self._credentials = credentials
         self._use_threadlocal = use_threadlocal
-        self.operation_count = 0
         if self._use_threadlocal:
             self._local = threading.local()
         else:
@@ -207,7 +206,6 @@ class Connection(object):
 
     def __getattr__(self, attr):
         def _client_call(*args, **kwargs):
-            self.operation_count += 1
             try:
                 conn = self._ensure_connection()
                 return getattr(conn.client, attr)(*args, **kwargs)
@@ -222,10 +220,26 @@ class Connection(object):
         """Make certain we have a valid connection and return it."""
         conn = self.connect()
         if conn.recycle and conn.recycle < time.time():
-            log.debug('Client session expired after %is. Recycling.', self._recycle)
+            log.info('Client session expired after %is. Recycling.', self._recycle) #TODO not info
             self.close()
             conn = self.connect()
         return conn
+
+    def _replace(self, new_conn):
+        self._keyspace = new_conn._keyspace
+        self._servers = new_conn._servers
+        self._framed_transport = new_conn._framed_transport
+        self._timeout = new_conn._timeout
+        self._recycle = new_conn._recycle
+        self._credentials = new_conn._credentials
+        self._use_threadlocal = new_conn._use_threadlocal
+        if self._use_threadlocal:
+            self._local = new_conn.local
+            #self._local = threading.local()
+            #self._local.conn = new_conn._local.conn
+            # TODO
+        else:
+            self._connection = new_conn._connection
 
     def get_keyspace_description(self, keyspace=None):
         """

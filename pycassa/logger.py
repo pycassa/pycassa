@@ -69,11 +69,17 @@ class PycassaLogger:
                 "after %d operations; it is replaced by connection %s",
                 id(old_conn), dic.get('pool_type'), dic.get('pool_id'),
                 old_conn.operation_count, id(dic.get('new_conn')))
- 
-    def server_list_obtained(self, dic):
+
+    def connection_failed(self, dic):
         level = PycassaLogger._levels[dic.get('level', 'info')]
         self.pool_logger.log(level,
-                "Server list obtained for %s (id = %s): %s",
+                "A connection in %s (id = %s) failed: %s",
+                dic.get('pool_type'), dic.get('pool_id'), str(dic.get('error')))
+
+    def obtained_server_list(self, dic):
+        level = PycassaLogger._levels[dic.get('level', 'info')]
+        self.pool_logger.log(level,
+                "Server list obtained for %s (id = %s): [%s]",
                  dic.get('pool_type'), dic.get('pool_id'), ", ".join(dic.get('server_list')))
 
     def pool_recreated(self, dic):

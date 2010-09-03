@@ -7,6 +7,7 @@ from pycassa import connect, connect_thread_local, NullPool, StaticPool,\
                     AssertionPool, SingletonThreadPool, QueuePool,\
                     ColumnFamily, PoolListener, InvalidRequestError,\
                     NoConnectionAvailable
+from cassandra.ttypes import TimedOutException
 
 _credentials = {'username':'jsmith', 'password':'havebadpass'}
 _pools = [NullPool, StaticPool, AssertionPool, SingletonThreadPool, QueuePool]
@@ -37,8 +38,9 @@ class PoolingCase(unittest.TestCase):
 
     def test_queue_pool(self):
         listener = _TestListener()
-        pool = QueuePool(keyspace='Keyspace1', credentials=_credentials,
-                         pool_size=5, max_overflow=5, timeout=1,
+        pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
+                         prefill=True, timeout=1,
+                         keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=False)
         conns = []
         for i in range(10):
@@ -95,8 +97,9 @@ class PoolingCase(unittest.TestCase):
 
     def test_queue_pool_threadlocal(self):
         listener = _TestListener()
-        pool = QueuePool(keyspace='Keyspace1', credentials=_credentials,
-                         pool_size=5, max_overflow=5, timeout=1,
+        pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
+                         prefill=True, timeout=1,
+                         keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=True)
         conns = []
 
@@ -159,8 +162,9 @@ class PoolingCase(unittest.TestCase):
 
     def test_queue_pool_recycle(self):
         listener = _TestListener()
-        pool = QueuePool(keyspace='Keyspace1', credentials=_credentials,
-                         pool_size=5, max_overflow=5, timeout=1, recycle=10,
+        pool = QueuePool(pool_size=5, max_overflow=5, recycle=1,
+                         prefill=True, timeout=1,
+                         keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=False)
 
         conn = pool.get()
@@ -175,8 +179,9 @@ class PoolingCase(unittest.TestCase):
         listener.reset()
 
         # Try with threadlocal=True
-        pool = QueuePool(keyspace='Keyspace1', credentials=_credentials,
-                         pool_size=5, max_overflow=5, timeout=1, recycle=10,
+        pool = QueuePool(pool_size=5, max_overflow=5, recycle=10,
+                         prefill=True, timeout=1,
+                         keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=True)
 
         conn = pool.get()
@@ -331,6 +336,262 @@ class PoolingCase(unittest.TestCase):
         assert_equal(listener.checkout_count, 1)
         assert_equal(listener.checkin_count, 1)
 
+    def test_pool_connection_failure(self):
+        listener = _TestListener()
+ 
+        def get_extra():
+            """Make failure count adjustments based on whether or not
+            the permuted list starts with a good host:port"""
+            if listener.serv_list[0] == 'localhost:9160':
+                return 0
+            else:
+                return 1
+
+        pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
+                         prefill=True,
+                         keyspace='Keyspace1', credentials=_credentials,
+                         listeners=[listener], use_threadlocal=False,
+                         server_list=['localhost:9160', 'foobar:1'])
+
+        assert_equal(listener.failure_count, 4 + get_extra()) 
+
+        for i in range(0,7):
+            pool.get()
+
+        assert_equal(listener.failure_count, 6 + get_extra())
+
+        pool.dispose()
+        listener.reset()
+
+        pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
+                         prefill=True,
+                         keyspace='Keyspace1', credentials=_credentials,
+                         listeners=[listener], use_threadlocal=True,
+                         server_list=['localhost:9160', 'foobar:1'])
+
+        assert_equal(listener.failure_count, 4 + get_extra())
+
+        threads = []
+        for i in range(0, 7):
+            threads.append(threading.Thread(target=pool.get))
+            threads[-1].start()
+        for thread in threads:
+            thread.join()
+
+        assert_equal(listener.failure_count, 6 + get_extra())
+
+        pool.dispose()
+        listener.reset()
+
+        pool = SingletonThreadPool(pool_size=5, keyspace='Keyspace1',
+                         credentials=_credentials, listeners=[listener],
+                         server_list=['localhost:9160', 'foobar:1'])
+
+        threads = []
+        for i in range(0, 5):
+            threads.append(threading.Thread(target=pool.get))
+            threads[-1].start()
+        for thread in threads:
+            thread.join()
+
+        assert_equal(listener.failure_count, 4 + get_extra())
+
+        pool.dispose()
+        listener.reset()
+
+        pool = StaticPool(keyspace='Keyspace1', credentials=_credentials,
+                         listeners=[listener],
+                         server_list=['localhost:9160', 'foobar:1'])
+
+        pool.get()
+        assert_equal(listener.failure_count, 0 + get_extra())
+        
+        pool.dispose()
+        listener.reset()
+
+        pool = NullPool(keyspace='Keyspace1', credentials=_credentials,
+                         listeners=[listener], use_threadlocal=False,
+                         server_list=['localhost:9160', 'foobar:1'])
+ 
+        for i in range(0, 5):
+            pool.get()
+
+        assert_equal(listener.failure_count, 4 + get_extra()) 
+
+        pool.dispose()
+        listener.reset()
+       
+        pool = AssertionPool(keyspace='Keyspace1', credentials=_credentials,
+                             listeners=[listener], use_threadlocal=False,
+                             server_list=['localhost:9160', 'foobar:1'])
+        while True:
+            if listener.serv_list[0] == 'foobar:1':
+                break
+            pool.set_server_list(['localhost:9160', 'foobar:1'])
+
+        conn = pool.get()
+        assert_equal(listener.failure_count, 1) 
+        
+        pool.dispose()
+        listener.reset()
+ 
+        pool = AssertionPool(keyspace='Keyspace1', credentials=_credentials,
+                             listeners=[listener], use_threadlocal=True,
+                             server_list=['localhost:9160', 'foobar:1'])
+        while True:
+            if listener.serv_list[0] == 'foobar:1':
+                break
+            pool.set_server_list(['localhost:9160', 'foobar:1'])
+
+        conn = pool.get()
+        assert_equal(listener.failure_count, 1) 
+
+        pool.dispose()
+
+    def test_queue_failover(self):
+        listener = _TestListener()
+        pool = QueuePool(pool_size=2, max_overflow=0, recycle=10000,
+                         prefill=True,
+                         keyspace='Keyspace1', credentials=_credentials,
+                         listeners=[listener], use_threadlocal=False,
+                         server_list=['localhost:9160', 'localhost:9160'])
+
+        conn = pool.get()
+        cf = ColumnFamily(conn, 'Standard1')
+
+        def _timeout(*args, **kwargs):
+            print 'exception raised'
+            raise TimedOutException()
+
+        for i in range(1,5):
+            setattr(cf.client._connection.client, 'batch_mutate', _timeout)
+
+            # The first insert attempt should fail, but failover should occur
+            # and the insert should succeed
+            cf.insert('key', {'col': 'val'})
+            assert_equal(listener.failure_count, i)
+            cf.get('key')
+
+        pool.dispose()
+        listener.reset()
+
+        # Test the threadlocal version of this
+        pool = QueuePool(pool_size=2, max_overflow=0, recycle=10000,
+                         prefill=True,
+                         keyspace='Keyspace1', credentials=_credentials,
+                         listeners=[listener], use_threadlocal=True,
+                         server_list=['localhost:9160', 'localhost:9160'])
+
+        conn = pool.get()
+        cf = ColumnFamily(conn, 'Standard1')
+
+        for i in range(1,5):
+            setattr(cf.client._local.conn.client, 'batch_mutate', _timeout)
+
+            # The first insert attempt should fail, but failover should occur
+            # and the insert should succeed
+            cf.insert('key', {'col': 'val'})
+            assert_equal(listener.failure_count, i)
+            cf.get('key')
+
+    def test_null_pool_failover(self):
+        listener = _TestListener()
+        pool = NullPool(keyspace='Keyspace1', credentials=_credentials,
+                        listeners=[listener], use_threadlocal=False,
+                        server_list=['localhost:9160', 'localhost:9160'])
+
+        conn = pool.get()
+        cf = ColumnFamily(conn, 'Standard1')
+
+        def _timeout(*args, **kwargs):
+            print 'exception raised'
+            raise TimedOutException()
+
+        for i in range(1,5):
+            setattr(cf.client._connection.client, 'batch_mutate', _timeout)
+
+            # The first insert attempt should fail, but failover should occur
+            # and the insert should succeed
+            cf.insert('key', {'col': 'val'})
+            assert_equal(listener.failure_count, i)
+            cf.get('key')
+
+        pool.dispose()
+
+    def test_singleton_thread_failover(self):
+        listener = _TestListener()
+        pool = SingletonThreadPool(pool_size=5,
+                                   keyspace='Keyspace1', credentials=_credentials,
+                                   listeners=[listener],
+                                   server_list=['localhost:9160', 'localhost:9160'])
+
+        conn = pool.get()
+        cf = ColumnFamily(conn, 'Standard1')
+
+        def _timeout(*args, **kwargs):
+            print 'exception raised'
+            raise TimedOutException()
+
+        for i in range(1,5):
+            setattr(cf.client._local.conn.client, 'batch_mutate', _timeout)
+
+            # The first insert attempt should fail, but failover should occur
+            # and the insert should succeed
+            cf.insert('key', {'col': 'val'})
+            assert_equal(listener.failure_count, i)
+            cf.get('key')
+
+        pool.dispose()
+
+    def test_assertion_failover(self):
+        listener = _TestListener()
+        pool = AssertionPool(keyspace='Keyspace1', credentials=_credentials,
+                             listeners=[listener], use_threadlocal=True,
+                             server_list=['localhost:9160', 'localhost:9160'])
+
+        conn = pool.get()
+        cf = ColumnFamily(conn, 'Standard1')
+
+        def _timeout(*args, **kwargs):
+            print 'exception raised'
+            raise TimedOutException()
+
+        for i in range(1,5):
+            setattr(cf.client._local.conn.client, 'batch_mutate', _timeout)
+
+            # The first insert attempt should fail, but failover should occur
+            # and the insert should succeed
+            cf.insert('key', {'col': 'val'})
+            assert_equal(listener.failure_count, i)
+            cf.get('key')
+
+        pool.dispose()
+        listener.reset()
+
+        # Test non-threadlocal version
+        pool = AssertionPool(keyspace='Keyspace1', credentials=_credentials,
+                             listeners=[listener], use_threadlocal=False,
+                             server_list=['localhost:9160', 'localhost:9160'])
+
+        conn = pool.get()
+        cf = ColumnFamily(conn, 'Standard1')
+
+        def _timeout(*args, **kwargs):
+            print 'exception raised'
+            raise TimedOutException()
+
+        for i in range(1,5):
+            setattr(cf.client._connection.client, 'batch_mutate', _timeout)
+
+            # The first insert attempt should fail, but failover should occur
+            # and the insert should succeed
+            cf.insert('key', {'col': 'val'})
+            assert_equal(listener.failure_count, i)
+            cf.get('key')
+
+        pool.dispose()
+
+
 class _TestListener(PoolListener):
 
     def __init__(self):
@@ -343,6 +604,7 @@ class _TestListener(PoolListener):
         self.checkin_count = 0
         self.close_count = 0
         self.recycle_count = 0
+        self.failure_count = 0
         self.list_count = 0
         self.recreate_count = 0
         self.dispose_count = 0
@@ -362,6 +624,9 @@ class _TestListener(PoolListener):
 
     def connection_recycled(self, dic):
         self.recycle_count += 1
+
+    def connection_failed(self, dic):
+        self.failure_count += 1
 
     def obtained_server_list(self, dic):
         self.list_count += 1
