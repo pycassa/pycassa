@@ -6,7 +6,7 @@ from nose.tools import assert_raises, assert_equal, assert_not_equal
 from pycassa import connect, connect_thread_local, NullPool, StaticPool,\
                     AssertionPool, SingletonThreadPool, QueuePool,\
                     ColumnFamily, PoolListener, InvalidRequestError,\
-                    NoConnectionAvailable
+                    NoConnectionAvailable, MaximumRetryException
 from cassandra.ttypes import TimedOutException
 
 _credentials = {'username':'jsmith', 'password':'havebadpass'}
@@ -503,7 +503,7 @@ class PoolingCase(unittest.TestCase):
                          server_list=['localhost:9160', 'localhost:9160'])
         threads = []
         args = (pool, 'key', {'col':'val'})
-        for i in range(0, 5):
+        for i in range(5):
             threads.append(threading.Thread(target=_five_fails, args=args))
             threads[-1].start()
         for thread in threads:
@@ -512,9 +512,9 @@ class PoolingCase(unittest.TestCase):
         assert_equal(listener.failure_count, 25)
 
         pool.dispose()
-        listener.reset()
 
-        # Test the threadlocal version of this
+    def test_queue_threadlocal_failover(self):
+        listener = _TestListener()
         pool = QueuePool(pool_size=2, max_overflow=0, recycle=10000,
                          prefill=True,
                          keyspace='Keyspace1', credentials=_credentials,
@@ -550,6 +550,50 @@ class PoolingCase(unittest.TestCase):
             thread.join()
 
         assert_equal(listener.failure_count, 25)
+        pool.dispose()
+
+    def test_queue_retry_limit(self):
+        listener = _TestListener()
+        pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
+                         prefill=True, max_retries=3, # allow 3 retries
+                         keyspace='Keyspace1', credentials=_credentials,
+                         listeners=[listener], use_threadlocal=False,
+                         server_list=['localhost:9160', 'localhost:9160'])
+
+        # Corrupt all of the connections
+        for i in range(5):
+            conn = pool.get()
+            cf = ColumnFamily(conn, 'Standard1')
+            setattr(cf.client._connection.client, 'batch_mutate', _timeout)
+            conn.return_to_pool()
+
+        conn = pool.get()
+        cf = ColumnFamily(conn, 'Standard1')
+        assert_raises(MaximumRetryException, cf.insert, 'key', {'col':'val'})
+        assert_equal(listener.failure_count, 4) # On the 4th failure, didn't retry
+
+        pool.dispose()
+
+    def test_queue_threadlocal_retry_limit(self):
+        listener = _TestListener()
+        pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
+                         prefill=True, max_retries=3, # allow 3 retries
+                         keyspace='Keyspace1', credentials=_credentials,
+                         listeners=[listener], use_threadlocal=True,
+                         server_list=['localhost:9160', 'localhost:9160'])
+
+        # Corrupt all of the connections
+        for i in range(5):
+            conn = pool.get()
+            cf = ColumnFamily(conn, 'Standard1')
+            setattr(cf.client._local.conn.client, 'batch_mutate', _timeout)
+            conn.return_to_pool()
+
+        conn = pool.get()
+        cf = ColumnFamily(conn, 'Standard1')
+        assert_raises(MaximumRetryException, cf.insert, 'key', {'col':'val'})
+        assert_equal(listener.failure_count, 4) # On the 4th failure, didn't retry
+
         pool.dispose()
 
     def test_null_pool_failover(self):
@@ -646,7 +690,8 @@ class PoolingCase(unittest.TestCase):
         pool.dispose()
         listener.reset()
 
-        # Test non-threadlocal version
+    def test_assertion_threadlocal_failover(self):
+        listener = _TestListener()
         pool = AssertionPool(keyspace='Keyspace1', credentials=_credentials,
                              listeners=[listener], use_threadlocal=False,
                              server_list=['localhost:9160', 'localhost:9160'])
@@ -664,7 +709,6 @@ class PoolingCase(unittest.TestCase):
             cf.get('key')
 
         pool.dispose()
-
 
 class _TestListener(PoolListener):
 

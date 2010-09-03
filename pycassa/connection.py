@@ -234,7 +234,7 @@ class Connection(object):
         self._credentials = new_conn._credentials
         self._use_threadlocal = new_conn._use_threadlocal
         if self._use_threadlocal:
-            self._local = new_conn.local
+            self._local.conn = new_conn._local.conn
         else:
             self._connection = new_conn._connection
 
