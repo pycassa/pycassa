@@ -522,7 +522,7 @@ class TestAutoPacking:
         #  longs and cm for 'subcol' allows TIMEUUIDs.
         self.cf_def_valid.insert(key, col_cf)
         self.cf_def_valid.insert(key, col_cm)
-        assert self.cf_def_valid.get(key) == col_cf.update(col_cm)
+        assert self.cf_def_valid.get(key) == {'aaaaaa':1L,'subcol':TIME1}
           
         assert_raises(TypeError, self.cf_def_valid.insert, key,col_ncf)
         assert_raises(TypeError, self.cf_def_valid.insert, key,col_ncm)
@@ -552,8 +552,7 @@ class TestAutoPacking:
 
         timeline.append(datetime.now())
 
-        import pdb; pdb.set_trace()
-        cols = col1.update(col2)
+        cols = {time1:'0', time2:'1'}
 
         assert_equal(self.cf_time.get(key, column_start=timeline[0])                            , cols)
         assert_equal(self.cf_time.get(key,                           column_finish=timeline[2]) , cols)
