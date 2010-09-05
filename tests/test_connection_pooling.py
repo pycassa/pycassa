@@ -7,7 +7,7 @@ from pycassa import connect, connect_thread_local, NullPool, StaticPool,\
                     AssertionPool, SingletonThreadPool, QueuePool,\
                     ColumnFamily, PoolListener, InvalidRequestError,\
                     NoConnectionAvailable, MaximumRetryException
-from cassandra.ttypes import TimedOutException
+from pycassa.cassandra.ttypes import TimedOutException
 
 _credentials = {'username':'jsmith', 'password':'havebadpass'}
 _pools = [NullPool, StaticPool, AssertionPool, SingletonThreadPool, QueuePool]
@@ -64,7 +64,7 @@ class PoolingCase(unittest.TestCase):
     def test_queue_pool(self):
         listener = _TestListener()
         pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
-                         prefill=True, timeout=1,
+                         prefill=True, pool_timeout=0.5, timeout=1,
                          keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=False)
         conns = []
@@ -123,7 +123,7 @@ class PoolingCase(unittest.TestCase):
     def test_queue_pool_threadlocal(self):
         listener = _TestListener()
         pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
-                         prefill=True, timeout=1,
+                         prefill=True, pool_timeout=0.5, timeout=1,
                          keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=True)
         conns = []
@@ -188,7 +188,7 @@ class PoolingCase(unittest.TestCase):
     def test_queue_pool_recycle(self):
         listener = _TestListener()
         pool = QueuePool(pool_size=5, max_overflow=5, recycle=1,
-                         prefill=True, timeout=1,
+                         prefill=True, pool_timeout=0.5, timeout=1,
                          keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=False)
 
@@ -205,7 +205,7 @@ class PoolingCase(unittest.TestCase):
 
         # Try with threadlocal=True
         pool = QueuePool(pool_size=5, max_overflow=5, recycle=10,
-                         prefill=True, timeout=1,
+                         prefill=True, pool_timeout=0.5, timeout=1,
                          keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=True)
 
@@ -375,6 +375,7 @@ class PoolingCase(unittest.TestCase):
         pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
                          prefill=True,
                          keyspace='Keyspace1', credentials=_credentials,
+                         timeout=0.05,
                          listeners=[listener], use_threadlocal=False,
                          server_list=['localhost:9160', 'foobar:1'])
 
@@ -391,6 +392,7 @@ class PoolingCase(unittest.TestCase):
         pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
                          prefill=True,
                          keyspace='Keyspace1', credentials=_credentials,
+                         timeout=0.05,
                          listeners=[listener], use_threadlocal=True,
                          server_list=['localhost:9160', 'foobar:1'])
 
@@ -410,6 +412,7 @@ class PoolingCase(unittest.TestCase):
 
         pool = SingletonThreadPool(pool_size=5, keyspace='Keyspace1',
                          credentials=_credentials, listeners=[listener],
+                         timeout=0.05,
                          server_list=['localhost:9160', 'foobar:1'])
 
         threads = []
@@ -425,7 +428,7 @@ class PoolingCase(unittest.TestCase):
         listener.reset()
 
         pool = StaticPool(keyspace='Keyspace1', credentials=_credentials,
-                         listeners=[listener],
+                         timeout=0.05, listeners=[listener],
                          server_list=['localhost:9160', 'foobar:1'])
 
         pool.get()
@@ -435,6 +438,7 @@ class PoolingCase(unittest.TestCase):
         listener.reset()
 
         pool = NullPool(keyspace='Keyspace1', credentials=_credentials,
+                         timeout=0.05,
                          listeners=[listener], use_threadlocal=False,
                          server_list=['localhost:9160', 'foobar:1'])
  
@@ -447,6 +451,7 @@ class PoolingCase(unittest.TestCase):
         listener.reset()
        
         pool = AssertionPool(keyspace='Keyspace1', credentials=_credentials,
+                             timeout=0.05,
                              listeners=[listener], use_threadlocal=False,
                              server_list=['localhost:9160', 'foobar:1'])
         while True:
@@ -461,6 +466,7 @@ class PoolingCase(unittest.TestCase):
         listener.reset()
  
         pool = AssertionPool(keyspace='Keyspace1', credentials=_credentials,
+                             timeout=0.05,
                              listeners=[listener], use_threadlocal=True,
                              server_list=['localhost:9160', 'foobar:1'])
         while True:

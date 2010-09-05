@@ -28,7 +28,7 @@ class Pool(object):
     """Abstract base class for connection pools."""
 
     def __init__(self, keyspace, server_list=['localhost:9160'],
-                 credentials=None, retry_times=-1, logging_name=None,
+                 credentials=None, timeout=0.5, logging_name=None,
                  use_threadlocal=True, listeners=None):
         """
         Construct a Pool.
@@ -43,6 +43,9 @@ class Pool(object):
 
         :param credentials: A dictionary containing 'username' and 'password'
           keys and appropriate string values.
+
+        :param timeout: The amount of time in seconds before a connection
+          will time out.  Defaults to 0.5 (half a second).
 
         :param logging_name:  String identifier which will be used within
           the "name" field of logging records generated within the
@@ -70,7 +73,7 @@ class Pool(object):
         self._pool_threadlocal = use_threadlocal
         self.keyspace = keyspace
         self.credentials = credentials
-        self.retry_times = retry_times
+        self.timeout = timeout
         self._tlocal = threading.local()
 
         # Listener groups
@@ -93,8 +96,6 @@ class Pool(object):
                 self.add_listener(l)
 
         self.set_server_list(server_list)
-        if self.retry_times == -1:
-            self.retry_times = 2 * len(self.server_list)
 
     def set_server_list(self, server_list):
         """
@@ -407,10 +408,10 @@ class ImmutableConnectionWrapper(ConnectionWrapper):
 
 class ReplaceableConnectionWrapper(ConnectionWrapper):
 
-    def __init__(self, pool, retry_times, *args, **kwargs):
+    def __init__(self, pool, max_retries, *args, **kwargs):
         super(ReplaceableConnectionWrapper, self).__init__(pool, *args, **kwargs)
         self._retry_count = 0
-        self._retry_times = retry_times
+        self._max_retries = max_retries
 
     def _replace(self, new_conn_wrapper):
         super(ConnectionWrapper, self)._replace(new_conn_wrapper)
@@ -431,7 +432,7 @@ class ReplaceableConnectionWrapper(ConnectionWrapper):
                                               connection=self)
 
                 self._retry_count += 1
-                if self._retry_count > self._retry_times:
+                if self._retry_count > self._max_retries:
                     raise MaximumRetryException('Retried %d times' % self._retry_count)
 
                 self.close()
@@ -450,10 +451,10 @@ class ReplaceableConnectionWrapper(ConnectionWrapper):
 
 class MutableConnectionWrapper(ConnectionWrapper):
 
-    def __init__(self, pool, retry_times, *args, **kwargs):
+    def __init__(self, pool, max_retries, *args, **kwargs):
         super(MutableConnectionWrapper, self).__init__(pool, *args, **kwargs)
         self._retry_count = 0
-        self._retry_times = retry_times
+        self._max_retries = max_retries
 
     def _replace_conn(self):
         failure_count = 0
@@ -484,7 +485,7 @@ class MutableConnectionWrapper(ConnectionWrapper):
                 self._pool._notify_on_failure(exc, server=self._servers._servers[0],
                                               connection=self)
                 self._retry_count += 1
-                if self._retry_count > self._retry_times:
+                if self._retry_count > self._max_retries:
                     raise MaximumRetryException('Retried %d times' % self._retry_count)
                 self._replace_conn()
                 return self.__getattr__(attr)(*args, **kwargs)
@@ -495,7 +496,7 @@ class QueuePool(Pool):
     """A Pool that maintains a queue of open connections."""
 
     def __init__(self, pool_size=5, max_overflow=10,
-                 timeout=30, recycle=10000, max_retries=5,
+                 pool_timeout=30, recycle=10000, max_retries=5,
                  prefill=True, *args, **kwargs):
         """
         Construct a QueuePool.
@@ -517,7 +518,7 @@ class QueuePool(Pool):
           will be placed on the total number of concurrent
           connections. Defaults to 10.
 
-        :param timeout: The number of seconds to wait before giving up
+        :param pool_timeout: The number of seconds to wait before giving up
           on returning a connection. Defaults to 30.
 
         :param recycle: If set to non -1, number of operations between
@@ -538,7 +539,7 @@ class QueuePool(Pool):
         self._pool_size = pool_size
         self._q = pool_queue.Queue(pool_size)
         self._max_overflow = max_overflow
-        self._timeout = timeout
+        self._pool_timeout = pool_timeout
         self._recycle = recycle
         self._max_retries = max_retries
         self._prefill = prefill
@@ -555,11 +556,11 @@ class QueuePool(Pool):
         self._notify_on_pool_recreate()
         return QueuePool(pool_size=self._q.maxsize,
                          max_overflow=self._max_overflow,
-                         timeout=self._timeout,
+                         pool_timeout=self._pool_timeout,
                          keyspace=self.keyspace,
                          server_list=self.server_list,
                          credentials=self.credentials,
-                         retry_times=self.retry_times,
+                         timeout=self.timeout,
                          recycle=self._recycle,
                          max_retries=self._max_retries,
                          prefill=self._prefill,
@@ -571,6 +572,7 @@ class QueuePool(Pool):
         return ReplaceableConnectionWrapper(self, self._max_retries,
                                             self.keyspace, [server],
                                             credentials=self.credentials,
+                                            timeout=self.timeout,
                                             use_threadlocal=self._pool_threadlocal)
 
     def _replace_wrapper(self):
@@ -635,7 +637,7 @@ class QueuePool(Pool):
         try:
             wait = self._max_overflow > -1 and \
                         self._overflow >= self._max_overflow
-            conn = self._q.get(wait, self._timeout)
+            conn = self._q.get(wait, self._pool_timeout)
         except pool_queue.Empty:
             if self._max_overflow > -1 and \
                         self._overflow >= self._max_overflow:
@@ -646,8 +648,8 @@ class QueuePool(Pool):
                             pool_max=self.size() + self.overflow())
                     raise NoConnectionAvailable(
                             "QueuePool limit of size %d overflow %d reached, "
-                            "connection timed out, timeout %d" %
-                            (self.size(), self.overflow(), self._timeout))
+                            "connection timed out, pool_timeout %d" %
+                            (self.size(), self.overflow(), self._pool_timeout))
 
             if self._overflow_lock is not None:
                 self._overflow_lock.acquire()
@@ -744,7 +746,7 @@ class SingletonThreadPool(Pool):
             keyspace=self.keyspace,
             server_list=self.server_list,
             credentials=self.credentials,
-            retry_times=self.retry_times,
+            timeout=self.timeout,
             logging_name=self._orig_logging_name,
             use_threadlocal=self._pool_threadlocal,
             listeners=self.listeners)
@@ -769,6 +771,7 @@ class SingletonThreadPool(Pool):
         return MutableConnectionWrapper(self, self._max_retries,
                                         self.keyspace, [server],
                                         credentials=self.credentials,
+                                        timeout=self.timeout,
                                         use_threadlocal=self._pool_threadlocal)
 
     def _do_return_conn(self, conn):
@@ -825,6 +828,7 @@ class NullPool(Pool):
         return ReplaceableConnectionWrapper(self, self._max_retries,
                                             self.keyspace, [server],
                                             credentials=self.credentials,
+                                            timeout=self.timeout,
                                             use_threadlocal=self._pool_threadlocal)
 
     def _do_return_conn(self, conn):
@@ -842,7 +846,7 @@ class NullPool(Pool):
                         keyspace=self.keyspace,
                         server_list=self.server_list,
                         credentials=self.credentials,
-                        retry_times=self.retry_times,
+                        timeout=self.timeout,
                         logging_name=self._orig_logging_name,
                         use_threadlocal=self._pool_threadlocal,
                         listeners=self.listeners)
@@ -872,7 +876,7 @@ class StaticPool(Pool):
         return self.__class__(keyspace=self.keyspace,
                               server_list=self.server_list,
                               credentials=self.credentials,
-                              retry_times=self.retry_times,
+                              timeout=self.timeout,
                               use_threadlocal=self._pool_threadlocal,
                               logging_name=self._orig_logging_name,
                               listeners=self.listeners)
@@ -880,6 +884,7 @@ class StaticPool(Pool):
     def _get_new_wrapper(self, server):
         return ImmutableConnectionWrapper(self, self.keyspace, [server],
                                   credentials=self.credentials,
+                                  timeout=self.timeout,
                                   use_threadlocal=self._pool_threadlocal)
 
 
@@ -929,6 +934,7 @@ class AssertionPool(Pool):
         return MutableConnectionWrapper(self, self._max_retries,
                                         self.keyspace, [server],
                                         credentials=self.credentials,
+                                        timeout=self.timeout,
                                         use_threadlocal=self._pool_threadlocal)
 
     def _do_return_conn(self, conn):
@@ -951,7 +957,7 @@ class AssertionPool(Pool):
                              keyspace=self.keyspace,
                              server_list=self.server_list,
                              credentials=self.credentials,
-                             retry_times=self.retry_times,
+                             timeout=self.timeout,
                              logging_name=self._orig_logging_name,
                              listeners=self.listeners)
 
@@ -1199,13 +1205,6 @@ class PoolListener(object):
         """
 
 
-class DisconnectionError(Exception):
-    """A disconnect is detected on a raw connection.
-
-    This error is raised and consumed internally by a connection pool.  It can
-    be raised by a ``PoolListener`` so that the host pool forces a disconnect.
-
-    """
 class AllServersUnavailable(Exception):
     """Raised when none of the servers given to a pool can be connected to."""
 
@@ -1213,8 +1212,11 @@ class NoConnectionAvailable(Exception):
     """Raised when there are no connections left in a pool."""
 
 class MaximumRetryException(Exception):
-    """Raised when a single connection has retried an operation the maximum
-    allowed times."""
+    """Raised when a connection wrapper has retried the maximum
+    allowed times before being returned to the pool; note that all of
+    the retries do not have to be on the same operation.
+
+    """
 
 class InvalidRequestError(Exception):
     """Pycassa was asked to do something it can't do.
