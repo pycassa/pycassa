@@ -93,34 +93,6 @@ class IndexOperator:
     "LT": 4,
   }
 
-class AccessLevel:
-  """
-  The AccessLevel is an enum that expresses the authorized access level granted to an API user:
-  
-  NONE       No access permitted.
-  READONLY   Only read access is allowed.
-  READWRITE  Read and write access is allowed.
-  FULL       Read, write, and remove access is allowed.
-  """
-  NONE = 0
-  READONLY = 16
-  READWRITE = 32
-  FULL = 64
-
-  _VALUES_TO_NAMES = {
-    0: "NONE",
-    16: "READONLY",
-    32: "READWRITE",
-    64: "FULL",
-  }
-
-  _NAMES_TO_VALUES = {
-    "NONE": 0,
-    "READONLY": 16,
-    "READWRITE": 32,
-    "FULL": 64,
-  }
-
 class IndexType:
   KEYS = 0
 
@@ -1983,6 +1955,8 @@ class CfDef:
    - read_repair_chance
    - column_metadata
    - gc_grace_seconds
+   - default_validation_class
+   - id
   """
 
   thrift_spec = (
@@ -2001,9 +1975,11 @@ class CfDef:
     (12, TType.DOUBLE, 'read_repair_chance', None, 1, ), # 12
     (13, TType.LIST, 'column_metadata', (TType.STRUCT,(ColumnDef, ColumnDef.thrift_spec)), None, ), # 13
     (14, TType.I32, 'gc_grace_seconds', None, None, ), # 14
+    (15, TType.STRING, 'default_validation_class', None, None, ), # 15
+    (16, TType.I32, 'id', None, None, ), # 16
   )
 
-  def __init__(self, keyspace=None, name=None, column_type=thrift_spec[3][4], clock_type=thrift_spec[4][4], comparator_type=thrift_spec[5][4], subcomparator_type=thrift_spec[6][4], reconciler=thrift_spec[7][4], comment=thrift_spec[8][4], row_cache_size=thrift_spec[9][4], preload_row_cache=thrift_spec[10][4], key_cache_size=thrift_spec[11][4], read_repair_chance=thrift_spec[12][4], column_metadata=None, gc_grace_seconds=None,):
+  def __init__(self, keyspace=None, name=None, column_type=thrift_spec[3][4], clock_type=thrift_spec[4][4], comparator_type=thrift_spec[5][4], subcomparator_type=thrift_spec[6][4], reconciler=thrift_spec[7][4], comment=thrift_spec[8][4], row_cache_size=thrift_spec[9][4], preload_row_cache=thrift_spec[10][4], key_cache_size=thrift_spec[11][4], read_repair_chance=thrift_spec[12][4], column_metadata=None, gc_grace_seconds=None, default_validation_class=None, id=None,):
     self.keyspace = keyspace
     self.name = name
     self.column_type = column_type
@@ -2018,6 +1994,8 @@ class CfDef:
     self.read_repair_chance = read_repair_chance
     self.column_metadata = column_metadata
     self.gc_grace_seconds = gc_grace_seconds
+    self.default_validation_class = default_validation_class
+    self.id = id
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -2104,6 +2082,16 @@ class CfDef:
           self.gc_grace_seconds = iprot.readI32();
         else:
           iprot.skip(ftype)
+      elif fid == 15:
+        if ftype == TType.STRING:
+          self.default_validation_class = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 16:
+        if ftype == TType.I32:
+          self.id = iprot.readI32();
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -2172,6 +2160,14 @@ class CfDef:
     if self.gc_grace_seconds != None:
       oprot.writeFieldBegin('gc_grace_seconds', TType.I32, 14)
       oprot.writeI32(self.gc_grace_seconds)
+      oprot.writeFieldEnd()
+    if self.default_validation_class != None:
+      oprot.writeFieldBegin('default_validation_class', TType.STRING, 15)
+      oprot.writeString(self.default_validation_class)
+      oprot.writeFieldEnd()
+    if self.id != None:
+      oprot.writeFieldBegin('id', TType.I32, 16)
+      oprot.writeI32(self.id)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
