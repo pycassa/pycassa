@@ -293,6 +293,27 @@ Calls to `insert` and `remove` can also be chained:
 
     >>> cf.batch().remove('foo').remove('bar').send()
 
+Connection Pooling
+------------------
+
+pycassa offers several types of connection pools for different usage scenarios. These include:
+
+* QueuePool - typical connection pool that maintains a queue of open connections
+* SingletonThreadPool - one connection per thread
+* StaticPool - a single connection used for all operations
+* NullPool - no pooling is performed, but failover is supported
+* AssertionPool - asserts that at most one connection is open at a time; useful for debugging
+
+To create a pool and use a connection:
+
+    >>> pool = pycassa.QueuePool(keyspace='Keyspace1')
+    >>> connection = pool.get()
+    >>> cf = pycassa.ColumnFamily(connection, 'Standard1')
+    >>> cf.insert('key', {'col': 'val'})
+    >>> connection.return_to_pool()
+
+Automatic retries (or failover) are supported with all types of pools except for StaticPools.  This means that if any operation fails, it will be transparently retried on other servers until it succeeds or a maximum number of failures is reached.
+
 Advanced
 --------
 
