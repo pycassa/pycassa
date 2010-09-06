@@ -482,7 +482,7 @@ class PoolingCase(unittest.TestCase):
     def test_queue_failover(self):
         listener = _TestListener()
         pool = QueuePool(pool_size=2, max_overflow=0, recycle=10000,
-                         prefill=True,
+                         prefill=True, timeout=0.05,
                          keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=False,
                          server_list=['localhost:9160', 'localhost:9160'])
@@ -503,7 +503,7 @@ class PoolingCase(unittest.TestCase):
         listener.reset()
 
         pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
-                         prefill=True,
+                         prefill=True, timeout=0.05,
                          keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=False,
                          server_list=['localhost:9160', 'localhost:9160'])
@@ -522,7 +522,7 @@ class PoolingCase(unittest.TestCase):
     def test_queue_threadlocal_failover(self):
         listener = _TestListener()
         pool = QueuePool(pool_size=2, max_overflow=0, recycle=10000,
-                         prefill=True,
+                         prefill=True, timeout=0.05,
                          keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=True,
                          server_list=['localhost:9160', 'localhost:9160'])
@@ -543,7 +543,7 @@ class PoolingCase(unittest.TestCase):
         listener.reset()
 
         pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
-                         prefill=True,
+                         prefill=True, timeout=0.05,
                          keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=True,
                          server_list=['localhost:9160', 'localhost:9160'])

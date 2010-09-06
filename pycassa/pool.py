@@ -467,7 +467,7 @@ class ReplaceableConnectionWrapper(ConnectionWrapper):
                                               connection=self)
 
                 self._retry_count += 1
-                if self._retry_count > self._max_retries:
+                if self._max_retries != -1 and self._retry_count > self._max_retries:
                     raise MaximumRetryException('Retried %d times' % self._retry_count)
 
                 self.close()
@@ -532,7 +532,7 @@ class MutableConnectionWrapper(ConnectionWrapper):
                 self._pool._notify_on_failure(exc, server=self._servers._servers[0],
                                               connection=self)
                 self._retry_count += 1
-                if self._retry_count > self._max_retries:
+                if self._max_retries != -1 and self._retry_count > self._max_retries:
                     raise MaximumRetryException('Retried %d times' % self._retry_count)
                 self._replace_conn()
                 return self.__getattr__(attr)(*args, **kwargs)
@@ -640,7 +640,7 @@ class QueuePool(Pool):
 
     def _replace_wrapper(self):
         """Try to replace the connection."""
-        if not self._q.full:
+        if not self._q.full():
             try:
                 self._q.put(self._create_connection(), False)
             except pool_queue.Full:
