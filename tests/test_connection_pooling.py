@@ -6,7 +6,9 @@ from nose.tools import assert_raises, assert_equal, assert_not_equal
 from pycassa import connect, connect_thread_local, NullPool, StaticPool,\
                     AssertionPool, SingletonThreadPool, QueuePool,\
                     ColumnFamily, PoolListener, InvalidRequestError,\
-                    NoConnectionAvailable, MaximumRetryException
+                    NoConnectionAvailable, MaximumRetryException,\
+                    AllServersUnavailable
+
 from pycassa.cassandra.ttypes import TimedOutException
 
 _credentials = {'username':'jsmith', 'password':'havebadpass'}
@@ -715,6 +717,18 @@ class PoolingCase(unittest.TestCase):
             cf.get('key')
 
         pool.dispose()
+
+    def test_create_connection_limit(self):
+        listener = _TestListener()
+        pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
+                         prefill=False, timeout=0.05,
+                         keyspace='Keyspace1', credentials=_credentials,
+                         listeners=[listener], use_threadlocal=True,
+                         server_list=['foobar:1', 'barfoo:2'])
+
+        assert_raises(AllServersUnavailable, pool.get)
+        assert_equal(listener.failure_count, 4)
+
 
 class _TestListener(PoolListener):
 

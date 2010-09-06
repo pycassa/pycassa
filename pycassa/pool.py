@@ -232,12 +232,10 @@ class Pool(object):
             for l in self._on_pool_recreate:
                 l.pool_recreated(dic)
 
-    def _notify_on_pool_dispose(self, status=""):
+    def _notify_on_pool_dispose(self):
         if self._on_pool_dispose:
             dic = self._get_dic()
             dic['level'] = 'info'
-            if status:
-                dic['status'] = status
             for l in self._on_pool_dispose:
                 l.pool_disposed(dic)
 
@@ -515,7 +513,8 @@ class MutableConnectionWrapper(ConnectionWrapper):
                 new_conn.connect()
                 super(MutableConnectionWrapper, self)._replace(new_conn)
                 return
-            except (TimedOutException, UnavailableException, Thrift.TException), exc:
+            except (TimedOutException, UnavailableException,
+                    Thrift.TException, NoServerAvailable), exc:
                 self._pool._notify_on_failure(exc, server=new_serv, 
                                               connection=new_conn)
                 failure_count += 1
