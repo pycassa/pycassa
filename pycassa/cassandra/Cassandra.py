@@ -169,11 +169,11 @@ class Iface:
     """
     pass
 
-  def check_schema_agreement(self, ):
+  def describe_schema_versions(self, ):
     """
-    ask the cluster if they all are using the same migration id. returns a map of version->hosts-on-that-version.
-    hosts that did not respond will be under the key DatabaseDescriptor.INITIAL_VERSION. agreement can be determined
-    by checking if the size of the map is 1.
+    for each schema version present in the cluster, returns a list of nodes at that version.
+    hosts that do not respond will be under the key DatabaseDescriptor.INITIAL_VERSION.
+    the cluster is all on the same version if the size of the map is 1.
     """
     pass
 
@@ -226,7 +226,7 @@ class Iface:
     """
     pass
 
-  def describe_splits(self, keyspace, cfName, start_token, end_token, keys_per_split):
+  def describe_splits(self, cfName, start_token, end_token, keys_per_split):
     """
     experimental API for hadoop/parallel query support.
     may change violently and without warning.
@@ -235,7 +235,6 @@ class Iface:
     next is (list[1], list[2]], etc.
     
     Parameters:
-     - keyspace
      - cfName
      - start_token
      - end_token
@@ -864,37 +863,37 @@ class Client(Iface):
       raise result.ue
     return
 
-  def check_schema_agreement(self, ):
+  def describe_schema_versions(self, ):
     """
-    ask the cluster if they all are using the same migration id. returns a map of version->hosts-on-that-version.
-    hosts that did not respond will be under the key DatabaseDescriptor.INITIAL_VERSION. agreement can be determined
-    by checking if the size of the map is 1.
+    for each schema version present in the cluster, returns a list of nodes at that version.
+    hosts that do not respond will be under the key DatabaseDescriptor.INITIAL_VERSION.
+    the cluster is all on the same version if the size of the map is 1.
     """
-    self.send_check_schema_agreement()
-    return self.recv_check_schema_agreement()
+    self.send_describe_schema_versions()
+    return self.recv_describe_schema_versions()
 
-  def send_check_schema_agreement(self, ):
-    self._oprot.writeMessageBegin('check_schema_agreement', TMessageType.CALL, self._seqid)
-    args = check_schema_agreement_args()
+  def send_describe_schema_versions(self, ):
+    self._oprot.writeMessageBegin('describe_schema_versions', TMessageType.CALL, self._seqid)
+    args = describe_schema_versions_args()
     args.write(self._oprot)
     self._oprot.writeMessageEnd()
     self._oprot.trans.flush()
 
-  def recv_check_schema_agreement(self, ):
+  def recv_describe_schema_versions(self, ):
     (fname, mtype, rseqid) = self._iprot.readMessageBegin()
     if mtype == TMessageType.EXCEPTION:
       x = TApplicationException()
       x.read(self._iprot)
       self._iprot.readMessageEnd()
       raise x
-    result = check_schema_agreement_result()
+    result = describe_schema_versions_result()
     result.read(self._iprot)
     self._iprot.readMessageEnd()
     if result.success != None:
       return result.success
     if result.ire != None:
       raise result.ire
-    raise TApplicationException(TApplicationException.MISSING_RESULT, "check_schema_agreement failed: unknown result");
+    raise TApplicationException(TApplicationException.MISSING_RESULT, "describe_schema_versions failed: unknown result");
 
   def describe_keyspaces(self, ):
     """
@@ -1083,7 +1082,7 @@ class Client(Iface):
       raise result.nfe
     raise TApplicationException(TApplicationException.MISSING_RESULT, "describe_keyspace failed: unknown result");
 
-  def describe_splits(self, keyspace, cfName, start_token, end_token, keys_per_split):
+  def describe_splits(self, cfName, start_token, end_token, keys_per_split):
     """
     experimental API for hadoop/parallel query support.
     may change violently and without warning.
@@ -1092,19 +1091,17 @@ class Client(Iface):
     next is (list[1], list[2]], etc.
     
     Parameters:
-     - keyspace
      - cfName
      - start_token
      - end_token
      - keys_per_split
     """
-    self.send_describe_splits(keyspace, cfName, start_token, end_token, keys_per_split)
+    self.send_describe_splits(cfName, start_token, end_token, keys_per_split)
     return self.recv_describe_splits()
 
-  def send_describe_splits(self, keyspace, cfName, start_token, end_token, keys_per_split):
+  def send_describe_splits(self, cfName, start_token, end_token, keys_per_split):
     self._oprot.writeMessageBegin('describe_splits', TMessageType.CALL, self._seqid)
     args = describe_splits_args()
-    args.keyspace = keyspace
     args.cfName = cfName
     args.start_token = start_token
     args.end_token = end_token
@@ -1421,7 +1418,7 @@ class Processor(Iface, TProcessor):
     self._processMap["remove"] = Processor.process_remove
     self._processMap["batch_mutate"] = Processor.process_batch_mutate
     self._processMap["truncate"] = Processor.process_truncate
-    self._processMap["check_schema_agreement"] = Processor.process_check_schema_agreement
+    self._processMap["describe_schema_versions"] = Processor.process_describe_schema_versions
     self._processMap["describe_keyspaces"] = Processor.process_describe_keyspaces
     self._processMap["describe_cluster_name"] = Processor.process_describe_cluster_name
     self._processMap["describe_version"] = Processor.process_describe_version
@@ -1681,16 +1678,16 @@ class Processor(Iface, TProcessor):
     oprot.writeMessageEnd()
     oprot.trans.flush()
 
-  def process_check_schema_agreement(self, seqid, iprot, oprot):
-    args = check_schema_agreement_args()
+  def process_describe_schema_versions(self, seqid, iprot, oprot):
+    args = describe_schema_versions_args()
     args.read(iprot)
     iprot.readMessageEnd()
-    result = check_schema_agreement_result()
+    result = describe_schema_versions_result()
     try:
-      result.success = self._handler.check_schema_agreement()
+      result.success = self._handler.describe_schema_versions()
     except InvalidRequestException, ire:
       result.ire = ire
-    oprot.writeMessageBegin("check_schema_agreement", TMessageType.REPLY, seqid)
+    oprot.writeMessageBegin("describe_schema_versions", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
     oprot.trans.flush()
@@ -1772,7 +1769,7 @@ class Processor(Iface, TProcessor):
     args.read(iprot)
     iprot.readMessageEnd()
     result = describe_splits_result()
-    result.success = self._handler.describe_splits(args.keyspace, args.cfName, args.start_token, args.end_token, args.keys_per_split)
+    result.success = self._handler.describe_splits(args.cfName, args.start_token, args.end_token, args.keys_per_split)
     oprot.writeMessageBegin("describe_splits", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
@@ -4184,7 +4181,7 @@ class truncate_result:
   def __ne__(self, other):
     return not (self == other)
 
-class check_schema_agreement_args:
+class describe_schema_versions_args:
 
   thrift_spec = (
   )
@@ -4207,7 +4204,7 @@ class check_schema_agreement_args:
     if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
-    oprot.writeStructBegin('check_schema_agreement_args')
+    oprot.writeStructBegin('describe_schema_versions_args')
     oprot.writeFieldStop()
     oprot.writeStructEnd()
 
@@ -4222,7 +4219,7 @@ class check_schema_agreement_args:
   def __ne__(self, other):
     return not (self == other)
 
-class check_schema_agreement_result:
+class describe_schema_versions_result:
   """
   Attributes:
    - success
@@ -4278,7 +4275,7 @@ class check_schema_agreement_result:
     if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
-    oprot.writeStructBegin('check_schema_agreement_result')
+    oprot.writeStructBegin('describe_schema_versions_result')
     if self.success != None:
       oprot.writeFieldBegin('success', TType.MAP, 0)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.success))
@@ -4950,7 +4947,6 @@ class describe_keyspace_result:
 class describe_splits_args:
   """
   Attributes:
-   - keyspace
    - cfName
    - start_token
    - end_token
@@ -4959,15 +4955,13 @@ class describe_splits_args:
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRING, 'keyspace', None, None, ), # 1
-    (2, TType.STRING, 'cfName', None, None, ), # 2
-    (3, TType.STRING, 'start_token', None, None, ), # 3
-    (4, TType.STRING, 'end_token', None, None, ), # 4
-    (5, TType.I32, 'keys_per_split', None, None, ), # 5
+    (1, TType.STRING, 'cfName', None, None, ), # 1
+    (2, TType.STRING, 'start_token', None, None, ), # 2
+    (3, TType.STRING, 'end_token', None, None, ), # 3
+    (4, TType.I32, 'keys_per_split', None, None, ), # 4
   )
 
-  def __init__(self, keyspace=None, cfName=None, start_token=None, end_token=None, keys_per_split=None,):
-    self.keyspace = keyspace
+  def __init__(self, cfName=None, start_token=None, end_token=None, keys_per_split=None,):
     self.cfName = cfName
     self.start_token = start_token
     self.end_token = end_token
@@ -4984,25 +4978,20 @@ class describe_splits_args:
         break
       if fid == 1:
         if ftype == TType.STRING:
-          self.keyspace = iprot.readString();
+          self.cfName = iprot.readString();
         else:
           iprot.skip(ftype)
       elif fid == 2:
         if ftype == TType.STRING:
-          self.cfName = iprot.readString();
+          self.start_token = iprot.readString();
         else:
           iprot.skip(ftype)
       elif fid == 3:
         if ftype == TType.STRING:
-          self.start_token = iprot.readString();
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.STRING:
           self.end_token = iprot.readString();
         else:
           iprot.skip(ftype)
-      elif fid == 5:
+      elif fid == 4:
         if ftype == TType.I32:
           self.keys_per_split = iprot.readI32();
         else:
@@ -5017,24 +5006,20 @@ class describe_splits_args:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
     oprot.writeStructBegin('describe_splits_args')
-    if self.keyspace != None:
-      oprot.writeFieldBegin('keyspace', TType.STRING, 1)
-      oprot.writeString(self.keyspace)
-      oprot.writeFieldEnd()
     if self.cfName != None:
-      oprot.writeFieldBegin('cfName', TType.STRING, 2)
+      oprot.writeFieldBegin('cfName', TType.STRING, 1)
       oprot.writeString(self.cfName)
       oprot.writeFieldEnd()
     if self.start_token != None:
-      oprot.writeFieldBegin('start_token', TType.STRING, 3)
+      oprot.writeFieldBegin('start_token', TType.STRING, 2)
       oprot.writeString(self.start_token)
       oprot.writeFieldEnd()
     if self.end_token != None:
-      oprot.writeFieldBegin('end_token', TType.STRING, 4)
+      oprot.writeFieldBegin('end_token', TType.STRING, 3)
       oprot.writeString(self.end_token)
       oprot.writeFieldEnd()
     if self.keys_per_split != None:
-      oprot.writeFieldBegin('keys_per_split', TType.I32, 5)
+      oprot.writeFieldBegin('keys_per_split', TType.I32, 4)
       oprot.writeI32(self.keys_per_split)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
