@@ -5,7 +5,7 @@ pycassa
 
 pycassa is a Cassandra library with the following features:
 
-1. Auto-failover single or thread-local connections
+1. Auto-failover single or thread-local connections and connection pooling
 2. A simplified version of the thrift interface
 3. A method to map an existing class to a Cassandra ColumnFamily.
 4. Support for SuperColumns

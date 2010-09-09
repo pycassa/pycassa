@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 
-__version_info__ = (0, 4, 2)
+__version_info__ = (0, 5, 0)
 __version__ = '.'.join([str(v) for v in __version_info__])
 
 """pycassa is a Cassandra library with the following features:
@@ -20,11 +20,11 @@ setup(
       name = 'pycassa',
       version = __version__,
       author = 'Jonathan Hseu',
-      author_email = 'vomjom@vomjom.net',
+      author_email = 'pycassa.maintainer@gmail.com',
       description = 'Simple python library for Cassandra',
       long_description = __doc__,
-      url = 'http://github.com/vomjom/pycassa',
-      download_url = 'http://github.com/vomjom/pycassa',
+      url = 'http://github.com/pycassa/pycassa',
+      download_url = 'http://github.com/pycassa/pycassa',
       license = 'MIT',
       keywords = 'cassandra client db distributed thrift',
       packages = ['pycassa', 'pycassa.cassandra'],
