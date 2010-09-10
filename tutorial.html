@@ -106,7 +106,7 @@ were already included in the schema file:</p>
 <div class="section" id="inserting-data">
 <h2>Inserting Data<a class="headerlink" href="#inserting-data" title="Permalink to this headline">¶</a></h2>
 <p>To insert a row into a column family we can use the
-<tt class="xref py py-meth docutils literal"><span class="pre">insert()</span></tt> method:</p>
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.insert" title="pycassa.columnfamily.ColumnFamily.insert"><tt class="xref py py-meth docutils literal"><span class="pre">insert()</span></tt></a> method:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;col_name&#39;</span><span class="p">:</span> <span class="s">&#39;col_val&#39;</span><span class="p">})</span>
 <span class="go">1354459123410932</span>
 </pre></div>
@@ -128,12 +128,12 @@ were already included in the schema file:</p>
 <p>There are many more ways to get data out of Cassandra than there are
 to insert data.</p>
 <p>The simplest way to get data is to use
-<tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt>:</p>
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get" title="pycassa.columnfamily.ColumnFamily.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">)</span>
 <span class="go">{&#39;colname&#39;: &#39;col_val&#39;}</span>
 </pre></div>
 </div>
-<p>Without any other arguments, <tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt>
+<p>Without any other arguments, <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get" title="pycassa.columnfamily.ColumnFamily.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a>
 returns every column in the row (up to <cite>column_count</cite>, which defaults to 100).
 If you only want a few of the columns and you know them by name, you can
 specify them using a <cite>columns</cite> argument:</p>
@@ -152,13 +152,13 @@ columns with names &#8216;1&#8217; through &#8216;9&#8217;, we could do the foll
 </div>
 <p>There are also two ways to get multiple rows at the same time.
 The first is to specify them by name using
-<tt class="xref py py-meth docutils literal"><span class="pre">multiget()</span></tt>:</p>
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.multiget" title="pycassa.columnfamily.ColumnFamily.multiget"><tt class="xref py py-meth docutils literal"><span class="pre">multiget()</span></tt></a>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">multiget</span><span class="p">([</span><span class="s">&#39;row_key1&#39;</span><span class="p">,</span> <span class="s">&#39;row_key2&#39;</span><span class="p">])</span>
 <span class="go">{&#39;row_key1&#39;: {&#39;name&#39;:&#39;val&#39;}, &#39;row_key2&#39;: {&#39;name&#39;:&#39;val&#39;}}</span>
 </pre></div>
 </div>
 <p>The other way is to get a range of keys at once by using
-<tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt>. The parameter
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_range" title="pycassa.columnfamily.ColumnFamily.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a>. The parameter
 <cite>finish</cite> is also inclusive here too.  Assuming we&#8217;ve inserted some rows
 with keys &#8216;row_key1&#8217; through &#8216;row_key9&#8217;, we could do this:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get_range</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="s">&#39;row_key5&#39;</span><span class="p">,</span> <span class="n">finish</span><span class="o">=</span><span class="s">&#39;row_key7&#39;</span><span class="p">)</span>
@@ -166,14 +166,14 @@ with keys &#8216;row_key1&#8217; through &#8216;row_key9&#8217;, we could do thi
 </pre></div>
 </div>
 <p>It&#8217;s also possible to specify a set of columns or a slice for
-<tt class="xref py py-meth docutils literal"><span class="pre">multiget()</span></tt> and
-<tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt> just like we did for
-<tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt>.</p>
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.multiget" title="pycassa.columnfamily.ColumnFamily.multiget"><tt class="xref py py-meth docutils literal"><span class="pre">multiget()</span></tt></a> and
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_range" title="pycassa.columnfamily.ColumnFamily.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a> just like we did for
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get" title="pycassa.columnfamily.ColumnFamily.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a>.</p>
 </div>
 <div class="section" id="counting">
 <h2>Counting<a class="headerlink" href="#counting" title="Permalink to this headline">¶</a></h2>
 <p>If you just want to know how many columns are in a row, you can use
-<tt class="xref py py-meth docutils literal"><span class="pre">get_count()</span></tt>:</p>
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_count" title="pycassa.columnfamily.ColumnFamily.get_count"><tt class="xref py py-meth docutils literal"><span class="pre">get_count()</span></tt></a>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get_count</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">)</span>
 <span class="go">3</span>
 </pre></div>
@@ -187,7 +187,7 @@ of a slice or have particular names, you can do that as well:</p>
 </pre></div>
 </div>
 <p>You can also do this in parallel for multiple rows using
-<tt class="xref py py-meth docutils literal"><span class="pre">multiget_count()</span></tt>:</p>
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.multiget_count" title="pycassa.columnfamily.ColumnFamily.multiget_count"><tt class="xref py py-meth docutils literal"><span class="pre">multiget_count()</span></tt></a>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">multiget_count</span><span class="p">([</span><span class="s">&#39;fib0&#39;</span><span class="p">,</span> <span class="s">&#39;fib1&#39;</span><span class="p">,</span> <span class="s">&#39;fib2&#39;</span><span class="p">,</span> <span class="s">&#39;fib3&#39;</span><span class="p">,</span> <span class="s">&#39;fib4&#39;</span><span class="p">])</span>
 <span class="go">{&#39;fib0&#39;: 1, &#39;fib1&#39;: 1, &#39;fib2&#39;: 2, &#39;fib3&#39;: 3, &#39;fib4&#39;: 5&#39;}</span>
 </pre></div>
@@ -211,7 +211,7 @@ of a slice or have particular names, you can do that as well:</p>
   column_type: Super</pre>
 </div>
 <p>To use a super column in <strong>pycassa</strong>, you only need to do one thing:
-when creating the <tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt>,
+when creating the <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>,
 set the <cite>super</cite> argument to be <tt class="xref docutils literal"><span class="pre">True</span></tt>. If this is done, you can
 use a super column family just like a regular one, except there is an
 extra level in the dictionary:</p>
@@ -294,7 +294,7 @@ for individual columns, or both.  Here&#8217;s another example <tt class="docuti
 </div>
 <p>Of course, if <strong>pycassa</strong>&#8216;s automatic behavior isn&#8217;t working for you, you
 can turn it off when you create the
-<tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt>:</p>
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="s">&#39;Standard1&#39;</span><span class="p">,</span>
 <span class="gp">... </span>                               <span class="n">autopack_names</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
 <span class="gp">... </span>                               <span class="n">autopack_values</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
@@ -316,7 +316,7 @@ will be indexed.  In a <tt class="docutils literal"><span class="pre">cassandra.
       validator_class: LongType
       index_type: KEYS</pre>
 </div>
-<p>In order to use <tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt>
+<p>In order to use <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_indexed_slices" title="pycassa.columnfamily.ColumnFamily.get_indexed_slices"><tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt></a>
 to get data from Indexed1 using the indexed column, we need to create an
 <tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt> which contains
 <tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt>.  The module

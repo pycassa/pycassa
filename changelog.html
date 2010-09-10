@@ -51,18 +51,59 @@
 <h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="changes-in-version-0-5-0">
 <h2>Changes in Version 0.5.0<a class="headerlink" href="#changes-in-version-0-5-0" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Connection Pooling support: <a class="reference internal" href="api/pycassa/pool.html#module-pycassa.pool" title="pycassa.pool"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.pool</span></tt></a></li>
+<li>Started moving logging to <a class="reference internal" href="api/pycassa/logger.html#module-pycassa.logger" title="pycassa.logger"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.logger</span></tt></a></li>
+<li>Use Thrift API 14.0.0</li>
+</ul>
 </div>
 <div class="section" id="changes-in-version-0-4-3">
 <h2>Changes in Version 0.4.3<a class="headerlink" href="#changes-in-version-0-4-3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Autopack on CF&#8217;s default_validation_class</li>
+<li>Use Thrift API 13.0.0</li>
+</ul>
 </div>
 <div class="section" id="changes-in-version-0-4-2">
 <h2>Changes in Version 0.4.2<a class="headerlink" href="#changes-in-version-0-4-2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Added batch mutations interface: <a class="reference internal" href="api/pycassa/batch.html#module-pycassa.batch" title="pycassa.batch"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.batch</span></tt></a></li>
+<li>Made bundled thrift-gen code a subpackage of pycassa</li>
+<li>Don&#8217;t attempt to reencode already encoded UTF8 strings</li>
+</ul>
 </div>
 <div class="section" id="changes-in-version-0-4-1">
 <h2>Changes in Version 0.4.1<a class="headerlink" href="#changes-in-version-0-4-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Added <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.batch_insert" title="pycassa.columnfamily.ColumnFamily.batch_insert"><tt class="xref py py-meth docutils literal"><span class="pre">batch_insert()</span></tt></a></li>
+<li>Redifined <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.insert" title="pycassa.columnfamily.ColumnFamily.insert"><tt class="xref py py-meth docutils literal"><span class="pre">insert()</span></tt></a>
+in terms of <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.batch_insert" title="pycassa.columnfamily.ColumnFamily.batch_insert"><tt class="xref py py-meth docutils literal"><span class="pre">batch_insert()</span></tt></a></li>
+<li>Fixed UTF8 autopacking</li>
+<li>Convert datetime slice args to uuids when appropriate</li>
+<li>Changed how thrift-gen code is bundled</li>
+<li>Assert that the major version of the thrift API is the same on the
+client and on the server</li>
+<li>Use Thrift API 12.0.0</li>
+</ul>
 </div>
 <div class="section" id="changes-in-version-0-4-0">
 <h2>Changes in Version 0.4.0<a class="headerlink" href="#changes-in-version-0-4-0" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Added pycassaShell, a simple interactive shell</li>
+<li>Converted the test config from xml to yaml</li>
+<li>fixed overflow error on
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_count" title="pycassa.columnfamily.ColumnFamily.get_count"><tt class="xref py py-meth docutils literal"><span class="pre">get_count()</span></tt></a></li>
+<li>Only insert columns which exist in the model object</li>
+<li>Make ColumnFamilyMap not ignore the ColumnFamily&#8217;s dict_class</li>
+<li>Specify keyspace as argument to <a class="reference internal" href="api/pycassa/connection.html#pycassa.connection.connect" title="pycassa.connection.connect"><tt class="xref py py-meth docutils literal"><span class="pre">connect()</span></tt></a></li>
+<li>Add support for framed transport and default to using it</li>
+<li>Added autopacking for column names and values</li>
+<li>Added support for secondary indexes with
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_indexed_slices" title="pycassa.columnfamily.ColumnFamily.get_indexed_slices"><tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt></a>
+and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.index" title="pycassa.index"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.index</span></tt></a></li>
+<li>Added <cite>~pycassa.columnfamily.ColumnFamily.truncate()</cite></li>
+<li>Use Thrift API 11.0.0</li>
+</ul>
 </div>
 </div>
 
