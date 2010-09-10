@@ -1,6 +1,9 @@
+"""Logging facilities for pycassa."""
+
 import logging
 
 class PycassaLogger:
+    """pycassa's logger."""
 
     __shared_state = {}
 
@@ -13,6 +16,16 @@ class PycassaLogger:
                'critical': logging.CRITICAL}
 
     def __init__(self, level='info', logger_name='pycassa'):
+        """
+        Creates a new :class:`PycassaLogger`.
+
+        This class uses the `Borg design pattern <http://code.activestate.com/recipes/66531-singleton-we-dont-need-no-stinkin-singleton-the-bo/>`_
+        to acheive singleton-like sharing.
+
+        :param level: the logging level for the logger
+        :param logger_name: the name that will be used to call :meth:`logging.getLogger()`
+
+        """
         self.__dict__ = self.__shared_state
         level = PycassaLogger._levels[level]
         logging.basicConfig(level=level)

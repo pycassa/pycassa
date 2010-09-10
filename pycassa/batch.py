@@ -1,16 +1,34 @@
+"""Tools to support batch operations."""
+
 import threading
 from pycassa.cassandra.ttypes import (Clock, Column, ColumnOrSuperColumn,
                                       ConsistencyLevel, Deletion, Mutation,
                                       SlicePredicate, SuperColumn)
 
+__all__ = ['Mutator', 'CfMutator']
 
 class Mutator(object):
-    """Batch update convenience mechanism.
-       Queues insert/update/remove operations and executes them when the queue
-       is filled up or explicitly using `send`.
+    """
+    Batch update convenience mechanism.
+
+    Queues insert/update/remove operations and executes them when the queue
+    is full or `send` is called explicitly.
+
     """
 
     def __init__(self, client, queue_size=100, write_consistency_level=None):
+        """Creates a new Mutator object.
+
+        :Parameters:
+            `client`: :class:`~pycassa.connection.Connection`
+                The connection that will be used.
+            `queue_size`: int
+                The number of operations to queue before they are executed
+                automatically.
+            `write_consistency_level`: :class:`~pycassa.cassandra.ttypes.ConsistencyLevel`
+                The Cassandra write consistency level.
+
+        """
         self._buffer = []
         self._lock = threading.RLock()
         self.client = client
@@ -92,7 +110,24 @@ class Mutator(object):
 
 
 class CfMutator(Mutator):
+    """
+    A :class:`~pycassa.batch.Mutator` that deals only with one column family.
+
+    """
+
     def __init__(self, column_family, queue_size=100, write_consistency_level=None):
+        """Creates a new CfMutator object.
+
+        :Parameters:
+            `column_family`: :class:`~pycassa.columnfamily.ColumnFamily`
+                The column family that all operations will be on.
+            `queue_size`: int
+                The number of operations to queue before they are executed
+                automatically.
+            `write_consistency_level`: :class:`~pycassa.cassandra.ttypes.ConsistencyLevel`
+                The Cassandra write consistency level.
+
+        """
         wcl = write_consistency_level or column_family.write_consistency_level
         super(CfMutator, self).__init__(column_family.client, queue_size=queue_size,
                                         write_consistency_level=wcl)

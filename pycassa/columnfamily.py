@@ -1,3 +1,10 @@
+"""
+Provides an abstraction of Cassandra's data model to allow for easy
+manipulation of data inside Cassandra.
+
+.. seealso:: :mod:`pycassa.columnfamilymap`
+"""
+
 from pycassa.cassandra.ttypes import Column, ColumnOrSuperColumn,\
     ColumnParent, ColumnPath, ConsistencyLevel, NotFoundException,\
     SlicePredicate, SliceRange, SuperColumn, Clock, KeyRange,\
@@ -11,6 +18,7 @@ import struct
 from batch import CfMutator
 
 __all__ = ['gm_timestamp', 'ColumnFamily']
+
 _TYPES = ['BytesType', 'LongType', 'IntegerType', 'UTF8Type', 'AsciiType',
          'LexicalUUIDType', 'TimeUUIDType']
 _NON_SLICE = 0
@@ -19,9 +27,11 @@ _SLICE_FINISH = 2
 
 def gm_timestamp():
     """
-    Returns
-    -------
-    int : UNIX epoch time in GMT
+    Gets the current GMT timestamp
+
+    :Returns:
+        integer UNIX epoch time in GMT
+
     """
     return int(time.time() * 1e6)
 
@@ -33,6 +43,8 @@ def create_SlicePredicate(columns, column_start, column_finish, column_reversed,
     return SlicePredicate(slice_range=sr)
 
 class ColumnFamily(object):
+    """An abstraction of a Cassandra column family or super column family."""
+
     def __init__(self, client, column_family, buffer_size=1024,
                  read_consistency_level=ConsistencyLevel.ONE,
                  write_consistency_level=ConsistencyLevel.ONE,
@@ -40,48 +52,53 @@ class ColumnFamily(object):
                  dict_class=dict, autopack_names=True,
                  autopack_values=True):
         """
-        Construct a ColumnFamily
+        Constructs an abstraction of a Cassandra column family or super column family.
 
-        Parameters
-        ----------
-        client   : cassandra.Cassandra.Client
-            Cassandra client with thrift API
-        column_family : str
-            The name of this ColumnFamily
-        buffer_size : int
-            When calling get_range(), the intermediate results need to be
-            buffered if we are fetching many rows, otherwise the Cassandra
-            server will overallocate memory and fail.  This is the size of
-            that buffer.
-        read_consistency_level : ConsistencyLevel
-            Affects the guaranteed replication factor before returning from
-            any read operation
-        write_consistency_level : ConsistencyLevel
-            Affects the guaranteed replication factor before returning from
-            any write operation
-        timestamp : function
-            The default timestamp function returns:
-            int(time.mktime(time.gmtime()))
-            Or the number of seconds since Unix epoch in GMT.
-            Set timestamp to replace the default timestamp function with your
-            own.
-        super : bool
-            Whether this ColumnFamily has SuperColumns
-        dict_class : class (must act like the dict type)
-            The default dict_class is dict.
-            If the order of columns matter to you, pass your own dictionary
-            class, or python 2.7's new collections.OrderedDict. All returned
-            rows and subcolumns are instances of this.
-        autopack_names : bool
-            Whether column and supercolumn names should be packed automatically
-            based on the comparator and subcomparator for the column
-            family.  This does not typically work when used with
-            ColumnFamilyMaps.
-        autopack_values : bool
-            Whether column values should be packed automatically based on
-            the validator_class for a given column.  This should probably
-            be set to False when used with a ColumnFamilyMap.
+        Operations on this, such as `get` or `insert` will get data from or
+        insert data into the corresponding Cassandra column family.
+
+        :Parameters:
+            `client`: :class:`cassandra.Cassandra.Client`
+                Cassandra client with thrift API
+            `column_family`: string
+                The name of this ColumnFamily
+            `buffer_size`: integer
+                When calling `get_range`, the intermediate results need to be
+                buffered if we are fetching many rows, otherwise the Cassandra
+                server will overallocate memory and fail.  This is the size of
+                that buffer.
+            `read_consistency_level`: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
+                Affects the guaranteed replication factor before returning from
+                any read operation
+            `write_consistency_level`: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
+                Affects the guaranteed replication factor before returning from
+                any write operation
+            `timestamp`: function
+                The default timestamp function returns:
+                int(time.mktime(time.gmtime()))
+                Or the number of seconds since Unix epoch in GMT.
+                Set timestamp to replace the default timestamp function with your
+                own.
+            `super`: bool
+                Whether this ColumnFamily has SuperColumns
+            `dict_class` : class (must act like the dict type)
+                The default dict_class is :class:`dict`.
+                If the order of columns matter to you, pass your own dictionary
+                class, or python 2.7's new :class:`collections.OrderedDict`. All returned
+                rows and subcolumns are instances of this.
+            `autopack_names`: bool
+                Whether column and supercolumn names should be packed automatically
+                based on the comparator and subcomparator for the column
+                family.  This does not typically work when used with
+                :class:`~pycassa.columnfamilymap.ColumnFamilyMap`.
+            `autopack_values`: bool
+                Whether column values should be packed automatically based on
+                the validator_class for a given column.  This should probably
+                be set to ``False`` when used with a
+                :class:`~pycassa.columnfamilymap.ColumnFamilyMap`.
+
         """
+
         self.client = client
         self.column_family = column_family
         self.buffer_size = buffer_size
@@ -242,14 +259,14 @@ class ColumnFamily(object):
         This is to assist with getting a time slice of columns when the
         column names are TimeUUID.
 
-        Parameters
-        ----------
-        datetime: datetime
-            - The time to use for the timestamp portion of the UUID.
-        lowest_val: boolean
-            - Whether the UUID produced should be the lowest possible value
-              UUID with the same timestamp as datetime or the highest possible
-              value.
+        :Parameters:
+            `datetime`: datetime
+                - The time to use for the timestamp portion of the UUID.
+            `lowest_val`: boolean
+                - Whether the UUID produced should be the lowest possible value
+                  UUID with the same timestamp as datetime or the highest possible
+                  value.
+
         """
         if isinstance(datetime, uuid.UUID):
             return datetime
@@ -328,33 +345,32 @@ class ColumnFamily(object):
         """
         Fetch a key from a Cassandra server
 
-        Parameters
-        ----------
-        key : str
-            The key to fetch
-        columns : [str]
-            Limit the columns or super_columns fetched to the specified list
-        column_start : str
-            Only fetch when a column or super_column is >= column_start
-        column_finish : str
-            Only fetch when a column or super_column is <= column_finish
-        column_reversed : bool
-            Fetch the columns or super_columns in reverse order. This will do
-            nothing unless you passed a dict_class to the constructor.
-        column_count : int
-            Limit the number of columns or super_columns fetched per key
-        include_timestamp : bool
-            If true, return a (value, timestamp) tuple for each column
-        super_column : str
-            Return columns only in this super_column
-        read_consistency_level : ConsistencyLevel
-            Affects the guaranteed replication factor before returning from
-            any read operation
+        :Parameters:
+            `key`: str
+                The key to fetch
+            `columns`: [str]
+                Limit the columns or super_columns fetched to the specified list
+            `column_start`: str
+                Only fetch when a column or super_column is >= column_start
+            `column_finish`: str
+                Only fetch when a column or super_column is <= column_finish
+            `column_reversed`: bool
+                Fetch the columns or super_columns in reverse order. This will do
+                nothing unless you passed a ``dict_class`` to the constructor.
+            `column_count`: int
+                Limit the number of columns or super_columns fetched per key
+            `include_timestamp` : bool
+                If true, return a (value, timestamp) tuple for each column
+            `super_column`: str
+                Return columns only in this super_column
+            `read_consistency_level`: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
+                Affects the guaranteed replication factor before returning from
+                any read operation
 
-        Returns
-        -------
-        if include_timestamp == True: {'column': ('value', timestamp)}
-        else: {'column': 'value'}
+        :Returns:
+            if include_timestamp == True: {'column': ('value', timestamp)}
+            else: {'column': 'value'}
+
         """
 
         super_column, column_start, column_finish = self._pack_slice_cols(
@@ -383,36 +399,35 @@ class ColumnFamily(object):
         """
         Fetches a list of KeySlices from a Cassandra server based on an index clause
 
-        Parameters
-        ----------
-        index_clause : IndexClause
-            Limits the keys that are returned based on expressions that compare
-            the value of a column to a given value.  At least one of the
-            expressions in the IndexClause must be on an indexed column.
-            See index_clause.create_index_clause() and create_index_expression().
-        columns : [str]
-            Limit the columns or super_columns fetched to the specified list
-        column_start : str
-            Only fetch when a column or super_column is >= column_start
-        column_finish : str
-            Only fetch when a column or super_column is <= column_finish
-        column_reversed : bool
-            Fetch the columns or super_columns in reverse order. This will do
-            nothing unless you passed a dict_class to the constructor.
-        column_count : int
-            Limit the number of columns or super_columns fetched per key
-        include_timestamp : bool
-            If true, return a (value, timestamp) tuple for each column
-        super_column : str
-            Return columns only in this super_column
-        read_consistency_level : ConsistencyLevel
-            Affects the guaranteed replication factor before returning from
-            any read operation
+        :Parameters:
+            `index_clause`: :class:`~pycassa.cassandra.ttypes.IndexClause`
+                Limits the keys that are returned based on expressions that compare
+                the value of a column to a given value.  At least one of the
+                expressions in the IndexClause must be on an indexed column.
+                .. seealso:: meth::pycassa.index.create_index_clause() and
+                             meth::pycassa.index.create_index_expression().
+            `columns`: [str]
+                Limit the columns or super_columns fetched to the specified list
+            `column_start`: str
+                Only fetch when a column or super_column is >= column_start
+            `column_finish`: str
+                Only fetch when a column or super_column is <= column_finish
+            `column_reversed`: bool
+                Fetch the columns or super_columns in reverse order. This will do
+                nothing unless you passed a dict_class to the constructor.
+            `column_count`: int
+                Limit the number of columns or super_columns fetched per key
+            `include_timestamp`: bool
+                If true, return a (value, timestamp) tuple for each column
+            `super_column`: str
+                Return columns only in this super_column
+            `read_consistency_level`: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
+                Affects the guaranteed replication factor before returning from
+                any read operation
 
-        Returns
-        -------
-        if include_timestamp == True: {key : {column : (value, timestamp)}}
-        else: {key : {column : value}}
+        :Returns:
+            if include_timestamp == True: {key : {column : (value, timestamp)}}
+            else: {key : {column : value}}
         """
 
         (super_column, column_start, column_finish) = self._pack_slice_cols(
@@ -446,35 +461,33 @@ class ColumnFamily(object):
                  column_reversed=False, column_count=100, include_timestamp=False,
                  super_column=None, read_consistency_level = None):
         """
-        Fetch multiple key from a Cassandra server
+        Fetch multiple keys from a Cassandra server
 
-        Parameters
-        ----------
-        keys : [str]
-            A list of keys to fetch
-        columns : [str]
-            Limit the columns or super_columns fetched to the specified list
-        column_start : str
-            Only fetch when a column or super_column is >= column_start
-        column_finish : str
-            Only fetch when a column or super_column is <= column_finish
-        column_reversed : bool
-            Fetch the columns or super_columns in reverse order. This will do
-            nothing unless you passed a dict_class to the constructor.
-        column_count : int
-            Limit the number of columns or super_columns fetched per key
-        include_timestamp : bool
-            If true, return a (value, timestamp) tuple for each column
-        super_column : str
-            Return columns only in this super_column
-        read_consistency_level : ConsistencyLevel
-            Affects the guaranteed replication factor before returning from
-            any read operation
+        :Parameters:
+            `keys`: [str]
+                A list of keys to fetch
+            `columns`: [str]
+                Limit the columns or super_columns fetched to the specified list
+            `column_start`: str
+                Only fetch when a column or super_column is >= column_start
+            `column_finish`: str
+                Only fetch when a column or super_column is <= column_finish
+            `column_reversed`: bool
+                Fetch the columns or super_columns in reverse order. This will do
+                nothing unless you passed a dict_class to the constructor.
+            `column_count`: int
+                Limit the number of columns or super_columns fetched per key
+            `include_timestamp`: bool
+                If true, return a (value, timestamp) tuple for each column
+            `super_column`: str
+                Return columns only in this super_column
+            `read_consistency_level`: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
+                Affects the guaranteed replication factor before returning from
+                any read operation
 
-        Returns
-        -------
-        if include_timestamp == True: {'key': {'column': ('value', timestamp)}}
-        else: {'key': {'column': 'value'}}
+        :Returns:
+            if include_timestamp == True: {'key': {'column': ('value', timestamp)}}
+            else: {'key': {'column': 'value'}}
         """
 
         (super_column, column_start, column_finish) = self._pack_slice_cols(
@@ -504,19 +517,17 @@ class ColumnFamily(object):
         """
         Count the number of columns for a key
 
-        Parameters
-        ----------
-        key : str
-            The key with which to count columns
-        super_column : str
-            Count the columns only in this super_column
-        read_consistency_level : ConsistencyLevel
-            Affects the guaranteed replication factor before returning from
-            any read operation
+        :Parameters:
+            `key` : str
+                The key with which to count columns
+            `super_column` : str
+                Count the columns only in this super_column
+            `read_consistency_level` : :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
+                Affects the guaranteed replication factor before returning from
+                any read operation
 
-        Returns
-        -------
-        int Count of columns
+        :Returns:
+            int Count of columns
         """
 
         if super_column != '':
@@ -536,36 +547,34 @@ class ColumnFamily(object):
         """
         Get an iterator over keys in a specified range
 
-        Parameters
-        ----------
-        start : str
-            Start from this key (inclusive)
-        finish : str
-            End at this key (inclusive)
-        columns : [str]
-            Limit the columns or super_columns fetched to the specified list
-        column_start : str
-            Only fetch when a column or super_column is >= column_start
-        column_finish : str
-            Only fetch when a column or super_column is <= column_finish
-        column_reversed : bool
-            Fetch the columns or super_columns in reverse order. This will do
-            nothing unless you passed a dict_class to the constructor.
-        column_count : int
-            Limit the number of columns or super_columns fetched per key
-        row_count : int
-            Limit the number of rows fetched
-        include_timestamp : bool
-            If true, return a (value, timestamp) tuple for each column
-        super_column : string
-            Return columns only in this super_column
-        read_consistency_level : ConsistencyLevel
-            Affects the guaranteed replication factor before returning from
-            any read operation
+        :Parameters:
+            `start`: str
+                Start from this key (inclusive)
+            `finish`: str
+                End at this key (inclusive)
+            `columns`: [str]
+                Limit the columns or super_columns fetched to the specified list
+            `column_start`: str
+                Only fetch when a column or super_column is >= column_start
+            `column_finish`: str
+                Only fetch when a column or super_column is <= column_finish
+            `column_reversed`: bool
+                Fetch the columns or super_columns in reverse order. This will do
+                nothing unless you passed a dict_class to the constructor.
+            `column_count`: int
+                Limit the number of columns or super_columns fetched per key
+            `row_count`: int
+                Limit the number of rows fetched
+            `include_timestamp`: bool
+                If true, return a (value, timestamp) tuple for each column
+            `super_column`: string
+                Return columns only in this super_column
+            `read_consistency_level`: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
+                Affects the guaranteed replication factor before returning from
+                any read operation
 
-        Returns
-        -------
-        iterator over ('key', {'column': 'value'})
+        :Returns:
+            iterator over ('key', {'column': 'value'})
         """
 
         (super_column, column_start, column_finish) = self._pack_slice_cols(
@@ -616,21 +625,19 @@ class ColumnFamily(object):
         """
         Insert or update columns for a key
 
-        Parameters
-        ----------
-        key : str
-            The key to insert or update the columns at
-        columns : dict
-            Column: {'column': 'value'}
-            SuperColumn: {'column': {'subcolumn': 'value'}}
-            The columns or supercolumns to insert or update
-        write_consistency_level : ConsistencyLevel
-            Affects the guaranteed replication factor before returning from
-            any write operation
+        :Parameters:
+            `key`: str
+                The key to insert or update the columns at
+            `columns`: dict
+                Column: {'column': 'value'}
+                SuperColumn: {'column': {'subcolumn': 'value'}}
+                The columns or supercolumns to insert or update
+            `write_consistency_level`: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
+                Affects the guaranteed replication factor before returning from
+                any write operation
 
-        Returns
-        -------
-        int timestamp
+        :Returns:
+            int timestamp
         """
         return self.batch_insert({key: columns}, clock=clock, ttl=ttl,
                                  write_consistency_level=write_consistency_level)
@@ -639,18 +646,16 @@ class ColumnFamily(object):
         """
         Insert or update columns for multiple keys
 
-        Parameters
-        ----------
-        rows : dict
-            Column: {'row': {'column': 'value'}}
-            SuperColumn: {'row': {'column': {'subcolumn': 'value'}}}
-        write_consistency_level : ConsistencyLevel
-            Affects the guaranteed replication factor before returning from
-            any write operation
+        :Parameters:
+            `rows`: :class:`dict`
+                Column: {'row': {'column': 'value'}}
+                SuperColumn: {'row': {'column': {'subcolumn': 'value'}}}
+            `write_consistency_level`: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
+                Affects the guaranteed replication factor before returning from
+                any write operation
 
-        Returns
-        -------
-        int timestamp
+        :Returns:
+            int timestamp
         """
         clock = Clock(timestamp=self.timestamp())
         batch = self.batch(write_consistency_level=write_consistency_level)
@@ -663,21 +668,19 @@ class ColumnFamily(object):
         """
         Remove a specified key or columns
 
-        Parameters
-        ----------
-        key : str
-            The key to remove. If columns is not set, remove all columns
-        columns : list
-            Delete the columns or super_columns in this list
-        super_column : str
-            Delete the columns from this super_column
-        write_consistency_level : ConsistencyLevel
-            Affects the guaranteed replication factor before returning from
-            any write operation
+        :Parameters:
+            `key`: str
+                The key to remove. If columns is not set, remove all columns
+            `columns`: list
+                Delete the columns or super_columns in this list
+            `super_column`: str
+                Delete the columns from this super_column
+            `write_consistency_level`: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
+                Affects the guaranteed replication factor before returning from
+                any write operation
 
-        Returns
-        -------
-        int timestamp
+        :Returns:
+            int timestamp
         """
         clock = Clock(timestamp=self.timestamp())
         batch = self.batch(write_consistency_level=write_consistency_level)
@@ -687,19 +690,17 @@ class ColumnFamily(object):
 
     def batch(self, queue_size=100, write_consistency_level=None):
         """
-        Create batch mutator for doing multiple insert,update,remove
+        Create batch mutator for doing multiple insert, update, and remove
         operations using as few roundtrips as possible.
 
-        Parameters
-        ----------
-        queue_size : int
-            Max number of mutations per request
-        write_consistency_level: ConsistencyLevel
-            Consistency level used for mutations.
+        :Parameters:
+            `queue_size`: int
+                Max number of mutations per request
+            `write_consistency_level`: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
+                Consistency level used for mutations.
 
-        Returns
-        -------
-        CfMutator mutator
+        :Returns:
+            :class:`pycassa.batch.CfMutator`
         """
         if write_consistency_level is None:
             write_consistency_level = self.write_consistency_level
@@ -709,10 +710,15 @@ class ColumnFamily(object):
     def truncate(self):
         """
         Marks the entire ColumnFamily as deleted.
-        From the user's perspective a successful call to truncate will result complete data deletion from cfname.
-        Internally, however, disk space will not be immediatily released, as with all deletes in cassandra, this one
-        only marks the data as deleted.
-        The operation succeeds only if all hosts in the cluster at available and will throw an UnavailableException if
-        some hosts are down.
+
+        From the user's perspective a successful call to truncate will result
+        complete data deletion from cfname. Internally, however, disk space
+        will not be immediatily released, as with all deletes in cassandra,
+        this one only marks the data as deleted.
+
+        The operation succeeds only if all hosts in the cluster at available
+        and will throw an :exc:`.UnavailableException` if some hosts are
+        down.
+
         """
         self.client.truncate(self.column_family)

@@ -6,11 +6,15 @@
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 
-"""Connection pooling for Cassandra connections.
+"""
+Connection pooling for Cassandra connections.
 
 Provides a number of connection pool implementations for a variety of
 usage scenarios and thread behavior requirements imposed by the
 application.
+
+.. seealso:: :mod:`pycassa.connection`
+
 """
 
 import weakref, time, threading, random
@@ -24,14 +28,23 @@ from cassandra.ttypes import TimedOutException, UnavailableException
 
 from thrift import Thrift
 
+__all__ = ['Pool', 'QueuePool', 'SingletonThreadPool', 'StaticPool',
+           'NullPool', 'AssertionPool', 'PoolListener', 'ConnectionWrapper',
+           'ImmutableConnectionWrapper', 'MutableConnectionWrapper',
+           'ReplaceableConnectionWrapper', 'AllServersUnavailable',
+           'MaximumRetryException', 'NoConnectionAvailable',
+           'InvalidRequestError']
+
 class Pool(object):
-    """Abstract base class for connection pools."""
+    """An abstract base class for all other pools."""
 
     def __init__(self, keyspace, server_list=['localhost:9160'],
                  credentials=None, timeout=0.5, logging_name=None,
                  use_threadlocal=True, listeners=[]):
         """
-        Construct a Pool.
+        Construct an instance of the abstract base class :class:`Pool`.  This
+        should not be called directly, only by subclass :meth:`__init__()`
+        methods.
 
         :param keyspace: The keyspace this connection pool will
           make all connections to.
@@ -49,16 +62,16 @@ class Pool(object):
 
         :param logging_name:  String identifier which will be used within
           the "name" field of logging records generated within the
-          "pycassa.pool" logger. Defaults to id(pool).
+          "pycassa.pool" logger. Defaults to ``id(pool)``.
 
         :param use_threadlocal: If set to True, repeated calls to
-          :meth:`get` within the same application thread will
+          :meth:`get()` within the same application thread will
           return the same ConnectionWrapper object, if one has already
           been retrieved from the pool and has not been
           returned yet.
 
         :param listeners: A list of
-          :class:`~PoolListener`-like objects or
+          :class:`PoolListener`-like objects or
           dictionaries of callables that receive events when Cassandra
           connections are created, checked out and checked in to the
           pool.
@@ -160,22 +173,31 @@ class Pool(object):
         raise NotImplementedError()
 
     def dispose(self):
-        """Dispose of this pool.
+        """
+        Dispose of this pool.
 
         This method leaves the possibility of checked-out connections
-        remaining open, It is advised to not reuse the pool once dispose()
-        is called, and to instead use a new pool constructed by the
-        recreate() method.
-        """
+        remaining open, It is advised to not reuse the pool once
+        :meth:`dispose()` is called, and to instead use a new pool
+        constructed by :meth:`recreate()`.
 
+        """
         raise NotImplementedError()
 
     def return_conn(self, record):
-        """Returns a ConnectionWrapper to the pool."""
+        """
+        Return a ConnectionWrapper to the pool.
+
+        :param record: The :class:`ConnectionWrapper` to retrun to the pool.
+
+        """
         self._do_return_conn(record)
 
     def get(self):
-        """Gets a ConnectionWrapper from the pool."""
+        """
+        Get a :class:`ConnectionWrapper` from the pool.
+
+        """
         return self._do_get()
 
     def _do_get(self):
@@ -188,11 +210,12 @@ class Pool(object):
         raise NotImplementedError()
 
     def add_listener(self, listener):
-        """Add a ``PoolListener``-like object to this pool.
+        """
+        Add a :class:`PoolListener`-like object to this pool.
 
-        ``listener`` may be an object that implements some or all of
-        PoolListener, or a dictionary of callables containing implementations
-        of some or all of the named methods in PoolListener.
+        `listener` may be an object that implements some or all of
+        :class:`PoolListener`, or a dictionary of callables containing implementations
+        of some or all of the named methods in :class:`PoolListener`.
 
         """
 
@@ -322,12 +345,7 @@ class Pool(object):
 
 class ConnectionWrapper(connection.Connection):
     """
-    Wraps a pycassa.connection.Connection object, adding pooling
-    related functionality while still allowing access to the
-    thrift API calls.
-
-    These should not be created directly, only obtained through
-    Pool's get() method.
+    A wrapper class for :class:`Connection`s that adds pooling functionality.
 
     """
 
@@ -339,6 +357,15 @@ class ConnectionWrapper(connection.Connection):
     _DISPOSED = 2
 
     def __init__(self, pool, *args, **kwargs):
+        """
+        Creates a wrapper for a :class:`pycassa.connection.Connection`
+        object, adding pooling related functionality while still allowing
+        access to the thrift API calls.
+
+        These should not be created directly, only obtained through
+        Pool's :meth:`~pycassa.pool.Pool.get()` method.
+
+        """
         self._pool = pool
         self._lock = threading.Lock()
         self.info = {}
@@ -350,8 +377,13 @@ class ConnectionWrapper(connection.Connection):
         self._pool._notify_on_connect(self)
 
     def return_to_pool(self):
-        """Returns the Connection to the pool.  This has the same
-        effect as calling Pool.return_conn() on the wrapper."""
+        """
+        Returns this to the pool.
+
+        This has the same effect as calling :meth:`Pool.return_conn()`
+        on the wrapper.
+
+        """
         self._pool.return_conn(self)
 
     def _checkin(self):
@@ -399,20 +431,21 @@ class ConnectionWrapper(connection.Connection):
         raise NotImplementedError()
 
 class ImmutableConnectionWrapper(ConnectionWrapper):
-    """
-    A ConnectionWrapper that does not support retries through replacing
-    one wrapper with another or by swapping out the lower-level
-    pycassa.connection.Connection.
-
-    This is currently only used by a StaticPool.  Here, the connection
-    is immutable because multiple threads may be using the same connection
-    at the same time.
-
-    These should not be created directly.
-
-    """
+    """A connection wrapper that may not be altered."""
 
     def __init__(self, pool, *args, **kwargs):
+        """
+        Create a ConnectionWrapper that does not support retries through replacing
+        one wrapper with another or by swapping out the lower-level
+        :class:`pycassa.connection.Connection`.
+
+        This is currently only used by :class:`StaticPool`.  Here, the connection
+        is immutable because multiple threads may be using the same connection
+        at the same time.
+
+        These should not be created directly.
+
+        """
         super(ImmutableConnectionWrapper, self).__init__(pool, *args, **kwargs)
 
     def __getattr__(self, attr):
@@ -429,24 +462,28 @@ class ImmutableConnectionWrapper(ConnectionWrapper):
         return getattr(self, attr)
 
 class ReplaceableConnectionWrapper(ConnectionWrapper):
-    """
-    A ConnectionWrapper that supports retries by obtaining another wrapper
-    from the pool and swapping all contents with it.
-
-    Caution should be used when this not used with use_threadlocal=True.
-
-    These should not be created directly.
-
-    """
+    """A connection wrapper that may be replaced by another wrapper."""
 
     def __init__(self, pool, max_retries, *args, **kwargs):
+        """
+        Create a ConnectionWrapper that supports retries by obtaining another
+        wrapper from the pool and swapping all contents with it.
+
+        Caution should be used when this is used with ``use_threadlocal=False``.
+
+        These should not be created directly.
+
+        """
         super(ReplaceableConnectionWrapper, self).__init__(pool, *args, **kwargs)
         self._retry_count = 0
         self._max_retries = max_retries
 
     def _replace(self, new_conn_wrapper):
-        """Get another wrapper from the pool and replace our own contents
-        with its contents."""
+        """
+        Get another wrapper from the pool and replace our own contents
+        with its contents.
+
+        """
         super(ConnectionWrapper, self)._replace(new_conn_wrapper)
         self._lock = new_conn_wrapper._lock
         self._info = new_conn_wrapper.info
@@ -483,25 +520,30 @@ class ReplaceableConnectionWrapper(ConnectionWrapper):
         return getattr(self, attr)
 
 class MutableConnectionWrapper(ConnectionWrapper):
-    """A ConnectionWrapper that supports retries by opening a new
-    connection to the next server in Pool's list.
-
-    Caution should be used when this is not used with use_threadlocal=True.
-
-    These should not be created directly.
-
-    """
+    """A connection wrapper that may be altered."""
 
     def __init__(self, pool, max_retries, *args, **kwargs):
+        """
+        Create a :class:`ConnectionWrapper` that supports retries by
+        opening a new connection to the next server in Pool's list.
+
+        Caution should be used when this is used with ``use_threadlocal=False``.
+
+        These should not be created directly.
+
+        """
         super(MutableConnectionWrapper, self).__init__(pool, *args, **kwargs)
         self._retry_count = 0
         self._max_retries = max_retries
 
     def _replace_conn(self):
-        """Try getting servers from Pool's list and open connections to them
+        """
+        Try getting servers from Pool's list and open connections to them
         until one succeeds or we have failed enough times; if we succeed,
         swap the contents of our pycassa.connection.Connection attributes with
-        that connection's."""
+        that connection's.
+
+        """
         self.close()
         failure_count = 0
         while failure_count < 2 * len(self._pool.server_list):
@@ -539,22 +581,19 @@ class MutableConnectionWrapper(ConnectionWrapper):
         return getattr(self, attr)
 
 class QueuePool(Pool):
-    """
-    A Pool that maintains a queue of open connections.
-
-    This is typically what you want to use for connection pooling.
-
-    Be careful when using a QueuePool with use_threadlocal=True,
-    especially with retries enabled.  Synchronization may be required to
-    prevent the connection from changing while another thread is using it.
-
-    """
+    """A pool that maintains a queue of open connections."""
 
     def __init__(self, pool_size=5, max_overflow=10,
                  pool_timeout=30, recycle=10000, max_retries=5,
                  prefill=True, *args, **kwargs):
         """
-        Construct a QueuePool.
+        Construct a Pool that maintains a queue of open connections.
+
+        This is typically what you want to use for connection pooling.
+
+        Be careful when using a QueuePool with ``use_threadlocal=False``,
+        especially with retries enabled.  Synchronization may be required to
+        prevent the connection from changing while another thread is using it.
 
         :param pool_size: The size of the pool to be maintained,
           defaults to 5. This is the largest number of connections that
@@ -562,9 +601,9 @@ class QueuePool(Pool):
 
           A good choice for this is usually a multiple of the number of servers
           passed to the Pool constructor.  If a size less than this is chosen,
-          the last (len(server_list) - pool_size) servers may not be used until
+          the last ``(len(server_list) - pool_size)`` servers may not be used until
           either overflow occurs, a connection is recycled, or a connection
-          fails. Similarly, if a multiple of len(server_list) is not chosen,
+          fails. Similarly, if a multiple of ``len(server_list)`` is not chosen,
           those same servers would have a decreased load.
 
         :param max_overflow: The maximum overflow size of the
@@ -775,16 +814,14 @@ class QueuePool(Pool):
         return self._pool_size - self._q.qsize() + self._overflow
 
 class SingletonThreadPool(Pool):
-    """A Pool that maintains one connection per thread.
-
-    Maintains one connection per each thread, never moving a connection to a
-    thread other than the one which it was created in.
-
-    """
+    """A Pool that maintains one connection per thread."""
 
     def __init__(self, pool_size=5, max_retries=5, *args, **kwargs):
         """
-        Creates a SingletonThreadPool.
+        Creates a Pool that maintains one connection per thread.
+
+        Maintains one connection per each thread, never moving a connection to a
+        thread other than the one which it was created in.
 
         Options are the same as those of :class:`Pool`, as well as:
 
@@ -817,8 +854,6 @@ class SingletonThreadPool(Pool):
             listeners=self.listeners)
 
     def dispose(self):
-        """Dispose of this pool."""
-
         for conn in self._all_conns:
             try:
                 conn._dispose_wrapper()
@@ -865,19 +900,19 @@ class SingletonThreadPool(Pool):
         return c
 
 class NullPool(Pool):
-    """A Pool which does not pool connections.
-
-    Instead, it opens and closes the underlying Cassandra connection
-    per each get()/return(). NullPools do offer retry behavior.
-
-    Instead of using this with threadlocal storage, you should use a
-    SingletonThreadPool.
-
-    """
+    """A Pool which does not pool connections."""
 
     def __init__(self, max_retries=5, *args, **kwargs):
         """
-        Creates a NullPool.
+        Creates a Pool which does not pool connections.
+
+        Instead, it opens and closes the underlying Cassandra connection
+        per each :meth:`~Pool.get()` and :meth:`~Pool.return_conn()`.
+
+        NullPools support retry behavior.
+
+        Instead of using this with threadlocal storage, you should use a
+        :class:`SingletonThreadPool`.
 
         Options are the same as those of :class:`Pool`, as well as:
 
@@ -924,14 +959,16 @@ class NullPool(Pool):
 
 
 class StaticPool(Pool):
-    """
-    A Pool of exactly one connection, used for all requests.
-
-    StaticPools do not currently automatic retries.
-
-    """
+    """A Pool of exactly one connection, used for all requests."""  
 
     def __init__(self, *args, **kwargs):
+        """
+        Creates a pool with exactly one connection that is used
+        for all requests.
+
+        Automatic retries are not currently supported.
+
+        """
         Pool.__init__(self, *args, **kwargs)
         self._conn = self._create_connection()
 
@@ -975,19 +1012,18 @@ class StaticPool(Pool):
 
 class AssertionPool(Pool):
     """A Pool that allows at most one checked out connection at any given
-    time.
-
-    This will raise an AssertionError if more than one connection is checked
-    out at a time.  Useful for debugging code that is using more connections
-    than desired.
-
-    AssertionPools do support automatic retries.
-
-    """
+    time."""
 
     def __init__(self, max_retries=5, *args, **kwargs):
         """
-        Creates an AssertionPool.
+        Creates a Pool that allows at most one checked out connection at any given
+        time.
+
+        This will raise an :exc:`AssertionError` if more than one connection is checked
+        out at a time.  Useful for debugging code that is using more connections
+        than desired.
+
+        AssertionPools support automatic retries.
 
         Options are the same as those of :class:`Pool`, as well as:
 
@@ -1055,34 +1091,32 @@ class AssertionPool(Pool):
 
 
 class PoolListener(object):
-    """Hooks into the lifecycle of connections in a ``Pool``.
+    """Hooks into the lifecycle of connections in a :class:`Pool`.
 
     Usage::
 
         class MyListener(PoolListener):
-            def connect(self, dic):
+            def connection_created(self, dic):
                 '''perform connect operations'''
             # etc.
 
         # create a new pool with a listener
         p = QueuePool(..., listeners=[MyListener()])
 
-        # add a listener after the fact
+        # or add a listener after the fact
         p.add_listener(MyListener())
 
-    All of the standard connection :class:`~pycassa.pool.Pool` types can
-    accept event listeners for key connection lifecycle events:
-    creation, pool check-out and check-in.  There are no events fired
-    when a connection closes.
+    All of the standard connection :class:`Pool` types can
+    accept event listeners for key connection lifecycle events.
 
     Listeners receive a dictionary that contains event information and
     is indexed by a string describing that piece of info.  For example,
     all event dictionaries include 'level', so dic['level'] will return
     the prescribed logging level.
 
-    There is no need to subclass ``PoolListener`` to handle events.
+    There is no need to subclass :class:`PoolListener` to handle events.
     Any class that implements one or more of these methods can be used
-    as a pool listener.  The ``Pool`` will inspect the methods
+    as a pool listener.  The :class:`Pool` will inspect the methods
     provided by a listener object and add the listener to one or more
     internal event queues based on its capabilities.  In terms of
     efficiency and function call overhead, you're much better off only
@@ -1094,7 +1128,7 @@ class PoolListener(object):
         """Called once for each new Cassandra connection.
 
         dic['connection']
-          The ``ConnectionWrapper`` that persistently manages the connection
+          The :class:`ConnectionWrapper` that persistently manages the connection
 
         dic['message']
             A reason for closing the connection, if any.
@@ -1103,7 +1137,7 @@ class PoolListener(object):
             An error that occured while closing the connection, if any.
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. QueuePool
+          The type of pool the connection was created in; e.g. :class:`QueuePool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))
@@ -1118,10 +1152,10 @@ class PoolListener(object):
         """Called when a connection is retrieved from the Pool.
 
         dic['connection']
-          The ``ConnectionWrapper`` that persistently manages the connection
+          The :class:`ConnectionWrapper` that persistently manages the connection
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. QueuePool
+          The type of pool the connection was created in; e.g. :class:`QueuePool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))
@@ -1138,10 +1172,10 @@ class PoolListener(object):
         Note that the connection may be None if the connection has been closed.
 
         dic['connection']
-          The ``ConnectionWrapper`` that persistently manages the connection
+          The :class:`ConnectionWrapper` that persistently manages the connection
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. QueuePool
+          The type of pool the connection was created in; e.g. :class:`QueuePool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))
@@ -1156,7 +1190,7 @@ class PoolListener(object):
         """Called when a connection is closed.
 
         dic['connection']
-            The ``ConnectionWrapper`` that persistently manages the connection
+            The :class:`ConnectionWrapper` that persistently manages the connection
 
         dic['message']
             A reason for closing the connection, if any.
@@ -1165,7 +1199,7 @@ class PoolListener(object):
             An error that occured while closing the connection, if any.
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. QueuePool
+          The type of pool the connection was created in; e.g. :class:`QueuePool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))
@@ -1180,13 +1214,13 @@ class PoolListener(object):
         """Called when a connection is recycled.
 
         dic['old_conn']
-            The ``ConnectionWrapper`` that is being recycled
+            The :class:`ConnectionWrapper` that is being recycled
 
         dic['new_conn']
-            The ``ConnectionWrapper`` that is replacing it
+            The :class:`ConnectionWrapper` that is replacing it
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. QueuePool
+          The type of pool the connection was created in; e.g. :class:`QueuePool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))
@@ -1204,7 +1238,7 @@ class PoolListener(object):
           The connection error (Exception).
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. QueuePool
+          The type of pool the connection was created in; e.g. :class:`QueuePool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))
@@ -1221,7 +1255,7 @@ class PoolListener(object):
             The randomly permuted list of servers.
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. QueuePool
+          The type of pool the connection was created in; e.g. :class:`QueuePool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))
@@ -1236,7 +1270,7 @@ class PoolListener(object):
         """Called when a pool is recreated.
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. QueuePool
+          The type of pool the connection was created in; e.g. :class:`QueuePool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))
@@ -1251,7 +1285,7 @@ class PoolListener(object):
         """Called when a pool is recreated.
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. QueuePool
+          The type of pool the connection was created in; e.g. :class:`QueuePool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))
@@ -1268,7 +1302,7 @@ class PoolListener(object):
         pool, but the pool is already at its max size.
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. QueuePool
+          The type of pool the connection was created in; e.g. :class:`QueuePool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))
@@ -1287,14 +1321,16 @@ class NoConnectionAvailable(Exception):
     """Raised when there are no connections left in a pool."""
 
 class MaximumRetryException(Exception):
-    """Raised when a connection wrapper has retried the maximum
+    """
+    Raised when a :class:`ConnectionWrapper` has retried the maximum
     allowed times before being returned to the pool; note that all of
     the retries do not have to be on the same operation.
 
     """
 
 class InvalidRequestError(Exception):
-    """Pycassa was asked to do something it can't do.
+    """
+    Pycassa was asked to do something it can't do.
 
     This error generally corresponds to runtime state errors.
 

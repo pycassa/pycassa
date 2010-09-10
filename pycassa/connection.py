@@ -1,3 +1,17 @@
+"""Tools for connecting to a Cassandra cluster.
+
+.. seealso:: Module :mod:`~pycassa.pool` to see how connections
+    can be pooled.
+
+To get a connection object which you can use directly, with
+:class:`~pycassa.columnfamily.ColumnFamily`, or with
+:class:`~pycassa.columnfamilymap.ColumnFamilyMap`, you can do the
+following:
+
+    >>> import pycassa
+    >>> connection = pycassa.connect('Keyspace', ['hostname:9160'])
+"""
+
 from exceptions import Exception
 import logging
 import random
@@ -15,7 +29,8 @@ from pycassa.cassandra.ttypes import AuthenticationRequest
 
 from batch import Mutator
 
-__all__ = ['connect', 'connect_thread_local', 'NoServerAvailable']
+__all__ = ['connect', 'connect_thread_local', 'NoServerAvailable',
+           'Connection']
 
 DEFAULT_SERVER = 'localhost:9160'
 API_VERSION = VERSION.split('.')
@@ -23,6 +38,7 @@ API_VERSION = VERSION.split('.')
 log = logging.getLogger('pycassa')
 
 class NoServerAvailable(Exception):
+    """Raised if all servers are currently marked dead."""
     pass
 
 class ClientTransport(object):
@@ -71,44 +87,41 @@ def connect(keyspace, servers=None, framed_transport=True, timeout=None,
 
     If the connection fails, it will attempt to connect to each server on the
     list in turn until one succeeds. If it is unable to find an active server,
-    it will throw a NoServerAvailable exception.
+    it will throw a `NoServerAvailable` exception.
 
     Failing servers are kept on a separate list and eventually retried, no
     sooner than `retry_time` seconds after failure.
 
-    Parameters
-    ----------
-    keyspace: string
-              The keyspace to associate this connection with.
-    servers : [server]
-              List of Cassandra servers with format: "hostname:port"
+    :Parameters:
+        `keyspace`: string
+                  The keyspace to associate this connection with.
+        `servers`: [server]
+                  List of Cassandra servers with format: "hostname:port"
 
-              Default: ['localhost:9160']
-    framed_transport: bool
-              If True, use a TFramedTransport instead of a TBufferedTransport
-    timeout: float
-              Timeout in seconds (e.g. 0.5)
+                  Default: ['localhost:9160']
+        `framed_transport`: bool
+                  If True, use a TFramedTransport instead of a TBufferedTransport
+        `timeout`: float
+                  Timeout in seconds (e.g. 0.5)
 
-              Default: None (it will stall forever)
-    retry_time: float
-              Minimum time in seconds until a failed server is reinstated. (e.g. 0.5)
+                  Default: None (it will stall forever)
+        `retry_time`: float
+                  Minimum time in seconds until a failed server is reinstated. (e.g. 0.5)
 
-              Default: 60
-    credentials : dict
-              Dictionary of Credentials
+                  Default: 60
+        `credentials`: dict
+                  Dictionary of Credentials
 
-              Example: {'username':'jsmith', 'password':'havebadpass'}
-    recycle: float
-              Max time in seconds before an open connection is closed and returned to the pool.
+                  Example: {'username':'jsmith', 'password':'havebadpass'}
+        `recycle`: float
+                  Max time in seconds before an open connection is closed and returned to the pool.
 
-              Default: None (Never recycle)
+                  Default: None (Never recycle)
+        `round_robin`: bool
+                  *DEPRECATED*
 
-    round_robin: bool
-              *DEPRECATED*
-
-    Returns
-    -------
-    Cassandra client
+    :Returns:
+        Cassandra client
     """
 
     if servers is None:
@@ -156,6 +169,7 @@ class ServerSet(object):
             self._lock.release()
 
 class Connection(object):
+    """A connection that gives access to raw Thrift calls."""
 
     def __init__(self, keyspace, servers, framed_transport=True, timeout=None,
                  retry_time=10, recycle=None, credentials=None,
@@ -244,16 +258,13 @@ class Connection(object):
         """
         Describes the given keyspace.
         
-        Parameters
-        ----------
-        keyspace: str
-                  Defaults to the current keyspace.
+        :param keyspace: The keyspace to describe. Defaults to the current
+                         keyspace.
 
-        Returns
-        -------
-        {column_family_name: CfDef}
-        where a CfDef has many attributes describing the column family, including
-        the dictionary column_metadata = {column_name: ColumnDef}
+        :Returns:
+            ``{column_family_name: CfDef}``
+            where a ``CfDef`` has many attributes describing the column family, including
+            the dictionary ``column_metadata = {column_name: ColumnDef}``
         """
         if keyspace is None:
             keyspace = self._keyspace
@@ -270,4 +281,8 @@ class Connection(object):
         return cf_defs
 
     def batch(self, *args, **kwargs):
+        """
+        Returns a mutator on this connection.
+
+        """
         return Mutator(self, *args, **kwargs)
