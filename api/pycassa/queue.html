@@ -1,0 +1,303 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>&lt;no title&gt; &mdash; pycassa v0.5.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="pycassa v0.5.0 documentation" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">pycassa v0.5.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <p>&#8220;&#8221;&#8220;An adaptation of Py2.3/2.4&#8217;s Queue module which supports reentrant
+behavior, using RLock instead of Lock for its mutex object.</p>
+<p>This is to support the connection pool&#8217;s usage of weakref callbacks to return
+connections to the underlying Queue, which can in extremely
+rare cases be invoked within the <tt class="docutils literal"><span class="pre">get()</span></tt> method of the Queue itself,
+producing a <tt class="docutils literal"><span class="pre">put()</span></tt> inside the <tt class="docutils literal"><span class="pre">get()</span></tt> and therefore a reentrant
+condition.&#8221;&#8220;&#8221;</p>
+<p>from collections import deque
+from time import time as _time
+import threading</p>
+<p>__all__ = [&#8216;Empty&#8217;, &#8216;Full&#8217;, &#8216;Queue&#8217;]</p>
+<dl class="docutils">
+<dt>class Empty(Exception):</dt>
+<dd><p class="first">&#8220;Exception raised by Queue.get(block=0)/get_nowait().&#8221;</p>
+<p class="last">pass</p>
+</dd>
+<dt>class Full(Exception):</dt>
+<dd><p class="first">&#8220;Exception raised by Queue.put(block=0)/put_nowait().&#8221;</p>
+<p class="last">pass</p>
+</dd>
+<dt>class Queue:</dt>
+<dd><dl class="first docutils">
+<dt>def __init__(self, maxsize=0):</dt>
+<dd><p class="first">&#8220;&#8221;&#8220;Initialize a queue object with a given maximum size.</p>
+<p>If <cite>maxsize</cite> is &lt;= 0, the queue size is infinite.
+&#8220;&#8221;&#8220;</p>
+<p class="last">self._init(maxsize)
+# mutex must be held whenever the queue is mutating.  All methods
+# that acquire mutex must release it before returning.  mutex
+# is shared between the two conditions, so acquiring and
+# releasing the conditions also acquires and releases mutex.
+self.mutex = threading.RLock()
+# Notify not_empty whenever an item is added to the queue; a
+# thread waiting to get is notified then.
+self.not_empty = threading.Condition(self.mutex)
+# Notify not_full whenever an item is removed from the queue;
+# a thread waiting to put is notified then.
+self.not_full = threading.Condition(self.mutex)</p>
+</dd>
+<dt>def qsize(self):</dt>
+<dd><p class="first">&#8220;&#8221;&#8220;Return the approximate size of the queue (not reliable!).&#8221;&#8220;&#8221;</p>
+<p class="last">self.mutex.acquire()
+n = self._qsize()
+self.mutex.release()
+return n</p>
+</dd>
+<dt>def empty(self):</dt>
+<dd><p class="first">&#8220;&#8221;&#8220;Return True if the queue is empty, False otherwise (not
+reliable!).&#8221;&#8220;&#8221;</p>
+<p class="last">self.mutex.acquire()
+n = self._empty()
+self.mutex.release()
+return n</p>
+</dd>
+<dt>def full(self):</dt>
+<dd><p class="first">&#8220;&#8221;&#8220;Return True if the queue is full, False otherwise (not
+reliable!).&#8221;&#8220;&#8221;</p>
+<p class="last">self.mutex.acquire()
+n = self._full()
+self.mutex.release()
+return n</p>
+</dd>
+<dt>def put(self, item, block=True, timeout=None):</dt>
+<dd><p class="first">&#8220;&#8221;&#8220;Put an item into the queue.</p>
+<p>If optional args <cite>block</cite> is True and <cite>timeout</cite> is None (the
+default), block if necessary until a free slot is
+available. If <cite>timeout</cite> is a positive number, it blocks at
+most <cite>timeout</cite> seconds and raises the <tt class="docutils literal"><span class="pre">Full</span></tt> exception if no
+free slot was available within that time.  Otherwise (<cite>block</cite>
+is false), put an item on the queue if a free slot is
+immediately available, else raise the <tt class="docutils literal"><span class="pre">Full</span></tt> exception
+(<cite>timeout</cite> is ignored in that case).
+&#8220;&#8221;&#8220;</p>
+<p>self.not_full.acquire()
+try:</p>
+<blockquote>
+<dl class="docutils">
+<dt>if not block:</dt>
+<dd><dl class="first last docutils">
+<dt>if self._full():</dt>
+<dd>raise Full</dd>
+</dl>
+</dd>
+<dt>elif timeout is None:</dt>
+<dd><dl class="first last docutils">
+<dt>while self._full():</dt>
+<dd>self.not_full.wait()</dd>
+</dl>
+</dd>
+<dt>else:</dt>
+<dd><dl class="first docutils">
+<dt>if timeout &lt; 0:</dt>
+<dd>raise ValueError(&#8220;&#8216;timeout&#8217; must be a positive number&#8221;)</dd>
+</dl>
+<p>endtime = _time() + timeout
+while self._full():</p>
+<blockquote class="last">
+<p>remaining = endtime - _time()
+if remaining &lt;= 0.0:</p>
+<blockquote>
+raise Full</blockquote>
+<p>self.not_full.wait(remaining)</p>
+</blockquote>
+</dd>
+</dl>
+<p>item._checkin()
+self._put(item)
+self.not_empty.notify()</p>
+</blockquote>
+<dl class="last docutils">
+<dt>finally:</dt>
+<dd>self.not_full.release()</dd>
+</dl>
+</dd>
+<dt>def put_nowait(self, item):</dt>
+<dd><p class="first">&#8220;&#8221;&#8220;Put an item into the queue without blocking.</p>
+<p class="last">Only enqueue the item if a free slot is immediately available.
+Otherwise raise the <tt class="docutils literal"><span class="pre">Full</span></tt> exception.
+&#8220;&#8221;&#8221;
+return self.put(item, False)</p>
+</dd>
+<dt>def get(self, block=True, timeout=None):</dt>
+<dd><p class="first">&#8220;&#8221;&#8220;Remove and return an item from the queue.</p>
+<p>If optional args <cite>block</cite> is True and <cite>timeout</cite> is None (the
+default), block if necessary until an item is available. If
+<cite>timeout</cite> is a positive number, it blocks at most <cite>timeout</cite>
+seconds and raises the <tt class="docutils literal"><span class="pre">Empty</span></tt> exception if no item was
+available within that time.  Otherwise (<cite>block</cite> is false),
+return an item if one is immediately available, else raise the
+<tt class="docutils literal"><span class="pre">Empty</span></tt> exception (<cite>timeout</cite> is ignored in that case).
+&#8220;&#8221;&#8220;</p>
+<p>self.not_empty.acquire()
+try:</p>
+<blockquote>
+<dl class="docutils">
+<dt>if not block:</dt>
+<dd><dl class="first last docutils">
+<dt>if self._empty():</dt>
+<dd>raise Empty</dd>
+</dl>
+</dd>
+<dt>elif timeout is None:</dt>
+<dd><dl class="first last docutils">
+<dt>while self._empty():</dt>
+<dd>self.not_empty.wait()</dd>
+</dl>
+</dd>
+<dt>else:</dt>
+<dd><dl class="first docutils">
+<dt>if timeout &lt; 0:</dt>
+<dd>raise ValueError(&#8220;&#8216;timeout&#8217; must be a positive number&#8221;)</dd>
+</dl>
+<p>endtime = _time() + timeout
+while self._empty():</p>
+<blockquote class="last">
+<p>remaining = endtime - _time()
+if remaining &lt;= 0.0:</p>
+<blockquote>
+raise Empty</blockquote>
+<p>self.not_empty.wait(remaining)</p>
+</blockquote>
+</dd>
+</dl>
+<p>item = self._get()
+item._checkout()
+self.not_full.notify()
+return item</p>
+</blockquote>
+<dl class="last docutils">
+<dt>finally:</dt>
+<dd>self.not_empty.release()</dd>
+</dl>
+</dd>
+<dt>def get_nowait(self):</dt>
+<dd><p class="first">&#8220;&#8221;&#8220;Remove and return an item from the queue without blocking.</p>
+<p>Only get an item if one is immediately available. Otherwise
+raise the <tt class="docutils literal"><span class="pre">Empty</span></tt> exception.
+&#8220;&#8221;&#8220;</p>
+<p class="last">return self.get(False)</p>
+</dd>
+</dl>
+<p># Override these methods to implement other queue organizations
+# (e.g. stack or priority queue).
+# These will only be called with appropriate locks held</p>
+<p># Initialize the queue representation
+def _init(self, maxsize):</p>
+<blockquote>
+self.maxsize = maxsize
+self.queue = deque()</blockquote>
+<dl class="docutils">
+<dt>def _qsize(self):</dt>
+<dd>return len(self.queue)</dd>
+</dl>
+<p># Check whether the queue is empty
+def _empty(self):</p>
+<blockquote>
+return not self.queue</blockquote>
+<p># Check whether the queue is full
+def _full(self):</p>
+<blockquote>
+return self.maxsize &gt; 0 and len(self.queue) == self.maxsize</blockquote>
+<p># Put a new item in the queue
+def _put(self, item):</p>
+<blockquote>
+self.queue.append(item)</blockquote>
+<p># Get an item from the queue
+def _get(self):</p>
+<blockquote class="last">
+return self.queue.popleft()</blockquote>
+</dd>
+</dl>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/api/pycassa/queue.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">pycassa v0.5.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2009, Michael Dirolf.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.3.
+    </div>
+  </body>
+</html>

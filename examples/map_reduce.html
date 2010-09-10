@@ -1,0 +1,219 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Map/Reduce Example &mdash; pycassa v0.5.0 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="pycassa v0.5.0 documentation" href="../index.html" />
+    <link rel="up" title="Examples" href="index.html" />
+    <link rel="next" title="Geospatial Indexing Example" href="geo.html" />
+    <link rel="prev" title="GridFS Example" href="gridfs.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="geo.html" title="Geospatial Indexing Example"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gridfs.html" title="GridFS Example"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">pycassa v0.5.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Examples</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="map-reduce-example">
+<h1>Map/Reduce Example<a class="headerlink" href="#map-reduce-example" title="Permalink to this headline">¶</a></h1>
+<p>This example shows how to use the
+<tt class="xref py py-meth docutils literal"><span class="pre">map_reduce()</span></tt> method to perform
+map/reduce style aggregations on your data.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Map/Reduce requires server version <strong>&gt;= 1.1.1</strong>. The PyMongo
+<tt class="xref py py-meth docutils literal"><span class="pre">map_reduce()</span></tt> helper requires
+PyMongo version <strong>&gt;= 1.2</strong>.</p>
+</div>
+<div class="section" id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
+<p>To start, we&#8217;ll insert some example data which we can perform
+map/reduce queries on:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pymongo</span> <span class="kn">import</span> <span class="n">Connection</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">db</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">()</span><span class="o">.</span><span class="n">map_reduce_example</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">things</span><span class="o">.</span><span class="n">insert</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&quot;tags&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;dog&quot;</span><span class="p">,</span> <span class="s">&quot;cat&quot;</span><span class="p">]})</span>
+<span class="go">ObjectId(&#39;...&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">things</span><span class="o">.</span><span class="n">insert</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&quot;tags&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;cat&quot;</span><span class="p">]})</span>
+<span class="go">ObjectId(&#39;...&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">things</span><span class="o">.</span><span class="n">insert</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s">&quot;tags&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;mouse&quot;</span><span class="p">,</span> <span class="s">&quot;cat&quot;</span><span class="p">,</span> <span class="s">&quot;dog&quot;</span><span class="p">]})</span>
+<span class="go">ObjectId(&#39;...&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">things</span><span class="o">.</span><span class="n">insert</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s">&quot;tags&quot;</span><span class="p">:</span> <span class="p">[]})</span>
+<span class="go">ObjectId(&#39;...&#39;)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="basic-map-reduce">
+<h2>Basic Map/Reduce<a class="headerlink" href="#basic-map-reduce" title="Permalink to this headline">¶</a></h2>
+<p>Now we&#8217;ll define our <strong>map</strong> and <strong>reduce</strong> functions. In this case
+we&#8217;re performing the same operation as in the <a class="reference external" href="http://www.mongodb.org/display/DOCS/MapReduce">MongoDB Map/Reduce
+documentation</a> -
+counting the number of occurrences for each tag in the <tt class="docutils literal"><span class="pre">tags</span></tt> array,
+across the entire collection.</p>
+<p>Our <strong>map</strong> function just emits a single <cite>(key, 1)</cite> pair for each tag in
+the array:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pymongo.code</span> <span class="kn">import</span> <span class="n">Code</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">map</span> <span class="o">=</span> <span class="n">Code</span><span class="p">(</span><span class="s">&quot;function () {&quot;</span>
+<span class="gp">... </span>           <span class="s">&quot;  this.tags.forEach(function(z) {&quot;</span>
+<span class="gp">... </span>           <span class="s">&quot;    emit(z, 1);&quot;</span>
+<span class="gp">... </span>           <span class="s">&quot;  });&quot;</span>
+<span class="gp">... </span>           <span class="s">&quot;}&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <strong>reduce</strong> function sums over all of the emitted values for a given key:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">reduce</span> <span class="o">=</span> <span class="n">Code</span><span class="p">(</span><span class="s">&quot;function (key, values) {&quot;</span>
+<span class="gp">... </span>              <span class="s">&quot;  var total = 0;&quot;</span>
+<span class="gp">... </span>              <span class="s">&quot;  for (var i = 0; i &lt; values.length; i++) {&quot;</span>
+<span class="gp">... </span>              <span class="s">&quot;    total += values[i];&quot;</span>
+<span class="gp">... </span>              <span class="s">&quot;  }&quot;</span>
+<span class="gp">... </span>              <span class="s">&quot;  return total;&quot;</span>
+<span class="gp">... </span>              <span class="s">&quot;}&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">We can&#8217;t just return <tt class="docutils literal"><span class="pre">values.length</span></tt> as the <strong>reduce</strong> function
+might be called iteratively on the results of other reduce steps.</p>
+</div>
+<p>Finally, we call <tt class="xref py py-meth docutils literal"><span class="pre">map_reduce()</span></tt> and
+iterate over the result collection:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">things</span><span class="o">.</span><span class="n">map_reduce</span><span class="p">(</span><span class="nb">map</span><span class="p">,</span> <span class="nb">reduce</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">find</span><span class="p">():</span>
+<span class="gp">... </span>  <span class="k">print</span> <span class="n">doc</span>
+<span class="gp">...</span>
+<span class="go">{u&#39;_id&#39;: u&#39;cat&#39;, u&#39;value&#39;: 3.0}</span>
+<span class="go">{u&#39;_id&#39;: u&#39;dog&#39;, u&#39;value&#39;: 2.0}</span>
+<span class="go">{u&#39;_id&#39;: u&#39;mouse&#39;, u&#39;value&#39;: 1.0}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="advanced-map-reduce">
+<h2>Advanced Map/Reduce<a class="headerlink" href="#advanced-map-reduce" title="Permalink to this headline">¶</a></h2>
+<p>PyMongo&#8217;s API supports all of the features of MongoDB&#8217;s map/reduce engine. One interesting feature is the ability to get more detailed results when desired, by passing <cite>full_response=True</cite> to <tt class="xref py py-meth docutils literal"><span class="pre">map_reduce()</span></tt>. This returns the full response to the map/reduce command, rather than just the result collection:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">things</span><span class="o">.</span><span class="n">map_reduce</span><span class="p">(</span><span class="nb">map</span><span class="p">,</span> <span class="nb">reduce</span><span class="p">,</span> <span class="n">full_response</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">{u&#39;counts&#39;: {u&#39;input&#39;: 4, u&#39;emit&#39;: 6, u&#39;output&#39;: 3}, u&#39;timeMillis&#39;: ..., u&#39;ok&#39;: ..., u&#39;result&#39;: u&#39;...&#39;}</span>
+</pre></div>
+</div>
+<p>All of the optional map/reduce parameters are also supported, simply pass them as keyword arguments. In this example we use the <cite>query</cite> parameter to limit the documents that will be mapped over:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">things</span><span class="o">.</span><span class="n">map_reduce</span><span class="p">(</span><span class="nb">map</span><span class="p">,</span> <span class="nb">reduce</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;$lt&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">find</span><span class="p">():</span>
+<span class="gp">... </span>  <span class="k">print</span> <span class="n">doc</span>
+<span class="gp">...</span>
+<span class="go">{u&#39;_id&#39;: u&#39;cat&#39;, u&#39;value&#39;: 2.0}</span>
+<span class="go">{u&#39;_id&#39;: u&#39;dog&#39;, u&#39;value&#39;: 1.0}</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">The full list of options for MongoDB&#8217;s <a class="reference external" href="http://www.mongodb.org/display/DOCS/MapReduce">map reduce engine</a></p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Map/Reduce Example</a><ul>
+<li><a class="reference internal" href="#setup">Setup</a></li>
+<li><a class="reference internal" href="#basic-map-reduce">Basic Map/Reduce</a></li>
+<li><a class="reference internal" href="#advanced-map-reduce">Advanced Map/Reduce</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gridfs.html"
+                        title="previous chapter">GridFS Example</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="geo.html"
+                        title="next chapter">Geospatial Indexing Example</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/examples/map_reduce.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="geo.html" title="Geospatial Indexing Example"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gridfs.html" title="GridFS Example"
+             >previous</a> |</li>
+        <li><a href="../index.html">pycassa v0.5.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Examples</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2009, Michael Dirolf.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.3.
+    </div>
+  </body>
+</html>

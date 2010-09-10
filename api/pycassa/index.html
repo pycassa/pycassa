@@ -1,0 +1,142 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>index – Index Tools for Pycassa &mdash; pycassa v0.5.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="pycassa v0.5.0 documentation" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">pycassa v0.5.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-pycassa.index">
+<span id="index-index-tools-for-pycassa"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">index</span></tt> &#8211; Index Tools for Pycassa<a class="headerlink" href="#module-pycassa.index" title="Permalink to this headline">¶</a></h1>
+<p>Tools for using Cassandra&#8217;s secondary indexes.</p>
+<dl class="function">
+<dt id="pycassa.index.create_index_clause">
+<tt class="descclassname">pycassa.index.</tt><tt class="descname">create_index_clause</tt><big>(</big><em>expr_list</em>, <em>start_key=''</em>, <em>count=100</em><big>)</big><a class="headerlink" href="#pycassa.index.create_index_clause" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs an <tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt> for use with 
+<tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>expr_list</strong> &#8211; [<tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt>]
+A list of <cite>IndexExpressions</cite> to match</li>
+<li><strong>start_key</strong> &#8211; str
+The key to begin searching from</li>
+<li><strong>count</strong> &#8211; int
+The number of results to return</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pycassa.index.create_index_expression">
+<tt class="descclassname">pycassa.index.</tt><tt class="descname">create_index_expression</tt><big>(</big><em>column_name</em>, <em>value</em>, <em>op=0</em><big>)</big><a class="headerlink" href="#pycassa.index.create_index_expression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs an <tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt> to use
+in an <tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>column_name</strong> &#8211; string
+Name of an indexed or non-indexed column</li>
+<li><strong>value</strong> &#8211; The value that will be compared to column values using op</li>
+<li><strong>op</strong> &#8211; <tt class="xref py py-class docutils literal"><span class="pre">IndexOperator</span></tt>
+The binary operator to apply to column values and <cite>value</cite>.  Defaults
+to <cite>IndexOperator.EQ</cite>, which tests for equality.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/api/pycassa/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">pycassa v0.5.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright .
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.3.
+    </div>
+  </body>
+</html>

@@ -1,8 +1,0 @@
-To run the tests:
-1. Install python-nose (http://code.google.com/p/python-nose/)
-2. Copy cassandra.yaml and log4j-server-properties to your Cassandra conf directory
-3. Invoke the loadSchemaFromYAML JMX operation
-(see http://wiki.apache.org/cassandra/LiveSchemaUpdates).
-4. Run Cassandra with:
-bin/cassandra -f -Dpasswd.properties=conf/passwd.properties -Daccess.properties=conf/access.properties
-5. Run nosetests in the top directory
