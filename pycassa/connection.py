@@ -1,4 +1,5 @@
-"""Tools for connecting to a Cassandra cluster.
+"""
+Tools for connecting to a Cassandra cluster.
 
 .. seealso:: Module :mod:`~pycassa.pool` to see how connections
     can be pooled.
@@ -6,7 +7,7 @@
 To get a connection object which you can use directly, with
 :class:`~pycassa.columnfamily.ColumnFamily`, or with
 :class:`~pycassa.columnfamilymap.ColumnFamilyMap`, you can do the
-following:
+following::
 
     >>> import pycassa
     >>> connection = pycassa.connect('Keyspace', ['hostname:9160'])
