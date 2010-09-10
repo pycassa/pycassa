@@ -10,7 +10,7 @@ Before we start, make sure that you have **pycassa**
 :doc:`installed <installation>`. In the Python shell, the following
 should run without raising an exception:
 
-.. doctest::
+.. code-block:: python
 
   >>> import pycassa
 
@@ -342,7 +342,7 @@ maximum number of failures is reached.
 Class Mapping with Column Family Map
 ------------------------------------
 You can map existing classes to column families using
-:class:`~pycassa.columnfamily.ColumnFamilyMap`.
+:class:`~pycassa.columnfamilymap.ColumnFamilyMap`.
 
 .. code-block:: python
 
@@ -359,10 +359,10 @@ columns in the future, you simply add the relevant column and the default
 will be there when you get old instances.
 
 :class:`~pycassa.types.IntString`, :class:`~pycassa.types.FloatString`, and
-:class:`~pycassa.types.DateString`, all use string representations for storage.
-:class:`~pycassa.types.Float64` is stored as a double and is native-endian.
-Be aware of any endian issues if you use it on different architectures, or
-perhaps make your own column type.
+:class:`~pycassa.types.DateTimeString`, all use string representations for
+storage. :class:`~pycassa.types.Float64` is stored as a double and is
+native-endian. Be aware of any endian issues if you use it on different
+architectures, or perhaps make your own column type.
 
 .. code-block:: python
 
@@ -411,7 +411,9 @@ All the functions are exactly the same, except that they return instances of the
   ...
   cassandra.ttypes.NotFoundException: NotFoundException()
 
-Note that, as mentioned previously, get_range() may continue to return removed rows for some time:
+Note that, as mentioned previously,
+:meth:`~pycassa.columnfamilymap.ColumnFamilyMap.get_range()`
+may continue to return removed rows for some time:
 
 .. code-block:: python
 

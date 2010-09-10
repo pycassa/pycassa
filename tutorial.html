@@ -339,7 +339,7 @@ maximum number of failures is reached.</p>
 <div class="section" id="class-mapping-with-column-family-map">
 <h2>Class Mapping with Column Family Map<a class="headerlink" href="#class-mapping-with-column-family-map" title="Permalink to this headline">¶</a></h2>
 <p>You can map existing classes to column families using
-<tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt>.</p>
+<a class="reference internal" href="api/pycassa/columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Test</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">string_column</span>       <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s">&#39;Your Default&#39;</span><span class="p">)</span>
 <span class="gp">... </span>    <span class="n">int_str_column</span>      <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">IntString</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
@@ -353,10 +353,10 @@ Cassandra server and the column doesn&#8217;t exist. If, for example, you add
 columns in the future, you simply add the relevant column and the default
 will be there when you get old instances.</p>
 <p><a class="reference internal" href="api/pycassa/types.html#pycassa.types.IntString" title="pycassa.types.IntString"><tt class="xref py py-class docutils literal"><span class="pre">IntString</span></tt></a>, <a class="reference internal" href="api/pycassa/types.html#pycassa.types.FloatString" title="pycassa.types.FloatString"><tt class="xref py py-class docutils literal"><span class="pre">FloatString</span></tt></a>, and
-<tt class="xref py py-class docutils literal"><span class="pre">DateString</span></tt>, all use string representations for storage.
-<a class="reference internal" href="api/pycassa/types.html#pycassa.types.Float64" title="pycassa.types.Float64"><tt class="xref py py-class docutils literal"><span class="pre">Float64</span></tt></a> is stored as a double and is native-endian.
-Be aware of any endian issues if you use it on different architectures, or
-perhaps make your own column type.</p>
+<a class="reference internal" href="api/pycassa/types.html#pycassa.types.DateTimeString" title="pycassa.types.DateTimeString"><tt class="xref py py-class docutils literal"><span class="pre">DateTimeString</span></tt></a>, all use string representations for
+storage. <a class="reference internal" href="api/pycassa/types.html#pycassa.types.Float64" title="pycassa.types.Float64"><tt class="xref py py-class docutils literal"><span class="pre">Float64</span></tt></a> is stored as a double and is
+native-endian. Be aware of any endian issues if you use it on different
+architectures, or perhaps make your own column type.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamilyMap</span><span class="p">(</span><span class="n">Test</span><span class="p">,</span> <span class="n">cf</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -398,7 +398,9 @@ perhaps make your own column type.</p>
 <span class="nc">cassandra.ttypes.NotFoundException</span>: <span class="n-Identifier">NotFoundException()</span>
 </pre></div>
 </div>
-<p>Note that, as mentioned previously, get_range() may continue to return removed rows for some time:</p>
+<p>Note that, as mentioned previously,
+<a class="reference internal" href="api/pycassa/columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap.get_range" title="pycassa.columnfamilymap.ColumnFamilyMap.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a>
+may continue to return removed rows for some time:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
 <span class="go">1261395603756875</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_range</span><span class="p">())</span>
