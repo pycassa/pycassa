@@ -72,6 +72,13 @@ class TestColumnFamily:
         self.cf.insert(key, columns)
         assert self.cf.get_count(key) == 2
 
+        assert_equal(self.cf.get_count(key, column_start='1'), 2)
+        assert_equal(self.cf.get_count(key, column_finish='2'), 2)
+        assert_equal(self.cf.get_count(key, column_start='1', column_finish='2'), 2)
+        assert_equal(self.cf.get_count(key, column_start='1', column_finish='1'), 1)
+        assert_equal(self.cf.get_count(key, columns=['1','2']), 2)
+        assert_equal(self.cf.get_count(key, columns=['1']), 1)
+
     def test_insert_multiget_count(self):
         keys = ['TestColumnFamily.test_insert_multiget_count1',
                'TestColumnFamily.test_insert_multiget_count2',
