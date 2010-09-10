@@ -1,6 +1,6 @@
 from pycassa import connect, connect_thread_local, index, ColumnFamily, ConsistencyLevel, NotFoundException
 
-from nose.tools import assert_raises
+from nose.tools import assert_raises, assert_equal
 
 import struct
 
@@ -71,6 +71,42 @@ class TestColumnFamily:
         columns = {'1': 'val1', '2': 'val2'}
         self.cf.insert(key, columns)
         assert self.cf.get_count(key) == 2
+
+    def test_insert_multiget_count(self):
+        keys = ['TestColumnFamily.test_insert_multiget_count1',
+               'TestColumnFamily.test_insert_multiget_count2',
+               'TestColumnFamily.test_insert_multiget_count3']
+        columns = {'1': 'val1', '2': 'val2'}
+        for key in keys:
+            self.cf.insert(key, columns)
+        result = self.cf.multiget_count(keys)
+        assert_equal(result[keys[0]], 2)
+        assert_equal(result[keys[1]], 2)
+        assert_equal(result[keys[2]], 2)
+
+        result = self.cf.multiget_count(keys, column_start='1')
+        assert_equal(len(result), 3)
+        assert_equal(result[keys[0]], 2)
+
+        result = self.cf.multiget_count(keys, column_finish='2')
+        assert_equal(len(result), 3)
+        assert_equal(result[keys[0]], 2)
+
+        result = self.cf.multiget_count(keys, column_start='1', column_finish='2')
+        assert_equal(len(result), 3)
+        assert_equal(result[keys[0]], 2)
+
+        result = self.cf.multiget_count(keys, column_start='1', column_finish='1')
+        assert_equal(len(result), 3)
+        assert_equal(result[keys[0]], 1)
+
+        result = self.cf.multiget_count(keys, columns=['1','2'])
+        assert_equal(len(result), 3)
+        assert_equal(result[keys[0]], 2)
+
+        result = self.cf.multiget_count(keys, columns=['1'])
+        assert_equal(len(result), 3)
+        assert_equal(result[keys[0]], 1)
 
     def test_insert_get_range(self):
         keys = ['TestColumnFamily.test_insert_get_range%s' % i for i in xrange(5)]

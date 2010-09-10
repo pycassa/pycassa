@@ -540,6 +540,48 @@ class ColumnFamily(object):
         return self.client.get_count(key, cp, sp,
                                      self._rcl(read_consistency_level))
 
+    def multiget_count(self, keys, columns=None, column_start="",
+                       column_finish="", super_column=None,
+                       read_consistency_level=None):
+        """
+        Perform a get_count in parallel on a list of keys.
+
+        :Parameters:
+            `keys` : [str]
+                The keys to count columns for
+            `columns`: [str]
+                Limit the columns or super_columns fetched to the specified list
+            `column_start`: str
+                Only fetch when a column or super_column is >= column_start
+            `column_finish`: str
+                Only fetch when a column or super_column is <= column_finish
+            `super_column` : str
+                Count the columns only in this super_column
+            `read_consistency_level` : :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
+                Affects the guaranteed replication factor before returning from
+                any read operation
+
+        :Returns:
+            {'keyname': int count}
+        """
+
+        (super_column, column_start, column_finish) = self._pack_slice_cols(
+                super_column, column_start, column_finish)
+
+        packed_cols = None
+        if columns is not None:
+            packed_cols = []
+            for col in columns:
+                packed_cols.append(self._pack_name(col, is_supercol_name=self.super))
+
+        cp = ColumnParent(column_family=self.column_family, super_column=super_column)
+        sp = create_SlicePredicate(packed_cols, column_start, column_finish,
+                                   False, self.MAX_COUNT)
+
+        return self.client.multiget_count(keys, cp, sp,
+                                     self._rcl(read_consistency_level))
+
+
     def get_range(self, start="", finish="", columns=None, column_start="",
                   column_finish="", column_reversed=False, column_count=100,
                   row_count=None, include_timestamp=False,
