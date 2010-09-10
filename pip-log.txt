@@ -1,0 +1,118 @@
+Checking out sphinx-to-github from git+git://github.com/michaeljones/sphinx-to-github.git#egg=sphinx-to-github checkout from git+git://github.com/michaeljones/sphinx-to-github.git#egg=sphinx-to-github
+  Cloning git://github.com/michaeljones/sphinx-to-github.git to ./src/sphinx-to-github
+  Running command git clone -q git://github.com/michaeljones/sphinx-to-github.git /home/thobbs/pycassa-clean/src/sphinx-to-github
+  Running command git checkout -q master
+  Running setup.py egg_info for package sphinx-to-github
+    running egg_info
+    creating sphinxtogithub.egg-info
+    writing sphinxtogithub.egg-info/PKG-INFO
+    writing top-level names to sphinxtogithub.egg-info/top_level.txt
+    writing dependency_links to sphinxtogithub.egg-info/dependency_links.txt
+    writing manifest file 'sphinxtogithub.egg-info/SOURCES.txt'
+    warning: manifest_maker: standard file '-c' not found
+    reading manifest file 'sphinxtogithub.egg-info/SOURCES.txt'
+    reading manifest template 'MANIFEST.in'
+    no previously-included directories found matching 'sphinxtogithub/*.pyc'
+    writing manifest file 'sphinxtogithub.egg-info/SOURCES.txt'
+Installing collected packages: sphinx-to-github
+  Running setup.py develop for sphinx-to-github
+    Running command /usr/bin/python -c "import setuptools; __file__='/home/thobbs/pycassa-clean/src/sphinx-to-github/setup.py'; execfile('/home/thobbs/pycassa-clean/src/sphinx-to-github/setup.py')" develop --no-deps
+    running develop
+    error: can't create or remove files in install directory
+    
+    The following error occurred while trying to add or remove files in the
+    installation directory:
+    
+        [Errno 13] Permission denied: '/usr/local/lib/python2.6/dist-packages/test-easy-install-22806.write-test'
+    
+    The installation directory you specified (via --install-dir, --prefix, or
+    the distutils default setting) was:
+    
+        /usr/local/lib/python2.6/dist-packages/
+    
+    Perhaps your account does not have write access to this directory?  If the
+    installation directory is a system-owned directory, you may need to sign in
+    as the administrator or "root" account.  If you do not have administrative
+    access to this machine, you may wish to choose a different installation
+    directory, preferably one that is listed in your PYTHONPATH environment
+    variable.
+    
+    For information on other options, you may wish to consult the
+    documentation at:
+    
+      http://peak.telecommunity.com/EasyInstall.html
+    
+    Please make the appropriate changes for your system and try again.
+    
+    Complete output from command /usr/bin/python -c "import setuptools; __file__='/home/thobbs/pycassa-clean/src/sphinx-to-github/setup.py'; execfile('/home/thobbs/pycassa-clean/src/sphinx-to-github/setup.py')" develop --no-deps:
+    running develop
+
+error: can't create or remove files in install directory
+
+
+
+The following error occurred while trying to add or remove files in the
+
+installation directory:
+
+
+
+    [Errno 13] Permission denied: '/usr/local/lib/python2.6/dist-packages/test-easy-install-22806.write-test'
+
+
+
+The installation directory you specified (via --install-dir, --prefix, or
+
+the distutils default setting) was:
+
+
+
+    /usr/local/lib/python2.6/dist-packages/
+
+
+
+Perhaps your account does not have write access to this directory?  If the
+
+installation directory is a system-owned directory, you may need to sign in
+
+as the administrator or "root" account.  If you do not have administrative
+
+access to this machine, you may wish to choose a different installation
+
+directory, preferably one that is listed in your PYTHONPATH environment
+
+variable.
+
+
+
+For information on other options, you may wish to consult the
+
+documentation at:
+
+
+
+  http://peak.telecommunity.com/EasyInstall.html
+
+
+
+Please make the appropriate changes for your system and try again.
+
+
+
+----------------------------------------
+Command /usr/bin/python -c "import setuptools; __file__='/home/thobbs/pycassa-clean/src/sphinx-to-github/setup.py'; execfile('/home/thobbs/pycassa-clean/src/sphinx-to-github/setup.py')" develop --no-deps failed with error code 1
+Exception information:
+Traceback (most recent call last):
+  File "/usr/lib/python2.6/dist-packages/pip.py", line 252, in main
+    self.run(options, args)
+  File "/usr/lib/python2.6/dist-packages/pip.py", line 410, in run
+    requirement_set.install(install_options)
+  File "/usr/lib/python2.6/dist-packages/pip.py", line 2017, in install
+    requirement.install(install_options)
+  File "/usr/lib/python2.6/dist-packages/pip.py", line 1494, in install
+    self.install_editable()
+  File "/usr/lib/python2.6/dist-packages/pip.py", line 1562, in install_editable
+    show_stdout=False)
+  File "/usr/lib/python2.6/dist-packages/pip.py", line 3543, in call_subprocess
+    % (command_desc, proc.returncode))
+InstallationError: Command /usr/bin/python -c "import setuptools; __file__='/home/thobbs/pycassa-clean/src/sphinx-to-github/setup.py'; execfile('/home/thobbs/pycassa-clean/src/sphinx-to-github/setup.py')" develop --no-deps failed with error code 1
