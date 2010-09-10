@@ -10,7 +10,7 @@ Before we start, make sure that you have **pycassa**
 :doc:`installed <installation>`. In the Python shell, the following
 should run without raising an exception:
 
-.. code-block::
+.. code-block:: python
 
   >>> import pycassa
 
