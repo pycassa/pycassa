@@ -179,6 +179,106 @@ with keys &#8216;row_key1&#8217; through &#8216;row_key9&#8217;, we could do thi
 </pre></div>
 </div>
 </div>
+<div class="section" id="super-columns">
+<h2>Super Columns<a class="headerlink" href="#super-columns" title="Permalink to this headline">¶</a></h2>
+<p>Cassandra allows you to group columns in &#8220;super columns&#8221;. In a
+<tt class="docutils literal"><span class="pre">cassandra.yaml</span></tt> file, this looks like this:</p>
+<div class="highlight-python"><pre>- name: Super1
+  column_type: Super</pre>
+</div>
+<p>To use a super column in <strong>pycassa</strong>, you only need to do one thing:
+when creating the <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>,
+set the <cite>super</cite> argument to be <tt class="xref docutils literal"><span class="pre">True</span></tt>. If this is done, you can
+use a super column family just like a regular one, except there is an
+extra level in the dictionary:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="s">&#39;Super1&#39;</span><span class="p">,</span> <span class="nb">super</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;supercol_name&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;col_name&#39;</span><span class="p">:</span> <span class="s">&#39;col_val&#39;</span><span class="p">}})</span>
+<span class="go">1354491238721345</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">)</span>
+<span class="go">{&#39;supercol_name&#39;: {&#39;col_name&#39;: &#39;col_val&#39;}}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="typed-column-names-and-values">
+<h2>Typed Column Names and Values<a class="headerlink" href="#typed-column-names-and-values" title="Permalink to this headline">¶</a></h2>
+<p>In Cassandra 0.7, you can specify a comparator type for column names
+and a validator type for column values.</p>
+<p>The types available are:</p>
+<ul class="simple">
+<li>BytesType - no type</li>
+<li>IntegerType - 32 bit integer</li>
+<li>LongType - 64 bit integer</li>
+<li>AsciiType - ASCII string</li>
+<li>UTF8Type - UTF8 encoded string</li>
+<li>TimeUUIDType - version 1 UUID (timestamp based)</li>
+<li>LexicalUUID - non-version 1 UUID</li>
+</ul>
+<p>The column name comparator types affect how columns are sorted within
+a row. You can use these with standard column families as well as with
+super column families; with super column families, the subcolumns may
+even have a different comparator type.  Here&#8217;s an example <tt class="docutils literal"><span class="pre">cassandra.yaml</span></tt>:</p>
+<div class="highlight-python"><pre>- name: StandardInt
+  column_type: Standard
+  compare_with: IntegerType
+
+- name: SuperLongSubAscii
+  column_type: Super
+  compare_with: LongType
+  compare_subcolumns_with: AsciiType</pre>
+</div>
+<p>Cassandra still requires you to pack these types into a format it can
+understand by using something like <tt class="xref py py-meth docutils literal"><span class="pre">struct.pack()</span></tt>.  Fortunately,
+when <strong>pycassa</strong> sees that a column family uses these types, it knows
+to pack and unpack these data types automatically for you. So, if we want to
+write to the StandardInt column family, we can do the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="s">&#39;StandardInt&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="mi">42</span><span class="p">:</span> <span class="s">&#39;some_val&#39;</span><span class="p">})</span>
+<span class="go">1354491238721387</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">)</span>
+<span class="go">{42: &#39;some_val&#39;}</span>
+</pre></div>
+</div>
+<p>Notice that 42 is an integer here, not a string.</p>
+<p>As mentioned above, Cassandra also offers validators on column values with
+the same set of types.  Validators can be set for an entire column family,
+for individual columns, or both.  Here&#8217;s another example <tt class="docutils literal"><span class="pre">cassandra.yaml</span></tt>:</p>
+<div class="highlight-python"><pre>- name: AllLongs
+  column_type: Standard
+  default_validation_class: LongType
+
+- name: OneUUID
+  column_type: Standard
+  column_metadata:
+    - name: uuid
+      validator_class: TimeUUIDType
+
+- name: LongsExceptUUID
+  column_type: Standard
+  default_validation_class: LongType
+  column_metadata:
+    - name: uuid
+      validator_class: TimeUUIDType</pre>
+</div>
+<p><strong>pycassa</strong> knows to pack these column values automatically too:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">uuid</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="s">&#39;LongsExceptUUID&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;foo&#39;</span><span class="p">:</span> <span class="mi">123456789</span><span class="p">,</span> <span class="s">&#39;uuid&#39;</span><span class="p">:</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid1</span><span class="p">()})</span>
+<span class="go">1354491238782746</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">)</span>
+<span class="go">{&#39;foo&#39;: 123456789, &#39;uuid&#39;: UUID(&#39;5880c4b8-bd1a-11df-bbe1-00234d21610a&#39;)}</span>
+</pre></div>
+</div>
+<p>Of course, if <strong>pycassa</strong>&#8216;s automatic behavior isn&#8217;t working for you, you
+can turn it off when you create the
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="s">&#39;Standard1&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                               <span class="n">autopack_names</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+<span class="gp">... </span>                               <span class="n">autopack_values</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This mainly needs to be done when working with
+<tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt>.</p>
+</div>
 <div class="section" id="indexes">
 <h2>Indexes<a class="headerlink" href="#indexes" title="Permalink to this headline">¶</a></h2>
 <p>Cassandra 0.7.0 adds support for secondary indexes, which allow you to
@@ -212,6 +312,102 @@ the following:</p>
 must be on an indexed column, you may also have other expressions which are
 on non-indexed columns.</p>
 </div>
+<div class="section" id="connection-pooling">
+<h2>Connection Pooling<a class="headerlink" href="#connection-pooling" title="Permalink to this headline">¶</a></h2>
+<p>Several types of connection pools are offered for different usages:</p>
+<ul class="simple">
+<li><a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.QueuePool" title="pycassa.pool.QueuePool"><tt class="xref py py-class docutils literal"><span class="pre">QueuePool</span></tt></a> – typical connection pool that maintains a queue of open connections</li>
+<li><a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.SingletonThreadPool" title="pycassa.pool.SingletonThreadPool"><tt class="xref py py-class docutils literal"><span class="pre">SingletonThreadPool</span></tt></a> – one connection per thread</li>
+<li><a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.StaticPool" title="pycassa.pool.StaticPool"><tt class="xref py py-class docutils literal"><span class="pre">StaticPool</span></tt></a> – a single connection used for all operations</li>
+<li><a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.NullPool" title="pycassa.pool.NullPool"><tt class="xref py py-class docutils literal"><span class="pre">NullPool</span></tt></a> – no pooling is performed, but failover is supported</li>
+<li><a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.AssertionPool" title="pycassa.pool.AssertionPool"><tt class="xref py py-class docutils literal"><span class="pre">AssertionPool</span></tt></a> – asserts that at most one connection is open at a time; useful for debugging</li>
+</ul>
+<p>For example, to create a <a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.QueuePool" title="pycassa.pool.QueuePool"><tt class="xref py py-class docutils literal"><span class="pre">QueuePool</span></tt></a> and use a connection:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">QueuePool</span><span class="p">(</span><span class="n">keyspace</span><span class="o">=</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">connection</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="s">&#39;Standard1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;col&#39;</span><span class="p">:</span> <span class="s">&#39;val&#39;</span><span class="p">})</span>
+<span class="go">1354491238782746</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">connection</span><span class="o">.</span><span class="n">return_to_pool</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Automatic retries (or failover) are supported with all types of pools except
+for <a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.StaticPool" title="pycassa.pool.StaticPool"><tt class="xref py py-class docutils literal"><span class="pre">StaticPool</span></tt></a>. This means that if any operation fails,
+it will be transparently retried on other servers until it succeeds or a
+maximum number of failures is reached.</p>
+</div>
+<div class="section" id="class-mapping-with-column-family-map">
+<h2>Class Mapping with Column Family Map<a class="headerlink" href="#class-mapping-with-column-family-map" title="Permalink to this headline">¶</a></h2>
+<p>You can map existing classes to column families using
+<tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Test</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">string_column</span>       <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s">&#39;Your Default&#39;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">int_str_column</span>      <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">IntString</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">float_str_column</span>    <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">FloatString</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">8.0</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">float_column</span>        <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">Float64</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">datetime_str_column</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">DateTimeString</span><span class="p">()</span> <span class="c"># default=None</span>
+</pre></div>
+</div>
+<p>The defaults will be filled in whenever you retrieve instances from the
+Cassandra server and the column doesn&#8217;t exist. If, for example, you add
+columns in the future, you simply add the relevant column and the default
+will be there when you get old instances.</p>
+<p><a class="reference internal" href="api/pycassa/types.html#pycassa.types.IntString" title="pycassa.types.IntString"><tt class="xref py py-class docutils literal"><span class="pre">IntString</span></tt></a>, <a class="reference internal" href="api/pycassa/types.html#pycassa.types.FloatString" title="pycassa.types.FloatString"><tt class="xref py py-class docutils literal"><span class="pre">FloatString</span></tt></a>, and
+<tt class="xref py py-class docutils literal"><span class="pre">DateString</span></tt>, all use string representations for storage.
+<a class="reference internal" href="api/pycassa/types.html#pycassa.types.Float64" title="pycassa.types.Float64"><tt class="xref py py-class docutils literal"><span class="pre">Float64</span></tt></a> is stored as a double and is native-endian.
+Be aware of any endian issues if you use it on different architectures, or
+perhaps make your own column type.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamilyMap</span><span class="p">(</span><span class="n">Test</span><span class="p">,</span> <span class="n">cf</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>All the functions are exactly the same, except that they return instances of the supplied class when possible.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">Test</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="s">&#39;maptest&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">string_column</span> <span class="o">=</span> <span class="s">&#39;string test&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">int_str_column</span> <span class="o">=</span> <span class="mi">18</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">float_column</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">float_str_column</span> <span class="o">=</span> <span class="mf">35.8</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">datetime_str_column</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">1261395560186855</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">string_column</span>
+<span class="go">&#39;string test&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">int_str_column</span>
+<span class="go">18</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">float_column</span>
+<span class="go">35.799999999999997</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">datetime_str_column</span>
+<span class="go">datetime.datetime(2009, 12, 23, 17, 6, 3)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">multiget</span><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="n">key</span><span class="p">])</span>
+<span class="go">{&#39;maptest&#39;: &lt;__main__.Test object at 0x7f8ddde0b9d0&gt;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_range</span><span class="p">())</span>
+<span class="go">[&lt;__main__.Test object at 0x7f8ddde0b710&gt;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_count</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+<span class="go">7</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">1261395603906864</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="nc">cassandra.ttypes.NotFoundException</span>: <span class="n-Identifier">NotFoundException()</span>
+</pre></div>
+</div>
+<p>Note that, as mentioned previously, get_range() may continue to return removed rows for some time:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">1261395603756875</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_range</span><span class="p">())</span>
+<span class="go">[&lt;__main__.Test object at 0x7fac9c85ea90&gt;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_range</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">string_column</span>
+<span class="go">&#39;Your Default&#39;</span>
+</pre></div>
+</div>
+</div>
 </div>
 
 
@@ -229,7 +425,11 @@ on non-indexed columns.</p>
 <li><a class="reference internal" href="#inserting-data">Inserting Data</a></li>
 <li><a class="reference internal" href="#getting-data">Getting Data</a></li>
 <li><a class="reference internal" href="#counting">Counting</a></li>
+<li><a class="reference internal" href="#super-columns">Super Columns</a></li>
+<li><a class="reference internal" href="#typed-column-names-and-values">Typed Column Names and Values</a></li>
 <li><a class="reference internal" href="#indexes">Indexes</a></li>
+<li><a class="reference internal" href="#connection-pooling">Connection Pooling</a></li>
+<li><a class="reference internal" href="#class-mapping-with-column-family-map">Class Mapping with Column Family Map</a></li>
 </ul>
 </li>
 </ul>
