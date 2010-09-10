@@ -154,6 +154,28 @@ If you just want to know how many columns are in a row, you can use
   >>> col_fam.get_count('row_key')
   3
 
+You can also do this in parallel for multiple rows using
+:meth:`~pycassa.columnfamily.ColumnFamily.multiget_count()`:
+
+.. code-block:: python
+
+  >>> col_fam.multiget_count(['fib0', 'fib1', 'fib2', 'fib3', 'fib4'])
+  {'fib0': 1, 'fib1': 1, 'fib2': 2, 'fib3': 3, 'fib4': 5'}
+
+If you only want to get a count of the number of columns that are inside
+of a slice or have particular names, you can do that as well:
+
+.. code-block:: python
+
+  >>> col_fam.multiget_count(['fib0', 'fib1', 'fib2', 'fib3', 'fib4'],
+  ...                        columns=['col1', 'col2', 'col3'])
+  {'fib0': 1, 'fib1': 1, 'fib2': 2, 'fib3': 3, 'fib4': 3'}
+
+.. code-block:: python
+
+  >>> col_fam.multiget_count(['fib0', 'fib1', 'fib2', 'fib3', 'fib4'],
+  ...                        column_start='col1', column_finish='col3')
+  {'fib0': 1, 'fib1': 1, 'fib2': 2, 'fib3': 3, 'fib4': 3'}
 
 Super Columns
 -------------

@@ -77,7 +77,7 @@ manipulation of data inside Cassandra.</p>
 
 <dl class="class">
 <dt id="pycassa.columnfamily.ColumnFamily">
-<em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">ColumnFamily</tt><big>(</big><em>client</em>, <em>column_family</em>, <em>buffer_size=1024</em>, <em>read_consistency_level=1</em>, <em>write_consistency_level=1</em>, <em>timestamp=&lt;function gm_timestamp at 0x2538d70&gt;</em>, <em>super=False</em>, <em>dict_class=&lt;type 'dict'&gt;</em>, <em>autopack_names=True</em>, <em>autopack_values=True</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">ColumnFamily</tt><big>(</big><em>client</em>, <em>column_family</em>, <em>buffer_size=1024</em>, <em>read_consistency_level=1</em>, <em>write_consistency_level=1</em>, <em>timestamp=&lt;function gm_timestamp at 0x2806de8&gt;</em>, <em>super=False</em>, <em>dict_class=&lt;type 'dict'&gt;</em>, <em>autopack_names=True</em>, <em>autopack_values=True</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructs an abstraction of a Cassandra column family or super column family.</p>
 <p>Operations on this, such as <cite>get</cite> or <cite>insert</cite> will get data from or
 insert data into the corresponding Cassandra column family.</p>
@@ -453,6 +453,44 @@ any read operation</p>
 </tr>
 <tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last">if include_timestamp == True: {&#8216;key&#8217;: {&#8216;column&#8217;: (&#8216;value&#8217;, timestamp)}}
 else: {&#8216;key&#8217;: {&#8216;column&#8217;: &#8216;value&#8217;}}</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.columnfamily.ColumnFamily.multiget_count">
+<tt class="descname">multiget_count</tt><big>(</big><em>keys</em>, <em>columns=None</em>, <em>column_start=''</em>, <em>column_finish=''</em>, <em>super_column=None</em>, <em>read_consistency_level=None</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.multiget_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a get_count in parallel on a list of keys.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first docutils">
+<dt><cite>keys</cite> <span class="classifier-delimiter">:</span> <span class="classifier">[str]</span></dt>
+<dd><p class="first last">The keys to count columns for</p>
+</dd>
+<dt><cite>columns</cite>: [str]</dt>
+<dd><p class="first last">Limit the columns or super_columns fetched to the specified list</p>
+</dd>
+<dt><cite>column_start</cite>: str</dt>
+<dd><p class="first last">Only fetch when a column or super_column is &gt;= column_start</p>
+</dd>
+<dt><cite>column_finish</cite>: str</dt>
+<dd><p class="first last">Only fetch when a column or super_column is &lt;= column_finish</p>
+</dd>
+<dt><cite>super_column</cite> <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first last">Count the columns only in this super_column</p>
+</dd>
+<dt><cite>read_consistency_level</cite> <span class="classifier-delimiter">:</span> <span class="classifier"><tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></span></dt>
+<dd><p class="first last">Affects the guaranteed replication factor before returning from
+any read operation</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last">{&#8216;keyname&#8217;: int count}</p>
 </td>
 </tr>
 </tbody>

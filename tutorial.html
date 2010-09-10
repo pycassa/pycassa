@@ -178,6 +178,24 @@ with keys &#8216;row_key1&#8217; through &#8216;row_key9&#8217;, we could do thi
 <span class="go">3</span>
 </pre></div>
 </div>
+<p>You can also do this in parallel for multiple rows using
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.multiget_count" title="pycassa.columnfamily.ColumnFamily.multiget_count"><tt class="xref py py-meth docutils literal"><span class="pre">multiget_count()</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">multiget_count</span><span class="p">([</span><span class="s">&#39;fib0&#39;</span><span class="p">,</span> <span class="s">&#39;fib1&#39;</span><span class="p">,</span> <span class="s">&#39;fib2&#39;</span><span class="p">,</span> <span class="s">&#39;fib3&#39;</span><span class="p">,</span> <span class="s">&#39;fib4&#39;</span><span class="p">])</span>
+<span class="go">{&#39;fib0&#39;: 1, &#39;fib1&#39;: 1, &#39;fib2&#39;: 2, &#39;fib3&#39;: 3, &#39;fib4&#39;: 5&#39;}</span>
+</pre></div>
+</div>
+<p>If you only want to get a count of the number of columns that are inside
+of a slice or have particular names, you can do that as well:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">multiget_count</span><span class="p">([</span><span class="s">&#39;fib0&#39;</span><span class="p">,</span> <span class="s">&#39;fib1&#39;</span><span class="p">,</span> <span class="s">&#39;fib2&#39;</span><span class="p">,</span> <span class="s">&#39;fib3&#39;</span><span class="p">,</span> <span class="s">&#39;fib4&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                       <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;col1&#39;</span><span class="p">,</span> <span class="s">&#39;col2&#39;</span><span class="p">,</span> <span class="s">&#39;col3&#39;</span><span class="p">])</span>
+<span class="go">{&#39;fib0&#39;: 1, &#39;fib1&#39;: 1, &#39;fib2&#39;: 2, &#39;fib3&#39;: 3, &#39;fib4&#39;: 3&#39;}</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">multiget_count</span><span class="p">([</span><span class="s">&#39;fib0&#39;</span><span class="p">,</span> <span class="s">&#39;fib1&#39;</span><span class="p">,</span> <span class="s">&#39;fib2&#39;</span><span class="p">,</span> <span class="s">&#39;fib3&#39;</span><span class="p">,</span> <span class="s">&#39;fib4&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                       <span class="n">column_start</span><span class="o">=</span><span class="s">&#39;col1&#39;</span><span class="p">,</span> <span class="n">column_finish</span><span class="o">=</span><span class="s">&#39;col3&#39;</span><span class="p">)</span>
+<span class="go">{&#39;fib0&#39;: 1, &#39;fib1&#39;: 1, &#39;fib2&#39;: 2, &#39;fib3&#39;: 3, &#39;fib4&#39;: 3&#39;}</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="super-columns">
 <h2>Super Columns<a class="headerlink" href="#super-columns" title="Permalink to this headline">¶</a></h2>
