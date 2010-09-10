@@ -55,6 +55,27 @@
             
   <div class="section" id="module-pycassa.logger">
 <span id="logger-pycassa-logging"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">logger</span></tt> &#8211; Pycassa Logging<a class="headerlink" href="#module-pycassa.logger" title="Permalink to this headline">¶</a></h1>
+<p>Logging facilities for pycassa.</p>
+<dl class="class">
+<dt id="pycassa.logger.PycassaLogger">
+<em class="property">class </em><tt class="descclassname">pycassa.logger.</tt><tt class="descname">PycassaLogger</tt><big>(</big><em>level='info'</em>, <em>logger_name='pycassa'</em><big>)</big><a class="headerlink" href="#pycassa.logger.PycassaLogger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new <a class="reference internal" href="#pycassa.logger.PycassaLogger" title="pycassa.logger.PycassaLogger"><tt class="xref py py-class docutils literal"><span class="pre">PycassaLogger</span></tt></a>.</p>
+<p>This class uses the <a class="reference external" href="http://code.activestate.com/recipes/66531-singleton-we-dont-need-no-stinkin-singleton-the-bo/">Borg design pattern</a>
+to acheive singleton-like sharing.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>level</strong> &#8211; the logging level for the logger</li>
+<li><strong>logger_name</strong> &#8211; the name that will be used to call <tt class="xref py py-meth docutils literal"><span class="pre">logging.getLogger()</span></tt></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 
 

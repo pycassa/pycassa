@@ -55,6 +55,317 @@
             
   <div class="section" id="module-pycassa.columnfamilymap">
 <span id="columnfamilymap-maps-classes-to-column-families"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">columnfamilymap</span></tt> &#8211; Maps Classes to Column Families<a class="headerlink" href="#module-pycassa.columnfamilymap" title="Permalink to this headline">¶</a></h1>
+<p>Provides a means for mapping an existing class to a column family.</p>
+<dl class="class">
+<dt id="pycassa.columnfamilymap.ColumnFamilyMap">
+<em class="property">class </em><tt class="descclassname">pycassa.columnfamilymap.</tt><tt class="descname">ColumnFamilyMap</tt><big>(</big><em>cls</em>, <em>column_family</em>, <em>columns=None</em>, <em>raw_columns=False</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a ObjectFamily</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first last docutils">
+<dt><cite>cls</cite>: class</dt>
+<dd><p class="first last">Instances of cls are generated on <tt class="docutils literal"><span class="pre">get*()</span></tt> requests</p>
+</dd>
+<dt><cite>column_family</cite>: <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a></dt>
+<dd><p class="first last">The <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a> to tie with cls</p>
+</dd>
+<dt><cite>raw_columns</cite>: boolean</dt>
+<dd><p class="first last">Whether all columns should be fetched into the raw_columns field in
+requests</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="pycassa.columnfamilymap.ColumnFamilyMap.get">
+<tt class="descname">get</tt><big>(</big><em>key</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch a key from a Cassandra server</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first docutils">
+<dt><cite>key</cite>: str</dt>
+<dd><p class="first last">The key to fetch</p>
+</dd>
+<dt><cite>columns</cite>: [str]</dt>
+<dd><p class="first last">Limit the columns or super_columns fetched to the specified list</p>
+</dd>
+<dt><cite>column_start</cite>: str</dt>
+<dd><p class="first last">Only fetch when a column or super_column is &gt;= column_start</p>
+</dd>
+<dt><cite>column_finish</cite>: str</dt>
+<dd><p class="first last">Only fetch when a column or super_column is &lt;= column_finish</p>
+</dd>
+<dt><cite>column_reversed</cite>: bool</dt>
+<dd><p class="first last">Fetch the columns or super_columns in reverse order. This will do
+nothing unless you passed a dict_class to the constructor.</p>
+</dd>
+<dt><cite>column_count</cite>: int</dt>
+<dd><p class="first last">Limit the number of columns or super_columns fetched per key</p>
+</dd>
+<dt><cite>super_column</cite>: str</dt>
+<dd><p class="first last">Fetch only this super_column</p>
+</dd>
+<dt><cite>read_consistency_level</cite>: <tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></dt>
+<dd><p class="first last">Affects the guaranteed replication factor before returning from
+any read operation</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last">Class instance</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.columnfamilymap.ColumnFamilyMap.get_count">
+<tt class="descname">get_count</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap.get_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Count the number of columns for a key</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first docutils">
+<dt><cite>key</cite>: str</dt>
+<dd><p class="first last">The key with which to count columns</p>
+</dd>
+<dt><cite>super_column</cite>: str</dt>
+<dd><p class="first last">Count the columns only in this super_column</p>
+</dd>
+<dt><cite>read_consistency_level</cite>: <tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></dt>
+<dd><p class="first last">Affects the guaranteed replication factor before returning from
+any read operation</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last">int Count of columns</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.columnfamilymap.ColumnFamilyMap.get_indexed_slices">
+<tt class="descname">get_indexed_slices</tt><big>(</big><em>instance=None</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap.get_indexed_slices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetches a list of KeySlices from a Cassandra server based on an index clause</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first docutils">
+<dt><cite>index_clause</cite>: <tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt></dt>
+<dd><p class="first last">Limits the keys that are returned based on expressions that compare
+the value of a column to a given value.  At least one of the
+expressions in the IndexClause must be on an indexed column.</p>
+</dd>
+<dt><cite>columns</cite>: [str]</dt>
+<dd><p class="first last">Limit the columns or super_columns fetched to the specified list</p>
+</dd>
+<dt><cite>column_start</cite>: str</dt>
+<dd><p class="first last">Only fetch when a column or super_column is &gt;= column_start</p>
+</dd>
+<dt><cite>column_finish</cite>: str</dt>
+<dd><p class="first last">Only fetch when a column or super_column is &lt;= column_finish</p>
+</dd>
+<dt><cite>column_reversed</cite>: bool</dt>
+<dd><p class="first last">Fetch the columns or super_columns in reverse order. This will do
+nothing unless you passed a dict_class to the constructor.</p>
+</dd>
+<dt><cite>column_count</cite>: int</dt>
+<dd><p class="first last">Limit the number of columns or super_columns fetched per key</p>
+</dd>
+<dt><cite>include_timestamp</cite>: bool</dt>
+<dd><p class="first last">If true, return a (value, timestamp) tuple for each column</p>
+</dd>
+<dt><cite>super_column</cite>: str</dt>
+<dd><p class="first last">Return columns only in this super_column</p>
+</dd>
+<dt><cite>read_consistency_level</cite>: <tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></dt>
+<dd><p class="first last">Affects the guaranteed replication factor before returning from
+any read operation</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last">Class instance</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="index.html#pycassa.index.create_index_clause" title="pycassa.index.create_index_clause"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.index.create_index_clause()</span></tt></a> and
+<a class="reference internal" href="index.html#pycassa.index.create_index_expression" title="pycassa.index.create_index_expression"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.index.create_index_expression()</span></tt></a>.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.columnfamilymap.ColumnFamilyMap.get_range">
+<tt class="descname">get_range</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap.get_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get an iterator over keys in a specified range</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first docutils">
+<dt><cite>start</cite>: str</dt>
+<dd><p class="first last">Start from this key (inclusive)</p>
+</dd>
+<dt><cite>finish</cite>: str</dt>
+<dd><p class="first last">End at this key (inclusive)</p>
+</dd>
+<dt><cite>columns</cite>: [str]</dt>
+<dd><p class="first last">Limit the columns or super_columns fetched to the specified list</p>
+</dd>
+<dt><cite>column_start</cite>: str</dt>
+<dd><p class="first last">Only fetch when a column or super_column is &gt;= column_start</p>
+</dd>
+<dt><cite>column_finish</cite>: str</dt>
+<dd><p class="first last">Only fetch when a column or super_column is &lt;= column_finish</p>
+</dd>
+<dt><cite>column_reversed</cite>: bool</dt>
+<dd><p class="first last">Fetch the columns or super_columns in reverse order. This will do
+nothing unless you passed a dict_class to the constructor.</p>
+</dd>
+<dt><cite>column_count</cite>: int</dt>
+<dd><p class="first last">Limit the number of columns or super_columns fetched per key</p>
+</dd>
+<dt><cite>row_count</cite>: int</dt>
+<dd><p class="first last">Limit the number of rows fetched</p>
+</dd>
+<dt><cite>include_timestamp</cite>: bool</dt>
+<dd><p class="first last">If true, return a (value, timestamp) tuple for each column</p>
+</dd>
+<dt><cite>super_column</cite>: string</dt>
+<dd><p class="first last">Return columns only in this super_column</p>
+</dd>
+<dt><cite>read_consistency_level</cite>: <tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></dt>
+<dd><p class="first last">Affects the guaranteed replication factor before returning from
+any read operation</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last">iterator over Class instance</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.columnfamilymap.ColumnFamilyMap.insert">
+<tt class="descname">insert</tt><big>(</big><em>instance</em>, <em>columns=None</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap.insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert or update columns</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first docutils">
+<dt><cite>instance</cite>: Class instance</dt>
+<dd><p class="first last">The class to insert or update the columns in</p>
+</dd>
+<dt><cite>columns</cite>: dict</dt>
+<dd><p class="first last">Column: {&#8216;column&#8217;: &#8216;value&#8217;}
+SuperColumn: {&#8216;column&#8217;: {&#8216;subcolumn&#8217;: &#8216;value&#8217;}}
+The columns or supercolumns to limit the insertion
+or update to.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last">int timestamp</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.columnfamilymap.ColumnFamilyMap.multiget">
+<tt class="descname">multiget</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap.multiget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch multiple keys from a Cassandra server</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first docutils">
+<dt><cite>keys</cite>: [str]</dt>
+<dd><p class="first last">A list of keys to fetch</p>
+</dd>
+<dt><cite>columns</cite>: [str]</dt>
+<dd><p class="first last">Limit the columns or super_columns fetched to the specified list</p>
+</dd>
+<dt><cite>column_start</cite>: str</dt>
+<dd><p class="first last">Only fetch when a column or super_column is &gt;= column_start</p>
+</dd>
+<dt><cite>column_finish</cite>: str</dt>
+<dd><p class="first last">Only fetch when a column or super_column is &lt;= column_finish</p>
+</dd>
+<dt><cite>column_reversed</cite>: bool</dt>
+<dd><p class="first last">Fetch the columns or super_columns in reverse order. This will do
+nothing unless you passed a dict_class to the constructor.</p>
+</dd>
+<dt><cite>column_count</cite>: int</dt>
+<dd><p class="first last">Limit the number of columns or super_columns fetched per key</p>
+</dd>
+<dt><cite>include_timestamp</cite>: bool</dt>
+<dd><p class="first last">If true, return a (value, timestamp) tuple for each column</p>
+</dd>
+<dt><cite>super_column</cite>: str</dt>
+<dd><p class="first last">Return columns only in this super_column</p>
+</dd>
+<dt><cite>read_consistency_level</cite>: <tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></dt>
+<dd><p class="first last">Affects the guaranteed replication factor before returning from
+any read operation</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last">{&#8216;key&#8217;: Class instance}</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.columnfamilymap.ColumnFamilyMap.remove">
+<tt class="descname">remove</tt><big>(</big><em>instance</em>, <em>column=None</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove this instance</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first docutils">
+<dt><cite>instance</cite>: Class instance</dt>
+<dd><p class="first last">Remove the instance where the key is instance.key</p>
+</dd>
+<dt><cite>column</cite>: str</dt>
+<dd><p class="first last">If set, remove only this Column. Doesn&#8217;t do anything for SuperColumns</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last">int timestamp</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 

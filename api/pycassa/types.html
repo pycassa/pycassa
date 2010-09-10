@@ -55,6 +55,54 @@
             
   <div class="section" id="module-pycassa.types">
 <span id="types-column-types-for-columnfamilymaps"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">types</span></tt> &#8211; Column Types for ColumnFamilyMaps<a class="headerlink" href="#module-pycassa.types" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pycassa.types.Column">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">Column</tt><big>(</big><em>default=None</em><big>)</big><a class="headerlink" href="#pycassa.types.Column" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for typed columns.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.types.DateTime">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">DateTime</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pycassa.types.DateTime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Column for <tt class="xref py py-class docutils literal"><span class="pre">datetime</span></tt> objects stored as long timestamps.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.types.DateTimeString">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">DateTimeString</tt><big>(</big><em>default=None</em><big>)</big><a class="headerlink" href="#pycassa.types.DateTimeString" title="Permalink to this definition">¶</a></dt>
+<dd><p>Column for <tt class="xref py py-class docutils literal"><span class="pre">datetime</span></tt> objects stored as <tt class="docutils literal"><span class="pre">%Y-%m-%d</span> <span class="pre">%H:%M:%S</span></tt></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.types.Float64">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">Float64</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pycassa.types.Float64" title="Permalink to this definition">¶</a></dt>
+<dd><p>Column for 64bit floats.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.types.FloatString">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">FloatString</tt><big>(</big><em>default=None</em><big>)</big><a class="headerlink" href="#pycassa.types.FloatString" title="Permalink to this definition">¶</a></dt>
+<dd><p>Column for floats stored as strings.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.types.Int64">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">Int64</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pycassa.types.Int64" title="Permalink to this definition">¶</a></dt>
+<dd><p>Column for 64bit ints.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.types.IntString">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">IntString</tt><big>(</big><em>default=None</em><big>)</big><a class="headerlink" href="#pycassa.types.IntString" title="Permalink to this definition">¶</a></dt>
+<dd><p>Column for ints stored as strings.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.types.String">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">String</tt><big>(</big><em>default=None</em><big>)</big><a class="headerlink" href="#pycassa.types.String" title="Permalink to this definition">¶</a></dt>
+<dd><p>Column for <tt class="xref py py-class docutils literal"><span class="pre">str</span></tt> or <tt class="xref py py-class docutils literal"><span class="pre">unicode</span></tt> objects.</p>
+</dd></dl>
+
 </div>
 
 

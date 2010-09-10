@@ -55,32 +55,51 @@
             
   <div class="section" id="module-pycassa.index">
 <span id="index-index-tools-for-pycassa"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">index</span></tt> &#8211; Index Tools for Pycassa<a class="headerlink" href="#module-pycassa.index" title="Permalink to this headline">¶</a></h1>
+<p>Tools for using Cassandra&#8217;s secondary indexes.</p>
 <dl class="function">
 <dt id="pycassa.index.create_index_clause">
 <tt class="descclassname">pycassa.index.</tt><tt class="descname">create_index_clause</tt><big>(</big><em>expr_list</em>, <em>start_key=''</em>, <em>count=100</em><big>)</big><a class="headerlink" href="#pycassa.index.create_index_clause" title="Permalink to this definition">¶</a></dt>
-<dd><p>Constructs an IndexClause for use with get_indexed_slices()</p>
-<dl class="docutils">
-<dt>expr_list <span class="classifier-delimiter">:</span> <span class="classifier">[IndexExpression]</span></dt>
-<dd>A list of IndexExpressions to match</dd>
-<dt>start_key <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
-<dd>The key to begin searching from</dd>
-<dt>count <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd>The number of results to return</dd>
-</dl>
+<dd><p>Constructs an <tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt> for use with 
+<tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>expr_list</strong> &#8211; [<tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt>]
+A list of <cite>IndexExpressions</cite> to match</li>
+<li><strong>start_key</strong> &#8211; str
+The key to begin searching from</li>
+<li><strong>count</strong> &#8211; int
+The number of results to return</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="pycassa.index.create_index_expression">
 <tt class="descclassname">pycassa.index.</tt><tt class="descname">create_index_expression</tt><big>(</big><em>column_name</em>, <em>value</em>, <em>op=0</em><big>)</big><a class="headerlink" href="#pycassa.index.create_index_expression" title="Permalink to this definition">¶</a></dt>
-<dd><p>Constructs an IndexExpression to use with an IndexClause</p>
-<dl class="docutils">
-<dt>column_name <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
-<dd>Name of an indexed or non indexed column</dd>
-<dt>value <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
-<dd>The value that will be compared to column values using op</dd>
-<dt>op <span class="classifier-delimiter">:</span> <span class="classifier">IndexOperator</span></dt>
-<dd>The binary operator to apply to column values and &#8216;value&#8217;</dd>
-</dl>
+<dd><p>Constructs an <tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt> to use
+in an <tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>column_name</strong> &#8211; string
+Name of an indexed or non-indexed column</li>
+<li><strong>value</strong> &#8211; The value that will be compared to column values using op</li>
+<li><strong>op</strong> &#8211; <tt class="xref py py-class docutils literal"><span class="pre">IndexOperator</span></tt>
+The binary operator to apply to column values and <cite>value</cite>.  Defaults
+to <cite>IndexOperator.EQ</cite>, which tests for equality.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>

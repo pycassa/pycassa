@@ -55,6 +55,20 @@
             
   <div class="section" id="module-pycassa.connection">
 <span id="connection-non-pooled-connections-to-cassandra-servers"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">connection</span></tt> &#8211; Non-pooled connections to Cassandra servers<a class="headerlink" href="#module-pycassa.connection" title="Permalink to this headline">¶</a></h1>
+<p>Tools for connecting to a Cassandra cluster.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">Module <a class="reference internal" href="pool.html#module-pycassa.pool" title="pycassa.pool"><tt class="xref py py-mod docutils literal"><span class="pre">pool</span></tt></a> to see how connections
+can be pooled.</p>
+</div>
+<p>To get a connection object which you can use directly, with
+<a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>, or with
+<a class="reference internal" href="columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>, you can do the
+following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pycassa</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">connection</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;Keyspace&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;hostname:9160&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
 <dl class="function">
 <dt id="pycassa.connection.connect">
 <tt class="descclassname">pycassa.connection.</tt><tt class="descname">connect</tt><big>(</big><em>keyspace</em>, <em>servers=None</em>, <em>framed_transport=True</em>, <em>timeout=None</em>, <em>credentials=None</em>, <em>retry_time=60</em>, <em>recycle=None</em>, <em>round_robin=None</em>, <em>use_threadlocal=True</em><big>)</big><a class="headerlink" href="#pycassa.connection.connect" title="Permalink to this definition">¶</a></dt>
@@ -62,38 +76,51 @@
 server on the list.</p>
 <p>If the connection fails, it will attempt to connect to each server on the
 list in turn until one succeeds. If it is unable to find an active server,
-it will throw a NoServerAvailable exception.</p>
+it will throw a <cite>NoServerAvailable</cite> exception.</p>
 <p>Failing servers are kept on a separate list and eventually retried, no
 sooner than <cite>retry_time</cite> seconds after failure.</p>
-<dl class="docutils">
-<dt>keyspace: string</dt>
-<dd>The keyspace to associate this connection with.</dd>
-<dt>servers <span class="classifier-delimiter">:</span> <span class="classifier">[server]</span></dt>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first docutils">
+<dt><cite>keyspace</cite>: string</dt>
+<dd><p class="first last">The keyspace to associate this connection with.</p>
+</dd>
+<dt><cite>servers</cite>: [server]</dt>
 <dd><p class="first">List of Cassandra servers with format: &#8220;hostname:port&#8221;</p>
 <p class="last">Default: [&#8216;localhost:9160&#8217;]</p>
 </dd>
-<dt>framed_transport: bool</dt>
-<dd>If True, use a TFramedTransport instead of a TBufferedTransport</dd>
-<dt>timeout: float</dt>
+<dt><cite>framed_transport</cite>: bool</dt>
+<dd><p class="first last">If True, use a TFramedTransport instead of a TBufferedTransport</p>
+</dd>
+<dt><cite>timeout</cite>: float</dt>
 <dd><p class="first">Timeout in seconds (e.g. 0.5)</p>
 <p class="last">Default: None (it will stall forever)</p>
 </dd>
-<dt>retry_time: float</dt>
+<dt><cite>retry_time</cite>: float</dt>
 <dd><p class="first">Minimum time in seconds until a failed server is reinstated. (e.g. 0.5)</p>
 <p class="last">Default: 60</p>
 </dd>
-<dt>credentials <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dt><cite>credentials</cite>: dict</dt>
 <dd><p class="first">Dictionary of Credentials</p>
 <p class="last">Example: {&#8216;username&#8217;:&#8217;jsmith&#8217;, &#8216;password&#8217;:&#8217;havebadpass&#8217;}</p>
 </dd>
-<dt>recycle: float</dt>
+<dt><cite>recycle</cite>: float</dt>
 <dd><p class="first">Max time in seconds before an open connection is closed and returned to the pool.</p>
 <p class="last">Default: None (Never recycle)</p>
 </dd>
-<dt>round_robin: bool</dt>
-<dd><em>DEPRECATED</em></dd>
+<dt><cite>round_robin</cite>: bool</dt>
+<dd><p class="first last"><em>DEPRECATED</em></p>
+</dd>
 </dl>
-<p>Cassandra client</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last">Cassandra client</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -103,38 +130,104 @@ sooner than <cite>retry_time</cite> seconds after failure.</p>
 server on the list.</p>
 <p>If the connection fails, it will attempt to connect to each server on the
 list in turn until one succeeds. If it is unable to find an active server,
-it will throw a NoServerAvailable exception.</p>
+it will throw a <cite>NoServerAvailable</cite> exception.</p>
 <p>Failing servers are kept on a separate list and eventually retried, no
 sooner than <cite>retry_time</cite> seconds after failure.</p>
-<dl class="docutils">
-<dt>keyspace: string</dt>
-<dd>The keyspace to associate this connection with.</dd>
-<dt>servers <span class="classifier-delimiter">:</span> <span class="classifier">[server]</span></dt>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first docutils">
+<dt><cite>keyspace</cite>: string</dt>
+<dd><p class="first last">The keyspace to associate this connection with.</p>
+</dd>
+<dt><cite>servers</cite>: [server]</dt>
 <dd><p class="first">List of Cassandra servers with format: &#8220;hostname:port&#8221;</p>
 <p class="last">Default: [&#8216;localhost:9160&#8217;]</p>
 </dd>
-<dt>framed_transport: bool</dt>
-<dd>If True, use a TFramedTransport instead of a TBufferedTransport</dd>
-<dt>timeout: float</dt>
+<dt><cite>framed_transport</cite>: bool</dt>
+<dd><p class="first last">If True, use a TFramedTransport instead of a TBufferedTransport</p>
+</dd>
+<dt><cite>timeout</cite>: float</dt>
 <dd><p class="first">Timeout in seconds (e.g. 0.5)</p>
 <p class="last">Default: None (it will stall forever)</p>
 </dd>
-<dt>retry_time: float</dt>
+<dt><cite>retry_time</cite>: float</dt>
 <dd><p class="first">Minimum time in seconds until a failed server is reinstated. (e.g. 0.5)</p>
 <p class="last">Default: 60</p>
 </dd>
-<dt>credentials <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dt><cite>credentials</cite>: dict</dt>
 <dd><p class="first">Dictionary of Credentials</p>
 <p class="last">Example: {&#8216;username&#8217;:&#8217;jsmith&#8217;, &#8216;password&#8217;:&#8217;havebadpass&#8217;}</p>
 </dd>
-<dt>recycle: float</dt>
+<dt><cite>recycle</cite>: float</dt>
 <dd><p class="first">Max time in seconds before an open connection is closed and returned to the pool.</p>
 <p class="last">Default: None (Never recycle)</p>
 </dd>
-<dt>round_robin: bool</dt>
-<dd><em>DEPRECATED</em></dd>
+<dt><cite>round_robin</cite>: bool</dt>
+<dd><p class="first last"><em>DEPRECATED</em></p>
+</dd>
 </dl>
-<p>Cassandra client</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last">Cassandra client</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pycassa.connection.NoServerAvailable">
+<em class="property">exception </em><tt class="descclassname">pycassa.connection.</tt><tt class="descname">NoServerAvailable</tt><a class="headerlink" href="#pycassa.connection.NoServerAvailable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raised if all servers are currently marked dead.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.connection.Connection">
+<em class="property">class </em><tt class="descclassname">pycassa.connection.</tt><tt class="descname">Connection</tt><big>(</big><em>keyspace</em>, <em>servers</em>, <em>framed_transport=True</em>, <em>timeout=None</em>, <em>retry_time=10</em>, <em>recycle=None</em>, <em>credentials=None</em>, <em>use_threadlocal=True</em><big>)</big><a class="headerlink" href="#pycassa.connection.Connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>A connection that gives access to raw Thrift calls.</p>
+<dl class="method">
+<dt id="pycassa.connection.Connection.batch">
+<tt class="descname">batch</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pycassa.connection.Connection.batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a mutator on this connection.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.connection.Connection.close">
+<tt class="descname">close</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.connection.Connection.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>If a connection is open, close its transport.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.connection.Connection.connect">
+<tt class="descname">connect</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.connection.Connection.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create new connection unless we already have one.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.connection.Connection.get_keyspace_description">
+<tt class="descname">get_keyspace_description</tt><big>(</big><em>keyspace=None</em><big>)</big><a class="headerlink" href="#pycassa.connection.Connection.get_keyspace_description" title="Permalink to this definition">¶</a></dt>
+<dd><p>Describes the given keyspace.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>keyspace</strong> &#8211; The keyspace to describe. Defaults to the current
+keyspace.</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><tt class="docutils literal"><span class="pre">{column_family_name:</span> <span class="pre">CfDef}</span></tt>
+where a <tt class="docutils literal"><span class="pre">CfDef</span></tt> has many attributes describing the column family, including
+the dictionary <tt class="docutils literal"><span class="pre">column_metadata</span> <span class="pre">=</span> <span class="pre">{column_name:</span> <span class="pre">ColumnDef}</span></tt></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 </div>

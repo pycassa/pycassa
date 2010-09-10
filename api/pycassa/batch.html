@@ -55,12 +55,57 @@
             
   <div class="section" id="module-pycassa.batch">
 <span id="batch-batch-operations"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">batch</span></tt> &#8211; Batch Operations<a class="headerlink" href="#module-pycassa.batch" title="Permalink to this headline">¶</a></h1>
+<p>Tools to support batch operations.</p>
 <dl class="class">
 <dt id="pycassa.batch.Mutator">
 <em class="property">class </em><tt class="descclassname">pycassa.batch.</tt><tt class="descname">Mutator</tt><big>(</big><em>client</em>, <em>queue_size=100</em>, <em>write_consistency_level=None</em><big>)</big><a class="headerlink" href="#pycassa.batch.Mutator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Batch update convenience mechanism.
-Queues insert/update/remove operations and executes them when the queue
-is filled up or explicitly using <cite>send</cite>.</p>
+<dd><p>Creates a new Mutator object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first last docutils">
+<dt><cite>client</cite>: <a class="reference internal" href="connection.html#pycassa.connection.Connection" title="pycassa.connection.Connection"><tt class="xref py py-class docutils literal"><span class="pre">Connection</span></tt></a></dt>
+<dd><p class="first last">The connection that will be used.</p>
+</dd>
+<dt><cite>queue_size</cite>: int</dt>
+<dd><p class="first last">The number of operations to queue before they are executed
+automatically.</p>
+</dd>
+<dt><cite>write_consistency_level</cite>: <tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt></dt>
+<dd><p class="first last">The Cassandra write consistency level.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.batch.CfMutator">
+<em class="property">class </em><tt class="descclassname">pycassa.batch.</tt><tt class="descname">CfMutator</tt><big>(</big><em>column_family</em>, <em>queue_size=100</em>, <em>write_consistency_level=None</em><big>)</big><a class="headerlink" href="#pycassa.batch.CfMutator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new CfMutator object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first last docutils">
+<dt><cite>column_family</cite>: <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a></dt>
+<dd><p class="first last">The column family that all operations will be on.</p>
+</dd>
+<dt><cite>queue_size</cite>: int</dt>
+<dd><p class="first last">The number of operations to queue before they are executed
+automatically.</p>
+</dd>
+<dt><cite>write_consistency_level</cite>: <tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt></dt>
+<dd><p class="first last">The Cassandra write consistency level.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
