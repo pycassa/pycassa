@@ -14,7 +14,7 @@ import pycassa
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.coverage',
-              'sphinx.ext.todo']
+              'sphinx.ext.todo', 'doc.sphinxtogithub']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -26,7 +26,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'pycassa'
+project = 'pycassa'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -89,7 +89,7 @@ html_theme = 'default'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+#html_static_path = ['_static']
 
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}
@@ -124,8 +124,8 @@ htmlhelp_basename = 'pycassa' + release.replace('.', '_')
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'pycassa.tex', u'pycassa Documentation',
-   u'Jonathan Hseu', 'manual'),
+  ('index', 'pycassa.tex', 'pycassa Documentation',
+   'Jonathan Hseu', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
