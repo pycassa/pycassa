@@ -10,6 +10,14 @@ pycassa is a Cassandra library with the following features:
 3. A method to map an existing class to a Cassandra ColumnFamily.
 4. Support for SuperColumns
 
+Documentation
+-------------
+
+While this readme includes a lot of information, the official and more
+thorough documentation can be found here:
+
+[http://pycassa.github.com/pycassa/](http://pycassa.github.com/pycassa/)
+
 IRC
 ---
 
