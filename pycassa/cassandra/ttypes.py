@@ -1966,9 +1966,9 @@ class CfDef:
     (3, TType.STRING, 'column_type', None, "Standard", ), # 3
     (4, TType.STRING, 'clock_type', None, "Timestamp", ), # 4
     (5, TType.STRING, 'comparator_type', None, "BytesType", ), # 5
-    (6, TType.STRING, 'subcomparator_type', None, "", ), # 6
-    (7, TType.STRING, 'reconciler', None, "", ), # 7
-    (8, TType.STRING, 'comment', None, "", ), # 8
+    (6, TType.STRING, 'subcomparator_type', None, None, ), # 6
+    (7, TType.STRING, 'reconciler', None, None, ), # 7
+    (8, TType.STRING, 'comment', None, None, ), # 8
     (9, TType.DOUBLE, 'row_cache_size', None, 0, ), # 9
     (10, TType.BOOL, 'preload_row_cache', None, False, ), # 10
     (11, TType.DOUBLE, 'key_cache_size', None, 200000, ), # 11
@@ -1979,7 +1979,7 @@ class CfDef:
     (16, TType.I32, 'id', None, None, ), # 16
   )
 
-  def __init__(self, keyspace=None, name=None, column_type=thrift_spec[3][4], clock_type=thrift_spec[4][4], comparator_type=thrift_spec[5][4], subcomparator_type=thrift_spec[6][4], reconciler=thrift_spec[7][4], comment=thrift_spec[8][4], row_cache_size=thrift_spec[9][4], preload_row_cache=thrift_spec[10][4], key_cache_size=thrift_spec[11][4], read_repair_chance=thrift_spec[12][4], column_metadata=None, gc_grace_seconds=None, default_validation_class=None, id=None,):
+  def __init__(self, keyspace=None, name=None, column_type=thrift_spec[3][4], clock_type=thrift_spec[4][4], comparator_type=thrift_spec[5][4], subcomparator_type=None, reconciler=None, comment=None, row_cache_size=thrift_spec[9][4], preload_row_cache=thrift_spec[10][4], key_cache_size=thrift_spec[11][4], read_repair_chance=thrift_spec[12][4], column_metadata=None, gc_grace_seconds=None, default_validation_class=None, id=None,):
     self.keyspace = keyspace
     self.name = name
     self.column_type = column_type
