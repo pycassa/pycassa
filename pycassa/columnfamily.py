@@ -505,11 +505,16 @@ class ColumnFamily(object):
 
         keymap = self.client.multiget_slice(keys, cp, sp,
                                             self._rcl(read_consistency_level))
+        
+        ret = self.dict_class()
+        
+        # Keep the order of keys
+        for key in keys:
+            ret[key] = None
 
-        ret = dict()
         for key, columns in keymap.iteritems():
             if len(columns) > 0:
-                ret[key] = self._convert_ColumnOrSuperColumns_to_dict_class(columns, include_timestamp)
+                ret[key] = self._convert_ColumnOrSuperColumns_to_dict_class(columns, include_timestamp) 
         return ret
 
     MAX_COUNT = 2**31-1

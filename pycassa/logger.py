@@ -7,7 +7,7 @@ class PycassaLogger:
 
     __shared_state = {}
 
-    _LOG_FILENAME = '/var/log/pycassa/system.log'
+    _LOG_FILENAME = '/tmp/pycassa.log'
 
     _levels = {'debug': logging.DEBUG,
                'info': logging.INFO,

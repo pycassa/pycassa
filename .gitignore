@@ -3,3 +3,5 @@
 *.swo
 build/
 doc/_build
+dist/
+pycassa.egg-info/
