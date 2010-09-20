@@ -2715,7 +2715,7 @@ class multiget_slice_args:
 
   thrift_spec = (
     None, # 0
-    (1, TType.SET, 'keys', (TType.STRING,None), None, ), # 1
+    (1, TType.LIST, 'keys', (TType.STRING,None), None, ), # 1
     (2, TType.STRUCT, 'column_parent', (ColumnParent, ColumnParent.thrift_spec), None, ), # 2
     (3, TType.STRUCT, 'predicate', (SlicePredicate, SlicePredicate.thrift_spec), None, ), # 3
     (4, TType.I32, 'consistency_level', None,     1, ), # 4
@@ -2737,13 +2737,13 @@ class multiget_slice_args:
       if ftype == TType.STOP:
         break
       if fid == 1:
-        if ftype == TType.SET:
-          self.keys = set()
-          (_etype77, _size74) = iprot.readSetBegin()
+        if ftype == TType.LIST:
+          self.keys = []
+          (_etype77, _size74) = iprot.readListBegin()
           for _i78 in xrange(_size74):
             _elem79 = iprot.readString();
-            self.keys.add(_elem79)
-          iprot.readSetEnd()
+            self.keys.append(_elem79)
+          iprot.readListEnd()
         else:
           iprot.skip(ftype)
       elif fid == 2:
@@ -2774,11 +2774,11 @@ class multiget_slice_args:
       return
     oprot.writeStructBegin('multiget_slice_args')
     if self.keys != None:
-      oprot.writeFieldBegin('keys', TType.SET, 1)
-      oprot.writeSetBegin(TType.STRING, len(self.keys))
+      oprot.writeFieldBegin('keys', TType.LIST, 1)
+      oprot.writeListBegin(TType.STRING, len(self.keys))
       for iter80 in self.keys:
         oprot.writeString(iter80)
-      oprot.writeSetEnd()
+      oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.column_parent != None:
       oprot.writeFieldBegin('column_parent', TType.STRUCT, 2)
@@ -2930,7 +2930,7 @@ class multiget_count_args:
 
   thrift_spec = (
     None, # 0
-    (1, TType.SET, 'keys', (TType.STRING,None), None, ), # 1
+    (1, TType.LIST, 'keys', (TType.STRING,None), None, ), # 1
     (2, TType.STRUCT, 'column_parent', (ColumnParent, ColumnParent.thrift_spec), None, ), # 2
     (3, TType.STRUCT, 'predicate', (SlicePredicate, SlicePredicate.thrift_spec), None, ), # 3
     (4, TType.I32, 'consistency_level', None,     1, ), # 4
@@ -2952,13 +2952,13 @@ class multiget_count_args:
       if ftype == TType.STOP:
         break
       if fid == 1:
-        if ftype == TType.SET:
-          self.keys = set()
-          (_etype100, _size97) = iprot.readSetBegin()
+        if ftype == TType.LIST:
+          self.keys = []
+          (_etype100, _size97) = iprot.readListBegin()
           for _i101 in xrange(_size97):
             _elem102 = iprot.readString();
-            self.keys.add(_elem102)
-          iprot.readSetEnd()
+            self.keys.append(_elem102)
+          iprot.readListEnd()
         else:
           iprot.skip(ftype)
       elif fid == 2:
@@ -2989,11 +2989,11 @@ class multiget_count_args:
       return
     oprot.writeStructBegin('multiget_count_args')
     if self.keys != None:
-      oprot.writeFieldBegin('keys', TType.SET, 1)
-      oprot.writeSetBegin(TType.STRING, len(self.keys))
+      oprot.writeFieldBegin('keys', TType.LIST, 1)
+      oprot.writeListBegin(TType.STRING, len(self.keys))
       for iter103 in self.keys:
         oprot.writeString(iter103)
-      oprot.writeSetEnd()
+      oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.column_parent != None:
       oprot.writeFieldBegin('column_parent', TType.STRUCT, 2)

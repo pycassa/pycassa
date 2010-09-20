@@ -1957,6 +1957,8 @@ class CfDef:
    - gc_grace_seconds
    - default_validation_class
    - id
+   - min_compaction_threshold
+   - max_compaction_threshold
   """
 
   thrift_spec = (
@@ -1977,9 +1979,11 @@ class CfDef:
     (14, TType.I32, 'gc_grace_seconds', None, None, ), # 14
     (15, TType.STRING, 'default_validation_class', None, None, ), # 15
     (16, TType.I32, 'id', None, None, ), # 16
+    (17, TType.I32, 'min_compaction_threshold', None, None, ), # 17
+    (18, TType.I32, 'max_compaction_threshold', None, None, ), # 18
   )
 
-  def __init__(self, keyspace=None, name=None, column_type=thrift_spec[3][4], clock_type=thrift_spec[4][4], comparator_type=thrift_spec[5][4], subcomparator_type=None, reconciler=None, comment=None, row_cache_size=thrift_spec[9][4], preload_row_cache=thrift_spec[10][4], key_cache_size=thrift_spec[11][4], read_repair_chance=thrift_spec[12][4], column_metadata=None, gc_grace_seconds=None, default_validation_class=None, id=None,):
+  def __init__(self, keyspace=None, name=None, column_type=thrift_spec[3][4], clock_type=thrift_spec[4][4], comparator_type=thrift_spec[5][4], subcomparator_type=None, reconciler=None, comment=None, row_cache_size=thrift_spec[9][4], preload_row_cache=thrift_spec[10][4], key_cache_size=thrift_spec[11][4], read_repair_chance=thrift_spec[12][4], column_metadata=None, gc_grace_seconds=None, default_validation_class=None, id=None, min_compaction_threshold=None, max_compaction_threshold=None,):
     self.keyspace = keyspace
     self.name = name
     self.column_type = column_type
@@ -1996,6 +2000,8 @@ class CfDef:
     self.gc_grace_seconds = gc_grace_seconds
     self.default_validation_class = default_validation_class
     self.id = id
+    self.min_compaction_threshold = min_compaction_threshold
+    self.max_compaction_threshold = max_compaction_threshold
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -2092,6 +2098,16 @@ class CfDef:
           self.id = iprot.readI32();
         else:
           iprot.skip(ftype)
+      elif fid == 17:
+        if ftype == TType.I32:
+          self.min_compaction_threshold = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 18:
+        if ftype == TType.I32:
+          self.max_compaction_threshold = iprot.readI32();
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -2168,6 +2184,14 @@ class CfDef:
     if self.id != None:
       oprot.writeFieldBegin('id', TType.I32, 16)
       oprot.writeI32(self.id)
+      oprot.writeFieldEnd()
+    if self.min_compaction_threshold != None:
+      oprot.writeFieldBegin('min_compaction_threshold', TType.I32, 17)
+      oprot.writeI32(self.min_compaction_threshold)
+      oprot.writeFieldEnd()
+    if self.max_compaction_threshold != None:
+      oprot.writeFieldBegin('max_compaction_threshold', TType.I32, 18)
+      oprot.writeI32(self.max_compaction_threshold)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
