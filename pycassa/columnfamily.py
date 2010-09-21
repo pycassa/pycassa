@@ -7,7 +7,7 @@ manipulation of data inside Cassandra.
 
 from pycassa.cassandra.ttypes import Column, ColumnOrSuperColumn,\
     ColumnParent, ColumnPath, ConsistencyLevel, NotFoundException,\
-    SlicePredicate, SliceRange, SuperColumn, Clock, KeyRange,\
+    SlicePredicate, SliceRange, SuperColumn, KeyRange,\
     IndexExpression, IndexClause
 
 import time
@@ -154,7 +154,7 @@ class ColumnFamily(object):
     def _convert_Column_to_base(self, column, include_timestamp):
         value = self._unpack_value(column.value, column.name)
         if include_timestamp:
-            return (value, column.clock.timestamp)
+            return (value, column.timestamp)
         return value
 
     def _convert_SuperColumn_to_base(self, super_column, include_timestamp):
@@ -512,9 +512,16 @@ class ColumnFamily(object):
         for key in keys:
             ret[key] = None
 
+        non_empty_keys = []
         for key, columns in keymap.iteritems():
             if len(columns) > 0:
+                non_empty_keys.append(key)
                 ret[key] = self._convert_ColumnOrSuperColumns_to_dict_class(columns, include_timestamp) 
+
+        for key in keys:
+            if key not in non_empty_keys:
+                del ret[key]
+
         return ret
 
     MAX_COUNT = 2**31-1
@@ -684,7 +691,7 @@ class ColumnFamily(object):
             last_key = key_slices[-1].key
             i += 1
 
-    def insert(self, key, columns, clock=None, ttl=None,
+    def insert(self, key, columns, timestamp=None, ttl=None,
                write_consistency_level=None):
         """
         Insert or update columns for a key
@@ -703,10 +710,10 @@ class ColumnFamily(object):
         :Returns:
             int timestamp
         """
-        return self.batch_insert({key: columns}, clock=clock, ttl=ttl,
+        return self.batch_insert({key: columns}, timestamp=timestamp, ttl=ttl,
                                  write_consistency_level=write_consistency_level)
 
-    def batch_insert(self, rows, clock=None, ttl=None, write_consistency_level = None):
+    def batch_insert(self, rows, timestamp=None, ttl=None, write_consistency_level = None):
         """
         Insert or update columns for multiple keys
 
@@ -721,12 +728,13 @@ class ColumnFamily(object):
         :Returns:
             int timestamp
         """
-        clock = Clock(timestamp=self.timestamp())
+        if timestamp == None:
+            timestamp = self.timestamp()
         batch = self.batch(write_consistency_level=write_consistency_level)
         for key, columns in rows.iteritems():
-            batch.insert(key, columns, clock=clock, ttl=ttl)
+            batch.insert(key, columns, timestamp=timestamp, ttl=ttl)
         batch.send()
-        return clock.timestamp
+        return timestamp
 
     def remove(self, key, columns=None, super_column=None, write_consistency_level = None):
         """
@@ -746,11 +754,11 @@ class ColumnFamily(object):
         :Returns:
             int timestamp
         """
-        clock = Clock(timestamp=self.timestamp())
+        timestamp = self.timestamp()
         batch = self.batch(write_consistency_level=write_consistency_level)
-        batch.remove(key, columns, super_column, clock)
+        batch.remove(key, columns, super_column, timestamp)
         batch.send()
-        return clock.timestamp
+        return timestamp
 
     def batch(self, queue_size=100, write_consistency_level=None):
         """

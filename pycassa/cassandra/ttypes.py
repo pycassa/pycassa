@@ -104,80 +104,18 @@ class IndexType:
     "KEYS": 0,
   }
 
-class Clock:
-  """
-  Encapsulate types of conflict resolution.
-  
-  @param timestamp. User-supplied timestamp. When two columns with this type of clock conflict, the one with the
-                    highest timestamp is the one whose value the system will converge to. No other assumptions
-                    are made about what the timestamp represents, but using microseconds-since-epoch is customary.
-  
-  Attributes:
-   - timestamp
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.I64, 'timestamp', None, None, ), # 1
-  )
-
-  def __init__(self, timestamp=None,):
-    self.timestamp = timestamp
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.I64:
-          self.timestamp = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('Clock')
-    if self.timestamp != None:
-      oprot.writeFieldBegin('timestamp', TType.I64, 1)
-      oprot.writeI64(self.timestamp)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
 class Column:
   """
   Basic unit of data within a ColumnFamily.
   @param name, the name by which this column is set and retrieved.  Maximum 64KB long.
   @param value. The data associated with the name.  Maximum 2GB long, but in practice you should limit it to small numbers of MB (since Thrift must read the full value into memory to operate on it).
-  @param clock. The clock is used for conflict detection/resolution when two columns with same name need to be compared.
+  @param timestamp. The timestamp is used for conflict detection/resolution when two columns with same name need to be compared.
   @param ttl. An optional, positive delay (in seconds) after which the column will be automatically deleted.
   
   Attributes:
    - name
    - value
-   - clock
+   - timestamp
    - ttl
   """
 
@@ -185,14 +123,14 @@ class Column:
     None, # 0
     (1, TType.STRING, 'name', None, None, ), # 1
     (2, TType.STRING, 'value', None, None, ), # 2
-    (3, TType.STRUCT, 'clock', (Clock, Clock.thrift_spec), None, ), # 3
+    (3, TType.I64, 'timestamp', None, None, ), # 3
     (4, TType.I32, 'ttl', None, None, ), # 4
   )
 
-  def __init__(self, name=None, value=None, clock=None, ttl=None,):
+  def __init__(self, name=None, value=None, timestamp=None, ttl=None,):
     self.name = name
     self.value = value
-    self.clock = clock
+    self.timestamp = timestamp
     self.ttl = ttl
 
   def read(self, iprot):
@@ -215,9 +153,8 @@ class Column:
         else:
           iprot.skip(ftype)
       elif fid == 3:
-        if ftype == TType.STRUCT:
-          self.clock = Clock()
-          self.clock.read(iprot)
+        if ftype == TType.I64:
+          self.timestamp = iprot.readI64();
         else:
           iprot.skip(ftype)
       elif fid == 4:
@@ -243,9 +180,9 @@ class Column:
       oprot.writeFieldBegin('value', TType.STRING, 2)
       oprot.writeString(self.value)
       oprot.writeFieldEnd()
-    if self.clock != None:
-      oprot.writeFieldBegin('clock', TType.STRUCT, 3)
-      self.clock.write(oprot)
+    if self.timestamp != None:
+      oprot.writeFieldBegin('timestamp', TType.I64, 3)
+      oprot.writeI64(self.timestamp)
       oprot.writeFieldEnd()
     if self.ttl != None:
       oprot.writeFieldBegin('ttl', TType.I32, 4)
@@ -1537,20 +1474,20 @@ class KeyCount:
 class Deletion:
   """
   Attributes:
-   - clock
+   - timestamp
    - super_column
    - predicate
   """
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRUCT, 'clock', (Clock, Clock.thrift_spec), None, ), # 1
+    (1, TType.I64, 'timestamp', None, None, ), # 1
     (2, TType.STRING, 'super_column', None, None, ), # 2
     (3, TType.STRUCT, 'predicate', (SlicePredicate, SlicePredicate.thrift_spec), None, ), # 3
   )
 
-  def __init__(self, clock=None, super_column=None, predicate=None,):
-    self.clock = clock
+  def __init__(self, timestamp=None, super_column=None, predicate=None,):
+    self.timestamp = timestamp
     self.super_column = super_column
     self.predicate = predicate
 
@@ -1564,9 +1501,8 @@ class Deletion:
       if ftype == TType.STOP:
         break
       if fid == 1:
-        if ftype == TType.STRUCT:
-          self.clock = Clock()
-          self.clock.read(iprot)
+        if ftype == TType.I64:
+          self.timestamp = iprot.readI64();
         else:
           iprot.skip(ftype)
       elif fid == 2:
@@ -1590,9 +1526,9 @@ class Deletion:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
     oprot.writeStructBegin('Deletion')
-    if self.clock != None:
-      oprot.writeFieldBegin('clock', TType.STRUCT, 1)
-      self.clock.write(oprot)
+    if self.timestamp != None:
+      oprot.writeFieldBegin('timestamp', TType.I64, 1)
+      oprot.writeI64(self.timestamp)
       oprot.writeFieldEnd()
     if self.super_column != None:
       oprot.writeFieldBegin('super_column', TType.STRING, 2)
@@ -1944,10 +1880,8 @@ class CfDef:
    - keyspace
    - name
    - column_type
-   - clock_type
    - comparator_type
    - subcomparator_type
-   - reconciler
    - comment
    - row_cache_size
    - preload_row_cache
@@ -1966,10 +1900,10 @@ class CfDef:
     (1, TType.STRING, 'keyspace', None, None, ), # 1
     (2, TType.STRING, 'name', None, None, ), # 2
     (3, TType.STRING, 'column_type', None, "Standard", ), # 3
-    (4, TType.STRING, 'clock_type', None, "Timestamp", ), # 4
+    None, # 4
     (5, TType.STRING, 'comparator_type', None, "BytesType", ), # 5
     (6, TType.STRING, 'subcomparator_type', None, None, ), # 6
-    (7, TType.STRING, 'reconciler', None, None, ), # 7
+    None, # 7
     (8, TType.STRING, 'comment', None, None, ), # 8
     (9, TType.DOUBLE, 'row_cache_size', None, 0, ), # 9
     (10, TType.BOOL, 'preload_row_cache', None, False, ), # 10
@@ -1983,14 +1917,12 @@ class CfDef:
     (18, TType.I32, 'max_compaction_threshold', None, None, ), # 18
   )
 
-  def __init__(self, keyspace=None, name=None, column_type=thrift_spec[3][4], clock_type=thrift_spec[4][4], comparator_type=thrift_spec[5][4], subcomparator_type=None, reconciler=None, comment=None, row_cache_size=thrift_spec[9][4], preload_row_cache=thrift_spec[10][4], key_cache_size=thrift_spec[11][4], read_repair_chance=thrift_spec[12][4], column_metadata=None, gc_grace_seconds=None, default_validation_class=None, id=None, min_compaction_threshold=None, max_compaction_threshold=None,):
+  def __init__(self, keyspace=None, name=None, column_type=thrift_spec[3][4], comparator_type=thrift_spec[5][4], subcomparator_type=None, comment=None, row_cache_size=thrift_spec[9][4], preload_row_cache=thrift_spec[10][4], key_cache_size=thrift_spec[11][4], read_repair_chance=thrift_spec[12][4], column_metadata=None, gc_grace_seconds=None, default_validation_class=None, id=None, min_compaction_threshold=None, max_compaction_threshold=None,):
     self.keyspace = keyspace
     self.name = name
     self.column_type = column_type
-    self.clock_type = clock_type
     self.comparator_type = comparator_type
     self.subcomparator_type = subcomparator_type
-    self.reconciler = reconciler
     self.comment = comment
     self.row_cache_size = row_cache_size
     self.preload_row_cache = preload_row_cache
@@ -2027,11 +1959,6 @@ class CfDef:
           self.column_type = iprot.readString();
         else:
           iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.STRING:
-          self.clock_type = iprot.readString();
-        else:
-          iprot.skip(ftype)
       elif fid == 5:
         if ftype == TType.STRING:
           self.comparator_type = iprot.readString();
@@ -2040,11 +1967,6 @@ class CfDef:
       elif fid == 6:
         if ftype == TType.STRING:
           self.subcomparator_type = iprot.readString();
-        else:
-          iprot.skip(ftype)
-      elif fid == 7:
-        if ftype == TType.STRING:
-          self.reconciler = iprot.readString();
         else:
           iprot.skip(ftype)
       elif fid == 8:
@@ -2130,10 +2052,6 @@ class CfDef:
       oprot.writeFieldBegin('column_type', TType.STRING, 3)
       oprot.writeString(self.column_type)
       oprot.writeFieldEnd()
-    if self.clock_type != None:
-      oprot.writeFieldBegin('clock_type', TType.STRING, 4)
-      oprot.writeString(self.clock_type)
-      oprot.writeFieldEnd()
     if self.comparator_type != None:
       oprot.writeFieldBegin('comparator_type', TType.STRING, 5)
       oprot.writeString(self.comparator_type)
@@ -2141,10 +2059,6 @@ class CfDef:
     if self.subcomparator_type != None:
       oprot.writeFieldBegin('subcomparator_type', TType.STRING, 6)
       oprot.writeString(self.subcomparator_type)
-      oprot.writeFieldEnd()
-    if self.reconciler != None:
-      oprot.writeFieldBegin('reconciler', TType.STRING, 7)
-      oprot.writeString(self.reconciler)
       oprot.writeFieldEnd()
     if self.comment != None:
       oprot.writeFieldBegin('comment', TType.STRING, 8)

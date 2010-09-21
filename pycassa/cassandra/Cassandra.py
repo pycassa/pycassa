@@ -128,16 +128,16 @@ class Iface:
     """
     pass
 
-  def remove(self, key, column_path, clock, consistency_level):
+  def remove(self, key, column_path, timestamp, consistency_level):
     """
-    Remove data from the row specified by key at the granularity specified by column_path, and the given clock. Note
+    Remove data from the row specified by key at the granularity specified by column_path, and the given timestamp. Note
     that all the values in column_path besides column_path.column_family are truly optional: you can remove the entire
     row by just specifying the ColumnFamily, or you can remove a SuperColumn or a single Column by specifying those levels too.
     
     Parameters:
      - key
      - column_path
-     - clock
+     - timestamp
      - consistency_level
     """
     pass
@@ -739,27 +739,27 @@ class Client(Iface):
       raise result.te
     return
 
-  def remove(self, key, column_path, clock, consistency_level):
+  def remove(self, key, column_path, timestamp, consistency_level):
     """
-    Remove data from the row specified by key at the granularity specified by column_path, and the given clock. Note
+    Remove data from the row specified by key at the granularity specified by column_path, and the given timestamp. Note
     that all the values in column_path besides column_path.column_family are truly optional: you can remove the entire
     row by just specifying the ColumnFamily, or you can remove a SuperColumn or a single Column by specifying those levels too.
     
     Parameters:
      - key
      - column_path
-     - clock
+     - timestamp
      - consistency_level
     """
-    self.send_remove(key, column_path, clock, consistency_level)
+    self.send_remove(key, column_path, timestamp, consistency_level)
     self.recv_remove()
 
-  def send_remove(self, key, column_path, clock, consistency_level):
+  def send_remove(self, key, column_path, timestamp, consistency_level):
     self._oprot.writeMessageBegin('remove', TMessageType.CALL, self._seqid)
     args = remove_args()
     args.key = key
     args.column_path = column_path
-    args.clock = clock
+    args.timestamp = timestamp
     args.consistency_level = consistency_level
     args.write(self._oprot)
     self._oprot.writeMessageEnd()
@@ -1632,7 +1632,7 @@ class Processor(Iface, TProcessor):
     iprot.readMessageEnd()
     result = remove_result()
     try:
-      self._handler.remove(args.key, args.column_path, args.clock, args.consistency_level)
+      self._handler.remove(args.key, args.column_path, args.timestamp, args.consistency_level)
     except InvalidRequestException, ire:
       result.ire = ire
     except UnavailableException, ue:
@@ -3703,7 +3703,7 @@ class remove_args:
   Attributes:
    - key
    - column_path
-   - clock
+   - timestamp
    - consistency_level
   """
 
@@ -3711,14 +3711,14 @@ class remove_args:
     None, # 0
     (1, TType.STRING, 'key', None, None, ), # 1
     (2, TType.STRUCT, 'column_path', (ColumnPath, ColumnPath.thrift_spec), None, ), # 2
-    (3, TType.STRUCT, 'clock', (Clock, Clock.thrift_spec), None, ), # 3
+    (3, TType.I64, 'timestamp', None, None, ), # 3
     (4, TType.I32, 'consistency_level', None,     1, ), # 4
   )
 
-  def __init__(self, key=None, column_path=None, clock=None, consistency_level=thrift_spec[4][4],):
+  def __init__(self, key=None, column_path=None, timestamp=None, consistency_level=thrift_spec[4][4],):
     self.key = key
     self.column_path = column_path
-    self.clock = clock
+    self.timestamp = timestamp
     self.consistency_level = consistency_level
 
   def read(self, iprot):
@@ -3742,9 +3742,8 @@ class remove_args:
         else:
           iprot.skip(ftype)
       elif fid == 3:
-        if ftype == TType.STRUCT:
-          self.clock = Clock()
-          self.clock.read(iprot)
+        if ftype == TType.I64:
+          self.timestamp = iprot.readI64();
         else:
           iprot.skip(ftype)
       elif fid == 4:
@@ -3770,9 +3769,9 @@ class remove_args:
       oprot.writeFieldBegin('column_path', TType.STRUCT, 2)
       self.column_path.write(oprot)
       oprot.writeFieldEnd()
-    if self.clock != None:
-      oprot.writeFieldBegin('clock', TType.STRUCT, 3)
-      self.clock.write(oprot)
+    if self.timestamp != None:
+      oprot.writeFieldBegin('timestamp', TType.I64, 3)
+      oprot.writeI64(self.timestamp)
       oprot.writeFieldEnd()
     if self.consistency_level != None:
       oprot.writeFieldBegin('consistency_level', TType.I32, 4)

@@ -1,7 +1,7 @@
 """Tools to support batch operations."""
 
 import threading
-from pycassa.cassandra.ttypes import (Clock, Column, ColumnOrSuperColumn,
+from pycassa.cassandra.ttypes import (Column, ColumnOrSuperColumn,
                                       ConsistencyLevel, Deletion, Mutation,
                                       SlicePredicate, SuperColumn)
 
@@ -69,7 +69,7 @@ class Mutator(object):
         finally:
             self._lock.release()
 
-    def _make_mutations_insert(self, column_family, columns, clock, ttl):
+    def _make_mutations_insert(self, column_family, columns, timestamp, ttl):
         _pack_name = column_family._pack_name
         _pack_value = column_family._pack_value
         for c, v in columns.iteritems():
@@ -77,26 +77,28 @@ class Mutator(object):
             if column_family.super:
                 subc = [Column(name=_pack_name(subname),
                                value=_pack_value(subvalue, subname),
-                               clock=clock, ttl=ttl)
+                               timestamp=timestamp, ttl=ttl)
                             for subname, subvalue in v.iteritems()]
                 cos.super_column = SuperColumn(name=_pack_name(c, True),
                                                columns=subc)
             else:
                 cos.column = Column(name=_pack_name(c), value=_pack_value(v, c),
-                                    clock=clock, ttl=ttl)
+                                    timestamp=timestamp, ttl=ttl)
             yield Mutation(column_or_supercolumn=cos)
 
-    def insert(self, column_family, key, columns, clock=None, ttl=None):
+    def insert(self, column_family, key, columns, timestamp=None, ttl=None):
         if columns:
-            clock = clock or Clock(timestamp=column_family.timestamp())
+            if timestamp == None:
+                timestamp = column_family.timestamp()
             mutations = self._make_mutations_insert(column_family, columns,
-                                                    clock, ttl)
+                                                    timestamp, ttl)
             self._enqueue(key, column_family, mutations)
         return self
 
-    def remove(self, column_family, key, columns=None, super_column=None, clock=None):
-        clock = clock or Clock(timestamp=column_family.timestamp())
-        deletion = Deletion(clock=clock)
+    def remove(self, column_family, key, columns=None, super_column=None, timestamp=None):
+        if timestamp == None:
+            timestamp = column_family.timestamp()
+        deletion = Deletion(timestamp=timestamp)
         if columns:
             _pack_name = column_family._pack_name
             packed_cols = [_pack_name(col, column_family.super)
@@ -133,13 +135,13 @@ class CfMutator(Mutator):
                                         write_consistency_level=wcl)
         self._column_family = column_family
 
-    def insert(self, key, cols, clock=None, ttl=None):
+    def insert(self, key, cols, timestamp=None, ttl=None):
         return super(CfMutator, self).insert(self._column_family, key, cols,
-                                             clock=clock, ttl=ttl)
+                                             timestamp=timestamp, ttl=ttl)
 
-    def remove(self, key, columns=None, super_column=None, clock=None):
+    def remove(self, key, columns=None, super_column=None, timestamp=None):
         return super(CfMutator, self).remove(self._column_family, key,
                                              columns=columns,
                                              super_column=super_column,
-                                             clock=clock)
+                                             timestamp=timestamp)
 
