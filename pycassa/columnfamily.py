@@ -9,6 +9,7 @@ from pycassa.cassandra.ttypes import Column, ColumnOrSuperColumn,\
     ColumnParent, ColumnPath, ConsistencyLevel, NotFoundException,\
     SlicePredicate, SliceRange, SuperColumn, KeyRange,\
     IndexExpression, IndexClause
+from pycassa.util import *
 
 import time
 import sys
@@ -21,6 +22,7 @@ __all__ = ['gm_timestamp', 'ColumnFamily']
 
 _TYPES = ['BytesType', 'LongType', 'IntegerType', 'UTF8Type', 'AsciiType',
          'LexicalUUIDType', 'TimeUUIDType']
+
 _NON_SLICE = 0
 _SLICE_START = 1
 _SLICE_FINISH = 2
@@ -41,6 +43,7 @@ def create_SlicePredicate(columns, column_start, column_finish, column_reversed,
     sr = SliceRange(start=column_start, finish=column_finish,
                     reversed=column_reversed, count=column_count)
     return SlicePredicate(slice_range=sr)
+
 
 class ColumnFamily(object):
     """An abstraction of a Cassandra column family or super column family."""
@@ -218,9 +221,14 @@ class ColumnFamily(object):
         else:
             d_type = self.col_name_data_type
 
-        if slice_end and d_type == 'TimeUUIDType':
-            value = self._convert_time_to_uuid(value,
-                    lowest_val=(slice_end == _SLICE_START))
+        if d_type == 'TimeUUIDType':
+            if slice_end:
+                value = convert_time_to_uuid(value,
+                        lowest_val=(slice_end == _SLICE_START),
+                        randomize=False)
+            else:
+                value = convert_time_to_uuid(value,
+                        randomize=True)
 
         return self._pack(value, d_type)
 
@@ -250,49 +258,6 @@ class ColumnFamily(object):
         if not self.autopack_values:
             return value
         return self._unpack(value, self._get_data_type_for_col(col_name))
-
-
-    def _convert_time_to_uuid(self, datetime, lowest_val):
-        """
-        Converts a datetime to a type 1 UUID.
-
-        This is to assist with getting a time slice of columns when the
-        column names are TimeUUID.
-
-        :Parameters:
-            `datetime`: datetime
-                - The time to use for the timestamp portion of the UUID.
-            `lowest_val`: boolean
-                - Whether the UUID produced should be the lowest possible value
-                  UUID with the same timestamp as datetime or the highest possible
-                  value.
-
-        """
-        if isinstance(datetime, uuid.UUID):
-            return datetime
-
-        import time
-        nanoseconds = int(time.mktime(datetime.timetuple()) * 1e9)
-        # 0x01b21dd213814000 is the number of 100-ns intervals between the
-        # UUID epoch 1582-10-15 00:00:00 and the Unix epoch 1970-01-01 00:00:00.
-        timestamp = int(nanoseconds/100) + 0x01b21dd213814000L
-
-        time_low = timestamp & 0xffffffffL
-        time_mid = (timestamp >> 32L) & 0xffffL
-        time_hi_version = (timestamp >> 48L) & 0x0fffL
-
-        if lowest_val:
-            # Make the lowest value UUID with the same timestamp
-            clock_seq_low = 0 & 0xffL
-            clock_seq_hi_variant = 0 & 0x3fL
-            node = 0 & 0xffffffffffffL # 48 bits
-        else:
-            # Make the highestt value UUID with the same timestamp
-            clock_seq_low = 0xffL
-            clock_seq_hi_variant = 0x3fL
-            node = 0xffffffffffffL # 48 bits
-        return uuid.UUID(fields=(time_low, time_mid, time_hi_version,
-                            clock_seq_hi_variant, clock_seq_low, node), version=1)
 
     def _pack(self, value, data_type):
         """

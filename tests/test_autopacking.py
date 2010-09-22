@@ -1,9 +1,14 @@
 import uuid
 
-from pycassa import connect, connect_thread_local, ColumnFamily, NotFoundException
+from pycassa import connect, connect_thread_local, convert_uuid_to_time,\
+                    ColumnFamily, NotFoundException
+from pycassa.util import *
 
-from nose.tools import assert_raises
-from nose.tools import assert_equal
+from nose.tools import assert_raises, assert_equal, assert_almost_equal
+
+from datetime import datetime
+from uuid import uuid1
+import time
 
 TIME1 = uuid.UUID(hex='ddc6118e-a003-11df-8abf-00234d21610a')
 TIME2 = uuid.UUID(hex='40ad6d4c-a004-11df-8abf-00234d21610a')
@@ -527,14 +532,10 @@ class TestAutoPacking:
         assert_raises(TypeError, self.cf_def_valid.insert, key,col_ncf)
         assert_raises(TypeError, self.cf_def_valid.insert, key,col_ncm)
 
-    def test_time_to_uuid(self):
+    def test_datetime_to_uuid(self):
         self.clear()
 
         key = 'key1'
-
-        from datetime import datetime
-        from time import sleep
-        from uuid import uuid1
 
         timeline = []
 
@@ -542,13 +543,13 @@ class TestAutoPacking:
         time1 = uuid1()
         col1 = {time1:'0'}
         self.cf_time.insert(key, col1)
-        sleep(1)
+        time.sleep(1)
 
         timeline.append(datetime.now())
         time2 = uuid1()
         col2 = {time2:'1'}
         self.cf_time.insert(key, col2)
-        sleep(1)
+        time.sleep(1)
 
         timeline.append(datetime.now())
 
@@ -560,3 +561,45 @@ class TestAutoPacking:
         assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
         assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[1]) , col1)
         assert_equal(self.cf_time.get(key, column_start=timeline[1], column_finish=timeline[2]) , col2)
+
+    def test_time_to_uuid(self):
+        self.clear()
+
+        key = 'key1'
+
+        timeline = []
+
+        timeline.append(time.time())
+        time1 = uuid1()
+        col1 = {time1:'0'}
+        self.cf_time.insert(key, col1)
+        time.sleep(0.1)
+
+        timeline.append(time.time())
+        time2 = uuid1()
+        col2 = {time2:'1'}
+        self.cf_time.insert(key, col2)
+        time.sleep(0.1)
+
+        timeline.append(time.time())
+
+        cols = {time1:'0', time2:'1'}
+
+        assert_equal(self.cf_time.get(key, column_start=timeline[0])                            , cols)
+        assert_equal(self.cf_time.get(key,                           column_finish=timeline[2]) , cols)
+        assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
+        assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
+        assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[1]) , col1)
+        assert_equal(self.cf_time.get(key, column_start=timeline[1], column_finish=timeline[2]) , col2)
+
+    def test_auto_time_to_uuid1(self):
+        self.clear()
+
+        key = 'key'
+
+        t = time.time()
+        col = {t: 'foo'}
+        self.cf_time.insert(key, col)
+        uuid_res = self.cf_time.get(key).keys()[0]
+        timestamp = convert_uuid_to_time(uuid_res)
+        assert_almost_equal(timestamp, t, places=3)
