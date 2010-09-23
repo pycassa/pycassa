@@ -5,11 +5,12 @@ available for use by others working with pycassa.
 """
 
 import random
-import numbers
 import uuid
 import time
 
 __all__ = ['convert_time_to_uuid', 'convert_uuid_to_time']
+
+_number_types = frozenset((int, long, float))
 
 def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
     """
@@ -49,7 +50,7 @@ def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
     nanoseconds = 0
     if hasattr(time_arg, 'timetuple'):
         nanoseconds = int(time.mktime(time_arg.timetuple()) * 1e9)
-    elif isinstance(time_arg, numbers.Number):
+    elif type(time_arg) in _number_types:
         nanoseconds = int(time_arg * 1e9)
     else:
         raise ValueError('Argument for a v1 UUID column name or value was ' +
