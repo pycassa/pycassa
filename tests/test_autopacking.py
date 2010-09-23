@@ -1,6 +1,6 @@
 import uuid
 
-from pycassa import connect, connect_thread_local, convert_uuid_to_time,\
+from pycassa import connect, connect_thread_local,\
                     ColumnFamily, NotFoundException
 from pycassa.util import *
 
