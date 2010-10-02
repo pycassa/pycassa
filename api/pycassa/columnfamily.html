@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>columnfamily – Column Family &mdash; pycassa v0.5.0 documentation</title>
+    <title>columnfamily – Column Family &mdash; pycassa v0.5.1 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.0',
+        VERSION:     '0.5.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,7 +22,7 @@
     <script type="text/javascript" src="../../static/jquery.js"></script>
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
-    <link rel="top" title="pycassa v0.5.0 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v0.5.1 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="columnfamilymap – Maps Classes to Column Families" href="columnfamilymap.html" />
     <link rel="prev" title="pool – Connection Pooling" href="pool.html" /> 
@@ -43,7 +43,7 @@
         <li class="right" >
           <a href="pool.html" title="pool – Connection Pooling"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v0.5.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v0.5.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -77,7 +77,7 @@ manipulation of data inside Cassandra.</p>
 
 <dl class="class">
 <dt id="pycassa.columnfamily.ColumnFamily">
-<em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">ColumnFamily</tt><big>(</big><em>client</em>, <em>column_family</em>, <em>buffer_size=1024</em>, <em>read_consistency_level=1</em>, <em>write_consistency_level=1</em>, <em>timestamp=&lt;function gm_timestamp at 0x2320de8&gt;</em>, <em>super=False</em>, <em>dict_class=&lt;type 'dict'&gt;</em>, <em>autopack_names=True</em>, <em>autopack_values=True</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">ColumnFamily</tt><big>(</big><em>client</em>, <em>column_family</em>, <em>buffer_size=1024</em>, <em>read_consistency_level=1</em>, <em>write_consistency_level=1</em>, <em>timestamp=&lt;function gm_timestamp at 0x2822ed8&gt;</em>, <em>super=False</em>, <em>dict_class=&lt;type 'dict'&gt;</em>, <em>autopack_names=True</em>, <em>autopack_values=True</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructs an abstraction of a Cassandra column family or super column family.</p>
 <p>Operations on this, such as <cite>get</cite> or <cite>insert</cite> will get data from or
 insert data into the corresponding Cassandra column family.</p>
@@ -167,7 +167,7 @@ operations using as few roundtrips as possible.</p>
 
 <dl class="method">
 <dt id="pycassa.columnfamily.ColumnFamily.batch_insert">
-<tt class="descname">batch_insert</tt><big>(</big><em>rows</em>, <em>clock=None</em>, <em>ttl=None</em>, <em>write_consistency_level=None</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.batch_insert" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">batch_insert</tt><big>(</big><em>rows</em>, <em>timestamp=None</em>, <em>ttl=None</em>, <em>write_consistency_level=None</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.batch_insert" title="Permalink to this definition">¶</a></dt>
 <dd><p>Insert or update columns for multiple keys</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -390,7 +390,7 @@ any read operation</p>
 
 <dl class="method">
 <dt id="pycassa.columnfamily.ColumnFamily.insert">
-<tt class="descname">insert</tt><big>(</big><em>key</em>, <em>columns</em>, <em>clock=None</em>, <em>ttl=None</em>, <em>write_consistency_level=None</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.insert" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">insert</tt><big>(</big><em>key</em>, <em>columns</em>, <em>timestamp=None</em>, <em>ttl=None</em>, <em>write_consistency_level=None</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.insert" title="Permalink to this definition">¶</a></dt>
 <dd><p>Insert or update columns for a key</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -604,7 +604,7 @@ down.</p>
         <li class="right" >
           <a href="pool.html" title="pool – Connection Pooling"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v0.5.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v0.5.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>
