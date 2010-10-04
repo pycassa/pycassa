@@ -77,7 +77,7 @@ manipulation of data inside Cassandra.</p>
 
 <dl class="class">
 <dt id="pycassa.columnfamily.ColumnFamily">
-<em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">ColumnFamily</tt><big>(</big><em>client</em>, <em>column_family</em>, <em>buffer_size=1024</em>, <em>read_consistency_level=1</em>, <em>write_consistency_level=1</em>, <em>timestamp=&lt;function gm_timestamp at 0x2822ed8&gt;</em>, <em>super=False</em>, <em>dict_class=&lt;type 'dict'&gt;</em>, <em>autopack_names=True</em>, <em>autopack_values=True</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">ColumnFamily</tt><big>(</big><em>client</em>, <em>column_family</em>, <em>buffer_size=1024</em>, <em>read_consistency_level=1</em>, <em>write_consistency_level=1</em>, <em>timestamp=&lt;function gm_timestamp at 0x146caa0&gt;</em>, <em>super=False</em>, <em>dict_class=&lt;type 'dict'&gt;</em>, <em>autopack_names=True</em>, <em>autopack_values=True</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructs an abstraction of a Cassandra column family or super column family.</p>
 <p>Operations on this, such as <cite>get</cite> or <cite>insert</cite> will get data from or
 insert data into the corresponding Cassandra column family.</p>
@@ -85,56 +85,48 @@ insert data into the corresponding Cassandra column family.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first last docutils">
-<dt><cite>client</cite>: <tt class="xref py py-class docutils literal"><span class="pre">cassandra.Cassandra.Client</span></tt></dt>
-<dd><p class="first last">Cassandra client with thrift API</p>
-</dd>
-<dt><cite>column_family</cite>: string</dt>
-<dd><p class="first last">The name of this ColumnFamily</p>
-</dd>
-<dt><cite>buffer_size</cite>: integer</dt>
-<dd><p class="first last">When calling <cite>get_range</cite>, the intermediate results need to be
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>client</strong> &#8211; <tt class="xref py py-class docutils literal"><span class="pre">cassandra.Cassandra.Client</span></tt>
+Cassandra client with thrift API</li>
+<li><strong>column_family</strong> &#8211; string
+The name of this ColumnFamily</li>
+<li><strong>buffer_size</strong> &#8211; integer
+When calling <cite>get_range</cite>, the intermediate results need to be
 buffered if we are fetching many rows, otherwise the Cassandra
 server will overallocate memory and fail.  This is the size of
-that buffer.</p>
-</dd>
-<dt><cite>read_consistency_level</cite>: <tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></dt>
-<dd><p class="first last">Affects the guaranteed replication factor before returning from
-any read operation</p>
-</dd>
-<dt><cite>write_consistency_level</cite>: <tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></dt>
-<dd><p class="first last">Affects the guaranteed replication factor before returning from
-any write operation</p>
-</dd>
-<dt><cite>timestamp</cite>: function</dt>
-<dd><p class="first last">The default timestamp function returns:
+that buffer.</li>
+<li><strong>read_consistency_level</strong> &#8211; <tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt>
+Affects the guaranteed replication factor before returning from
+any read operation</li>
+<li><strong>write_consistency_level</strong> &#8211; <tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt>
+Affects the guaranteed replication factor before returning from
+any write operation</li>
+<li><strong>timestamp</strong> &#8211; function
+The default timestamp function returns:
 int(time.mktime(time.gmtime()))
 Or the number of seconds since Unix epoch in GMT.
 Set timestamp to replace the default timestamp function with your
-own.</p>
-</dd>
-<dt><cite>super</cite>: bool</dt>
-<dd><p class="first last">Whether this ColumnFamily has SuperColumns</p>
-</dd>
-<dt><cite>dict_class</cite> <span class="classifier-delimiter">:</span> <span class="classifier">class (must act like the dict type)</span></dt>
-<dd><p class="first last">The default dict_class is <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt>.
+own.</li>
+<li><strong>dict_class</strong> &#8211; class (must act like the dict type)
+The default dict_class is <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt>.
 If the order of columns matter to you, pass your own dictionary
 class, or python 2.7&#8217;s new <tt class="xref py py-class docutils literal"><span class="pre">collections.OrderedDict</span></tt>. All returned
-rows and subcolumns are instances of this.</p>
-</dd>
-<dt><cite>autopack_names</cite>: bool</dt>
-<dd><p class="first last">Whether column and supercolumn names should be packed automatically
+rows and subcolumns are instances of this.</li>
+<li><strong>autopack_names</strong> &#8211; bool
+Whether column and supercolumn names should be packed automatically
 based on the comparator and subcomparator for the column
 family.  This does not typically work when used with
-<a class="reference internal" href="columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</p>
-</dd>
-<dt><cite>autopack_values</cite>: bool</dt>
-<dd><p class="first last">Whether column values should be packed automatically based on
+<a class="reference internal" href="columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</li>
+<li><strong>autopack_values</strong> &#8211; bool
+Whether column values should be packed automatically based on
 the validator_class for a given column.  This should probably
 be set to <tt class="xref docutils literal"><span class="pre">False</span></tt> when used with a
-<a class="reference internal" href="columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</p>
-</dd>
-</dl>
+<a class="reference internal" href="columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</li>
+<li><strong>super</strong> &#8211; bool
+<em>deprecated since 0.5.2</em>
+Whether this ColumnFamily has SuperColumns. This is detected
+automatically since 0.5.2.</li>
+</ul>
 </td>
 </tr>
 </tbody>

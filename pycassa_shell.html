@@ -1,0 +1,173 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pycassaShell &mdash; pycassa v0.5.1 documentation</title>
+    <link rel="stylesheet" href="static/default.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.5.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <link rel="top" title="pycassa v0.5.1 documentation" href="index.html" />
+    <link rel="next" title="Twissandra Example" href="example/index.html" />
+    <link rel="prev" title="Tutorial" href="tutorial.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="example/index.html" title="Twissandra Example"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">pycassa v0.5.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pycassashell">
+<h1>pycassaShell<a class="headerlink" href="#pycassashell" title="Permalink to this headline">¶</a></h1>
+<p><strong>pycassaShell</strong> is an interactive Cassandra python shell. It is useful for
+exploring Cassandra, especially for those who are just beginning.</p>
+<div class="section" id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<p>Python 2.4 or later is required.</p>
+<p>It is <strong>strongly</strong> recommended that you have
+<a class="reference external" href="http://ipython.scipy.org/moin/">IPython</a>, an enhanced interactive
+python shell, installed. This gives you tab completion, colors, and working
+arrow keys!</p>
+<p>On Debian based systems, this can be installed by:</p>
+<div class="highlight-bash"><div class="highlight"><pre>apt-get install ipython
+</pre></div>
+</div>
+<p>Alternatively, if <tt class="docutils literal"><span class="pre">easy_install</span></tt> is available:</p>
+<div class="highlight-bash"><div class="highlight"><pre>easy_install ipython
+</pre></div>
+</div>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-bash"><div class="highlight"><pre>pycassaShell -k KEYSPACE <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p>The available options are:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">-H</span></tt>, <tt class="docutils literal"><span class="pre">--host</span></tt> - The hostname to connect to. Defaults to &#8216;localhost&#8217;</li>
+<li><tt class="docutils literal"><span class="pre">-p</span></tt>, <tt class="docutils literal"><span class="pre">--port</span></tt> - The port to connect to. Defaults to 9160.</li>
+<li><tt class="docutils literal"><span class="pre">-u</span></tt>, <tt class="docutils literal"><span class="pre">--user</span></tt> - If authentication or authorization are enabled, this username is used.</li>
+<li><tt class="docutils literal"><span class="pre">-P</span></tt>, <tt class="docutils literal"><span class="pre">--passwd</span></tt> - If authentication or authorization are enabled, this password is used.</li>
+<li><tt class="docutils literal"><span class="pre">-S</span></tt>, <tt class="docutils literal"><span class="pre">--streaming</span></tt> - Use a streaming transport. Works with Cassandra 0.6.x and below.</li>
+<li><tt class="docutils literal"><span class="pre">-F</span></tt>, <tt class="docutils literal"><span class="pre">--framed</span></tt> - Use a streaming transport. Works with Cassandra 0.7.x. This is the default.</li>
+</ul>
+<p>Once connected, the client is available as <tt class="docutils literal"><span class="pre">CLIENT</span></tt>.  This can be used as you
+would typically use a <strong>pycassa</strong> connection.  For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">column_family</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">CLIENT</span><span class="p">,</span> <span class="s">&#39;Standard1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">column_family</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;colname&#39;</span><span class="p">:</span> <span class="s">&#39;val&#39;</span><span class="p">})</span>
+<span class="go">1286048238391943</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">CLIENT</span><span class="o">.</span><span class="n">describe_keyspace</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
+<span class="go">KsDef(strategy_options=None, cf_defs=[CfDef(comment=&#39;&#39;, min_compaction_threshold=4, name=&#39;SuperLongSubInt&#39;, column_type=&#39;Super&#39;, preload_row_cache=False, key_cache_size=200000.0, gc_grace_seconds=0, column_metadata=[], keyspace=&#39;Keyspace1&#39;, default_validation_class=&#39;org.apache.cassandra.db.marshal.BytesType&#39;, max_compaction_threshold=32, subcomparator_type=&#39;org.apache.cassandra.db.marshal.IntegerType&#39;, read_repair_chance=1.0, comparator_type=&#39;org.apache.cassandra.db.marshal.LongType&#39;, id=1021, row_cache_size=0.0)], strategy_class=&#39;org.apache.cassandra.locator.SimpleStrategy&#39;, name=&#39;Keyspace1&#39;, replication_factor=1)</span>
+</pre></div>
+</div>
+<p>For working with data in Cassandra, check out <a class="reference internal" href="api/pycassa/columnfamily.html#module-pycassa.columnfamily" title="pycassa.columnfamily"><tt class="xref py py-mod docutils literal"><span class="pre">columnfamily</span></tt></a>. As
+shown in the example, once you make a <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>
+object, its easy to insert and retrieve data from Cassandra.</p>
+<p>If you are interested in the keyspace and column family definitions,
+the <tt class="xref py py-meth docutils literal"><span class="pre">system_*()</span></tt> calls are also availble directly on <tt class="docutils literal"><span class="pre">CLIENT</span></tt>.
+These allow you to create, drop, or edit keyspaces and column families,
+although they are not very friendly to use.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">pycassaShell</a><ul>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tutorial.html"
+                        title="previous chapter">Tutorial</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="example/index.html"
+                        title="next chapter">Twissandra Example</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="sources/pycassa_shell.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="example/index.html" title="Twissandra Example"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             >previous</a> |</li>
+        <li><a href="index.html">pycassa v0.5.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright .
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.3.
+    </div>
+  </body>
+</html>

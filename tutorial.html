@@ -210,12 +210,9 @@ of a slice or have particular names, you can do that as well:</p>
 <div class="highlight-python"><pre>- name: Super1
   column_type: Super</pre>
 </div>
-<p>To use a super column in <strong>pycassa</strong>, you only need to do one thing:
-when creating the <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>,
-set the <cite>super</cite> argument to be <tt class="xref docutils literal"><span class="pre">True</span></tt>. If this is done, you can
-use a super column family just like a regular one, except there is an
-extra level in the dictionary:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="s">&#39;Super1&#39;</span><span class="p">,</span> <span class="nb">super</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<p>To use a super column in <strong>pycassa</strong>, you only need to
+add an extra level to the dictionary:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="s">&#39;Super1&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;supercol_name&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;col_name&#39;</span><span class="p">:</span> <span class="s">&#39;col_val&#39;</span><span class="p">}})</span>
 <span class="go">1354491238721345</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">)</span>
