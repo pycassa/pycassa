@@ -194,15 +194,12 @@ Cassandra allows you to group columns in "super columns". In a
   - name: Super1
     column_type: Super 
 
-To use a super column in **pycassa**, you only need to do one thing:
-when creating the :class:`~pycassa.columnfamily.ColumnFamily`,
-set the `super` argument to be ``True``. If this is done, you can
-use a super column family just like a regular one, except there is an
-extra level in the dictionary:
+To use a super column in **pycassa**, you only need to
+add an extra level to the dictionary:
 
 .. code-block:: python
 
-  >>> col_fam = pycassa.ColumnFamily(connection, 'Super1', super=True)
+  >>> col_fam = pycassa.ColumnFamily(connection, 'Super1')
   >>> col_fam.insert('row_key', {'supercol_name': {'col_name': 'col_val'}})
   1354491238721345
   >>> col_fam.get('row_key')

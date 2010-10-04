@@ -60,45 +60,55 @@ class ColumnFamily(object):
         Operations on this, such as `get` or `insert` will get data from or
         insert data into the corresponding Cassandra column family.
 
-        :Parameters:
-            `client`: :class:`cassandra.Cassandra.Client`
-                Cassandra client with thrift API
-            `column_family`: string
-                The name of this ColumnFamily
-            `buffer_size`: integer
-                When calling `get_range`, the intermediate results need to be
-                buffered if we are fetching many rows, otherwise the Cassandra
-                server will overallocate memory and fail.  This is the size of
-                that buffer.
-            `read_consistency_level`: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
-                Affects the guaranteed replication factor before returning from
-                any read operation
-            `write_consistency_level`: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
-                Affects the guaranteed replication factor before returning from
-                any write operation
-            `timestamp`: function
-                The default timestamp function returns:
-                int(time.mktime(time.gmtime()))
-                Or the number of seconds since Unix epoch in GMT.
-                Set timestamp to replace the default timestamp function with your
-                own.
-            `super`: bool
-                Whether this ColumnFamily has SuperColumns
-            `dict_class` : class (must act like the dict type)
-                The default dict_class is :class:`dict`.
-                If the order of columns matter to you, pass your own dictionary
-                class, or python 2.7's new :class:`collections.OrderedDict`. All returned
-                rows and subcolumns are instances of this.
-            `autopack_names`: bool
-                Whether column and supercolumn names should be packed automatically
-                based on the comparator and subcomparator for the column
-                family.  This does not typically work when used with
-                :class:`~pycassa.columnfamilymap.ColumnFamilyMap`.
-            `autopack_values`: bool
-                Whether column values should be packed automatically based on
-                the validator_class for a given column.  This should probably
-                be set to ``False`` when used with a
-                :class:`~pycassa.columnfamilymap.ColumnFamilyMap`.
+        :param client: :class:`cassandra.Cassandra.Client`
+          Cassandra client with thrift API
+
+        :param column_family: string
+          The name of this ColumnFamily
+
+        :param buffer_size: integer
+          When calling `get_range`, the intermediate results need to be
+          buffered if we are fetching many rows, otherwise the Cassandra
+          server will overallocate memory and fail.  This is the size of
+          that buffer.
+
+        :param read_consistency_level: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
+          Affects the guaranteed replication factor before returning from
+          any read operation
+
+        :param write_consistency_level: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
+          Affects the guaranteed replication factor before returning from
+          any write operation
+
+        :param timestamp: function
+          The default timestamp function returns:
+          int(time.mktime(time.gmtime()))
+          Or the number of seconds since Unix epoch in GMT.
+          Set timestamp to replace the default timestamp function with your
+          own.
+
+        :param dict_class: class (must act like the dict type)
+          The default dict_class is :class:`dict`.
+          If the order of columns matter to you, pass your own dictionary
+          class, or python 2.7's new :class:`collections.OrderedDict`. All returned
+          rows and subcolumns are instances of this.
+
+        :param autopack_names: bool
+          Whether column and supercolumn names should be packed automatically
+          based on the comparator and subcomparator for the column
+          family.  This does not typically work when used with
+          :class:`~pycassa.columnfamilymap.ColumnFamilyMap`.
+
+        :param autopack_values: bool
+          Whether column values should be packed automatically based on
+          the validator_class for a given column.  This should probably
+          be set to ``False`` when used with a
+          :class:`~pycassa.columnfamilymap.ColumnFamilyMap`.
+
+        :param super: bool
+          *deprecated since 0.5.2*
+          Whether this ColumnFamily has SuperColumns. This is detected
+          automatically since 0.5.2.
 
         """
 
@@ -108,7 +118,6 @@ class ColumnFamily(object):
         self.read_consistency_level = read_consistency_level
         self.write_consistency_level = write_consistency_level
         self.timestamp = timestamp
-        self.super = super
         self.dict_class = dict_class
         self.autopack_names = autopack_names
         self.autopack_values = autopack_values
@@ -127,6 +136,7 @@ class ColumnFamily(object):
             raise NotFoundException('Column family %s not found.' % self.column_family)
 
         if col_fam is not None:
+            self.super = col_fam.column_type == 'Super'
             if self.autopack_names:
                 if not self.super:
                     self.col_name_data_type = col_fam.comparator_type
