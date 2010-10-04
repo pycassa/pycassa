@@ -58,6 +58,7 @@ exploring Cassandra, especially for those who are just beginning.</p>
 <div class="section" id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
 <p>Python 2.4 or later is required.</p>
+<p>Make sure you have <strong>pycassa</strong> installed as shown in <a class="reference internal" href="installation.html#installing"><em>Installing</em></a>.</p>
 <p>It is <strong>strongly</strong> recommended that you have
 <a class="reference external" href="http://ipython.scipy.org/moin/">IPython</a>, an enhanced interactive
 python shell, installed. This gives you tab completion, colors, and working
@@ -86,21 +87,27 @@ arrow keys!</p>
 <li><tt class="docutils literal"><span class="pre">-F</span></tt>, <tt class="docutils literal"><span class="pre">--framed</span></tt> - Use a streaming transport. Works with Cassandra 0.7.x. This is the default.</li>
 </ul>
 <p>Once connected, the client is available as <tt class="docutils literal"><span class="pre">CLIENT</span></tt>.  This can be used as you
-would typically use a <strong>pycassa</strong> connection.  For example:</p>
+would typically use a <strong>pycassa</strong> connection.</p>
+<p>For working with data in Cassandra, check out <a class="reference internal" href="api/pycassa/columnfamily.html#module-pycassa.columnfamily" title="pycassa.columnfamily"><tt class="xref py py-mod docutils literal"><span class="pre">columnfamily</span></tt></a>. As
+shown in the example below, once you make a <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>
+object, its easy to insert and retrieve data from Cassandra.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">column_family</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">CLIENT</span><span class="p">,</span> <span class="s">&#39;Standard1&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">column_family</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;colname&#39;</span><span class="p">:</span> <span class="s">&#39;val&#39;</span><span class="p">})</span>
 <span class="go">1286048238391943</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">CLIENT</span><span class="o">.</span><span class="n">describe_keyspace</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
-<span class="go">KsDef(strategy_options=None, cf_defs=[CfDef(comment=&#39;&#39;, min_compaction_threshold=4, name=&#39;SuperLongSubInt&#39;, column_type=&#39;Super&#39;, preload_row_cache=False, key_cache_size=200000.0, gc_grace_seconds=0, column_metadata=[], keyspace=&#39;Keyspace1&#39;, default_validation_class=&#39;org.apache.cassandra.db.marshal.BytesType&#39;, max_compaction_threshold=32, subcomparator_type=&#39;org.apache.cassandra.db.marshal.IntegerType&#39;, read_repair_chance=1.0, comparator_type=&#39;org.apache.cassandra.db.marshal.LongType&#39;, id=1021, row_cache_size=0.0)], strategy_class=&#39;org.apache.cassandra.locator.SimpleStrategy&#39;, name=&#39;Keyspace1&#39;, replication_factor=1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">column_family</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">)</span>
+<span class="go">{&#39;colname&#39;: &#39;val&#39;}</span>
 </pre></div>
 </div>
-<p>For working with data in Cassandra, check out <a class="reference internal" href="api/pycassa/columnfamily.html#module-pycassa.columnfamily" title="pycassa.columnfamily"><tt class="xref py py-mod docutils literal"><span class="pre">columnfamily</span></tt></a>. As
-shown in the example, once you make a <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>
-object, its easy to insert and retrieve data from Cassandra.</p>
 <p>If you are interested in the keyspace and column family definitions,
 the <tt class="xref py py-meth docutils literal"><span class="pre">system_*()</span></tt> calls are also availble directly on <tt class="docutils literal"><span class="pre">CLIENT</span></tt>.
 These allow you to create, drop, or edit keyspaces and column families,
 although they are not very friendly to use.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">CLIENT</span><span class="o">.</span><span class="n">describe_keyspace</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
+<span class="go">KsDef(strategy_options=None, cf_defs=[CfDef(comment=&#39;&#39;, min_compaction_threshold=4, name=&#39;SuperLongSubInt&#39;, column_type=&#39;Super&#39;, preload_row_cache=False, key_cache_size=200000.0, gc_grace_seconds=0, column_metadata=[], keyspace=&#39;Keyspace1&#39;, default_validation_class=&#39;org.apache.cassandra.db.marshal.BytesType&#39;, max_compaction_threshold=32, subcomparator_type=&#39;org.apache.cassandra.db.marshal.IntegerType&#39;, read_repair_chance=1.0, comparator_type=&#39;org.apache.cassandra.db.marshal.LongType&#39;, id=1021, row_cache_size=0.0)], strategy_class=&#39;org.apache.cassandra.locator.SimpleStrategy&#39;, name=&#39;Keyspace1&#39;, replication_factor=1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">CLIENT</span><span class="o">.</span><span class="n">system_rename_keyspace</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="s">&#39;NewKeyspaceName&#39;</span><span class="p">)</span>
+<span class="go">&#39;6e8504ff-d001-11df-a513-e700f669bcfc&#39;</span>
+</pre></div>
+</div>
 </div>
 </div>
 
