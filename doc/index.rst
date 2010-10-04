@@ -16,6 +16,9 @@ Contents
 :doc:`example/index`
   An example of how to use **pycassa** with `Twissandra <http://github.com/ericflo/twissandra>`_, an example project that uses Cassandra to provide functionality similar to Twitter.
 
+:doc:`pycassa_shell`
+  How to use the included pycassaShell.
+
 :doc:`api/index`
   The **pycassa** API documentation.
 
@@ -69,6 +72,7 @@ Indices and tables
 
    installation
    tutorial
+   pycassa_shell
    example/index
    api/index
    changelog
