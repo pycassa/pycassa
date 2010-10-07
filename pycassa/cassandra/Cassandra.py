@@ -927,6 +927,8 @@ class Client(Iface):
     self._iprot.readMessageEnd()
     if result.success != None:
       return result.success
+    if result.ire != None:
+      raise result.ire
     raise TApplicationException(TApplicationException.MISSING_RESULT, "describe_keyspaces failed: unknown result");
 
   def describe_cluster_name(self, ):
@@ -1114,6 +1116,8 @@ class Client(Iface):
       return result.success
     if result.nfe != None:
       raise result.nfe
+    if result.ire != None:
+      raise result.ire
     raise TApplicationException(TApplicationException.MISSING_RESULT, "describe_keyspace failed: unknown result");
 
   def describe_splits(self, cfName, start_token, end_token, keys_per_split):
@@ -1732,7 +1736,10 @@ class Processor(Iface, TProcessor):
     args.read(iprot)
     iprot.readMessageEnd()
     result = describe_keyspaces_result()
-    result.success = self._handler.describe_keyspaces()
+    try:
+      result.success = self._handler.describe_keyspaces()
+    except InvalidRequestException, ire:
+      result.ire = ire
     oprot.writeMessageBegin("describe_keyspaces", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
@@ -1805,6 +1812,8 @@ class Processor(Iface, TProcessor):
       result.success = self._handler.describe_keyspace(args.keyspace)
     except NotFoundException, nfe:
       result.nfe = nfe
+    except InvalidRequestException, ire:
+      result.ire = ire
     oprot.writeMessageBegin("describe_keyspace", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
@@ -4392,14 +4401,17 @@ class describe_keyspaces_result:
   """
   Attributes:
    - success
+   - ire
   """
 
   thrift_spec = (
     (0, TType.LIST, 'success', (TType.STRUCT,(KsDef, KsDef.thrift_spec)), None, ), # 0
+    (1, TType.STRUCT, 'ire', (InvalidRequestException, InvalidRequestException.thrift_spec), None, ), # 1
   )
 
-  def __init__(self, success=None,):
+  def __init__(self, success=None, ire=None,):
     self.success = success
+    self.ire = ire
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -4421,6 +4433,12 @@ class describe_keyspaces_result:
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
+      elif fid == 1:
+        if ftype == TType.STRUCT:
+          self.ire = InvalidRequestException()
+          self.ire.read(iprot)
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -4437,6 +4455,10 @@ class describe_keyspaces_result:
       for iter174 in self.success:
         iter174.write(oprot)
       oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.ire != None:
+      oprot.writeFieldBegin('ire', TType.STRUCT, 1)
+      self.ire.write(oprot)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -5018,16 +5040,19 @@ class describe_keyspace_result:
   Attributes:
    - success
    - nfe
+   - ire
   """
 
   thrift_spec = (
     (0, TType.STRUCT, 'success', (KsDef, KsDef.thrift_spec), None, ), # 0
     (1, TType.STRUCT, 'nfe', (NotFoundException, NotFoundException.thrift_spec), None, ), # 1
+    (2, TType.STRUCT, 'ire', (InvalidRequestException, InvalidRequestException.thrift_spec), None, ), # 2
   )
 
-  def __init__(self, success=None, nfe=None,):
+  def __init__(self, success=None, nfe=None, ire=None,):
     self.success = success
     self.nfe = nfe
+    self.ire = ire
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -5050,6 +5075,12 @@ class describe_keyspace_result:
           self.nfe.read(iprot)
         else:
           iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRUCT:
+          self.ire = InvalidRequestException()
+          self.ire.read(iprot)
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -5067,6 +5098,10 @@ class describe_keyspace_result:
     if self.nfe != None:
       oprot.writeFieldBegin('nfe', TType.STRUCT, 1)
       self.nfe.write(oprot)
+      oprot.writeFieldEnd()
+    if self.ire != None:
+      oprot.writeFieldBegin('ire', TType.STRUCT, 2)
+      self.ire.write(oprot)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
