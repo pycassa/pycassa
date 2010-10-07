@@ -42,17 +42,13 @@ The available options are:
 * ``-S``, ``--streaming`` - Use a streaming transport. Works with Cassandra 0.6.x and below.
 * ``-F``, ``--framed`` - Use a streaming transport. Works with Cassandra 0.7.x. This is the default.
 
-Once connected, the client is available as ``CLIENT``.  This can be used as you
-would typically use a **pycassa** connection.
-
-For working with data in Cassandra, check out :mod:`~pycassa.columnfamily`. As
-shown in the example below, once you make a :class:`~pycassa.columnfamily.ColumnFamily`
-object, its easy to insert and retrieve data from Cassandra.
+When pycassaShell starts, it creates a
+:class:`~pycassa.columnfamily.ColumnFamily` for every existing column family and prints
+the names of the objects. You can use these to easily insert and retrieve data from Cassandra.
 
 .. code-block:: python
 
-    >>> column_family = pycassa.ColumnFamily(CLIENT, 'Standard1')
-    >>> column_family.insert('key', {'colname': 'val'})
+    >>> STANDARD1.insert('key', {'colname': 'val'})
     1286048238391943
     >>> column_family.get('key')
     {'colname': 'val'}
