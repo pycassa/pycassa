@@ -86,13 +86,10 @@ arrow keys!</p>
 <li><tt class="docutils literal"><span class="pre">-S</span></tt>, <tt class="docutils literal"><span class="pre">--streaming</span></tt> - Use a streaming transport. Works with Cassandra 0.6.x and below.</li>
 <li><tt class="docutils literal"><span class="pre">-F</span></tt>, <tt class="docutils literal"><span class="pre">--framed</span></tt> - Use a streaming transport. Works with Cassandra 0.7.x. This is the default.</li>
 </ul>
-<p>Once connected, the client is available as <tt class="docutils literal"><span class="pre">CLIENT</span></tt>.  This can be used as you
-would typically use a <strong>pycassa</strong> connection.</p>
-<p>For working with data in Cassandra, check out <a class="reference internal" href="api/pycassa/columnfamily.html#module-pycassa.columnfamily" title="pycassa.columnfamily"><tt class="xref py py-mod docutils literal"><span class="pre">columnfamily</span></tt></a>. As
-shown in the example below, once you make a <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>
-object, its easy to insert and retrieve data from Cassandra.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">column_family</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">CLIENT</span><span class="p">,</span> <span class="s">&#39;Standard1&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">column_family</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;colname&#39;</span><span class="p">:</span> <span class="s">&#39;val&#39;</span><span class="p">})</span>
+<p>When pycassaShell starts, it creates a
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a> for every existing column family and prints
+the names of the objects. You can use these to easily insert and retrieve data from Cassandra.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">STANDARD1</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;colname&#39;</span><span class="p">:</span> <span class="s">&#39;val&#39;</span><span class="p">})</span>
 <span class="go">1286048238391943</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">column_family</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">)</span>
 <span class="go">{&#39;colname&#39;: &#39;val&#39;}</span>
