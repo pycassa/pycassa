@@ -454,7 +454,7 @@ class ImmutableConnectionWrapper(ConnectionWrapper):
             try:
                 conn = self._ensure_connection()
                 return getattr(conn.client, attr)(*args, **kwargs)
-            except (TimedoutException, UnavailableException, Thrift.TException), exc:
+            except (TimedoutException, UnavailableException), exc:
                 self._pool._notify_on_failure(exc, server=self._servers._servers[0],
                                               connection=self)
                 raise
@@ -497,7 +497,7 @@ class ReplaceableConnectionWrapper(ConnectionWrapper):
             try:
                 conn = self._ensure_connection()
                 return getattr(conn.client, attr)(*args, **kwargs)
-            except TimedOutException, exc:
+            except (TimedOutException, UnavailableException), exc:
                 self._pool._notify_on_failure(exc, server=self._servers._servers[0],
                                               connection=self)
 
