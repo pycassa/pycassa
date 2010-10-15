@@ -42,7 +42,6 @@ if not options.keyspace:
 
 hostname = options.host and options.host or 'localhost'
 port = options.port and options.port or 9160
-print 'options.framed: ', options.framed
 framed = True if options.framed is None else options.framed
 credentials = None
 
