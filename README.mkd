@@ -1,4 +1,9 @@
-# Note: If you are using the 0.6.x series of Cassandra then get Pycassa 0.3 from the Downloads section and read the documentation contained within.  This README applies to the current state of Pycassa which tracks Cassandra's development (work in-progress toward Cassandra 0.7).
+# Note
+
+If you are using the 0.6.x series of Cassandra then get Pycassa 0.3 from the
+Downloads section and read the documentation contained within.  This README
+applies to the current state of Pycassa which tracks Cassandra's development
+(work in-progress toward Cassandra 0.7).
 
 pycassa
 =======
