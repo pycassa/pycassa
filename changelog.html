@@ -49,6 +49,20 @@
             
   <div class="section" id="changelog">
 <h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="changes-in-version-0-5-1">
+<h2>Changes in Version 0.5.1<a class="headerlink" href="#changes-in-version-0-5-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Automatically detect if a column family is a standard column family
+or a super column family</li>
+<li><a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.multiget_count" title="pycassa.columnfamily.ColumnFamily.multiget_count"><tt class="xref py py-meth docutils literal"><span class="pre">multiget_count()</span></tt></a> support</li>
+<li>Allow preservation of key order in
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.multiget" title="pycassa.columnfamily.ColumnFamily.multiget"><tt class="xref py py-meth docutils literal"><span class="pre">multiget()</span></tt></a> if an ordered
+dictionary is used</li>
+<li>Convert timestamps to v1 UUIDs where appropriate</li>
+<li>pycassaShell documentation</li>
+<li>Use Thrift API 17.1.0</li>
+</ul>
+</div>
 <div class="section" id="changes-in-version-0-5-0">
 <h2>Changes in Version 0.5.0<a class="headerlink" href="#changes-in-version-0-5-0" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -116,6 +130,7 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Changelog</a><ul>
+<li><a class="reference internal" href="#changes-in-version-0-5-1">Changes in Version 0.5.1</a></li>
 <li><a class="reference internal" href="#changes-in-version-0-5-0">Changes in Version 0.5.0</a></li>
 <li><a class="reference internal" href="#changes-in-version-0-4-3">Changes in Version 0.4.3</a></li>
 <li><a class="reference internal" href="#changes-in-version-0-4-2">Changes in Version 0.4.2</a></li>
@@ -127,7 +142,7 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="api/pycassa/logger.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">logger</span></tt> &#8211; Pycassa Logging</a></p>
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">logger</span></tt> &#8211; Pycassa Logging</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="sources/changelog.txt"
