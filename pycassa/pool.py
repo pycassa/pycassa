@@ -273,7 +273,7 @@ class Pool(object):
     def _notify_on_dispose(self, conn_record, msg="", error=None):
         if self._on_dispose:
             dic = self._get_dic()
-            dic['level'] = 'info'
+            dic['level'] = 'debug'
             dic['connection'] = conn_record
             if msg:
                 dic['message'] = msg
@@ -285,6 +285,7 @@ class Pool(object):
 
     def _notify_on_server_list(self, server_list):
         dic = self._get_dic()
+        dic['level'] = 'debug'
         dic['server_list'] = server_list
         if self._on_server_list:
             for l in self._on_server_list:
@@ -293,7 +294,7 @@ class Pool(object):
     def _notify_on_recycle(self, old_conn, new_conn):
         if self._on_recycle:
             dic = self._get_dic()
-            dic['level'] = 'info'
+            dic['level'] = 'debug'
             dic['old_conn'] = old_conn
             dic['new_conn'] = new_conn
         for l in self._on_recycle:
@@ -302,7 +303,7 @@ class Pool(object):
     def _notify_on_connect(self, conn_record, msg="", error=None):
         if self._on_connect:
             dic = self._get_dic()
-            dic['level'] = 'info'
+            dic['level'] = 'debug'
             dic['connection'] = conn_record
             if msg:
                 dic['message'] = msg
@@ -315,7 +316,7 @@ class Pool(object):
     def _notify_on_checkin(self, conn_record):
         if self._on_checkin:
             dic = self._get_dic()
-            dic['level'] = 'info'
+            dic['level'] = 'debug'
             dic['connection'] = conn_record
             for l in self._on_checkin:
                 l.connection_checked_in(dic)
@@ -323,7 +324,7 @@ class Pool(object):
     def _notify_on_checkout(self, conn_record):
         if self._on_checkout:
             dic = self._get_dic()
-            dic['level'] = 'info'
+            dic['level'] = 'debug'
             dic['connection'] = conn_record
             for l in self._on_checkout:
                 l.connection_checked_out(dic)

@@ -7,8 +7,6 @@ class PycassaLogger:
 
     __shared_state = {}
 
-    _LOG_FILENAME = '/tmp/pycassa.log'
-
     _levels = {'debug': logging.DEBUG,
                'info': logging.INFO,
                'warn': logging.WARN,
@@ -27,11 +25,20 @@ class PycassaLogger:
 
         """
         self.__dict__ = self.__shared_state
-        level = PycassaLogger._levels[level]
-        logging.basicConfig(level=level)
         self.logger = logging.getLogger(logger_name)
         self.pool_logger = logging.getLogger('%s.pool' % logger_name)
+        self.set_level(level)
 
+    def set_level(self, level='info'):
+        level = PycassaLogger._levels[level]
+        self.logger.setLevel(level);
+
+    def get_level(self):
+        level = logger.getLevel();
+        for key in self._levels.keys():
+            if self._levels[key] == level:
+                return key
+        raise ValueError
 
     ### Connection Pool Logging ###
 
