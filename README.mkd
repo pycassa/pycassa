@@ -212,9 +212,11 @@ Note that, as mentioned previously, get_range() may continue to return removed r
 SuperColumns
 ------------
 
-To use SuperColumns, pass super=True to the ColumnFamily constructor.
+SuperColumnFamilies are created exactly the same way that regular
+ColumnFamilies are.  When using them, just include an extra layer
+in the column dictionaries.
 
-    >>> cf = pycassa.ColumnFamily(client, 'Test SuperColumnFamily', super=True)
+    >>> cf = pycassa.ColumnFamily(client, 'Test SuperColumnFamily')
     >>> cf.insert('key1', {'1': {'sub1': 'val1', 'sub2': 'val2'}, '2': {'sub3': 'val3', 'sub4': 'val4'}})
     1261490144457132
     >>> cf.get('key1')
@@ -283,7 +285,7 @@ on multiple column families:
     >>> b.insert(supercf, 'key1', {'subkey1': {'col1':'value1', 'col2':'value2'}})
     >>> b.send()
 
-Note: This interface does not implement atomic operations across coLUMN
+Note: This interface does not implement atomic operations across column
       families. All the limitations of the `batch_mutate` Thrift API call
       applies. Remember, a mutation in Cassandra is always atomic per key per
       column family only.
