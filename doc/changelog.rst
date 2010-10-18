@@ -62,5 +62,5 @@ Changes in Version 0.4.0
 - Added support for secondary indexes with
   :meth:`~pycassa.columnfamily.ColumnFamily.get_indexed_slices()`
   and :mod:`pycassa.index`
-- Added `~pycassa.columnfamily.ColumnFamily.truncate()`
+- Added :meth:`~pycassa.columnfamily.ColumnFamily.truncate()`
 - Use Thrift API 11.0.0
