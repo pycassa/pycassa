@@ -1,6 +1,19 @@
 Changelog
 =========
 
+Changes in Version 0.5.1
+------------------------
+
+- Automatically detect if a column family is a standard column family
+  or a super column family
+- :meth:`~pycassa.columnfamily.ColumnFamily.multiget_count()` support
+- Allow preservation of key order in
+  :meth:`~pycassa.columnfamily.ColumnFamily.multiget()` if an ordered
+  dictionary is used
+- Convert timestamps to v1 UUIDs where appropriate
+- pycassaShell documentation
+- Use Thrift API 17.1.0
+
 Changes in Version 0.5.0
 ------------------------
 
