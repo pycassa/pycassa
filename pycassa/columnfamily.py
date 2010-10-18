@@ -318,7 +318,7 @@ class ColumnFamily(object):
             column_reversed=False, column_count=100, include_timestamp=False,
             super_column=None, read_consistency_level = None):
         """
-        Fetch a key from a Cassandra server
+        Fetch a row from a Cassandra server.
 
         :Parameters:
             `key`: str
@@ -372,7 +372,7 @@ class ColumnFamily(object):
                           column_reversed=False, column_count=100, include_timestamp=False,
                           super_column=None, read_consistency_level=None):
         """
-        Fetches a list of KeySlices from a Cassandra server based on an index clause
+        Fetches a set of rows from a Cassandra server based on an index clause.
 
         :Parameters:
             `index_clause`: :class:`~pycassa.cassandra.ttypes.IndexClause`
@@ -436,7 +436,7 @@ class ColumnFamily(object):
                  column_reversed=False, column_count=100, include_timestamp=False,
                  super_column=None, read_consistency_level = None):
         """
-        Fetch multiple keys from a Cassandra server
+        Fetch multiple rows from a Cassandra server.
 
         :Parameters:
             `keys`: [str]
@@ -505,7 +505,7 @@ class ColumnFamily(object):
                   columns=None, column_start="",
                   column_finish=""):
         """
-        Count the number of columns for a key
+        Count the number of columns in a row.
 
         :Parameters:
             `key`: str
@@ -548,7 +548,7 @@ class ColumnFamily(object):
                        columns=None, column_start="",
                        column_finish="", ):
         """
-        Perform a get_count in parallel on a list of keys.
+        Perform a get_count in parallel on a set of rows.
 
         :Parameters:
             `keys` : [str]
@@ -591,7 +591,7 @@ class ColumnFamily(object):
                   row_count=None, include_timestamp=False,
                   super_column=None, read_consistency_level = None):
         """
-        Get an iterator over keys in a specified range
+        Get an iterator over rows in a specified key range.
 
         :Parameters:
             `start`: str
@@ -669,7 +669,7 @@ class ColumnFamily(object):
     def insert(self, key, columns, timestamp=None, ttl=None,
                write_consistency_level=None):
         """
-        Insert or update columns for a key
+        Insert or update columns in a row.
 
         :Parameters:
             `key`: str
@@ -690,7 +690,7 @@ class ColumnFamily(object):
 
     def batch_insert(self, rows, timestamp=None, ttl=None, write_consistency_level = None):
         """
-        Insert or update columns for multiple keys
+        Insert or update columns for multiple rows.
 
         :Parameters:
             `rows`: :class:`dict`
@@ -711,9 +711,9 @@ class ColumnFamily(object):
         batch.send()
         return timestamp
 
-    def remove(self, key, columns=None, super_column=None, write_consistency_level = None):
+    def remove(self, key, columns=None, super_column=None, write_consistency_level=None):
         """
-        Remove a specified key or columns
+        Remove a specified row or a set of columns within a row.
 
         :Parameters:
             `key`: str
