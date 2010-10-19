@@ -77,7 +77,7 @@ manipulation of data inside Cassandra.</p>
 
 <dl class="class">
 <dt id="pycassa.columnfamily.ColumnFamily">
-<em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">ColumnFamily</tt><big>(</big><em>client</em>, <em>column_family</em>, <em>buffer_size=1024</em>, <em>read_consistency_level=1</em>, <em>write_consistency_level=1</em>, <em>timestamp=&lt;function gm_timestamp at 0x160ac08&gt;</em>, <em>super=False</em>, <em>dict_class=&lt;type 'dict'&gt;</em>, <em>autopack_names=True</em>, <em>autopack_values=True</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">ColumnFamily</tt><big>(</big><em>client</em>, <em>column_family</em>, <em>buffer_size=1024</em>, <em>read_consistency_level=1</em>, <em>write_consistency_level=1</em>, <em>timestamp=&lt;function gm_timestamp at 0x228ec08&gt;</em>, <em>super=False</em>, <em>dict_class=&lt;type 'dict'&gt;</em>, <em>autopack_names=True</em>, <em>autopack_values=True</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructs an abstraction of a Cassandra column family or super column family.</p>
 <p>Operations on this, such as <cite>get</cite> or <cite>insert</cite> will get data from or
 insert data into the corresponding Cassandra column family.</p>
@@ -187,7 +187,7 @@ any write operation</p>
 <dl class="method">
 <dt id="pycassa.columnfamily.ColumnFamily.get">
 <tt class="descname">get</tt><big>(</big><em>key</em>, <em>columns=None</em>, <em>column_start=''</em>, <em>column_finish=''</em>, <em>column_reversed=False</em>, <em>column_count=100</em>, <em>include_timestamp=False</em>, <em>super_column=None</em>, <em>read_consistency_level=None</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fetch a row from a Cassandra server.</p>
+<dd><p>Fetches a row in this column family.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -196,26 +196,28 @@ any write operation</p>
 <dt><cite>key</cite>: str</dt>
 <dd><p class="first last">The key to fetch</p>
 </dd>
-<dt><cite>columns</cite>: [str]</dt>
+<dt><cite>columns</cite>: array</dt>
 <dd><p class="first last">Limit the columns or super_columns fetched to the specified list</p>
 </dd>
-<dt><cite>column_start</cite>: str</dt>
+<dt><cite>column_start</cite>: </dt>
 <dd><p class="first last">Only fetch when a column or super_column is &gt;= column_start</p>
 </dd>
-<dt><cite>column_finish</cite>: str</dt>
+<dt><cite>column_finish</cite>:</dt>
 <dd><p class="first last">Only fetch when a column or super_column is &lt;= column_finish</p>
 </dd>
 <dt><cite>column_reversed</cite>: bool</dt>
-<dd><p class="first last">Fetch the columns or super_columns in reverse order. This will do
-nothing unless you passed a <tt class="docutils literal"><span class="pre">dict_class</span></tt> to the constructor.</p>
+<dd><p class="first last">Fetch the columns or super_columns in reverse order. If <cite>column_count</cite> is
+used with this, columns will be drawn from the end. The returned dictionary
+of columns may not be in reversed order if an ordered <tt class="docutils literal"><span class="pre">dict_class</span></tt> is not
+passed to the constructor.</p>
 </dd>
 <dt><cite>column_count</cite>: int</dt>
-<dd><p class="first last">Limit the number of columns or super_columns fetched per key</p>
+<dd><p class="first last">Limit the number of columns or super_columns fetched per row</p>
 </dd>
 <dt><cite>include_timestamp</cite> <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd><p class="first last">If true, return a (value, timestamp) tuple for each column</p>
 </dd>
-<dt><cite>super_column</cite>: str</dt>
+<dt><cite>super_column</cite>:</dt>
 <dd><p class="first last">Return columns only in this super_column</p>
 </dd>
 <dt><cite>read_consistency_level</cite>: <tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></dt>
@@ -274,7 +276,7 @@ any read operation</p>
 <dl class="method">
 <dt id="pycassa.columnfamily.ColumnFamily.get_indexed_slices">
 <tt class="descname">get_indexed_slices</tt><big>(</big><em>index_clause</em>, <em>columns=None</em>, <em>column_start=''</em>, <em>column_finish=''</em>, <em>column_reversed=False</em>, <em>column_count=100</em>, <em>include_timestamp=False</em>, <em>super_column=None</em>, <em>read_consistency_level=None</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.get_indexed_slices" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fetches a set of rows from a Cassandra server based on an index clause.</p>
+<dd><p>Fetches a set of rows from this column family based on an index clause.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
