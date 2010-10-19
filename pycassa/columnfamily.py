@@ -318,25 +318,27 @@ class ColumnFamily(object):
             column_reversed=False, column_count=100, include_timestamp=False,
             super_column=None, read_consistency_level = None):
         """
-        Fetch a row from a Cassandra server.
+        Fetches a row in this column family.
 
         :Parameters:
             `key`: str
                 The key to fetch
-            `columns`: [str]
+            `columns`: array
                 Limit the columns or super_columns fetched to the specified list
-            `column_start`: str
+            `column_start`: 
                 Only fetch when a column or super_column is >= column_start
-            `column_finish`: str
+            `column_finish`:
                 Only fetch when a column or super_column is <= column_finish
             `column_reversed`: bool
-                Fetch the columns or super_columns in reverse order. This will do
-                nothing unless you passed a ``dict_class`` to the constructor.
+                Fetch the columns or super_columns in reverse order. If `column_count` is
+                used with this, columns will be drawn from the end. The returned dictionary
+                of columns may not be in reversed order if an ordered ``dict_class`` is not
+                passed to the constructor.
             `column_count`: int
-                Limit the number of columns or super_columns fetched per key
+                Limit the number of columns or super_columns fetched per row
             `include_timestamp` : bool
                 If true, return a (value, timestamp) tuple for each column
-            `super_column`: str
+            `super_column`:
                 Return columns only in this super_column
             `read_consistency_level`: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
                 Affects the guaranteed replication factor before returning from
@@ -372,7 +374,7 @@ class ColumnFamily(object):
                           column_reversed=False, column_count=100, include_timestamp=False,
                           super_column=None, read_consistency_level=None):
         """
-        Fetches a set of rows from a Cassandra server based on an index clause.
+        Fetches a set of rows from this column family based on an index clause.
 
         :Parameters:
             `index_clause`: :class:`~pycassa.cassandra.ttypes.IndexClause`
