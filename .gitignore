@@ -1,6 +1,7 @@
 *.pyc
 *.swp
 *.swo
+*.diff
 build/
 doc/_build
 dist/
