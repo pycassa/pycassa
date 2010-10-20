@@ -77,7 +77,7 @@ manipulation of data inside Cassandra.</p>
 
 <dl class="class">
 <dt id="pycassa.columnfamily.ColumnFamily">
-<em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">ColumnFamily</tt><big>(</big><em>client</em>, <em>column_family</em>, <em>buffer_size=1024</em>, <em>read_consistency_level=1</em>, <em>write_consistency_level=1</em>, <em>timestamp=&lt;function gm_timestamp at 0x228ec08&gt;</em>, <em>super=False</em>, <em>dict_class=&lt;type 'dict'&gt;</em>, <em>autopack_names=True</em>, <em>autopack_values=True</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">ColumnFamily</tt><big>(</big><em>client</em>, <em>column_family</em>, <em>buffer_size=1024</em>, <em>read_consistency_level=1</em>, <em>write_consistency_level=1</em>, <em>timestamp=&lt;function gm_timestamp at 0x1a83c08&gt;</em>, <em>super=False</em>, <em>dict_class=&lt;type 'dict'&gt;</em>, <em>autopack_names=True</em>, <em>autopack_values=True</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructs an abstraction of a Cassandra column family or super column family.</p>
 <p>Operations on this, such as <cite>get</cite> or <cite>insert</cite> will get data from or
 insert data into the corresponding Cassandra column family.</p>
@@ -94,7 +94,7 @@ The name of this ColumnFamily</li>
 When calling <cite>get_range</cite>, the intermediate results need to be
 buffered if we are fetching many rows, otherwise the Cassandra
 server will overallocate memory and fail.  This is the size of
-that buffer.</li>
+that buffer in number of rows.</li>
 <li><strong>read_consistency_level</strong> &#8211; <tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt>
 Affects the guaranteed replication factor before returning from
 any read operation</li>
@@ -330,7 +330,7 @@ else: {key : {column : value}}</p>
 
 <dl class="method">
 <dt id="pycassa.columnfamily.ColumnFamily.get_range">
-<tt class="descname">get_range</tt><big>(</big><em>start=''</em>, <em>finish=''</em>, <em>columns=None</em>, <em>column_start=''</em>, <em>column_finish=''</em>, <em>column_reversed=False</em>, <em>column_count=100</em>, <em>row_count=None</em>, <em>include_timestamp=False</em>, <em>super_column=None</em>, <em>read_consistency_level=None</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.get_range" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_range</tt><big>(</big><em>start=''</em>, <em>finish=''</em>, <em>columns=None</em>, <em>column_start=''</em>, <em>column_finish=''</em>, <em>column_reversed=False</em>, <em>column_count=100</em>, <em>row_count=None</em>, <em>include_timestamp=False</em>, <em>super_column=None</em>, <em>read_consistency_level=None</em>, <em>buffer_size=None</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.get_range" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get an iterator over rows in a specified key range.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -371,6 +371,12 @@ nothing unless you passed a dict_class to the constructor.</p>
 <dt><cite>read_consistency_level</cite>: <tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></dt>
 <dd><p class="first last">Affects the guaranteed replication factor before returning from
 any read operation</p>
+</dd>
+<dt><cite>buffer_size</cite>: When calling <cite>get_range</cite>, the intermediate results need to be</dt>
+<dd><p class="first last">buffered if we are fetching many rows, otherwise the Cassandra
+server will overallocate memory and fail.  This is the size of
+that buffer in number of rows. If left as None, the ColumnFamily&#8217;s default
+buffer size will be used.</p>
 </dd>
 </dl>
 </td>
