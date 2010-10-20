@@ -26,7 +26,8 @@ from thrift.transport import TSocket
 from thrift.protocol import TBinaryProtocol
 from pycassa.cassandra import Cassandra
 from pycassa.cassandra.constants import VERSION
-from pycassa.cassandra.ttypes import AuthenticationRequest
+from pycassa.cassandra.ttypes import AuthenticationRequest, TimedOutException,\
+                                     UnavailableException
 
 from batch import Mutator
 
@@ -226,10 +227,14 @@ class Connection(object):
             try:
                 conn = self._ensure_connection()
                 return getattr(conn.client, attr)(*args, **kwargs)
+            except (UnavailableException, TimedOutException), exc:
+                log.exception(exc)
+                self.close()
+                return _client_call(*args, **kwargs) # Retry
             except (Thrift.TException, socket.timeout, socket.error), exc:
                 log.exception('Client error: %s', exc)
                 self.close()
-                return _client_call(*args, **kwargs) # Retry
+                raise
         setattr(self, attr, _client_call)
         return getattr(self, attr)
 
