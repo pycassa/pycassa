@@ -70,7 +70,7 @@ class ColumnFamily(object):
           When calling `get_range`, the intermediate results need to be
           buffered if we are fetching many rows, otherwise the Cassandra
           server will overallocate memory and fail.  This is the size of
-          that buffer.
+          that buffer in number of rows.
 
         :param read_consistency_level: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
           Affects the guaranteed replication factor before returning from
@@ -591,7 +591,8 @@ class ColumnFamily(object):
     def get_range(self, start="", finish="", columns=None, column_start="",
                   column_finish="", column_reversed=False, column_count=100,
                   row_count=None, include_timestamp=False,
-                  super_column=None, read_consistency_level = None):
+                  super_column=None, read_consistency_level=None,
+                  buffer_size=None):
         """
         Get an iterator over rows in a specified key range.
 
@@ -620,6 +621,11 @@ class ColumnFamily(object):
             `read_consistency_level`: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
                 Affects the guaranteed replication factor before returning from
                 any read operation
+            `buffer_size`: When calling `get_range`, the intermediate results need to be
+              buffered if we are fetching many rows, otherwise the Cassandra
+              server will overallocate memory and fail.  This is the size of
+              that buffer in number of rows. If left as None, the ColumnFamily's default
+              buffer size will be used.
 
         :Returns:
             iterator over ('key', {'column': 'value'})
@@ -642,7 +648,8 @@ class ColumnFamily(object):
         i = 0
         last_key = start
 
-        buffer_size = self.buffer_size
+        if buffer_size is None:
+            buffer_size = self.buffer_size
         if row_count is not None:
             buffer_size = min(row_count, self.buffer_size)
         while True:
