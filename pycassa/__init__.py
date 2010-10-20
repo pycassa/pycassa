@@ -8,3 +8,7 @@ from pycassa.pool import *
 from pycassa.cassandra.ttypes import ConsistencyLevel,\
     InvalidRequestException, NotFoundException, UnavailableException,\
     TimedOutException
+
+from pycassa.logger import *
+
+PycassaLogger()

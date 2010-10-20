@@ -2,6 +2,10 @@
 
 import logging
 
+class NullHandler(logging.Handler):
+    def emit(self, record):
+        pass
+
 class PycassaLogger:
     """pycassa's logger."""
 
@@ -25,7 +29,9 @@ class PycassaLogger:
 
         """
         self.__dict__ = self.__shared_state
+        h = NullHandler()
         self.logger = logging.getLogger(logger_name)
+        self.logger.addHandler(h)
         self.pool_logger = logging.getLogger('%s.pool' % logger_name)
         self.set_level(level)
 
