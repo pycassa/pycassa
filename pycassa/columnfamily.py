@@ -622,7 +622,7 @@ class ColumnFamily(object):
         if buffer_size is None:
             buffer_size = self.buffer_size
         if row_count is not None:
-            buffer_size = min(row_count, self.buffer_size)
+            buffer_size = min(row_count, buffer_size)
         while True:
             key_range = KeyRange(start_key=last_key, end_key=finish, count=buffer_size)
             key_slices = self.client.get_range_slices(cp, sp, key_range,
@@ -641,7 +641,7 @@ class ColumnFamily(object):
                 if row_count is not None and count >= row_count:
                     return
 
-            if len(key_slices) != self.buffer_size:
+            if len(key_slices) != buffer_size:
                 return
             last_key = key_slices[-1].key
             i += 1

@@ -1,6 +1,6 @@
 from pycassa import connect, connect_thread_local, index, ColumnFamily, ConsistencyLevel, NotFoundException
 
-from nose.tools import assert_raises, assert_equal
+from nose.tools import assert_raises, assert_equal, assert_true
 
 import struct
 
@@ -126,6 +126,103 @@ class TestColumnFamily:
         for i, (k, c) in enumerate(rows):
             assert k == keys[i]
             assert c == columns
+
+    def test_get_range_batching(self):
+        self.cf.truncate()
+
+        keys = []
+        columns = {'c': 'v'}
+        for i in range(100, 201):
+            keys.append('key%d' % i)
+            self.cf.insert('key%d' % i, columns)
+
+        for i in range(201, 301):
+            self.cf.insert('key%d' % i, columns)
+
+        count = 0
+        for (k,v) in self.cf.get_range(row_count=100, buffer_size=10):
+            assert_true(k in keys, 'key "%s" should be in keys' % k)
+            count += 1
+        assert_equal(count, 100)
+
+        count = 0
+        for (k,v) in self.cf.get_range(row_count=100, buffer_size=1000):
+            assert_true(k in keys, 'key "%s" should be in keys' % k)
+            count += 1
+        assert_equal(count, 100)
+
+        count = 0
+        for (k,v) in self.cf.get_range(row_count=100, buffer_size=150):
+            assert_true(k in keys, 'key "%s" should be in keys' % k)
+            count += 1
+        assert_equal(count, 100)
+
+        count = 0
+        for (k,v) in self.cf.get_range(row_count=100, buffer_size=7):
+            assert_true(k in keys, 'key "%s" should be in keys' % k)
+            count += 1
+        assert_equal(count, 100)
+
+        count = 0
+        for (k,v) in self.cf.get_range(row_count=100, buffer_size=2):
+            assert_true(k in keys, 'key "%s" should be in keys' % k)
+            count += 1
+        assert_equal(count, 100)
+
+        # Put the remaining keys in our list
+        for i in range(201, 301):
+            keys.append('key%d' % i)
+
+        count = 0
+        for (k,v) in self.cf.get_range(row_count=10000, buffer_size=2):
+            assert_true(k in keys, 'key "%s" should be in keys' % k)
+            count += 1
+        assert_equal(count, 201)
+
+        count = 0
+        for (k,v) in self.cf.get_range(row_count=10000, buffer_size=7):
+            assert_true(k in keys, 'key "%s" should be in keys' % k)
+            count += 1
+        assert_equal(count, 201)
+
+        count = 0
+        for (k,v) in self.cf.get_range(row_count=10000, buffer_size=200):
+            assert_true(k in keys, 'key "%s" should be in keys' % k)
+            count += 1
+        assert_equal(count, 201)
+
+        count = 0
+        for (k,v) in self.cf.get_range(row_count=10000, buffer_size=10000):
+            assert_true(k in keys, 'key "%s" should be in keys' % k)
+            count += 1
+        assert_equal(count, 201)
+
+        # Don't give a row count
+        count = 0
+        for (k,v) in self.cf.get_range(buffer_size=2):
+            assert_true(k in keys, 'key "%s" should be in keys' % k)
+            count += 1
+        assert_equal(count, 201)
+
+        count = 0
+        for (k,v) in self.cf.get_range(buffer_size=77):
+            assert_true(k in keys, 'key "%s" should be in keys' % k)
+            count += 1
+        assert_equal(count, 201)
+
+        count = 0
+        for (k,v) in self.cf.get_range(buffer_size=200):
+            assert_true(k in keys, 'key "%s" should be in keys' % k)
+            count += 1
+        assert_equal(count, 201)
+
+        count = 0
+        for (k,v) in self.cf.get_range(buffer_size=10000):
+            assert_true(k in keys, 'key "%s" should be in keys' % k)
+            count += 1
+        assert_equal(count, 201)
+
+        self.cf.truncate()
 
     def test_insert_get_indexed_slices(self):
         indexed_cf = ColumnFamily(self.client, 'Indexed1')
