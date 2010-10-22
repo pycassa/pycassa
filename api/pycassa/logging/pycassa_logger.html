@@ -1,0 +1,184 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>logging.pycassa_logger – Pycassa Logging &mdash; pycassa v0.5.1 documentation</title>
+    <link rel="stylesheet" href="../../../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.5.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../static/jquery.js"></script>
+    <script type="text/javascript" src="../../../static/underscore.js"></script>
+    <script type="text/javascript" src="../../../static/doctools.js"></script>
+    <link rel="top" title="pycassa v0.5.1 documentation" href="../../../index.html" />
+    <link rel="up" title="API Documentation" href="../../index.html" />
+    <link rel="next" title="Changelog" href="../../../changelog.html" />
+    <link rel="prev" title="types – Column Types for ColumnFamilyMaps" href="../types.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../changelog.html" title="Changelog"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../types.html" title="types – Column Types for ColumnFamilyMaps"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">pycassa v0.5.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-pycassa.logging.pycassa_logger">
+<span id="logging-pycassa-logger-pycassa-logging"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">logging.pycassa_logger</span></tt> &#8211; Pycassa Logging<a class="headerlink" href="#module-pycassa.logging.pycassa_logger" title="Permalink to this headline">¶</a></h1>
+<p>Logging facilities for pycassa.</p>
+<dl class="class">
+<dt id="pycassa.logging.pycassa_logger.PycassaLogger">
+<em class="property">class </em><tt class="descclassname">pycassa.logging.pycassa_logger.</tt><tt class="descname">PycassaLogger</tt><a class="headerlink" href="#pycassa.logging.pycassa_logger.PycassaLogger" title="Permalink to this definition">¶</a></dt>
+<dd><p>The root logger for pycassa.</p>
+<p>This uses a singleton-like pattern,
+so creating a new instance will always give you the
+same result. This means that you can adjust all of
+pycassa&#8217;s logging by calling methods on any instance.</p>
+<p>By default, the root logger name is &#8216;pycassa&#8217; and the
+logging level is &#8216;info&#8217;.</p>
+<p>The available levels are:</p>
+<ul class="simple">
+<li>debug</li>
+<li>info</li>
+<li>warn</li>
+<li>error</li>
+<li>critical</li>
+</ul>
+<p>Usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">PycassaLogger</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="o">.</span><span class="n">set_logger_name</span><span class="p">(</span><span class="s">&#39;pycassa_library&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="o">.</span><span class="n">set_logger_level</span><span class="p">(</span><span class="s">&#39;debug&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="o">.</span><span class="n">get_logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="pycassa.logging.pycassa_logger.PycassaLogger.add_child_logger">
+<tt class="descname">add_child_logger</tt><big>(</big><em>child_logger_name</em>, <em>name_change_callback</em><big>)</big><a class="headerlink" href="#pycassa.logging.pycassa_logger.PycassaLogger.add_child_logger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a child logger to pycassa that will be
+updated when the logger name changes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.logging.pycassa_logger.PycassaLogger.get_logger">
+<tt class="descname">get_logger</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.logging.pycassa_logger.PycassaLogger.get_logger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the underlying <tt class="xref py py-class docutils literal"><span class="pre">logging.Logger</span></tt> instance.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.logging.pycassa_logger.PycassaLogger.get_logger_level">
+<tt class="descname">get_logger_level</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.logging.pycassa_logger.PycassaLogger.get_logger_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the logging level for all pycassa logging.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.logging.pycassa_logger.PycassaLogger.get_logger_name">
+<tt class="descname">get_logger_name</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.logging.pycassa_logger.PycassaLogger.get_logger_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the root logger name for pycassa.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.logging.pycassa_logger.PycassaLogger.set_logger_level">
+<tt class="descname">set_logger_level</tt><big>(</big><em>level</em><big>)</big><a class="headerlink" href="#pycassa.logging.pycassa_logger.PycassaLogger.set_logger_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the logging level for all pycassa logging.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.logging.pycassa_logger.PycassaLogger.set_logger_name">
+<tt class="descname">set_logger_name</tt><big>(</big><em>logger_name</em><big>)</big><a class="headerlink" href="#pycassa.logging.pycassa_logger.PycassaLogger.set_logger_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the root logger name for pycassa and all of its children loggers.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../types.html"
+                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">types</span></tt> &#8211; Column Types for ColumnFamilyMaps</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../../../changelog.html"
+                        title="next chapter">Changelog</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../sources/api/pycassa/logging/pycassa_logger.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../changelog.html" title="Changelog"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../types.html" title="types – Column Types for ColumnFamilyMaps"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">pycassa v0.5.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright .
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.3.
+    </div>
+  </body>
+</html>
