@@ -4,7 +4,7 @@ API Documentation
 Modules:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    pycassa/connection
    pycassa/pool
@@ -13,4 +13,4 @@ Modules:
    pycassa/index
    pycassa/batch
    pycassa/types
-   pycassa/logger
+   pycassa/logging/pycassa_logger

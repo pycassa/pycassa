@@ -51,7 +51,7 @@ class Pool(object):
 
         :param server_list: A sequence of servers in the form 'host:port' that
           the pool will connect to.  The list will be randomly permuted before
-          being used. server_list may also be a function that returns the
+          being used. `server_list` may also be a function that returns the
           sequence of servers.
 
         :param credentials: A dictionary containing 'username' and 'password'
@@ -64,7 +64,7 @@ class Pool(object):
           the "name" field of logging records generated within the
           "pycassa.pool" logger. Defaults to ``id(pool)``.
 
-        :param use_threadlocal: If set to True, repeated calls to
+        :param use_threadlocal: If set to ``True``, repeated calls to
           :meth:`get()` within the same application thread will
           return the same ConnectionWrapper object, if one has already
           been retrieved from the pool and has not been
@@ -72,9 +72,8 @@ class Pool(object):
 
         :param listeners: A list of
           :class:`PoolListener`-like objects or
-          dictionaries of callables that receive events when Cassandra
-          connections are created, checked out and checked in to the
-          pool.
+          dictionaries of callables that receive events when
+          pool or connection events occur.
 
         """
         if logging_name:
@@ -635,6 +634,15 @@ class QueuePool(Pool):
 
         :param prefill: If True, the pool creates ``pool_size`` connections
           upon creation and adds them to the queue.  Default is True.
+
+        Example::
+
+            >>> pool = pycassa.QueuePool(keyspace='Keyspace1', prefill=False)
+            >>> conn = pool.get()
+            >>> cf = pycassa.ColumnFamily(conn, 'Standard1')
+            >>> cf.insert('key', {'col': 'val'})
+            1287785685530679
+            >>> conn.return_to_pool()
 
         """
         Pool.__init__(self, *args, **kwargs)
