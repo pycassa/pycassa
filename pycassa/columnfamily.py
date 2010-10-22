@@ -45,14 +45,6 @@ def gm_timestamp():
     """
     return int(time.time() * 1e6)
 
-def create_SlicePredicate(columns, column_start, column_finish, column_reversed, column_count):
-    if columns is not None:
-        return SlicePredicate(column_names=columns)
-    sr = SliceRange(start=column_start, finish=column_finish,
-                    reversed=column_reversed, count=column_count)
-    return SlicePredicate(slice_range=sr)
-
-
 class ColumnFamily(object):
     """An abstraction of a Cassandra column family or super column family."""
 
@@ -214,18 +206,29 @@ class ColumnFamily(object):
             return self.write_consistency_level
         return alternative
 
-    def _pack_slice_cols(self, super_column, column_start, column_finish):
-        if super_column != '':
-            super_column = self._pack_name(super_column, is_supercol_name=True)
-        if column_start != '':
-            column_start = self._pack_name(column_start,
-                                           is_supercol_name=self.super,
-                                           slice_end=_SLICE_START)
-        if column_finish != '':
-            column_finish = self._pack_name(column_finish,
-                                            is_supercol_name=self.super,
-                                            slice_end=_SLICE_FINISH)
-        return super_column, column_start, column_finish
+    def _create_column_parent(self, super_column=None):
+        return ColumnParent(column_family=self.column_family,
+                            super_column=self._pack_name(super_column, is_supercol_name=True))
+
+    def _create_slice_predicate(self, columns, column_start, column_finish,
+                                      column_reversed, column_count):
+        if columns is not None:
+            packed_cols = []
+            for col in columns:
+                packed_cols.append(self._pack_name(col, is_supercol_name=self.super))
+            return SlicePredicate(column_names=packed_cols)
+        else:
+            if column_start != '':
+                column_start = self._pack_name(column_start,
+                                               is_supercol_name=self.super,
+                                               slice_end=_SLICE_START)
+            if column_finish != '':
+                column_finish = self._pack_name(column_finish,
+                                                is_supercol_name=self.super,
+                                                slice_end=_SLICE_FINISH)
+            sr = SliceRange(start=column_start, finish=column_finish,
+                            reversed=column_reversed, count=column_count)
+            return SlicePredicate(slice_range=sr)
 
     def _pack_name(self, value, is_supercol_name=False,
             slice_end=_NON_SLICE):
@@ -375,18 +378,9 @@ class ColumnFamily(object):
 
         """
 
-        super_column, column_start, column_finish = self._pack_slice_cols(
-                super_column, column_start, column_finish)
-
-        packed_cols = None
-        if columns is not None:
-            packed_cols = []
-            for col in columns:
-                packed_cols.append(self._pack_name(col, is_supercol_name=self.super))
-
-        cp = ColumnParent(column_family=self.column_family, super_column=super_column)
-        sp = create_SlicePredicate(packed_cols, column_start, column_finish,
-                                   column_reversed, column_count)
+        cp = self._create_column_parent(super_column)
+        sp = self._create_slice_predicate(columns, column_start, column_finish,
+                                    column_reversed, column_count)
 
         list_col_or_super = self.client.get_slice(key, cp, sp,
                                                   self._rcl(read_consistency_level))
@@ -432,18 +426,9 @@ class ColumnFamily(object):
             else: {key : {column : value}}
         """
 
-        (super_column, column_start, column_finish) = self._pack_slice_cols(
-                super_column, column_start, column_finish)
-
-        packed_cols = None
-        if columns is not None:
-            packed_cols = []
-            for col in columns:
-                packed_cols.append(self._pack_name(col, is_supercol_name=self.super))
-
-        cp = ColumnParent(column_family=self.column_family, super_column=super_column)
-        sp = create_SlicePredicate(packed_cols, column_start, column_finish,
-                                   column_reversed, column_count)
+        cp = self._create_column_parent(super_column)
+        sp = self._create_slice_predicate(columns, column_start, column_finish,
+                                    column_reversed, column_count)
 
         # Pack the values in the index clause expressions
         for expr in index_clause.expressions:
@@ -490,18 +475,9 @@ class ColumnFamily(object):
             else: {'key': {'column': 'value'}}
         """
 
-        (super_column, column_start, column_finish) = self._pack_slice_cols(
-                super_column, column_start, column_finish)
-
-        packed_cols = None
-        if columns is not None:
-            packed_cols = []
-            for col in columns:
-                packed_cols.append(self._pack_name(col, is_supercol_name=self.super))
-
-        cp = ColumnParent(column_family=self.column_family, super_column=super_column)
-        sp = create_SlicePredicate(packed_cols, column_start, column_finish,
-                                   column_reversed, column_count)
+        cp = self._create_column_parent(super_column)
+        sp = self._create_slice_predicate(columns, column_start, column_finish,
+                                          column_reversed, column_count)
 
         keymap = self.client.multiget_slice(keys, cp, sp,
                                             self._rcl(read_consistency_level))
@@ -551,19 +527,9 @@ class ColumnFamily(object):
             int Count of columns
         """
 
-        (super_column, column_start, column_finish) = self._pack_slice_cols(
-                super_column, column_start, column_finish)
-
-        packed_cols = None
-        if columns is not None:
-            packed_cols = []
-            for col in columns:
-                packed_cols.append(self._pack_name(col, is_supercol_name=self.super))
-
-        cp = ColumnParent(column_family=self.column_family, super_column=super_column)
-        sp = create_SlicePredicate(packed_cols, column_start, column_finish,
-                                   False, self.MAX_COUNT)
-
+        cp = self._create_column_parent(super_column)
+        sp = self._create_slice_predicate(columns, column_start, column_finish,
+                                          False, self.MAX_COUNT)
 
         return self.client.get_count(key, cp, sp,
                                      self._rcl(read_consistency_level))
@@ -594,18 +560,9 @@ class ColumnFamily(object):
             {'keyname': int count}
         """
 
-        (super_column, column_start, column_finish) = self._pack_slice_cols(
-                super_column, column_start, column_finish)
-
-        packed_cols = None
-        if columns is not None:
-            packed_cols = []
-            for col in columns:
-                packed_cols.append(self._pack_name(col, is_supercol_name=self.super))
-
-        cp = ColumnParent(column_family=self.column_family, super_column=super_column)
-        sp = create_SlicePredicate(packed_cols, column_start, column_finish,
-                                   False, self.MAX_COUNT)
+        cp = self._create_column_parent(super_column)
+        sp = self._create_slice_predicate(columns, column_start, column_finish,
+                                          False, self.MAX_COUNT)
 
         return self.client.multiget_count(keys, cp, sp,
                                      self._rcl(read_consistency_level))
@@ -654,18 +611,9 @@ class ColumnFamily(object):
             iterator over ('key', {'column': 'value'})
         """
 
-        (super_column, column_start, column_finish) = self._pack_slice_cols(
-                super_column, column_start, column_finish)
-
-        packed_cols = None
-        if columns is not None:
-            packed_cols = []
-            for col in columns:
-                packed_cols.append(self._pack_name(col, is_supercol_name=self.super))
-
-        cp = ColumnParent(column_family=self.column_family, super_column=super_column)
-        sp = create_SlicePredicate(packed_cols, column_start, column_finish,
-                                   column_reversed, column_count)
+        cp = self._create_column_parent(super_column)
+        sp = self._create_slice_predicate(columns, column_start, column_finish,
+                                          column_reversed, column_count)
 
         count = 0
         i = 0
