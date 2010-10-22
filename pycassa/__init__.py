@@ -9,6 +9,4 @@ from pycassa.cassandra.ttypes import ConsistencyLevel,\
     InvalidRequestException, NotFoundException, UnavailableException,\
     TimedOutException
 
-from pycassa.logger import *
-
-PycassaLogger()
+from pycassa.logging.pycassa_logger import *

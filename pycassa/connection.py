@@ -14,7 +14,7 @@ following::
 """
 
 from exceptions import Exception
-import logging
+from logging.pycassa_logger import *
 import random
 import socket
 import threading
@@ -37,7 +37,7 @@ __all__ = ['connect', 'connect_thread_local', 'NoServerAvailable',
 DEFAULT_SERVER = 'localhost:9160'
 API_VERSION = VERSION.split('.')
 
-log = logging.getLogger('pycassa')
+log = PycassaLogger().get_logger()
 
 class NoServerAvailable(Exception):
     """Raised if all servers are currently marked dead."""

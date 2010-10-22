@@ -21,12 +21,12 @@ import weakref, time, threading, random
 
 import connection
 import queue as pool_queue
-import threading
+from logging.pool_logger import PoolLogger
 from util import as_interface
-from logger import PycassaLogger
 from cassandra.ttypes import TimedOutException, UnavailableException
-
 from thrift import Thrift
+
+import threading
 
 __all__ = ['Pool', 'QueuePool', 'SingletonThreadPool', 'StaticPool',
            'NullPool', 'AssertionPool', 'PoolListener', 'ConnectionWrapper',
@@ -102,7 +102,7 @@ class Pool(object):
         self._on_pool_dispose = []
         self._on_pool_max = []
 
-        self.add_listener(PycassaLogger())
+        self.add_listener(PoolLogger())
 
         for l in listeners:
             self.add_listener(l)
