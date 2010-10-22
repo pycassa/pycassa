@@ -18,6 +18,14 @@ import struct
 
 from batch import CfMutator
 
+if hasattr(struct, 'Struct'): # new in Python 2.5
+   _have_struct = True
+   _long_packer = struct.Struct('>q')
+   _int_packer = struct.Struct('>i')
+   _uuid_packer = struct.Struct('>16s')
+else:
+    _have_struct = False
+
 __all__ = ['gm_timestamp', 'ColumnFamily']
 
 _TYPES = ['BytesType', 'LongType', 'IntegerType', 'UTF8Type', 'AsciiType',
@@ -150,7 +158,6 @@ class ColumnFamily(object):
                 for name, cdef in col_fam.column_metadata.items():
                     self.col_type_dict[name] = self._extract_type_name(cdef.validation_class)
 
-
     def _extract_type_name(self, string):
 
         if string is None: return 'BytesType'
@@ -274,9 +281,15 @@ class ColumnFamily(object):
         Packs a value into the expected sequence of bytes that Cassandra expects.
         """
         if data_type == 'LongType':
-            return struct.pack('>q', long(value))  # q is 'long long'
+            if _have_struct:
+                return _long_packer.pack(long(value))
+            else:
+                return struct.pack('>q', long(value))  # q is 'long long'
         elif data_type == 'IntegerType':
-            return struct.pack('>i', int(value))
+            if _have_struct:
+                return _int_packer.pack(int(value))
+            else:
+                return struct.pack('>i', int(value))
         elif data_type == 'AsciiType':
             return struct.pack(">%ds" % len(value), value)
         elif data_type == 'UTF8Type':
@@ -289,7 +302,10 @@ class ColumnFamily(object):
         elif data_type == 'TimeUUIDType' or data_type == 'LexicalUUIDType':
             if not hasattr(value, 'bytes'):
                 raise TypeError("%s not valid for %s" % (value, data_type))
-            return struct.pack('>16s', value.bytes)
+            if _have_struct:
+                return _uuid_packer.pack(value.bytes)
+            else:
+                return struct.pack('>16s', value.bytes)
         else:
             return value
 
@@ -300,16 +316,25 @@ class ColumnFamily(object):
         """
 
         if data_type == 'LongType':
-            return struct.unpack('>q', b)[0]
+            if _have_struct:
+                return _long_packer.unpack(b)[0]
+            else:
+                return struct.unpack('>q', b)[0]
         elif data_type == 'IntegerType':
-            return struct.unpack('>i', b)[0]
+            if _have_struct:
+                return _int_packer.unpack(b)[0]
+            else:
+                return struct.unpack('>i', b)[0]
         elif data_type == 'AsciiType':
             return struct.unpack('>%ds' % len(b), b)[0]
         elif data_type == 'UTF8Type':
             unic = struct.unpack('>%ds' % len(b), b)[0]
             return unic.decode('utf-8')
         elif data_type == 'LexicalUUIDType' or data_type == 'TimeUUIDType':
-            temp_bytes = struct.unpack('>16s', b)[0]
+            if _have_struct:
+                temp_bytes = _uuid_packer.unpack(b)[0]
+            else:
+                temp_bytes = struct.unpack('>16s', b)[0]
             return uuid.UUID(bytes=temp_bytes)
         else: # BytesType
             return b
