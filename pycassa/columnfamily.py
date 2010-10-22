@@ -421,11 +421,9 @@ class ColumnFamily(object):
                                    column_reversed, column_count)
 
         # Pack the values in the index clause expressions
-        new_exprs = []
         for expr in index_clause.expressions:
-            new_exprs.append(IndexExpression(self._pack_name(expr.column_name), expr.op, \
-                            self._pack_value(expr.value, expr.column_name)))
-        index_clause.expressions = new_exprs
+            expr.column_name = self._pack_name(expr.column_name)
+            expr.value = self._pack_value(expr.value, expr.column_name)
 
         keyslice_list = self.client.get_indexed_slices(cp, index_clause, sp,
                                                   self._rcl(read_consistency_level))
