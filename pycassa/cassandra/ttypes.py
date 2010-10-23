@@ -7,7 +7,7 @@
 from thrift.Thrift import *
 
 from thrift.transport import TTransport
-from thrift.protocol import TBinaryProtocol
+from thrift.protocol import TBinaryProtocol, TProtocol
 try:
   from thrift.protocol import fastbinary
 except:
@@ -23,7 +23,7 @@ class ConsistencyLevel:
   recent write. Of these, the most interesting is to do QUORUM reads and writes, which gives you consistency while still
   allowing availability in the face of node failures up to half of <ReplicationFactor>. Of course if latency is more
   important than consistency then you can use lower values for either or both.
-  
+
   Write consistency levels make the following guarantees before reporting success to the client:
     ANY          Ensure that the write has been written once somewhere, including possibly being hinted in a non-target node.
     ONE          Ensure that the write has been written to at least 1 node's commit log and memory table
@@ -31,7 +31,7 @@ class ConsistencyLevel:
     DCQUORUM     Ensure that the write has been written to <ReplicationFactor> / 2 + 1 nodes, within the local datacenter (requires NetworkTopologyStrategy)
     DCQUORUMSYNC Ensure that the write has been written to <ReplicationFactor> / 2 + 1 nodes in each datacenter (requires NetworkTopologyStrategy)
     ALL          Ensure that the write is written to <code>&lt;ReplicationFactor&gt;</code> nodes before responding to the client.
-  
+
   Read:
     ANY          Not supported. You probably want ONE instead.
     ONE          Will return the record returned by the first node to respond. A consistency check is always done in a background thread to fix any consistency issues when ConsistencyLevel.ONE is used. This means subsequent calls will have correct data even if the initial read gets an older value. (This is called 'read repair'.)
@@ -99,6 +99,7 @@ class IndexType:
     "KEYS": 0,
   }
 
+
 class Column:
   """
   Basic unit of data within a ColumnFamily.
@@ -106,7 +107,7 @@ class Column:
   @param value. The data associated with the name.  Maximum 2GB long, but in practice you should limit it to small numbers of MB (since Thrift must read the full value into memory to operate on it).
   @param timestamp. The timestamp is used for conflict detection/resolution when two columns with same name need to be compared.
   @param ttl. An optional, positive delay (in seconds) after which the column will be automatically deleted.
-  
+
   Attributes:
    - name
    - value
@@ -185,6 +186,15 @@ class Column:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.name is None:
+        raise TProtocol.TProtocolException(message='Required field name is unset!')
+      if self.value is None:
+        raise TProtocol.TProtocolException(message='Required field value is unset!')
+      if self.timestamp is None:
+        raise TProtocol.TProtocolException(message='Required field timestamp is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -203,7 +213,7 @@ class SuperColumn:
   @param name. see Column.name.
   @param columns. A collection of standard Columns.  The columns within a super column are defined in an adhoc manner.
                   Columns within a super column do not have to have matching structures (similarly named child columns).
-  
+
   Attributes:
    - name
    - columns
@@ -267,6 +277,13 @@ class SuperColumn:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.name is None:
+        raise TProtocol.TProtocolException(message='Required field name is unset!')
+      if self.columns is None:
+        raise TProtocol.TProtocolException(message='Required field columns is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -286,10 +303,10 @@ class ColumnOrSuperColumn:
   instances of ColumnOrSuperColumn will have the requested SuperColumn in the attribute super_column. For queries resulting
   in Columns, those values will be in the attribute column. This change was made between 0.3 and 0.4 to standardize on
   single query methods that may return either a SuperColumn or Column.
-  
+
   @param column. The Column returned by get() or get_slice().
   @param super_column. The SuperColumn returned by get() or get_slice().
-  
+
   Attributes:
    - column
    - super_column
@@ -346,6 +363,9 @@ class ColumnOrSuperColumn:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -387,6 +407,9 @@ class NotFoundException(Exception):
     oprot.writeStructBegin('NotFoundException')
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __str__(self):
     return repr(self)
@@ -406,7 +429,7 @@ class InvalidRequestException(Exception):
   """
   Invalid request could mean keyspace or column family does not exist, required parameters are missing, or a parameter is malformed.
   why contains an associated error message.
-  
+
   Attributes:
    - why
   """
@@ -449,6 +472,11 @@ class InvalidRequestException(Exception):
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.why is None:
+        raise TProtocol.TProtocolException(message='Required field why is unset!')
+      return
+
 
   def __str__(self):
     return repr(self)
@@ -493,6 +521,9 @@ class UnavailableException(Exception):
     oprot.writeStructBegin('UnavailableException')
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __str__(self):
     return repr(self)
@@ -537,6 +568,9 @@ class TimedOutException(Exception):
     oprot.writeStructBegin('TimedOutException')
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __str__(self):
     return repr(self)
@@ -555,7 +589,7 @@ class TimedOutException(Exception):
 class AuthenticationException(Exception):
   """
   invalid authentication request (invalid keyspace, user does not exist, or credentials invalid)
-  
+
   Attributes:
    - why
   """
@@ -598,6 +632,11 @@ class AuthenticationException(Exception):
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.why is None:
+        raise TProtocol.TProtocolException(message='Required field why is unset!')
+      return
+
 
   def __str__(self):
     return repr(self)
@@ -616,7 +655,7 @@ class AuthenticationException(Exception):
 class AuthorizationException(Exception):
   """
   invalid authorization request (user does not have access to keyspace)
-  
+
   Attributes:
    - why
   """
@@ -659,6 +698,11 @@ class AuthorizationException(Exception):
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.why is None:
+        raise TProtocol.TProtocolException(message='Required field why is unset!')
+      return
+
 
   def __str__(self):
     return repr(self)
@@ -678,9 +722,9 @@ class ColumnParent:
   """
   ColumnParent is used when selecting groups of columns from the same ColumnFamily. In directory structure terms, imagine
   ColumnParent as ColumnPath + '/../'.
-  
+
   See also <a href="cassandra.html#Struct_ColumnPath">ColumnPath</a>
-  
+
   Attributes:
    - column_family
    - super_column
@@ -737,6 +781,11 @@ class ColumnParent:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.column_family is None:
+        raise TProtocol.TProtocolException(message='Required field column_family is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -753,13 +802,13 @@ class ColumnPath:
   """
   The ColumnPath is the path to a single column in Cassandra. It might make sense to think of ColumnPath and
   ColumnParent in terms of a directory structure.
-  
+
   ColumnPath is used to looking up a single column.
-  
+
   @param column_family. The name of the CF of the column being looked up.
   @param super_column. The super column name.
   @param column. The column name.
-  
+
   Attributes:
    - column_family
    - super_column
@@ -828,6 +877,11 @@ class ColumnPath:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.column_family is None:
+        raise TProtocol.TProtocolException(message='Required field column_family is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -844,7 +898,7 @@ class SliceRange:
   """
   A slice range is a structure that stores basic range, ordering and limit information for a query that will return
   multiple columns. It could be thought of as Cassandra's version of LIMIT and ORDER BY
-  
+
   @param start. The column name to start the slice with. This attribute is not required, though there is no default value,
                 and can be safely set to '', i.e., an empty byte array, to start with the first column name. Otherwise, it
                 must a valid value under the rules of the Comparator defined for the given ColumnFamily.
@@ -856,7 +910,7 @@ class SliceRange:
                 materialize the whole result into memory before returning it to the client, so be aware that you may
                 be better served by iterating through slices by passing the last value of one call in as the 'start'
                 of the next instead of increasing 'count' arbitrarily large.
-  
+
   Attributes:
    - start
    - finish
@@ -935,6 +989,17 @@ class SliceRange:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.start is None:
+        raise TProtocol.TProtocolException(message='Required field start is unset!')
+      if self.finish is None:
+        raise TProtocol.TProtocolException(message='Required field finish is unset!')
+      if self.reversed is None:
+        raise TProtocol.TProtocolException(message='Required field reversed is unset!')
+      if self.count is None:
+        raise TProtocol.TProtocolException(message='Required field count is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -951,15 +1016,15 @@ class SlicePredicate:
   """
   A SlicePredicate is similar to a mathematic predicate (see http://en.wikipedia.org/wiki/Predicate_(mathematical_logic)),
   which is described as "a property that the elements of a set have in common."
-  
+
   SlicePredicate's in Cassandra are described with either a list of column_names or a SliceRange.  If column_names is
   specified, slice_range is ignored.
-  
+
   @param column_name. A list of column names to retrieve. This can be used similar to Memcached's "multi-get" feature
                       to fetch N known column names. For instance, if you know you wish to fetch columns 'Joe', 'Jack',
                       and 'Jim' you can pass those column names as a list to fetch all three at once.
   @param slice_range. A SliceRange describing how to range, order, and/or limit the slice.
-  
+
   Attributes:
    - column_names
    - slice_range
@@ -1023,6 +1088,9 @@ class SlicePredicate:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -1103,6 +1171,15 @@ class IndexExpression:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.column_name is None:
+        raise TProtocol.TProtocolException(message='Required field column_name is unset!')
+      if self.op is None:
+        raise TProtocol.TProtocolException(message='Required field op is unset!')
+      if self.value is None:
+        raise TProtocol.TProtocolException(message='Required field value is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -1192,6 +1269,15 @@ class IndexClause:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.expressions is None:
+        raise TProtocol.TProtocolException(message='Required field expressions is unset!')
+      if self.start_key is None:
+        raise TProtocol.TProtocolException(message='Required field start_key is unset!')
+      if self.count is None:
+        raise TProtocol.TProtocolException(message='Required field count is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -1212,7 +1298,7 @@ class KeyRange:
   than the start one.  Thus, a range from keyX to keyX is a
   one-element range, but a range from tokenY to tokenY is the
   full ring.
-  
+
   Attributes:
    - start_key
    - end_key
@@ -1303,6 +1389,11 @@ class KeyRange:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.count is None:
+        raise TProtocol.TProtocolException(message='Required field count is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -1318,11 +1409,11 @@ class KeyRange:
 class KeySlice:
   """
   A KeySlice is key followed by the data it maps to. A collection of KeySlice is returned by the get_range_slice operation.
-  
+
   @param key. a row key
   @param columns. List of data represented by the key. Typically, the list is pared down to only the columns specified by
                   a SlicePredicate.
-  
+
   Attributes:
    - key
    - columns
@@ -1386,6 +1477,13 @@ class KeySlice:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.key is None:
+        raise TProtocol.TProtocolException(message='Required field key is unset!')
+      if self.columns is None:
+        raise TProtocol.TProtocolException(message='Required field columns is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -1454,6 +1552,13 @@ class KeyCount:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.key is None:
+        raise TProtocol.TProtocolException(message='Required field key is unset!')
+      if self.count is None:
+        raise TProtocol.TProtocolException(message='Required field count is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -1535,6 +1640,11 @@ class Deletion:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.timestamp is None:
+        raise TProtocol.TProtocolException(message='Required field timestamp is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -1552,7 +1662,7 @@ class Mutation:
   A Mutation is either an insert, represented by filling column_or_supercolumn, or a deletion, represented by filling the deletion attribute.
   @param column_or_supercolumn. An insert to a column or supercolumn
   @param deletion. A deletion of a column or supercolumn
-  
+
   Attributes:
    - column_or_supercolumn
    - deletion
@@ -1609,6 +1719,9 @@ class Mutation:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -1697,6 +1810,15 @@ class TokenRange:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.start_token is None:
+        raise TProtocol.TProtocolException(message='Required field start_token is unset!')
+      if self.end_token is None:
+        raise TProtocol.TProtocolException(message='Required field end_token is unset!')
+      if self.endpoints is None:
+        raise TProtocol.TProtocolException(message='Required field endpoints is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -1712,7 +1834,7 @@ class TokenRange:
 class AuthenticationRequest:
   """
   Authentication requests can contain any data, dependent on the IAuthenticator used
-  
+
   Attributes:
    - credentials
   """
@@ -1765,6 +1887,11 @@ class AuthenticationRequest:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.credentials is None:
+        raise TProtocol.TProtocolException(message='Required field credentials is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -1857,6 +1984,13 @@ class ColumnDef:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.name is None:
+        raise TProtocol.TProtocolException(message='Required field name is unset!')
+      if self.validation_class is None:
+        raise TProtocol.TProtocolException(message='Required field validation_class is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -1879,7 +2013,6 @@ class CfDef:
    - subcomparator_type
    - comment
    - row_cache_size
-   - preload_row_cache
    - key_cache_size
    - read_repair_chance
    - column_metadata
@@ -1890,6 +2023,9 @@ class CfDef:
    - max_compaction_threshold
    - row_cache_save_period_in_seconds
    - key_cache_save_period_in_seconds
+   - memtable_flush_after_mins
+   - memtable_throughput_in_mb
+   - memtable_operations_in_millions
   """
 
   thrift_spec = (
@@ -1903,7 +2039,7 @@ class CfDef:
     None, # 7
     (8, TType.STRING, 'comment', None, None, ), # 8
     (9, TType.DOUBLE, 'row_cache_size', None, 0, ), # 9
-    (10, TType.BOOL, 'preload_row_cache', None, False, ), # 10
+    None, # 10
     (11, TType.DOUBLE, 'key_cache_size', None, 200000, ), # 11
     (12, TType.DOUBLE, 'read_repair_chance', None, 1, ), # 12
     (13, TType.LIST, 'column_metadata', (TType.STRUCT,(ColumnDef, ColumnDef.thrift_spec)), None, ), # 13
@@ -1914,9 +2050,12 @@ class CfDef:
     (18, TType.I32, 'max_compaction_threshold', None, None, ), # 18
     (19, TType.I32, 'row_cache_save_period_in_seconds', None, None, ), # 19
     (20, TType.I32, 'key_cache_save_period_in_seconds', None, None, ), # 20
+    (21, TType.I32, 'memtable_flush_after_mins', None, None, ), # 21
+    (22, TType.I32, 'memtable_throughput_in_mb', None, None, ), # 22
+    (23, TType.DOUBLE, 'memtable_operations_in_millions', None, None, ), # 23
   )
 
-  def __init__(self, keyspace=None, name=None, column_type=thrift_spec[3][4], comparator_type=thrift_spec[5][4], subcomparator_type=None, comment=None, row_cache_size=thrift_spec[9][4], preload_row_cache=thrift_spec[10][4], key_cache_size=thrift_spec[11][4], read_repair_chance=thrift_spec[12][4], column_metadata=None, gc_grace_seconds=None, default_validation_class=None, id=None, min_compaction_threshold=None, max_compaction_threshold=None, row_cache_save_period_in_seconds=None, key_cache_save_period_in_seconds=None,):
+  def __init__(self, keyspace=None, name=None, column_type=thrift_spec[3][4], comparator_type=thrift_spec[5][4], subcomparator_type=None, comment=None, row_cache_size=thrift_spec[9][4], key_cache_size=thrift_spec[11][4], read_repair_chance=thrift_spec[12][4], column_metadata=None, gc_grace_seconds=None, default_validation_class=None, id=None, min_compaction_threshold=None, max_compaction_threshold=None, row_cache_save_period_in_seconds=None, key_cache_save_period_in_seconds=None, memtable_flush_after_mins=None, memtable_throughput_in_mb=None, memtable_operations_in_millions=None,):
     self.keyspace = keyspace
     self.name = name
     self.column_type = column_type
@@ -1924,7 +2063,6 @@ class CfDef:
     self.subcomparator_type = subcomparator_type
     self.comment = comment
     self.row_cache_size = row_cache_size
-    self.preload_row_cache = preload_row_cache
     self.key_cache_size = key_cache_size
     self.read_repair_chance = read_repair_chance
     self.column_metadata = column_metadata
@@ -1935,6 +2073,9 @@ class CfDef:
     self.max_compaction_threshold = max_compaction_threshold
     self.row_cache_save_period_in_seconds = row_cache_save_period_in_seconds
     self.key_cache_save_period_in_seconds = key_cache_save_period_in_seconds
+    self.memtable_flush_after_mins = memtable_flush_after_mins
+    self.memtable_throughput_in_mb = memtable_throughput_in_mb
+    self.memtable_operations_in_millions = memtable_operations_in_millions
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -1978,11 +2119,6 @@ class CfDef:
       elif fid == 9:
         if ftype == TType.DOUBLE:
           self.row_cache_size = iprot.readDouble();
-        else:
-          iprot.skip(ftype)
-      elif fid == 10:
-        if ftype == TType.BOOL:
-          self.preload_row_cache = iprot.readBool();
         else:
           iprot.skip(ftype)
       elif fid == 11:
@@ -2041,6 +2177,21 @@ class CfDef:
           self.key_cache_save_period_in_seconds = iprot.readI32();
         else:
           iprot.skip(ftype)
+      elif fid == 21:
+        if ftype == TType.I32:
+          self.memtable_flush_after_mins = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 22:
+        if ftype == TType.I32:
+          self.memtable_throughput_in_mb = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 23:
+        if ftype == TType.DOUBLE:
+          self.memtable_operations_in_millions = iprot.readDouble();
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -2078,10 +2229,6 @@ class CfDef:
     if self.row_cache_size != None:
       oprot.writeFieldBegin('row_cache_size', TType.DOUBLE, 9)
       oprot.writeDouble(self.row_cache_size)
-      oprot.writeFieldEnd()
-    if self.preload_row_cache != None:
-      oprot.writeFieldBegin('preload_row_cache', TType.BOOL, 10)
-      oprot.writeBool(self.preload_row_cache)
       oprot.writeFieldEnd()
     if self.key_cache_size != None:
       oprot.writeFieldBegin('key_cache_size', TType.DOUBLE, 11)
@@ -2126,8 +2273,27 @@ class CfDef:
       oprot.writeFieldBegin('key_cache_save_period_in_seconds', TType.I32, 20)
       oprot.writeI32(self.key_cache_save_period_in_seconds)
       oprot.writeFieldEnd()
+    if self.memtable_flush_after_mins != None:
+      oprot.writeFieldBegin('memtable_flush_after_mins', TType.I32, 21)
+      oprot.writeI32(self.memtable_flush_after_mins)
+      oprot.writeFieldEnd()
+    if self.memtable_throughput_in_mb != None:
+      oprot.writeFieldBegin('memtable_throughput_in_mb', TType.I32, 22)
+      oprot.writeI32(self.memtable_throughput_in_mb)
+      oprot.writeFieldEnd()
+    if self.memtable_operations_in_millions != None:
+      oprot.writeFieldBegin('memtable_operations_in_millions', TType.DOUBLE, 23)
+      oprot.writeDouble(self.memtable_operations_in_millions)
+      oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.keyspace is None:
+        raise TProtocol.TProtocolException(message='Required field keyspace is unset!')
+      if self.name is None:
+        raise TProtocol.TProtocolException(message='Required field name is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -2251,6 +2417,17 @@ class KsDef:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.name is None:
+        raise TProtocol.TProtocolException(message='Required field name is unset!')
+      if self.strategy_class is None:
+        raise TProtocol.TProtocolException(message='Required field strategy_class is unset!')
+      if self.replication_factor is None:
+        raise TProtocol.TProtocolException(message='Required field replication_factor is unset!')
+      if self.cf_defs is None:
+        raise TProtocol.TProtocolException(message='Required field cf_defs is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -2262,4 +2439,3 @@ class KsDef:
 
   def __ne__(self, other):
     return not (self == other)
-

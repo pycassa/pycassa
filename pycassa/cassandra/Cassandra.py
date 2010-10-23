@@ -8,7 +8,7 @@ from thrift.Thrift import *
 from ttypes import *
 from thrift.Thrift import TProcessor
 from thrift.transport import TTransport
-from thrift.protocol import TBinaryProtocol
+from thrift.protocol import TBinaryProtocol, TProtocol
 try:
   from thrift.protocol import fastbinary
 except:
@@ -34,7 +34,7 @@ class Iface:
     """
     Get the Column or SuperColumn at the given column_path. If no value is present, NotFoundException is thrown. (This is
     the only method that can throw an exception under non-failure conditions.)
-    
+
     Parameters:
      - key
      - column_path
@@ -46,7 +46,7 @@ class Iface:
     """
     Get the group of columns contained by column_parent (either a ColumnFamily name or a ColumnFamily/SuperColumn name
     pair) specified by the given SlicePredicate. If no matching values are found, an empty list is returned.
-    
+
     Parameters:
      - key
      - column_parent
@@ -59,7 +59,7 @@ class Iface:
     """
     returns the number of columns matching <code>predicate</code> for a particular <code>key</code>,
     <code>ColumnFamily</code> and optionally <code>SuperColumn</code>.
-    
+
     Parameters:
      - key
      - column_parent
@@ -71,7 +71,7 @@ class Iface:
   def multiget_slice(self, keys, column_parent, predicate, consistency_level):
     """
     Performs a get_slice for column_parent and predicate for the given keys in parallel.
-    
+
     Parameters:
      - keys
      - column_parent
@@ -83,7 +83,7 @@ class Iface:
   def multiget_count(self, keys, column_parent, predicate, consistency_level):
     """
     Perform a get_count in parallel on the given list<binary> keys. The return value maps keys to the count found.
-    
+
     Parameters:
      - keys
      - column_parent
@@ -95,7 +95,7 @@ class Iface:
   def get_range_slices(self, column_parent, predicate, range, consistency_level):
     """
     returns a subset of columns for a contiguous range of keys.
-    
+
     Parameters:
      - column_parent
      - predicate
@@ -107,7 +107,7 @@ class Iface:
   def get_indexed_slices(self, column_parent, index_clause, column_predicate, consistency_level):
     """
     Returns the subset of columns specified in SlicePredicate for the rows matching the IndexClause
-    
+
     Parameters:
      - column_parent
      - index_clause
@@ -119,7 +119,7 @@ class Iface:
   def insert(self, key, column_parent, column, consistency_level):
     """
     Insert a Column at the given column_parent.column_family and optional column_parent.super_column.
-    
+
     Parameters:
      - key
      - column_parent
@@ -133,7 +133,7 @@ class Iface:
     Remove data from the row specified by key at the granularity specified by column_path, and the given timestamp. Note
     that all the values in column_path besides column_path.column_family are truly optional: you can remove the entire
     row by just specifying the ColumnFamily, or you can remove a SuperColumn or a single Column by specifying those levels too.
-    
+
     Parameters:
      - key
      - column_path
@@ -145,10 +145,10 @@ class Iface:
   def batch_mutate(self, mutation_map, consistency_level):
     """
       Mutate many columns or super columns for many row keys. See also: Mutation.
-    
+
       mutation_map maps key to column family to a list of Mutation objects to take place at that scope.
     *
-    
+
     Parameters:
      - mutation_map
      - consistency_level
@@ -163,7 +163,7 @@ class Iface:
     only marks the data as deleted.
     The operation succeeds only if all hosts in the cluster at available and will throw an UnavailableException if
     some hosts are down.
-    
+
     Parameters:
      - cfname
     """
@@ -202,10 +202,10 @@ class Iface:
     to list of endpoints, because you can't use Thrift structs as
     map keys:
     https://issues.apache.org/jira/browse/THRIFT-162
-    
+
     for the same reason, we can't return a set here, even though
     order is neither important nor predictable.
-    
+
     Parameters:
      - keyspace
     """
@@ -226,7 +226,7 @@ class Iface:
   def describe_keyspace(self, keyspace):
     """
     describe specified keyspace
-    
+
     Parameters:
      - keyspace
     """
@@ -236,10 +236,10 @@ class Iface:
     """
     experimental API for hadoop/parallel query support.
     may change violently and without warning.
-    
+
     returns list of token strings such that first subrange is (list[0], list[1]],
     next is (list[1], list[2]], etc.
-    
+
     Parameters:
      - cfName
      - start_token
@@ -251,7 +251,7 @@ class Iface:
   def system_add_column_family(self, cf_def):
     """
     adds a column family. returns the new schema id.
-    
+
     Parameters:
      - cf_def
     """
@@ -260,26 +260,16 @@ class Iface:
   def system_drop_column_family(self, column_family):
     """
     drops a column family. returns the new schema id.
-    
+
     Parameters:
      - column_family
-    """
-    pass
-
-  def system_rename_column_family(self, old_name, new_name):
-    """
-    renames a column family. returns the new schema id.
-    
-    Parameters:
-     - old_name
-     - new_name
     """
     pass
 
   def system_add_keyspace(self, ks_def):
     """
     adds a keyspace and any column families that are part of it. returns the new schema id.
-    
+
     Parameters:
      - ks_def
     """
@@ -288,26 +278,16 @@ class Iface:
   def system_drop_keyspace(self, keyspace):
     """
     drops a keyspace and any column families that are part of it. returns the new schema id.
-    
+
     Parameters:
      - keyspace
-    """
-    pass
-
-  def system_rename_keyspace(self, old_name, new_name):
-    """
-    renames a keyspace. returns the new schema id.
-    
-    Parameters:
-     - old_name
-     - new_name
     """
     pass
 
   def system_update_keyspace(self, ks_def):
     """
     updates properties of a keyspace. returns the new schema id.
-    
+
     Parameters:
      - ks_def
     """
@@ -316,7 +296,7 @@ class Iface:
   def system_update_column_family(self, cf_def):
     """
     updates properties of a column family. returns the new schema id.
-    
+
     Parameters:
      - cf_def
     """
@@ -396,7 +376,7 @@ class Client(Iface):
     """
     Get the Column or SuperColumn at the given column_path. If no value is present, NotFoundException is thrown. (This is
     the only method that can throw an exception under non-failure conditions.)
-    
+
     Parameters:
      - key
      - column_path
@@ -441,7 +421,7 @@ class Client(Iface):
     """
     Get the group of columns contained by column_parent (either a ColumnFamily name or a ColumnFamily/SuperColumn name
     pair) specified by the given SlicePredicate. If no matching values are found, an empty list is returned.
-    
+
     Parameters:
      - key
      - column_parent
@@ -486,7 +466,7 @@ class Client(Iface):
     """
     returns the number of columns matching <code>predicate</code> for a particular <code>key</code>,
     <code>ColumnFamily</code> and optionally <code>SuperColumn</code>.
-    
+
     Parameters:
      - key
      - column_parent
@@ -530,7 +510,7 @@ class Client(Iface):
   def multiget_slice(self, keys, column_parent, predicate, consistency_level):
     """
     Performs a get_slice for column_parent and predicate for the given keys in parallel.
-    
+
     Parameters:
      - keys
      - column_parent
@@ -574,7 +554,7 @@ class Client(Iface):
   def multiget_count(self, keys, column_parent, predicate, consistency_level):
     """
     Perform a get_count in parallel on the given list<binary> keys. The return value maps keys to the count found.
-    
+
     Parameters:
      - keys
      - column_parent
@@ -618,7 +598,7 @@ class Client(Iface):
   def get_range_slices(self, column_parent, predicate, range, consistency_level):
     """
     returns a subset of columns for a contiguous range of keys.
-    
+
     Parameters:
      - column_parent
      - predicate
@@ -662,7 +642,7 @@ class Client(Iface):
   def get_indexed_slices(self, column_parent, index_clause, column_predicate, consistency_level):
     """
     Returns the subset of columns specified in SlicePredicate for the rows matching the IndexClause
-    
+
     Parameters:
      - column_parent
      - index_clause
@@ -706,7 +686,7 @@ class Client(Iface):
   def insert(self, key, column_parent, column, consistency_level):
     """
     Insert a Column at the given column_parent.column_family and optional column_parent.super_column.
-    
+
     Parameters:
      - key
      - column_parent
@@ -750,7 +730,7 @@ class Client(Iface):
     Remove data from the row specified by key at the granularity specified by column_path, and the given timestamp. Note
     that all the values in column_path besides column_path.column_family are truly optional: you can remove the entire
     row by just specifying the ColumnFamily, or you can remove a SuperColumn or a single Column by specifying those levels too.
-    
+
     Parameters:
      - key
      - column_path
@@ -792,10 +772,10 @@ class Client(Iface):
   def batch_mutate(self, mutation_map, consistency_level):
     """
       Mutate many columns or super columns for many row keys. See also: Mutation.
-    
+
       mutation_map maps key to column family to a list of Mutation objects to take place at that scope.
     *
-    
+
     Parameters:
      - mutation_map
      - consistency_level
@@ -838,7 +818,7 @@ class Client(Iface):
     only marks the data as deleted.
     The operation succeeds only if all hosts in the cluster at available and will throw an UnavailableException if
     some hosts are down.
-    
+
     Parameters:
      - cfname
     """
@@ -994,10 +974,10 @@ class Client(Iface):
     to list of endpoints, because you can't use Thrift structs as
     map keys:
     https://issues.apache.org/jira/browse/THRIFT-162
-    
+
     for the same reason, we can't return a set here, even though
     order is neither important nor predictable.
-    
+
     Parameters:
      - keyspace
     """
@@ -1087,7 +1067,7 @@ class Client(Iface):
   def describe_keyspace(self, keyspace):
     """
     describe specified keyspace
-    
+
     Parameters:
      - keyspace
     """
@@ -1124,10 +1104,10 @@ class Client(Iface):
     """
     experimental API for hadoop/parallel query support.
     may change violently and without warning.
-    
+
     returns list of token strings such that first subrange is (list[0], list[1]],
     next is (list[1], list[2]], etc.
-    
+
     Parameters:
      - cfName
      - start_token
@@ -1165,7 +1145,7 @@ class Client(Iface):
   def system_add_column_family(self, cf_def):
     """
     adds a column family. returns the new schema id.
-    
+
     Parameters:
      - cf_def
     """
@@ -1199,7 +1179,7 @@ class Client(Iface):
   def system_drop_column_family(self, column_family):
     """
     drops a column family. returns the new schema id.
-    
+
     Parameters:
      - column_family
     """
@@ -1230,46 +1210,10 @@ class Client(Iface):
       raise result.ire
     raise TApplicationException(TApplicationException.MISSING_RESULT, "system_drop_column_family failed: unknown result");
 
-  def system_rename_column_family(self, old_name, new_name):
-    """
-    renames a column family. returns the new schema id.
-    
-    Parameters:
-     - old_name
-     - new_name
-    """
-    self.send_system_rename_column_family(old_name, new_name)
-    return self.recv_system_rename_column_family()
-
-  def send_system_rename_column_family(self, old_name, new_name):
-    self._oprot.writeMessageBegin('system_rename_column_family', TMessageType.CALL, self._seqid)
-    args = system_rename_column_family_args()
-    args.old_name = old_name
-    args.new_name = new_name
-    args.write(self._oprot)
-    self._oprot.writeMessageEnd()
-    self._oprot.trans.flush()
-
-  def recv_system_rename_column_family(self, ):
-    (fname, mtype, rseqid) = self._iprot.readMessageBegin()
-    if mtype == TMessageType.EXCEPTION:
-      x = TApplicationException()
-      x.read(self._iprot)
-      self._iprot.readMessageEnd()
-      raise x
-    result = system_rename_column_family_result()
-    result.read(self._iprot)
-    self._iprot.readMessageEnd()
-    if result.success != None:
-      return result.success
-    if result.ire != None:
-      raise result.ire
-    raise TApplicationException(TApplicationException.MISSING_RESULT, "system_rename_column_family failed: unknown result");
-
   def system_add_keyspace(self, ks_def):
     """
     adds a keyspace and any column families that are part of it. returns the new schema id.
-    
+
     Parameters:
      - ks_def
     """
@@ -1303,7 +1247,7 @@ class Client(Iface):
   def system_drop_keyspace(self, keyspace):
     """
     drops a keyspace and any column families that are part of it. returns the new schema id.
-    
+
     Parameters:
      - keyspace
     """
@@ -1334,46 +1278,10 @@ class Client(Iface):
       raise result.ire
     raise TApplicationException(TApplicationException.MISSING_RESULT, "system_drop_keyspace failed: unknown result");
 
-  def system_rename_keyspace(self, old_name, new_name):
-    """
-    renames a keyspace. returns the new schema id.
-    
-    Parameters:
-     - old_name
-     - new_name
-    """
-    self.send_system_rename_keyspace(old_name, new_name)
-    return self.recv_system_rename_keyspace()
-
-  def send_system_rename_keyspace(self, old_name, new_name):
-    self._oprot.writeMessageBegin('system_rename_keyspace', TMessageType.CALL, self._seqid)
-    args = system_rename_keyspace_args()
-    args.old_name = old_name
-    args.new_name = new_name
-    args.write(self._oprot)
-    self._oprot.writeMessageEnd()
-    self._oprot.trans.flush()
-
-  def recv_system_rename_keyspace(self, ):
-    (fname, mtype, rseqid) = self._iprot.readMessageBegin()
-    if mtype == TMessageType.EXCEPTION:
-      x = TApplicationException()
-      x.read(self._iprot)
-      self._iprot.readMessageEnd()
-      raise x
-    result = system_rename_keyspace_result()
-    result.read(self._iprot)
-    self._iprot.readMessageEnd()
-    if result.success != None:
-      return result.success
-    if result.ire != None:
-      raise result.ire
-    raise TApplicationException(TApplicationException.MISSING_RESULT, "system_rename_keyspace failed: unknown result");
-
   def system_update_keyspace(self, ks_def):
     """
     updates properties of a keyspace. returns the new schema id.
-    
+
     Parameters:
      - ks_def
     """
@@ -1407,7 +1315,7 @@ class Client(Iface):
   def system_update_column_family(self, cf_def):
     """
     updates properties of a column family. returns the new schema id.
-    
+
     Parameters:
      - cf_def
     """
@@ -1467,10 +1375,8 @@ class Processor(Iface, TProcessor):
     self._processMap["describe_splits"] = Processor.process_describe_splits
     self._processMap["system_add_column_family"] = Processor.process_system_add_column_family
     self._processMap["system_drop_column_family"] = Processor.process_system_drop_column_family
-    self._processMap["system_rename_column_family"] = Processor.process_system_rename_column_family
     self._processMap["system_add_keyspace"] = Processor.process_system_add_keyspace
     self._processMap["system_drop_keyspace"] = Processor.process_system_drop_keyspace
-    self._processMap["system_rename_keyspace"] = Processor.process_system_rename_keyspace
     self._processMap["system_update_keyspace"] = Processor.process_system_update_keyspace
     self._processMap["system_update_column_family"] = Processor.process_system_update_column_family
 
@@ -1858,20 +1764,6 @@ class Processor(Iface, TProcessor):
     oprot.writeMessageEnd()
     oprot.trans.flush()
 
-  def process_system_rename_column_family(self, seqid, iprot, oprot):
-    args = system_rename_column_family_args()
-    args.read(iprot)
-    iprot.readMessageEnd()
-    result = system_rename_column_family_result()
-    try:
-      result.success = self._handler.system_rename_column_family(args.old_name, args.new_name)
-    except InvalidRequestException, ire:
-      result.ire = ire
-    oprot.writeMessageBegin("system_rename_column_family", TMessageType.REPLY, seqid)
-    result.write(oprot)
-    oprot.writeMessageEnd()
-    oprot.trans.flush()
-
   def process_system_add_keyspace(self, seqid, iprot, oprot):
     args = system_add_keyspace_args()
     args.read(iprot)
@@ -1896,20 +1788,6 @@ class Processor(Iface, TProcessor):
     except InvalidRequestException, ire:
       result.ire = ire
     oprot.writeMessageBegin("system_drop_keyspace", TMessageType.REPLY, seqid)
-    result.write(oprot)
-    oprot.writeMessageEnd()
-    oprot.trans.flush()
-
-  def process_system_rename_keyspace(self, seqid, iprot, oprot):
-    args = system_rename_keyspace_args()
-    args.read(iprot)
-    iprot.readMessageEnd()
-    result = system_rename_keyspace_result()
-    try:
-      result.success = self._handler.system_rename_keyspace(args.old_name, args.new_name)
-    except InvalidRequestException, ire:
-      result.ire = ire
-    oprot.writeMessageBegin("system_rename_keyspace", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
     oprot.trans.flush()
@@ -1990,6 +1868,11 @@ class login_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.auth_request is None:
+        raise TProtocol.TProtocolException(message='Required field auth_request is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -2060,6 +1943,9 @@ class login_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -2116,6 +2002,11 @@ class set_keyspace_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.keyspace is None:
+        raise TProtocol.TProtocolException(message='Required field keyspace is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -2173,6 +2064,9 @@ class set_keyspace_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -2254,6 +2148,15 @@ class get_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.key is None:
+        raise TProtocol.TProtocolException(message='Required field key is unset!')
+      if self.column_path is None:
+        raise TProtocol.TProtocolException(message='Required field column_path is unset!')
+      if self.consistency_level is None:
+        raise TProtocol.TProtocolException(message='Required field consistency_level is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -2362,6 +2265,9 @@ class get_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -2456,6 +2362,17 @@ class get_slice_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.key is None:
+        raise TProtocol.TProtocolException(message='Required field key is unset!')
+      if self.column_parent is None:
+        raise TProtocol.TProtocolException(message='Required field column_parent is unset!')
+      if self.predicate is None:
+        raise TProtocol.TProtocolException(message='Required field predicate is unset!')
+      if self.consistency_level is None:
+        raise TProtocol.TProtocolException(message='Required field consistency_level is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -2559,6 +2476,9 @@ class get_slice_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -2653,6 +2573,17 @@ class get_count_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.key is None:
+        raise TProtocol.TProtocolException(message='Required field key is unset!')
+      if self.column_parent is None:
+        raise TProtocol.TProtocolException(message='Required field column_parent is unset!')
+      if self.predicate is None:
+        raise TProtocol.TProtocolException(message='Required field predicate is unset!')
+      if self.consistency_level is None:
+        raise TProtocol.TProtocolException(message='Required field consistency_level is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -2747,6 +2678,9 @@ class get_count_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -2849,6 +2783,17 @@ class multiget_slice_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.keys is None:
+        raise TProtocol.TProtocolException(message='Required field keys is unset!')
+      if self.column_parent is None:
+        raise TProtocol.TProtocolException(message='Required field column_parent is unset!')
+      if self.predicate is None:
+        raise TProtocol.TProtocolException(message='Required field predicate is unset!')
+      if self.consistency_level is None:
+        raise TProtocol.TProtocolException(message='Required field consistency_level is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -2962,6 +2907,9 @@ class multiget_slice_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -3064,6 +3012,17 @@ class multiget_count_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.keys is None:
+        raise TProtocol.TProtocolException(message='Required field keys is unset!')
+      if self.column_parent is None:
+        raise TProtocol.TProtocolException(message='Required field column_parent is unset!')
+      if self.predicate is None:
+        raise TProtocol.TProtocolException(message='Required field predicate is unset!')
+      if self.consistency_level is None:
+        raise TProtocol.TProtocolException(message='Required field consistency_level is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -3168,6 +3127,9 @@ class multiget_count_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -3263,6 +3225,17 @@ class get_range_slices_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.column_parent is None:
+        raise TProtocol.TProtocolException(message='Required field column_parent is unset!')
+      if self.predicate is None:
+        raise TProtocol.TProtocolException(message='Required field predicate is unset!')
+      if self.range is None:
+        raise TProtocol.TProtocolException(message='Required field range is unset!')
+      if self.consistency_level is None:
+        raise TProtocol.TProtocolException(message='Required field consistency_level is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -3366,6 +3339,9 @@ class get_range_slices_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -3461,6 +3437,17 @@ class get_indexed_slices_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.column_parent is None:
+        raise TProtocol.TProtocolException(message='Required field column_parent is unset!')
+      if self.index_clause is None:
+        raise TProtocol.TProtocolException(message='Required field index_clause is unset!')
+      if self.column_predicate is None:
+        raise TProtocol.TProtocolException(message='Required field column_predicate is unset!')
+      if self.consistency_level is None:
+        raise TProtocol.TProtocolException(message='Required field consistency_level is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -3564,6 +3551,9 @@ class get_indexed_slices_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -3658,6 +3648,17 @@ class insert_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.key is None:
+        raise TProtocol.TProtocolException(message='Required field key is unset!')
+      if self.column_parent is None:
+        raise TProtocol.TProtocolException(message='Required field column_parent is unset!')
+      if self.column is None:
+        raise TProtocol.TProtocolException(message='Required field column is unset!')
+      if self.consistency_level is None:
+        raise TProtocol.TProtocolException(message='Required field consistency_level is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -3741,6 +3742,9 @@ class insert_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -3834,6 +3838,15 @@ class remove_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.key is None:
+        raise TProtocol.TProtocolException(message='Required field key is unset!')
+      if self.column_path is None:
+        raise TProtocol.TProtocolException(message='Required field column_path is unset!')
+      if self.timestamp is None:
+        raise TProtocol.TProtocolException(message='Required field timestamp is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -3917,6 +3930,9 @@ class remove_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -4014,6 +4030,13 @@ class batch_mutate_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.mutation_map is None:
+        raise TProtocol.TProtocolException(message='Required field mutation_map is unset!')
+      if self.consistency_level is None:
+        raise TProtocol.TProtocolException(message='Required field consistency_level is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -4097,6 +4120,9 @@ class batch_mutate_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -4153,6 +4179,11 @@ class truncate_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.cfname is None:
+        raise TProtocol.TProtocolException(message='Required field cfname is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -4223,6 +4254,9 @@ class truncate_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -4261,6 +4295,9 @@ class describe_schema_versions_args:
     oprot.writeStructBegin('describe_schema_versions_args')
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -4347,6 +4384,9 @@ class describe_schema_versions_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -4385,6 +4425,9 @@ class describe_keyspaces_args:
     oprot.writeStructBegin('describe_keyspaces_args')
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -4462,6 +4505,9 @@ class describe_keyspaces_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -4500,6 +4546,9 @@ class describe_cluster_name_args:
     oprot.writeStructBegin('describe_cluster_name_args')
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -4555,6 +4604,9 @@ class describe_cluster_name_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -4593,6 +4645,9 @@ class describe_version_args:
     oprot.writeStructBegin('describe_version_args')
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -4648,6 +4703,9 @@ class describe_version_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -4704,6 +4762,11 @@ class describe_ring_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.keyspace is None:
+        raise TProtocol.TProtocolException(message='Required field keyspace is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -4781,6 +4844,9 @@ class describe_ring_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -4819,6 +4885,9 @@ class describe_partitioner_args:
     oprot.writeStructBegin('describe_partitioner_args')
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -4874,6 +4943,9 @@ class describe_partitioner_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -4912,6 +4984,9 @@ class describe_snitch_args:
     oprot.writeStructBegin('describe_snitch_args')
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -4967,6 +5042,9 @@ class describe_snitch_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -5023,6 +5101,11 @@ class describe_keyspace_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.keyspace is None:
+        raise TProtocol.TProtocolException(message='Required field keyspace is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -5105,6 +5188,9 @@ class describe_keyspace_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -5197,6 +5283,17 @@ class describe_splits_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.cfName is None:
+        raise TProtocol.TProtocolException(message='Required field cfName is unset!')
+      if self.start_token is None:
+        raise TProtocol.TProtocolException(message='Required field start_token is unset!')
+      if self.end_token is None:
+        raise TProtocol.TProtocolException(message='Required field end_token is unset!')
+      if self.keys_per_split is None:
+        raise TProtocol.TProtocolException(message='Required field keys_per_split is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -5260,6 +5357,9 @@ class describe_splits_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -5317,6 +5417,11 @@ class system_add_column_family_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.cf_def is None:
+        raise TProtocol.TProtocolException(message='Required field cf_def is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -5385,6 +5490,9 @@ class system_add_column_family_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -5441,6 +5549,11 @@ class system_drop_column_family_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.column_family is None:
+        raise TProtocol.TProtocolException(message='Required field column_family is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -5509,142 +5622,9 @@ class system_drop_column_family_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class system_rename_column_family_args:
-  """
-  Attributes:
-   - old_name
-   - new_name
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.STRING, 'old_name', None, None, ), # 1
-    (2, TType.STRING, 'new_name', None, None, ), # 2
-  )
-
-  def __init__(self, old_name=None, new_name=None,):
-    self.old_name = old_name
-    self.new_name = new_name
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+    def validate(self):
       return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.STRING:
-          self.old_name = iprot.readString();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.STRING:
-          self.new_name = iprot.readString();
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
 
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('system_rename_column_family_args')
-    if self.old_name != None:
-      oprot.writeFieldBegin('old_name', TType.STRING, 1)
-      oprot.writeString(self.old_name)
-      oprot.writeFieldEnd()
-    if self.new_name != None:
-      oprot.writeFieldBegin('new_name', TType.STRING, 2)
-      oprot.writeString(self.new_name)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class system_rename_column_family_result:
-  """
-  Attributes:
-   - success
-   - ire
-  """
-
-  thrift_spec = (
-    (0, TType.STRING, 'success', None, None, ), # 0
-    (1, TType.STRUCT, 'ire', (InvalidRequestException, InvalidRequestException.thrift_spec), None, ), # 1
-  )
-
-  def __init__(self, success=None, ire=None,):
-    self.success = success
-    self.ire = ire
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 0:
-        if ftype == TType.STRING:
-          self.success = iprot.readString();
-        else:
-          iprot.skip(ftype)
-      elif fid == 1:
-        if ftype == TType.STRUCT:
-          self.ire = InvalidRequestException()
-          self.ire.read(iprot)
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('system_rename_column_family_result')
-    if self.success != None:
-      oprot.writeFieldBegin('success', TType.STRING, 0)
-      oprot.writeString(self.success)
-      oprot.writeFieldEnd()
-    if self.ire != None:
-      oprot.writeFieldBegin('ire', TType.STRUCT, 1)
-      self.ire.write(oprot)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -5702,6 +5682,11 @@ class system_add_keyspace_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.ks_def is None:
+        raise TProtocol.TProtocolException(message='Required field ks_def is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -5770,6 +5755,9 @@ class system_add_keyspace_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -5826,6 +5814,11 @@ class system_drop_keyspace_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.keyspace is None:
+        raise TProtocol.TProtocolException(message='Required field keyspace is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -5894,142 +5887,9 @@ class system_drop_keyspace_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class system_rename_keyspace_args:
-  """
-  Attributes:
-   - old_name
-   - new_name
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.STRING, 'old_name', None, None, ), # 1
-    (2, TType.STRING, 'new_name', None, None, ), # 2
-  )
-
-  def __init__(self, old_name=None, new_name=None,):
-    self.old_name = old_name
-    self.new_name = new_name
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+    def validate(self):
       return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.STRING:
-          self.old_name = iprot.readString();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.STRING:
-          self.new_name = iprot.readString();
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
 
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('system_rename_keyspace_args')
-    if self.old_name != None:
-      oprot.writeFieldBegin('old_name', TType.STRING, 1)
-      oprot.writeString(self.old_name)
-      oprot.writeFieldEnd()
-    if self.new_name != None:
-      oprot.writeFieldBegin('new_name', TType.STRING, 2)
-      oprot.writeString(self.new_name)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class system_rename_keyspace_result:
-  """
-  Attributes:
-   - success
-   - ire
-  """
-
-  thrift_spec = (
-    (0, TType.STRING, 'success', None, None, ), # 0
-    (1, TType.STRUCT, 'ire', (InvalidRequestException, InvalidRequestException.thrift_spec), None, ), # 1
-  )
-
-  def __init__(self, success=None, ire=None,):
-    self.success = success
-    self.ire = ire
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 0:
-        if ftype == TType.STRING:
-          self.success = iprot.readString();
-        else:
-          iprot.skip(ftype)
-      elif fid == 1:
-        if ftype == TType.STRUCT:
-          self.ire = InvalidRequestException()
-          self.ire.read(iprot)
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('system_rename_keyspace_result')
-    if self.success != None:
-      oprot.writeFieldBegin('success', TType.STRING, 0)
-      oprot.writeString(self.success)
-      oprot.writeFieldEnd()
-    if self.ire != None:
-      oprot.writeFieldBegin('ire', TType.STRUCT, 1)
-      self.ire.write(oprot)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -6087,6 +5947,11 @@ class system_update_keyspace_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.ks_def is None:
+        raise TProtocol.TProtocolException(message='Required field ks_def is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -6155,6 +6020,9 @@ class system_update_keyspace_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -6212,6 +6080,11 @@ class system_update_column_family_args:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      if self.cf_def is None:
+        raise TProtocol.TProtocolException(message='Required field cf_def is unset!')
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -6280,6 +6153,9 @@ class system_update_column_family_result:
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
+    def validate(self):
+      return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
@@ -6291,5 +6167,3 @@ class system_update_column_family_result:
 
   def __ne__(self, other):
     return not (self == other)
-
-
