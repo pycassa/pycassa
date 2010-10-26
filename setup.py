@@ -73,7 +73,7 @@ Please ask in the user forums for help.
 
 
 setup(
-      name = 'pycassa',
+      name = 'pycassa-0.7',
       version = __version__,
       author = 'Jonathan Hseu',
       author_email = 'vomjom AT vomjom.net',
@@ -83,12 +83,22 @@ setup(
       long_description = long_description,
       url = 'http://github.com/pycassa/pycassa',
       download_url = 'http://github.com/downloads/pycassa/pycassa/pycassa-0.5.1.tar.gz',
-      license = 'MIT',
       keywords = 'cassandra client db distributed thrift',
-      packages = ['pycassa', 'pycassa.cassandra'],
+      packages = ['pycassa', 'pycassa.cassandra', 'pycassa.logging'],
       py_modules = ['ez_setup'],
-      platforms = 'any',
-      install_requires = ['thrift-r959516'],
+      requires = ['thrift05'],
       scripts=['pycassaShell'],
-      cmdclass={"doc": doc}
+      cmdclass={"doc": doc},
+      classifiers=[
+          'Development Status :: 5 - Production/Stable',
+          'Intended Audience :: Developers',
+          'License :: OSI Approved :: MIT License',
+          'Natural Language :: English',
+          'Operating System :: OS Independent',
+          'Programming Language :: Python :: 2.4',
+          'Programming Language :: Python :: 2.5',
+          'Programming Language :: Python :: 2.6',
+          'Programming Language :: Python :: 2.7',
+          'Topic :: Software Development :: Libraries :: Python Modules'
+          ]
       )
