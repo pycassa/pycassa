@@ -164,13 +164,26 @@ You can also map existing classes using ColumnFamilyMap.
     ...     float_column        = pycassa.Float64(default=0.0)
     ...     datetime_str_column = pycassa.DateTimeString() # default=None
 
-The defaults will be filled in whenever you retrieve instances from the Cassandra server and the column doesn't exist. If, for example, you add columns in the future, you simply add the relevant column and the default will be there when you get old instances.
+The defaults will be filled in whenever you retrieve instances from the
+Cassandra server and the column doesn't exist. If, for example, you add columns
+in the future, you simply add the relevant column and the default will be there
+when you get old instances.
 
-IntString, FloatString, and DateTimeString all use string representations for storage. Float64 is stored as a double and is native-endian. Be aware of any endian issues if you use it on different architectures, or perhaps make your own column type.
+IntString, FloatString, and DateTimeString all use string representations for
+storage. Float64 is stored as a double and is native-endian. Be aware of any
+endian issues if you use it on different architectures, or perhaps make your
+own column type.
 
+When creating a ColumnFamily object for use with a ColumnFamilyMap, it's
+important to disable autopacking in the ColumnFamily by setting
+autopack_names=False and autopack_values=False in the constructor.
+
+    >>> cf = pycassa.ColumnFamily(connection, 'Standard1',
+    ...                           autopack_names=False, autopack_values=False)
     >>> Test.objects = pycassa.ColumnFamilyMap(Test, cf)
 
-All the functions are exactly the same, except that they return instances of the supplied class when possible.
+All the functions are exactly the same, except that they return instances of the
+supplied class when possible.
 
     >>> t = Test()
     >>> t.key = 'maptest'

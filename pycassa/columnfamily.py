@@ -106,9 +106,9 @@ class ColumnFamily(object):
           :class:`~pycassa.columnfamilymap.ColumnFamilyMap`.
 
         :param super: bool
-          *deprecated since 0.5.2*
+          *deprecated since 0.5.1*
           Whether this ColumnFamily has SuperColumns. This is detected
-          automatically since 0.5.2.
+          automatically since 0.5.1.
 
         """
 

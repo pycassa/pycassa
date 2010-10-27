@@ -25,14 +25,20 @@ class ColumnFamilyMap(object):
         """
         Construct a ObjectFamily
 
-        :Parameters:
-            `cls`: class
-                Instances of cls are generated on ``get*()`` requests
-            `column_family`: :class:`~pycassa.columnfamily.ColumnFamily`
-                The :class:`~pycassa.columnfamily.ColumnFamily` to tie with cls
-            `raw_columns`: boolean
-                Whether all columns should be fetched into the raw_columns field in
-                requests
+        :param cls: 
+           Instances of cls are generated on ``get*()`` requests
+        :type cls: class
+
+        :param column_family:
+           The :class:`~pycassa.columnfamily.ColumnFamily` to tie with cls.
+           This should almost always have `autopack_names` and
+           `autopack_values` set to ``False``.
+        :type column_family: :class:`~pycassa.columnfamily.ColumnFamily`
+
+        :param raw_columns:
+           Whether all columns should be fetched into the `raw_columns` field in
+           requests
+        :type raw_columns: boolean
         """
         self.cls = cls
         self.column_family = column_family
