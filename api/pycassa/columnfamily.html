@@ -77,7 +77,7 @@ manipulation of data inside Cassandra.</p>
 
 <dl class="class">
 <dt id="pycassa.columnfamily.ColumnFamily">
-<em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">ColumnFamily</tt><big>(</big><em>client</em>, <em>column_family</em>, <em>buffer_size=1024</em>, <em>read_consistency_level=1</em>, <em>write_consistency_level=1</em>, <em>timestamp=&lt;function gm_timestamp at 0x1920d70&gt;</em>, <em>super=False</em>, <em>dict_class=&lt;type 'dict'&gt;</em>, <em>autopack_names=True</em>, <em>autopack_values=True</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">ColumnFamily</tt><big>(</big><em>client</em>, <em>column_family</em>, <em>buffer_size=1024</em>, <em>read_consistency_level=1</em>, <em>write_consistency_level=1</em>, <em>timestamp=&lt;function gm_timestamp at 0x162e9b0&gt;</em>, <em>super=False</em>, <em>dict_class=&lt;type 'dict'&gt;</em>, <em>autopack_names=True</em>, <em>autopack_values=True</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructs an abstraction of a Cassandra column family or super column family.</p>
 <p>Operations on this, such as <cite>get</cite> or <cite>insert</cite> will get data from or
 insert data into the corresponding Cassandra column family.</p>
@@ -123,9 +123,9 @@ the validator_class for a given column.  This should probably
 be set to <tt class="xref docutils literal"><span class="pre">False</span></tt> when used with a
 <a class="reference internal" href="columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</li>
 <li><strong>super</strong> &#8211; bool
-<em>deprecated since 0.5.2</em>
+<em>deprecated since 0.5.1</em>
 Whether this ColumnFamily has SuperColumns. This is detected
-automatically since 0.5.2.</li>
+automatically since 0.5.1.</li>
 </ul>
 </td>
 </tr>
@@ -609,7 +609,6 @@ down.</p>
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright .
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.3.
     </div>
   </body>

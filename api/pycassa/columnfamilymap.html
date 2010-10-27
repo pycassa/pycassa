@@ -64,18 +64,15 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first last docutils">
-<dt><cite>cls</cite>: class</dt>
-<dd><p class="first last">Instances of cls are generated on <tt class="docutils literal"><span class="pre">get*()</span></tt> requests</p>
-</dd>
-<dt><cite>column_family</cite>: <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a></dt>
-<dd><p class="first last">The <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a> to tie with cls</p>
-</dd>
-<dt><cite>raw_columns</cite>: boolean</dt>
-<dd><p class="first last">Whether all columns should be fetched into the raw_columns field in
-requests</p>
-</dd>
-</dl>
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>cls</strong> (<em>class</em>) &#8211; class
+Instances of cls are generated on <tt class="docutils literal"><span class="pre">get*()</span></tt> requests</li>
+<li><strong>column_family</strong> (<a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>) &#8211; The <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a> to tie with cls.
+This should almost always have <cite>autopack_names</cite> and
+<cite>autopack_values</cite> set to <tt class="xref docutils literal"><span class="pre">False</span></tt>.</li>
+<li><strong>raw_columns</strong> (<em>boolean</em>) &#8211; Whether all columns should be fetched into the raw_columns field in
+requests</li>
+</ul>
 </td>
 </tr>
 </tbody>
@@ -376,10 +373,10 @@ any read operation</p>
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="columnfamily.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">columnfamily</span></tt> &#8211; Column Family</a></p>
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">columnfamily</span></tt> &#8211; Column Family</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="index.html"
-                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">index</span></tt> &#8211; Index Tools for Pycassa</a></p>
+                        title="next chapter"><tt class="docutils literal"><span class="pre">index</span></tt> &#8211; Index Tools for Pycassa</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../sources/api/pycassa/columnfamilymap.txt"
@@ -422,7 +419,6 @@ any read operation</p>
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright .
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.3.
     </div>
   </body>
