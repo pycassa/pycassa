@@ -394,7 +394,6 @@ keyspaces:
         - name: Super2
           column_type: Super
           compare_subcolumns_with: UTF8Type
-          preload_row_cache: true
           rows_cached: 10000
           keys_cached: 50
           comment: 'A column family with supercolumns, whose column and subcolumn names are UTF8 strings'
