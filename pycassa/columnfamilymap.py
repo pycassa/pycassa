@@ -287,6 +287,12 @@ class ColumnFamilyMap(object):
             `read_consistency_level`: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
                 Affects the guaranteed replication factor before returning from
                 any read operation
+            `buffer_size`: When calling `get_range()`, the
+              intermediate results need to be buffered if we are fetching many
+              rows, otherwise the Cassandra server will overallocate memory
+              and fail.  This is the size of that buffer in number of rows.
+              If left as ``None``, the :class:`~pycassa.cassandra.ColumnFamily`'s
+              default `buffer_size` will be used.
 
         :Returns:
             iterator over Class instance
