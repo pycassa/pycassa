@@ -451,14 +451,14 @@ class ColumnFamily(object):
         if buffer_size is None:
             buffer_size = self.buffer_size
         row_count = clause.count
-        if row_count is not None:
-            buffer_size = min(row_count, buffer_size)
-        clause.count = buffer_size
 
         count = 0
         i = 0
         last_key = clause.start_key
         while True:
+            if row_count is not None:
+                buffer_size = min(row_count - count + 1, buffer_size)
+            clause.count = buffer_size
             clause.start_key = last_key
             key_slices = self.client.get_indexed_slices(cp, clause, sp,
                                                         self._rcl(read_consistency_level))
@@ -661,9 +661,9 @@ class ColumnFamily(object):
 
         if buffer_size is None:
             buffer_size = self.buffer_size
-        if row_count is not None:
-            buffer_size = min(row_count, buffer_size)
         while True:
+            if row_count is not None:
+                buffer_size = min(row_count - count + 1, buffer_size)
             key_range = KeyRange(start_key=last_key, end_key=finish, count=buffer_size)
             key_slices = self.client.get_range_slices(cp, sp, key_range,
                                                      self._rcl(read_consistency_level))
