@@ -73,7 +73,7 @@ Please ask in the user forums for help.
 
 
 setup(
-      name = 'pycassa-0.7',
+      name = 'pycassa',
       version = __version__,
       author = 'Jonathan Hseu',
       author_email = 'vomjom AT vomjom.net',
