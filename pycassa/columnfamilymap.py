@@ -4,7 +4,7 @@ Provides a means for mapping an existing class to a column family.
 """
 
 from pycassa.types import Column
-from pycassa.cassandra.ttypes import IndexExpression
+from pycassa.cassandra.ttypes import IndexExpression, IndexClause
 
 __all__ = ['ColumnFamilyMap']
 
@@ -143,9 +143,15 @@ class ColumnFamilyMap(object):
             `read_consistency_level`: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
                 Affects the guaranteed replication factor before returning from
                 any read operation
+            `buffer_size`: When calling `get_indexed_slices()`, the
+              intermediate results need to be buffered if we are fetching many
+              rows, otherwise the Cassandra server will overallocate memory
+              and fail.  This is the size of that buffer in number of rows.
+              If left as ``None``, the :class:`~pycassa.cassandra.ColumnFamily`'s
+              default `buffer_size` will be used.
 
         :Returns:
-            Class instance
+           {key: Class instance}
 
         .. seealso:: :meth:`pycassa.index.create_index_clause()` and
                      :meth:`pycassa.index.create_index_expression()`.
@@ -162,12 +168,14 @@ class ColumnFamilyMap(object):
                 new_expr = IndexExpression(expr.column_name, expr.op, 
                         value=self.columns[expr.column_name].pack(instance.__dict__[expr.column_name]))
                 new_exprs.append(new_expr)
-            kwargs['index_clause'].expressions = new_exprs
+            old_clause = kwargs['index_clause']
+            new_clause = IndexClause(new_exprs, old_clause.start_key, old_clause.count)
+            kwargs['index_clause'] = new_clause
 
         keyslice_map = self.column_family.get_indexed_slices(*args, **kwargs)
 
         ret = self.dict_class()
-        for key, columns in keyslice_map.iteritems():
+        for key, columns in keyslice_map:
             if self.column_family.super:
                 if 'super_column' not in kwargs:
                     vals = self.dict_class()

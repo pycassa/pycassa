@@ -224,27 +224,60 @@ class TestColumnFamily:
 
         self.cf.truncate()
 
-    def test_insert_get_indexed_slices(self):
+    def insert_insert_get_indexed_slices(self):
         indexed_cf = ColumnFamily(self.client, 'Indexed1')
 
         columns = {'birthdate': 1L}
 
-        key = 'key1'
-        indexed_cf.insert(key, columns, write_consistency_level=ConsistencyLevel.ONE)
-
-        key = 'key2'
-        indexed_cf.insert(key, columns, write_consistency_level=ConsistencyLevel.ONE)
-
-        key = 'key3'
-        indexed_cf.insert(key, columns, write_consistency_level=ConsistencyLevel.ONE)
+        keys = []
+        for i in range(1,4):
+            indexed_cf.insert('key%d' % i, columns)
+            keys.append('key%d')
 
         expr = index.create_index_expression(column_name='birthdate', value=1L)
         clause = index.create_index_clause([expr])
-        result = indexed_cf.get_indexed_slices(clause)
-        assert len(result) == 3
-        assert result.get('key1') == columns
-        assert result.get('key2') == columns
-        assert result.get('key3') == columns
+
+        count = 0
+        for key,cols in indexed_cf.get_indexed_slices(clause):
+            assert cols == columns
+            assert key in keys
+            count += 1
+        assert_equal(count, 3)
+
+    def test_get_indexed_slices_batching(self):
+        indexed_cf = ColumnFamily(self.client, 'Indexed1')
+
+        columns = {'birthdate': 1L}
+
+        for i in range(200):
+            indexed_cf.insert('key%d' % i, columns)
+
+        expr = index.create_index_expression(column_name='birthdate', value=1L)
+        clause = index.create_index_clause([expr], count=10)
+
+        result = list(indexed_cf.get_indexed_slices(clause, buffer_size=2))
+        assert_equal(len(result), 10)
+        result = list(indexed_cf.get_indexed_slices(clause, buffer_size=10))
+        assert_equal(len(result), 10)
+        result = list(indexed_cf.get_indexed_slices(clause, buffer_size=77))
+        assert_equal(len(result), 10)
+        result = list(indexed_cf.get_indexed_slices(clause, buffer_size=200))
+        assert_equal(len(result), 10)
+        result = list(indexed_cf.get_indexed_slices(clause, buffer_size=1000))
+        assert_equal(len(result), 10)
+
+        clause = index.create_index_clause([expr], count=250)
+
+        result = list(indexed_cf.get_indexed_slices(clause, buffer_size=2))
+        assert_equal(len(result), 200)
+        result = list(indexed_cf.get_indexed_slices(clause, buffer_size=10))
+        assert_equal(len(result), 200)
+        result = list(indexed_cf.get_indexed_slices(clause, buffer_size=77))
+        assert_equal(len(result), 200)
+        result = list(indexed_cf.get_indexed_slices(clause, buffer_size=200))
+        assert_equal(len(result), 200)
+        result = list(indexed_cf.get_indexed_slices(clause, buffer_size=1000))
+        assert_equal(len(result), 200)
 
     def test_remove(self):
         key = 'TestColumnFamily.test_remove'

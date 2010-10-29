@@ -390,8 +390,9 @@ class ColumnFamily(object):
         return self._convert_ColumnOrSuperColumns_to_dict_class(list_col_or_super, include_timestamp)
 
     def get_indexed_slices(self, index_clause, columns=None, column_start="", column_finish="",
-                          column_reversed=False, column_count=100, include_timestamp=False,
-                          super_column=None, read_consistency_level=None):
+                           column_reversed=False, column_count=100, include_timestamp=False,
+                           super_column=None, read_consistency_level=None,
+                           buffer_size=None):
         """
         Fetches a set of rows from this column family based on an index clause.
 
@@ -420,27 +421,66 @@ class ColumnFamily(object):
             `read_consistency_level`: :class:`pycassa.cassandra.ttypes.ConsistencyLevel`
                 Affects the guaranteed replication factor before returning from
                 any read operation
+            `buffer_size`: When calling `get_indexed_slices()`, the intermediate results need to be
+              buffered if we are fetching many rows, otherwise the Cassandra
+              server will overallocate memory and fail.  This is the size of
+              that buffer in number of rows. If left as ``None``,
+              the :class:`~pycassa.cassandra.ColumnFamily`'s default
+              `buffer_size` will be used.
 
         :Returns:
-            if include_timestamp == True: {key : {column : (value, timestamp)}}
-            else: {key : {column : value}}
+            Generator that iterates over:
+                if include_timestamp == True: {key : {column : (value, timestamp)}}
+                else: {key : {column : value}}
         """
 
         cp = self._create_column_parent(super_column)
         sp = self._create_slice_predicate(columns, column_start, column_finish,
                                     column_reversed, column_count)
 
+        new_exprs = []
         # Pack the values in the index clause expressions
         for expr in index_clause.expressions:
-            expr.column_name = self._pack_name(expr.column_name)
-            expr.value = self._pack_value(expr.value, expr.column_name)
+            new_exprs.append(IndexExpression(self._pack_name(expr.column_name),
+                                             expr.op,
+                                             self._pack_value(expr.value, expr.column_name)))
 
-        keyslice_list = self.client.get_indexed_slices(cp, index_clause, sp,
-                                                  self._rcl(read_consistency_level))
+        clause = IndexClause(new_exprs, index_clause.start_key, index_clause.count)
 
-        if len(keyslice_list) == 0:
-            raise NotFoundException()
-        return self._convert_KeySlice_list_to_dict_class(keyslice_list, include_timestamp)
+        # Figure out how we will chunk the request
+        if buffer_size is None:
+            buffer_size = self.buffer_size
+        row_count = clause.count
+        if row_count is not None:
+            buffer_size = min(row_count, buffer_size)
+        clause.count = buffer_size
+
+        count = 0
+        i = 0
+        last_key = clause.start_key
+        while True:
+            clause.start_key = last_key
+            key_slices = self.client.get_indexed_slices(cp, clause, sp,
+                                                        self._rcl(read_consistency_level))
+
+            if key_slices is None:
+                return
+            for j, key_slice in enumerate(key_slices):
+                # Ignore the first element after the first iteration
+                # because it will be a duplicate.
+                if j == 0 and i != 0:
+                    continue
+                yield (key_slice.key, self._convert_ColumnOrSuperColumns_to_dict_class(
+                        key_slice.columns, include_timestamp))
+
+                count += 1
+                if row_count is not None and count >= row_count:
+                    return
+
+            if len(key_slices) != buffer_size:
+                return
+            last_key = key_slices[-1].key
+            i += 1
 
     def multiget(self, keys, columns=None, column_start="", column_finish="",
                  column_reversed=False, column_count=100, include_timestamp=False,
