@@ -65,12 +65,11 @@
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>cls</strong> (<em>class</em>) &#8211; class
-Instances of cls are generated on <tt class="docutils literal"><span class="pre">get*()</span></tt> requests</li>
+<li><strong>cls</strong> (<em>class</em>) &#8211; Instances of cls are generated on <tt class="docutils literal"><span class="pre">get*()</span></tt> requests</li>
 <li><strong>column_family</strong> (<a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>) &#8211; The <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a> to tie with cls.
 This should almost always have <cite>autopack_names</cite> and
 <cite>autopack_values</cite> set to <tt class="xref docutils literal"><span class="pre">False</span></tt>.</li>
-<li><strong>raw_columns</strong> (<em>boolean</em>) &#8211; Whether all columns should be fetched into the raw_columns field in
+<li><strong>raw_columns</strong> (<em>boolean</em>) &#8211; Whether all columns should be fetched into the <cite>raw_columns</cite> field in
 requests</li>
 </ul>
 </td>
@@ -191,10 +190,17 @@ nothing unless you passed a dict_class to the constructor.</p>
 <dd><p class="first last">Affects the guaranteed replication factor before returning from
 any read operation</p>
 </dd>
+<dt><cite>buffer_size</cite>: When calling <cite>get_indexed_slices()</cite>, the</dt>
+<dd><p class="first last">intermediate results need to be buffered if we are fetching many
+rows, otherwise the Cassandra server will overallocate memory
+and fail.  This is the size of that buffer in number of rows.
+If left as <tt class="xref docutils literal"><span class="pre">None</span></tt>, the <tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt>&#8216;s
+default <cite>buffer_size</cite> will be used.</p>
+</dd>
 </dl>
 </td>
 </tr>
-<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last">Class instance</p>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last">{key: Class instance}</p>
 </td>
 </tr>
 </tbody>
@@ -249,6 +255,13 @@ nothing unless you passed a dict_class to the constructor.</p>
 <dt><cite>read_consistency_level</cite>: <tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></dt>
 <dd><p class="first last">Affects the guaranteed replication factor before returning from
 any read operation</p>
+</dd>
+<dt><cite>buffer_size</cite>: When calling <cite>get_range()</cite>, the</dt>
+<dd><p class="first last">intermediate results need to be buffered if we are fetching many
+rows, otherwise the Cassandra server will overallocate memory
+and fail.  This is the size of that buffer in number of rows.
+If left as <tt class="xref docutils literal"><span class="pre">None</span></tt>, the <tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt>&#8216;s
+default <cite>buffer_size</cite> will be used.</p>
 </dd>
 </dl>
 </td>
@@ -373,10 +386,10 @@ any read operation</p>
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="columnfamily.html"
-                        title="previous chapter"><tt class="docutils literal"><span class="pre">columnfamily</span></tt> &#8211; Column Family</a></p>
+                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">columnfamily</span></tt> &#8211; Column Family</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="index.html"
-                        title="next chapter"><tt class="docutils literal"><span class="pre">index</span></tt> &#8211; Index Tools for Pycassa</a></p>
+                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">index</span></tt> &#8211; Index Tools for Pycassa</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../sources/api/pycassa/columnfamilymap.txt"
