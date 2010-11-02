@@ -1,5 +1,5 @@
-:mod:`batch` -- Batch Operations
-================================
+:mod:`pycassa.batch` -- Batch Operations
+========================================
 
 .. automodule:: pycassa.batch
     :members:

@@ -1,5 +1,5 @@
-:mod:`columnfamily` -- Column Family
-====================================
+:mod:`pycassa.columnfamily` -- Column Family
+============================================
 
 .. automodule:: pycassa.columnfamily
     :members:

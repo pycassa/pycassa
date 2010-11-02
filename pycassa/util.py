@@ -14,10 +14,10 @@ _number_types = frozenset((int, long, float))
 
 def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
     """
-    Converts a datetime or timestamp to a type 1 UUID.
+    Converts a datetime or timestamp to a type 1 :class:`uuid.UUID`.
 
     This is to assist with getting a time slice of columns or creating
-    columns when column names are TimeUUID. Note that this is done
+    columns when column names are ``TimeUUIDType``. Note that this is done
     automatically in most cases if name packing and value packing are
     enabled.
 
@@ -27,21 +27,27 @@ def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
     with slice arguments, however, as the non-timestamp portions
     can be set to their lowest or highest possible values.
 
-    :Parameters:
-        `datetime`: datetime or timestamp
-            - The time to use for the timestamp portion of the UUID.
-              Expected inputs to this would either be a datetime object
-              or a timestamp with the same precision produced by
-              :meth:`time.time()`. That is, sub-second precision should
-              be below the decimal place.
-        `lowest_val`: boolean
-            - Whether the UUID produced should be the lowest possible value
-              UUID with the same timestamp as datetime or the highest possible
-              value.
-        `randomize`: boolean
-            - Whether the clock and node bits of the UUID should be randomly
-              generated.  The `lowest_val` argument will be ignored if this
-              is true.
+    :param datetime: 
+      The time to use for the timestamp portion of the UUID.
+      Expected inputs to this would either be a :class:`datetime`
+      object or a timestamp with the same precision produced by
+      :meth:`time.time()`. That is, sub-second precision should
+      be below the decimal place.
+    :type datetime: :class:`datetime` or timestamp
+
+    :param lowest_val:
+      Whether the UUID produced should be the lowest possible value
+      UUID with the same timestamp as datetime or the highest possible
+      value.
+    :type lowest_val: bool
+
+    :param randomize:
+      Whether the clock and node bits of the UUID should be randomly
+      generated.  The `lowest_val` argument will be ignored if this
+      is true.
+    :type randomize: bool
+
+    :rtype: :class:`uuid.UUID`
 
     """
     if isinstance(time_arg, uuid.UUID):
@@ -85,11 +91,13 @@ def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
 
 def convert_uuid_to_time(uuid_arg):
     """
-    Converts a version 1 UUID to a timestamp with the same precision
+    Converts a version 1 :class:`uuid.UUID` to a timestamp with the same precision
     as :meth:`time.time()` returns.  This is useful for examining the
-    results of queries returning v1 UUIDs.
+    results of queries returning a v1 :class:`~uuid.UUID`.
 
-    :param uuid_arg: a version 1 UUID
+    :param uuid_arg: a version 1 :class:`~uuid.UUID`
+
+    :rtype: timestamp
 
     """
     ts = uuid_arg.get_time()

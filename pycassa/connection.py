@@ -4,8 +4,8 @@ Tools for connecting to a Cassandra cluster.
 .. seealso:: Module :mod:`~pycassa.pool` to see how connections
     can be pooled.
 
-To get a connection object which you can use directly, with
-:class:`~pycassa.columnfamily.ColumnFamily`, or with
+To get a connection object which you can use directly with a
+:class:`~pycassa.columnfamily.ColumnFamily` or with a
 :class:`~pycassa.columnfamilymap.ColumnFamilyMap`, you can do the
 following::
 
@@ -84,46 +84,48 @@ def connect(keyspace, servers=None, framed_transport=True, timeout=None,
             credentials=None, retry_time=60, recycle=None, round_robin=None,
             use_threadlocal=True):
     """
-    Constructs a single Cassandra connection. Connects to a randomly chosen
+    Constructs a single :class:`.Connection`. Connects to a randomly chosen
     server on the list.
 
     If the connection fails, it will attempt to connect to each server on the
     list in turn until one succeeds. If it is unable to find an active server,
-    it will throw a `NoServerAvailable` exception.
+    it will throw a :exc:`.NoServerAvailable` exception.
 
     Failing servers are kept on a separate list and eventually retried, no
     sooner than `retry_time` seconds after failure.
 
-    :Parameters:
-        `keyspace`: string
-                  The keyspace to associate this connection with.
-        `servers`: [server]
-                  List of Cassandra servers with format: "hostname:port"
+    :param keyspace: The keyspace to associate this connection with.
+    :type keyspace: str
 
-                  Default: ['localhost:9160']
-        `framed_transport`: bool
-                  If True, use a TFramedTransport instead of a TBufferedTransport
-        `timeout`: float
-                  Timeout in seconds (e.g. 0.5)
+    :param servers: List of Cassandra servers with format: "hostname:port".
+      Default: ``['localhost:9160']``
+    :type servers: str[]
+                  
+    :param framed_transport: If ``True``, use a :class:`TFramedTransport` instead of a
+      :class:`TBufferedTransport`.  Cassandra 0.7.x uses framed transport, while
+      Cassandra 0.6.x uses buffered.
+    :type framed_transport: bool
 
-                  Default: None (it will stall forever)
-        `retry_time`: float
-                  Minimum time in seconds until a failed server is reinstated. (e.g. 0.5)
+    :param timeout: Timeout in seconds (e.g. 0.5). Default: ``None`` (it will stall forever)
+    :type timeout: float
 
-                  Default: 60
-        `credentials`: dict
-                  Dictionary of Credentials
+    :param retry_time: Minimum time in seconds until a failed server is reinstated
+      (e.g. 0.5).  Default: 60.
+    :type retry_time: float
 
-                  Example: {'username':'jsmith', 'password':'havebadpass'}
-        `recycle`: float
-                  Max time in seconds before an open connection is closed and returned to the pool.
+    :param credentials: Dictionary of user credentials. Example:
+      ``{'username':'jsmith', 'password':'havebadpass'}``
+    :type credentials: dict
 
-                  Default: None (Never recycle)
-        `round_robin`: bool
-                  *DEPRECATED*
+    :param recycle: Max time in seconds before an open connection is closed and replaced.
+      Default: ``None`` (never recycle)
+    :type recycle: float
+                  
+    :param round_robin: *DEPRECATED*
+    :type round_robin: bool
 
-    :Returns:
-        Cassandra client
+    :rtype: :class:`.Connection`
+
     """
 
     if servers is None:

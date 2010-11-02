@@ -1,7 +1,8 @@
 API Documentation
 =================
 
-Modules:
+Pycassa Modules
+---------------
 
 .. toctree::
    :maxdepth: 3
@@ -13,4 +14,13 @@ Modules:
    pycassa/index
    pycassa/batch
    pycassa/types
+   pycassa/util
    pycassa/logging/pycassa_logger
+
+Thrift Generated Modules
+------------------------
+
+.. toctree::
+   :maxdepth: 3
+
+   pycassa/cassandra/ttypes

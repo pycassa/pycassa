@@ -1,5 +1,5 @@
-:mod:`columnfamilymap` -- Maps Classes to Column Families
-=========================================================
+:mod:`pycassa.columnfamilymap` -- Maps Classes to Column Families
+=================================================================
 
 .. automodule:: pycassa.columnfamilymap
     :members:
