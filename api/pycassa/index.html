@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>index – Index Tools for Pycassa &mdash; pycassa v0.5.1 documentation</title>
+    <title>pycassa.index – Secondary Index Tools &mdash; pycassa v0.5.2 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,10 +22,10 @@
     <script type="text/javascript" src="../../static/jquery.js"></script>
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
-    <link rel="top" title="pycassa v0.5.1 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v0.5.2 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
-    <link rel="next" title="batch – Batch Operations" href="batch.html" />
-    <link rel="prev" title="columnfamilymap – Maps Classes to Column Families" href="columnfamilymap.html" /> 
+    <link rel="next" title="pycassa.batch – Batch Operations" href="batch.html" />
+    <link rel="prev" title="pycassa.columnfamilymap – Maps Classes to Column Families" href="columnfamilymap.html" /> 
   </head>
   <body>
     <div class="related">
@@ -38,12 +38,12 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="batch.html" title="batch – Batch Operations"
+          <a href="batch.html" title="pycassa.batch – Batch Operations"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="columnfamilymap.html" title="columnfamilymap – Maps Classes to Column Families"
+          <a href="columnfamilymap.html" title="pycassa.columnfamilymap – Maps Classes to Column Families"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v0.5.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v0.5.2 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -54,19 +54,19 @@
           <div class="body">
             
   <div class="section" id="module-pycassa.index">
-<span id="index-index-tools-for-pycassa"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">index</span></tt> &#8211; Index Tools for Pycassa<a class="headerlink" href="#module-pycassa.index" title="Permalink to this headline">¶</a></h1>
+<span id="pycassa-index-secondary-index-tools"></span><h1><a class="reference internal" href="#module-pycassa.index" title="pycassa.index"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.index</span></tt></a> &#8211; Secondary Index Tools<a class="headerlink" href="#module-pycassa.index" title="Permalink to this headline">¶</a></h1>
 <p>Tools for using Cassandra&#8217;s secondary indexes.</p>
 <dl class="function">
 <dt id="pycassa.index.create_index_clause">
 <tt class="descclassname">pycassa.index.</tt><tt class="descname">create_index_clause</tt><big>(</big><em>expr_list</em>, <em>start_key=''</em>, <em>count=100</em><big>)</big><a class="headerlink" href="#pycassa.index.create_index_clause" title="Permalink to this definition">¶</a></dt>
-<dd><p>Constructs an <tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt> for use with 
+<dd><p>Constructs an <a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexClause" title="pycassa.cassandra.ttypes.IndexClause"><tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt></a> for use with 
 <tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>expr_list</strong> &#8211; [<tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt>]
+<li><strong>expr_list</strong> &#8211; [<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexExpression" title="pycassa.cassandra.ttypes.IndexExpression"><tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt></a>]
 A list of <cite>IndexExpressions</cite> to match</li>
 <li><strong>start_key</strong> &#8211; str
 The key to begin searching from</li>
@@ -82,8 +82,8 @@ The number of results to return</li>
 <dl class="function">
 <dt id="pycassa.index.create_index_expression">
 <tt class="descclassname">pycassa.index.</tt><tt class="descname">create_index_expression</tt><big>(</big><em>column_name</em>, <em>value</em>, <em>op=0</em><big>)</big><a class="headerlink" href="#pycassa.index.create_index_expression" title="Permalink to this definition">¶</a></dt>
-<dd><p>Constructs an <tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt> to use
-in an <tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt></p>
+<dd><p>Constructs an <a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexExpression" title="pycassa.cassandra.ttypes.IndexExpression"><tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt></a> to use
+in an <a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexClause" title="pycassa.cassandra.ttypes.IndexClause"><tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt></a></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -112,10 +112,10 @@ to <cite>IndexOperator.EQ</cite>, which tests for equality.</li>
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="columnfamilymap.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">columnfamilymap</span></tt> &#8211; Maps Classes to Column Families</a></p>
+                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.columnfamilymap</span></tt> &#8211; Maps Classes to Column Families</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="batch.html"
-                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">batch</span></tt> &#8211; Batch Operations</a></p>
+                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">pycassa.batch</span></tt> &#8211; Batch Operations</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../sources/api/pycassa/index.txt"
@@ -148,12 +148,12 @@ to <cite>IndexOperator.EQ</cite>, which tests for equality.</li>
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="batch.html" title="batch – Batch Operations"
+          <a href="batch.html" title="pycassa.batch – Batch Operations"
              >next</a> |</li>
         <li class="right" >
-          <a href="columnfamilymap.html" title="columnfamilymap – Maps Classes to Column Families"
+          <a href="columnfamilymap.html" title="pycassa.columnfamilymap – Maps Classes to Column Families"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v0.5.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v0.5.2 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

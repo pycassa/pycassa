@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>connection – Non-pooled connections to Cassandra servers &mdash; pycassa v0.5.1 documentation</title>
+    <title>pycassa.connection – Non-pooled connections to Cassandra servers &mdash; pycassa v0.5.2 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,9 +22,9 @@
     <script type="text/javascript" src="../../static/jquery.js"></script>
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
-    <link rel="top" title="pycassa v0.5.1 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v0.5.2 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
-    <link rel="next" title="pool – Connection Pooling" href="pool.html" />
+    <link rel="next" title="pycassa.pool – Connection Pooling" href="pool.html" />
     <link rel="prev" title="API Documentation" href="../index.html" /> 
   </head>
   <body>
@@ -38,12 +38,12 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="pool.html" title="pool – Connection Pooling"
+          <a href="pool.html" title="pycassa.pool – Connection Pooling"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="../index.html" title="API Documentation"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v0.5.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v0.5.2 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -54,15 +54,15 @@
           <div class="body">
             
   <div class="section" id="module-pycassa.connection">
-<span id="connection-non-pooled-connections-to-cassandra-servers"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">connection</span></tt> &#8211; Non-pooled connections to Cassandra servers<a class="headerlink" href="#module-pycassa.connection" title="Permalink to this headline">¶</a></h1>
+<span id="pycassa-connection-non-pooled-connections-to-cassandra-servers"></span><h1><a class="reference internal" href="#module-pycassa.connection" title="pycassa.connection"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.connection</span></tt></a> &#8211; Non-pooled connections to Cassandra servers<a class="headerlink" href="#module-pycassa.connection" title="Permalink to this headline">¶</a></h1>
 <p>Tools for connecting to a Cassandra cluster.</p>
 <div class="admonition-see-also admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last">Module <a class="reference internal" href="pool.html#module-pycassa.pool" title="pycassa.pool"><tt class="xref py py-mod docutils literal"><span class="pre">pool</span></tt></a> to see how connections
 can be pooled.</p>
 </div>
-<p>To get a connection object which you can use directly, with
-<a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>, or with
+<p>To get a connection object which you can use directly with a
+<a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a> or with a
 <a class="reference internal" href="columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>, you can do the
 following:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pycassa</span>
@@ -72,51 +72,36 @@ following:</p>
 <dl class="function">
 <dt id="pycassa.connection.connect">
 <tt class="descclassname">pycassa.connection.</tt><tt class="descname">connect</tt><big>(</big><em>keyspace</em>, <em>servers=None</em>, <em>framed_transport=True</em>, <em>timeout=None</em>, <em>credentials=None</em>, <em>retry_time=60</em>, <em>recycle=None</em>, <em>round_robin=None</em>, <em>use_threadlocal=True</em><big>)</big><a class="headerlink" href="#pycassa.connection.connect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Constructs a single Cassandra connection. Connects to a randomly chosen
+<dd><p>Constructs a single <a class="reference internal" href="#pycassa.connection.Connection" title="pycassa.connection.Connection"><tt class="xref py py-class docutils literal"><span class="pre">Connection</span></tt></a>. Connects to a randomly chosen
 server on the list.</p>
 <p>If the connection fails, it will attempt to connect to each server on the
 list in turn until one succeeds. If it is unable to find an active server,
-it will throw a <cite>NoServerAvailable</cite> exception.</p>
+it will throw a <a class="reference internal" href="#pycassa.connection.NoServerAvailable" title="pycassa.connection.NoServerAvailable"><tt class="xref py py-exc docutils literal"><span class="pre">NoServerAvailable</span></tt></a> exception.</p>
 <p>Failing servers are kept on a separate list and eventually retried, no
 sooner than <cite>retry_time</cite> seconds after failure.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first docutils">
-<dt><cite>keyspace</cite>: string</dt>
-<dd><p class="first last">The keyspace to associate this connection with.</p>
-</dd>
-<dt><cite>servers</cite>: [server]</dt>
-<dd><p class="first">List of Cassandra servers with format: &#8220;hostname:port&#8221;</p>
-<p class="last">Default: [&#8216;localhost:9160&#8217;]</p>
-</dd>
-<dt><cite>framed_transport</cite>: bool</dt>
-<dd><p class="first last">If True, use a TFramedTransport instead of a TBufferedTransport</p>
-</dd>
-<dt><cite>timeout</cite>: float</dt>
-<dd><p class="first">Timeout in seconds (e.g. 0.5)</p>
-<p class="last">Default: None (it will stall forever)</p>
-</dd>
-<dt><cite>retry_time</cite>: float</dt>
-<dd><p class="first">Minimum time in seconds until a failed server is reinstated. (e.g. 0.5)</p>
-<p class="last">Default: 60</p>
-</dd>
-<dt><cite>credentials</cite>: dict</dt>
-<dd><p class="first">Dictionary of Credentials</p>
-<p class="last">Example: {&#8216;username&#8217;:&#8217;jsmith&#8217;, &#8216;password&#8217;:&#8217;havebadpass&#8217;}</p>
-</dd>
-<dt><cite>recycle</cite>: float</dt>
-<dd><p class="first">Max time in seconds before an open connection is closed and returned to the pool.</p>
-<p class="last">Default: None (Never recycle)</p>
-</dd>
-<dt><cite>round_robin</cite>: bool</dt>
-<dd><p class="first last"><em>DEPRECATED</em></p>
-</dd>
-</dl>
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>keyspace</strong> (<em>str</em>) &#8211; The keyspace to associate this connection with.</li>
+<li><strong>servers</strong> (<em>str[]</em>) &#8211; List of Cassandra servers with format: &#8220;hostname:port&#8221;.
+Default: <tt class="docutils literal"><span class="pre">['localhost:9160']</span></tt></li>
+<li><strong>framed_transport</strong> (<em>bool</em>) &#8211; If <tt class="xref docutils literal"><span class="pre">True</span></tt>, use a <tt class="xref py py-class docutils literal"><span class="pre">TFramedTransport</span></tt> instead of a
+<tt class="xref py py-class docutils literal"><span class="pre">TBufferedTransport</span></tt>.  Cassandra 0.7.x uses framed transport, while
+Cassandra 0.6.x uses buffered.</li>
+<li><strong>timeout</strong> (<em>float</em>) &#8211; Timeout in seconds (e.g. 0.5). Default: <tt class="xref docutils literal"><span class="pre">None</span></tt> (it will stall forever)</li>
+<li><strong>retry_time</strong> (<em>float</em>) &#8211; Minimum time in seconds until a failed server is reinstated
+(e.g. 0.5).  Default: 60.</li>
+<li><strong>credentials</strong> (<em>dict</em>) &#8211; Dictionary of user credentials. Example:
+<tt class="docutils literal"><span class="pre">{'username':'jsmith',</span> <span class="pre">'password':'havebadpass'}</span></tt></li>
+<li><strong>recycle</strong> (<em>float</em>) &#8211; Max time in seconds before an open connection is closed and replaced.
+Default: <tt class="xref docutils literal"><span class="pre">None</span></tt> (never recycle)</li>
+<li><strong>round_robin</strong> (<em>bool</em>) &#8211; <em>DEPRECATED</em></li>
+</ul>
 </td>
 </tr>
-<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last">Cassandra client</p>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#pycassa.connection.Connection" title="pycassa.connection.Connection"><tt class="xref py py-class docutils literal"><span class="pre">Connection</span></tt></a></p>
 </td>
 </tr>
 </tbody>
@@ -126,51 +111,36 @@ sooner than <cite>retry_time</cite> seconds after failure.</p>
 <dl class="function">
 <dt id="pycassa.connection.connect_thread_local">
 <tt class="descclassname">pycassa.connection.</tt><tt class="descname">connect_thread_local</tt><big>(</big><em>keyspace</em>, <em>servers=None</em>, <em>framed_transport=True</em>, <em>timeout=None</em>, <em>credentials=None</em>, <em>retry_time=60</em>, <em>recycle=None</em>, <em>round_robin=None</em>, <em>use_threadlocal=True</em><big>)</big><a class="headerlink" href="#pycassa.connection.connect_thread_local" title="Permalink to this definition">¶</a></dt>
-<dd><p>Constructs a single Cassandra connection. Connects to a randomly chosen
+<dd><p>Constructs a single <a class="reference internal" href="#pycassa.connection.Connection" title="pycassa.connection.Connection"><tt class="xref py py-class docutils literal"><span class="pre">Connection</span></tt></a>. Connects to a randomly chosen
 server on the list.</p>
 <p>If the connection fails, it will attempt to connect to each server on the
 list in turn until one succeeds. If it is unable to find an active server,
-it will throw a <cite>NoServerAvailable</cite> exception.</p>
+it will throw a <a class="reference internal" href="#pycassa.connection.NoServerAvailable" title="pycassa.connection.NoServerAvailable"><tt class="xref py py-exc docutils literal"><span class="pre">NoServerAvailable</span></tt></a> exception.</p>
 <p>Failing servers are kept on a separate list and eventually retried, no
 sooner than <cite>retry_time</cite> seconds after failure.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first docutils">
-<dt><cite>keyspace</cite>: string</dt>
-<dd><p class="first last">The keyspace to associate this connection with.</p>
-</dd>
-<dt><cite>servers</cite>: [server]</dt>
-<dd><p class="first">List of Cassandra servers with format: &#8220;hostname:port&#8221;</p>
-<p class="last">Default: [&#8216;localhost:9160&#8217;]</p>
-</dd>
-<dt><cite>framed_transport</cite>: bool</dt>
-<dd><p class="first last">If True, use a TFramedTransport instead of a TBufferedTransport</p>
-</dd>
-<dt><cite>timeout</cite>: float</dt>
-<dd><p class="first">Timeout in seconds (e.g. 0.5)</p>
-<p class="last">Default: None (it will stall forever)</p>
-</dd>
-<dt><cite>retry_time</cite>: float</dt>
-<dd><p class="first">Minimum time in seconds until a failed server is reinstated. (e.g. 0.5)</p>
-<p class="last">Default: 60</p>
-</dd>
-<dt><cite>credentials</cite>: dict</dt>
-<dd><p class="first">Dictionary of Credentials</p>
-<p class="last">Example: {&#8216;username&#8217;:&#8217;jsmith&#8217;, &#8216;password&#8217;:&#8217;havebadpass&#8217;}</p>
-</dd>
-<dt><cite>recycle</cite>: float</dt>
-<dd><p class="first">Max time in seconds before an open connection is closed and returned to the pool.</p>
-<p class="last">Default: None (Never recycle)</p>
-</dd>
-<dt><cite>round_robin</cite>: bool</dt>
-<dd><p class="first last"><em>DEPRECATED</em></p>
-</dd>
-</dl>
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>keyspace</strong> (<em>str</em>) &#8211; The keyspace to associate this connection with.</li>
+<li><strong>servers</strong> (<em>str[]</em>) &#8211; List of Cassandra servers with format: &#8220;hostname:port&#8221;.
+Default: <tt class="docutils literal"><span class="pre">['localhost:9160']</span></tt></li>
+<li><strong>framed_transport</strong> (<em>bool</em>) &#8211; If <tt class="xref docutils literal"><span class="pre">True</span></tt>, use a <tt class="xref py py-class docutils literal"><span class="pre">TFramedTransport</span></tt> instead of a
+<tt class="xref py py-class docutils literal"><span class="pre">TBufferedTransport</span></tt>.  Cassandra 0.7.x uses framed transport, while
+Cassandra 0.6.x uses buffered.</li>
+<li><strong>timeout</strong> (<em>float</em>) &#8211; Timeout in seconds (e.g. 0.5). Default: <tt class="xref docutils literal"><span class="pre">None</span></tt> (it will stall forever)</li>
+<li><strong>retry_time</strong> (<em>float</em>) &#8211; Minimum time in seconds until a failed server is reinstated
+(e.g. 0.5).  Default: 60.</li>
+<li><strong>credentials</strong> (<em>dict</em>) &#8211; Dictionary of user credentials. Example:
+<tt class="docutils literal"><span class="pre">{'username':'jsmith',</span> <span class="pre">'password':'havebadpass'}</span></tt></li>
+<li><strong>recycle</strong> (<em>float</em>) &#8211; Max time in seconds before an open connection is closed and replaced.
+Default: <tt class="xref docutils literal"><span class="pre">None</span></tt> (never recycle)</li>
+<li><strong>round_robin</strong> (<em>bool</em>) &#8211; <em>DEPRECATED</em></li>
+</ul>
 </td>
 </tr>
-<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last">Cassandra client</p>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#pycassa.connection.Connection" title="pycassa.connection.Connection"><tt class="xref py py-class docutils literal"><span class="pre">Connection</span></tt></a></p>
 </td>
 </tr>
 </tbody>
@@ -187,6 +157,54 @@ sooner than <cite>retry_time</cite> seconds after failure.</p>
 <dt id="pycassa.connection.Connection">
 <em class="property">class </em><tt class="descclassname">pycassa.connection.</tt><tt class="descname">Connection</tt><big>(</big><em>keyspace</em>, <em>servers</em>, <em>framed_transport=True</em>, <em>timeout=None</em>, <em>retry_time=10</em>, <em>recycle=None</em>, <em>credentials=None</em>, <em>use_threadlocal=True</em><big>)</big><a class="headerlink" href="#pycassa.connection.Connection" title="Permalink to this definition">¶</a></dt>
 <dd><p>A connection that gives access to raw Thrift calls.</p>
+<dl class="method">
+<dt id="pycassa.connection.Connection.add_column_family">
+<tt class="descname">add_column_family</tt><big>(</big><em>cfdef</em>, <em>block=True</em>, <em>sample_period=0.25</em><big>)</big><a class="headerlink" href="#pycassa.connection.Connection.add_column_family" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a column family to a keyspace.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cfdef</strong> (<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.CfDef" title="pycassa.cassandra.ttypes.CfDef"><tt class="xref py py-class docutils literal"><span class="pre">CfDef</span></tt></a>) &#8211; the column family definition</li>
+<li><strong>block</strong> &#8211; wait until the cluster has the same schema version
+to return</li>
+<li><strong>sample_period</strong> (<em>int</em>) &#8211; when blocking, how often to check for schema
+agreement among the cluster (in seconds)</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">new schema version</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.connection.Connection.add_keyspace">
+<tt class="descname">add_keyspace</tt><big>(</big><em>ksdef</em>, <em>block=True</em>, <em>sample_period=0.25</em><big>)</big><a class="headerlink" href="#pycassa.connection.Connection.add_keyspace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a keyspace to the cluster.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ksdef</strong> (<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.KsDef" title="pycassa.cassandra.ttypes.KsDef"><tt class="xref py py-class docutils literal"><span class="pre">KsDef</span></tt></a>) &#8211; the keyspace definition</li>
+<li><strong>block</strong> &#8211; wait until the cluster has the same schema version
+to return</li>
+<li><strong>sample_period</strong> (<em>int</em>) &#8211; when blocking, how often to check for schema
+agreement among the cluster (in seconds)</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">new schema version</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="method">
 <dt id="pycassa.connection.Connection.batch">
 <tt class="descname">batch</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pycassa.connection.Connection.batch" title="Permalink to this definition">¶</a></dt>
@@ -206,22 +224,132 @@ sooner than <cite>retry_time</cite> seconds after failure.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pycassa.connection.Connection.drop_column_family">
+<tt class="descname">drop_column_family</tt><big>(</big><em>name</em>, <em>block=True</em>, <em>sample_period=0.25</em><big>)</big><a class="headerlink" href="#pycassa.connection.Connection.drop_column_family" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drops a column family from the cluster.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> (<em>string</em>) &#8211; the column family to drop</li>
+<li><strong>block</strong> &#8211; wait until the cluster has the same schema version
+to return</li>
+<li><strong>sample_period</strong> (<em>int</em>) &#8211; when blocking, how often to check for schema
+agreement among the cluster (in seconds)</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">new schema version</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.connection.Connection.drop_keyspace">
+<tt class="descname">drop_keyspace</tt><big>(</big><em>name</em>, <em>block=True</em>, <em>sample_period=0.25</em><big>)</big><a class="headerlink" href="#pycassa.connection.Connection.drop_keyspace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drop a keyspace from the cluster.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ksdef</strong> (<em>string</em>) &#8211; the keyspace to drop</li>
+<li><strong>block</strong> &#8211; wait until the cluster has the same schema version
+to return</li>
+<li><strong>sample_period</strong> (<em>int</em>) &#8211; when blocking, how often to check for schema
+agreement among the cluster (in seconds)</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">new schema version</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="pycassa.connection.Connection.get_keyspace_description">
-<tt class="descname">get_keyspace_description</tt><big>(</big><em>keyspace=None</em><big>)</big><a class="headerlink" href="#pycassa.connection.Connection.get_keyspace_description" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_keyspace_description</tt><big>(</big><em>keyspace=None</em>, <em>use_dict_for_col_metadata=False</em><big>)</big><a class="headerlink" href="#pycassa.connection.Connection.get_keyspace_description" title="Permalink to this definition">¶</a></dt>
 <dd><p>Describes the given keyspace.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>keyspace</strong> &#8211; The keyspace to describe. Defaults to the current
-keyspace.</li>
+<li><strong>keyspace</strong> (<em>str</em>) &#8211; The keyspace to describe. Defaults to the current keyspace.</li>
+<li><strong>use_dict_for_col_metadata</strong> (<em>bool</em>) &#8211; whether or not store the column metadata as a
+dictionary instead of a list</li>
 </ul>
 </td>
 </tr>
-<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><tt class="docutils literal"><span class="pre">{column_family_name:</span> <span class="pre">CfDef}</span></tt>
-where a <tt class="docutils literal"><span class="pre">CfDef</span></tt> has many attributes describing the column family, including
-the dictionary <tt class="docutils literal"><span class="pre">column_metadata</span> <span class="pre">=</span> <span class="pre">{column_name:</span> <span class="pre">ColumnDef}</span></tt></p>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><tt class="docutils literal"><span class="pre">{column_family_name:</span> <span class="pre">CfDef}</span></tt></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.connection.Connection.update_column_family">
+<tt class="descname">update_column_family</tt><big>(</big><em>cfdef</em>, <em>block=True</em>, <em>sample_period=0.25</em><big>)</big><a class="headerlink" href="#pycassa.connection.Connection.update_column_family" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update a column family definition.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">If you do not set values for <em>everything</em> in the
+<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.CfDef" title="pycassa.cassandra.ttypes.CfDef"><tt class="xref py py-class docutils literal"><span class="pre">CfDef</span></tt></a>, Cassandra will fill them in with
+<em>bad</em> values.  You should get the existing
+<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.CfDef" title="pycassa.cassandra.ttypes.CfDef"><tt class="xref py py-class docutils literal"><span class="pre">CfDef</span></tt></a> using <a class="reference internal" href="#pycassa.connection.Connection.get_keyspace_description" title="pycassa.connection.Connection.get_keyspace_description"><tt class="xref py py-meth docutils literal"><span class="pre">get_keyspace_description()</span></tt></a>,
+change what you want, and use that.</p>
+</div>
+<p>Example usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">conn</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cfdef</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_keyspace_description</span><span class="p">()[</span><span class="s">&#39;MyColumnFamily&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cfdef</span><span class="o">.</span><span class="n">memtable_throughput_in_mb</span> <span class="o">=</span> <span class="mi">256</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conn</span><span class="o">.</span><span class="n">update_column_family</span><span class="p">(</span><span class="n">cfdef</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cfdef</strong> (<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.CfDef" title="pycassa.cassandra.ttypes.CfDef"><tt class="xref py py-class docutils literal"><span class="pre">CfDef</span></tt></a>) &#8211; the column family definition</li>
+<li><strong>block</strong> &#8211; wait until the cluster has the same schema version
+to return</li>
+<li><strong>sample_period</strong> (<em>int</em>) &#8211; when blocking, how often to check for schema
+agreement among the cluster (in seconds)</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">new schema version</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.connection.Connection.update_keyspace">
+<tt class="descname">update_keyspace</tt><big>(</big><em>ksdef</em>, <em>block=True</em>, <em>sample_period=0.25</em><big>)</big><a class="headerlink" href="#pycassa.connection.Connection.update_keyspace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates a keyspace.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ksdef</strong> (<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.KsDef" title="pycassa.cassandra.ttypes.KsDef"><tt class="xref py py-class docutils literal"><span class="pre">KsDef</span></tt></a>) &#8211; the new keyspace definition</li>
+<li><strong>block</strong> &#8211; wait until the cluster has the same schema version
+to return</li>
+<li><strong>sample_period</strong> (<em>int</em>) &#8211; when blocking, how often to check for schema
+agreement among the cluster (in seconds)</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">new schema version</p>
 </td>
 </tr>
 </tbody>
@@ -243,7 +371,7 @@ the dictionary <tt class="docutils literal"><span class="pre">column_metadata</s
                         title="previous chapter">API Documentation</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="pool.html"
-                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">pool</span></tt> &#8211; Connection Pooling</a></p>
+                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">pycassa.pool</span></tt> &#8211; Connection Pooling</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../sources/api/pycassa/connection.txt"
@@ -276,12 +404,12 @@ the dictionary <tt class="docutils literal"><span class="pre">column_metadata</s
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="pool.html" title="pool – Connection Pooling"
+          <a href="pool.html" title="pycassa.pool – Connection Pooling"
              >next</a> |</li>
         <li class="right" >
           <a href="../index.html" title="API Documentation"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v0.5.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v0.5.2 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

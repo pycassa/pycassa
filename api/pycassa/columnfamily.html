@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>columnfamily – Column Family &mdash; pycassa v0.5.1 documentation</title>
+    <title>pycassa.columnfamily – Column Family &mdash; pycassa v0.5.2 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,10 +22,10 @@
     <script type="text/javascript" src="../../static/jquery.js"></script>
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
-    <link rel="top" title="pycassa v0.5.1 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v0.5.2 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
-    <link rel="next" title="columnfamilymap – Maps Classes to Column Families" href="columnfamilymap.html" />
-    <link rel="prev" title="pool – Connection Pooling" href="pool.html" /> 
+    <link rel="next" title="pycassa.columnfamilymap – Maps Classes to Column Families" href="columnfamilymap.html" />
+    <link rel="prev" title="pycassa.pool – Connection Pooling" href="pool.html" /> 
   </head>
   <body>
     <div class="related">
@@ -38,12 +38,12 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="columnfamilymap.html" title="columnfamilymap – Maps Classes to Column Families"
+          <a href="columnfamilymap.html" title="pycassa.columnfamilymap – Maps Classes to Column Families"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="pool.html" title="pool – Connection Pooling"
+          <a href="pool.html" title="pycassa.pool – Connection Pooling"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v0.5.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v0.5.2 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -54,7 +54,7 @@
           <div class="body">
             
   <div class="section" id="module-pycassa.columnfamily">
-<span id="columnfamily-column-family"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">columnfamily</span></tt> &#8211; Column Family<a class="headerlink" href="#module-pycassa.columnfamily" title="Permalink to this headline">¶</a></h1>
+<span id="pycassa-columnfamily-column-family"></span><h1><a class="reference internal" href="#module-pycassa.columnfamily" title="pycassa.columnfamily"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.columnfamily</span></tt></a> &#8211; Column Family<a class="headerlink" href="#module-pycassa.columnfamily" title="Permalink to this headline">¶</a></h1>
 <p>Provides an abstraction of Cassandra&#8217;s data model to allow for easy
 manipulation of data inside Cassandra.</p>
 <div class="admonition-see-also admonition seealso">
@@ -77,7 +77,7 @@ manipulation of data inside Cassandra.</p>
 
 <dl class="class">
 <dt id="pycassa.columnfamily.ColumnFamily">
-<em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">ColumnFamily</tt><big>(</big><em>client</em>, <em>column_family</em>, <em>buffer_size=1024</em>, <em>read_consistency_level=1</em>, <em>write_consistency_level=1</em>, <em>timestamp=&lt;function gm_timestamp at 0x1809a28&gt;</em>, <em>super=False</em>, <em>dict_class=&lt;type 'dict'&gt;</em>, <em>autopack_names=True</em>, <em>autopack_values=True</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">ColumnFamily</tt><big>(</big><em>client</em>, <em>column_family</em>, <em>buffer_size=1024</em>, <em>read_consistency_level=1</em>, <em>write_consistency_level=1</em>, <em>timestamp=&lt;function gm_timestamp at 0x194db18&gt;</em>, <em>super=False</em>, <em>dict_class=&lt;type 'dict'&gt;</em>, <em>autopack_names=True</em>, <em>autopack_values=True</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructs an abstraction of a Cassandra column family or super column family.</p>
 <p>Operations on this, such as <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.get" title="pycassa.columnfamily.ColumnFamily.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a> or <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.insert" title="pycassa.columnfamily.ColumnFamily.insert"><tt class="xref py py-meth docutils literal"><span class="pre">insert()</span></tt></a> will get data from or
 insert data into the corresponding Cassandra column family.</p>
@@ -93,9 +93,9 @@ intermediate results need to be buffered if we are fetching
 many rows, otherwise the Cassandra server will overallocate
 memory and fail.  This is the size of that buffer in number
 of rows.</li>
-<li><strong>read_consistency_level</strong> (<tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt>) &#8211; Affects the guaranteed replication factor
+<li><strong>read_consistency_level</strong> (<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt></a>) &#8211; Affects the guaranteed replication factor
 before returning from any read operation</li>
-<li><strong>write_consistency_level</strong> (<tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt>) &#8211; Affects the guaranteed replication
+<li><strong>write_consistency_level</strong> (<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt></a>) &#8211; Affects the guaranteed replication
 factor before returning from any write operation</li>
 <li><strong>timestamp</strong> (<em>function</em>) &#8211; The default timestamp function returns
 <tt class="docutils literal"><span class="pre">int(time.mktime(time.gmtime()))</span></tt>,
@@ -134,7 +134,7 @@ operations using as few roundtrips as possible.</p>
 <tbody valign="top">
 <tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>queue_size</strong> (<em>int</em>) &#8211; Max number of mutations per request</li>
-<li><strong>write_consistency_level</strong> (<tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt>) &#8211; Affects the guaranteed replication factor
+<li><strong>write_consistency_level</strong> (<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt></a>) &#8211; Affects the guaranteed replication factor
 before returning from any write operation</li>
 </ul>
 </td>
@@ -157,7 +157,7 @@ before returning from any write operation</li>
 <tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>rows</strong> (<tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt>) &#8211; Standard Column Family: <tt class="docutils literal"><span class="pre">{row_key:</span> <span class="pre">{column_name:</span> <span class="pre">column_value}}</span></tt>
 Super Column Family: <tt class="docutils literal"><span class="pre">{row_key:</span> <span class="pre">{super_column_name:</span> <span class="pre">{sub_column_name:</span> <span class="pre">value}}}</span></tt></li>
-<li><strong>write_consistency_level</strong> (<tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt>) &#8211; Affects the guaranteed replication factor
+<li><strong>write_consistency_level</strong> (<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt></a>) &#8211; Affects the guaranteed replication factor
 before returning from any write operation</li>
 </ul>
 </td>
@@ -189,7 +189,7 @@ passed to the constructor.</li>
 <li><strong>column_count</strong> (<em>int</em>) &#8211; Limit the number of columns or super columns fetched per row</li>
 <li><strong>include_timestamp</strong> (<em>bool</em>) &#8211; If True, return a <tt class="docutils literal"><span class="pre">(value,</span> <span class="pre">timestamp)</span></tt> tuple for each column</li>
 <li><strong>super_column</strong> &#8211; Return columns only in this super column</li>
-<li><strong>read_consistency_level</strong> (<tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt>) &#8211; Affects the guaranteed replication factor before
+<li><strong>read_consistency_level</strong> (<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt></a>) &#8211; Affects the guaranteed replication factor before
 returning from any read operation</li>
 </ul>
 </td>
@@ -215,7 +215,7 @@ returning from any read operation</li>
 <li><strong>column_start</strong> &#8211; Only count columns or super columns <tt class="docutils literal"><span class="pre">&gt;=</span> <span class="pre">column_start</span></tt></li>
 <li><strong>column_finish</strong> &#8211; Only count columns or super columns <tt class="docutils literal"><span class="pre">&gt;=</span> <span class="pre">column_finish</span></tt></li>
 <li><strong>super_column</strong> &#8211; Only count the columns in this super column</li>
-<li><strong>read_consistency_level</strong> (<tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt>) &#8211; Affects the guaranteed replication factor before
+<li><strong>read_consistency_level</strong> (<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt></a>) &#8211; Affects the guaranteed replication factor before
 returning from any read operation</li>
 </ul>
 </td>
@@ -236,9 +236,9 @@ returning from any read operation</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>index_clause</strong> (<tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt>) &#8211; <p>Limits the keys that are returned based on expressions
+<li><strong>index_clause</strong> (<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexClause" title="pycassa.cassandra.ttypes.IndexClause"><tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt></a>) &#8211; <p>Limits the keys that are returned based on expressions
 that compare the value of a column to a given value.  At least one of the
-expressions in the <tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt> must be on an indexed column.</p>
+expressions in the <a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexClause" title="pycassa.cassandra.ttypes.IndexClause"><tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt></a> must be on an indexed column.</p>
 <blockquote>
 <div class="admonition-see-also admonition seealso">
 <p class="first admonition-title">See also</p>
@@ -257,7 +257,7 @@ passed to the constructor.</li>
 <li><strong>column_count</strong> &#8211; Limit the number of columns or super columns fetched per row</li>
 <li><strong>include_timestamp</strong> (<em>bool</em>) &#8211; If True, return a <tt class="docutils literal"><span class="pre">(value,</span> <span class="pre">timestamp)</span></tt> tuple for each column</li>
 <li><strong>super_column</strong> &#8211; Return columns only in this super column</li>
-<li><strong>read_consistency_level</strong> (<tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt>) &#8211; Affects the guaranteed replication factor before
+<li><strong>read_consistency_level</strong> (<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt></a>) &#8211; Affects the guaranteed replication factor before
 returning from any read operation</li>
 <li><strong>buffer_size</strong> (<em>int</em>) &#8211; When calling <cite>get_indexed_slices()</cite>, the intermediate
 results need to be buffered if we are fetching many rows, otherwise the Cassandra
@@ -297,7 +297,7 @@ passed to the constructor.</li>
 <li><strong>column_count</strong> (<em>int</em>) &#8211; Limit the number of columns or super columns fetched per row</li>
 <li><strong>include_timestamp</strong> (<em>bool</em>) &#8211; If True, return a <tt class="docutils literal"><span class="pre">(value,</span> <span class="pre">timestamp)</span></tt> tuple for each column</li>
 <li><strong>super_column</strong> &#8211; Return columns only in this super column</li>
-<li><strong>read_consistency_level</strong> (<tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt>) &#8211; Affects the guaranteed replication factor before
+<li><strong>read_consistency_level</strong> (<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt></a>) &#8211; Affects the guaranteed replication factor before
 returning from any read operation</li>
 <li><strong>buffer_size</strong> (<em>int</em>) &#8211; When calling <cite>get_range()</cite>, the intermediate results need to be
 buffered if we are fetching many rows, otherwise the Cassandra
@@ -324,7 +324,7 @@ that buffer in number of rows. If left as None, the ColumnFamily&#8217;s default
 <tbody valign="top">
 <tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>key</strong> (<em>str</em>) &#8211; Insert or update the columns in the row with this key</li>
-<li><strong>write_consistency_level</strong> (<tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt>) &#8211; Affects the guaranteed replication factor
+<li><strong>write_consistency_level</strong> (<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt></a>) &#8211; Affects the guaranteed replication factor
 before returning from any write operation</li>
 </ul>
 </td>
@@ -356,7 +356,7 @@ passed to the constructor.</li>
 <li><strong>column_count</strong> (<em>int</em>) &#8211; Limit the number of columns or super columns fetched per row</li>
 <li><strong>include_timestamp</strong> (<em>bool</em>) &#8211; If True, return a <tt class="docutils literal"><span class="pre">(value,</span> <span class="pre">timestamp)</span></tt> tuple for each column</li>
 <li><strong>super_column</strong> &#8211; Return columns only in this super column</li>
-<li><strong>read_consistency_level</strong> (<tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt>) &#8211; Affects the guaranteed replication factor before
+<li><strong>read_consistency_level</strong> (<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt></a>) &#8211; Affects the guaranteed replication factor before
 returning from any read operation</li>
 </ul>
 </td>
@@ -382,7 +382,7 @@ returning from any read operation</li>
 <li><strong>column_start</strong> &#8211; Only count columns or super columns <tt class="docutils literal"><span class="pre">&gt;=</span> <span class="pre">column_start</span></tt></li>
 <li><strong>column_finish</strong> &#8211; Only count columns or super columns <tt class="docutils literal"><span class="pre">&gt;=</span> <span class="pre">column_finish</span></tt></li>
 <li><strong>super_column</strong> &#8211; Only count the columns in this super column</li>
-<li><strong>read_consistency_level</strong> (<tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt>) &#8211; Affects the guaranteed replication factor before
+<li><strong>read_consistency_level</strong> (<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt></a>) &#8211; Affects the guaranteed replication factor before
 returning from any read operation</li>
 </ul>
 </td>
@@ -407,7 +407,7 @@ returning from any read operation</li>
 <tt class="xref docutils literal"><span class="pre">None</span></tt>, remove all columns</li>
 <li><strong>columns</strong> (<em>list</em>) &#8211; Delete only the columns or super columns in this list</li>
 <li><strong>super_column</strong> &#8211; Delete the columns from this super column</li>
-<li><strong>write_consistency_level</strong> (<tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt>) &#8211; Affects the guaranteed replication factor
+<li><strong>write_consistency_level</strong> (<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt></a>) &#8211; Affects the guaranteed replication factor
 before returning from any write operation</li>
 </ul>
 </td>
@@ -428,7 +428,7 @@ complete data deletion from cfname. Internally, however, disk space
 will not be immediatily released, as with all deletes in cassandra,
 this one only marks the data as deleted.</p>
 <p>The operation succeeds only if all hosts in the cluster at available
-and will throw an <tt class="xref py py-exc docutils literal"><span class="pre">UnavailableException</span></tt> if some hosts are
+and will throw an <a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.UnavailableException" title="pycassa.cassandra.ttypes.UnavailableException"><tt class="xref py py-exc docutils literal"><span class="pre">UnavailableException</span></tt></a> if some hosts are
 down.</p>
 </dd></dl>
 
@@ -444,10 +444,10 @@ down.</p>
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="pool.html"
-                        title="previous chapter"><tt class="docutils literal"><span class="pre">pool</span></tt> &#8211; Connection Pooling</a></p>
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">pycassa.pool</span></tt> &#8211; Connection Pooling</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="columnfamilymap.html"
-                        title="next chapter"><tt class="docutils literal"><span class="pre">columnfamilymap</span></tt> &#8211; Maps Classes to Column Families</a></p>
+                        title="next chapter"><tt class="docutils literal"><span class="pre">pycassa.columnfamilymap</span></tt> &#8211; Maps Classes to Column Families</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../sources/api/pycassa/columnfamily.txt"
@@ -480,12 +480,12 @@ down.</p>
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="columnfamilymap.html" title="columnfamilymap – Maps Classes to Column Families"
+          <a href="columnfamilymap.html" title="pycassa.columnfamilymap – Maps Classes to Column Families"
              >next</a> |</li>
         <li class="right" >
-          <a href="pool.html" title="pool – Connection Pooling"
+          <a href="pool.html" title="pycassa.pool – Connection Pooling"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v0.5.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v0.5.2 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

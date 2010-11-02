@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>columnfamilymap – Maps Classes to Column Families &mdash; pycassa v0.5.1 documentation</title>
+    <title>pycassa.columnfamilymap – Maps Classes to Column Families &mdash; pycassa v0.5.2 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,10 +22,10 @@
     <script type="text/javascript" src="../../static/jquery.js"></script>
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
-    <link rel="top" title="pycassa v0.5.1 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v0.5.2 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
-    <link rel="next" title="index – Index Tools for Pycassa" href="index.html" />
-    <link rel="prev" title="columnfamily – Column Family" href="columnfamily.html" /> 
+    <link rel="next" title="pycassa.index – Secondary Index Tools" href="index.html" />
+    <link rel="prev" title="pycassa.columnfamily – Column Family" href="columnfamily.html" /> 
   </head>
   <body>
     <div class="related">
@@ -38,12 +38,12 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="index.html" title="index – Index Tools for Pycassa"
+          <a href="index.html" title="pycassa.index – Secondary Index Tools"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="columnfamily.html" title="columnfamily – Column Family"
+          <a href="columnfamily.html" title="pycassa.columnfamily – Column Family"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v0.5.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v0.5.2 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -54,7 +54,7 @@
           <div class="body">
             
   <div class="section" id="module-pycassa.columnfamilymap">
-<span id="columnfamilymap-maps-classes-to-column-families"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">columnfamilymap</span></tt> &#8211; Maps Classes to Column Families<a class="headerlink" href="#module-pycassa.columnfamilymap" title="Permalink to this headline">¶</a></h1>
+<span id="pycassa-columnfamilymap-maps-classes-to-column-families"></span><h1><a class="reference internal" href="#module-pycassa.columnfamilymap" title="pycassa.columnfamilymap"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.columnfamilymap</span></tt></a> &#8211; Maps Classes to Column Families<a class="headerlink" href="#module-pycassa.columnfamilymap" title="Permalink to this headline">¶</a></h1>
 <p>Provides a means for mapping an existing class to a column family.</p>
 <dl class="class">
 <dt id="pycassa.columnfamilymap.ColumnFamilyMap">
@@ -107,7 +107,7 @@ nothing unless you passed a dict_class to the constructor.</p>
 <dt><cite>super_column</cite>: str</dt>
 <dd><p class="first last">Fetch only this super_column</p>
 </dd>
-<dt><cite>read_consistency_level</cite>: <tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></dt>
+<dt><cite>read_consistency_level</cite>: <a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></a></dt>
 <dd><p class="first last">Affects the guaranteed replication factor before returning from
 any read operation</p>
 </dd>
@@ -136,7 +136,7 @@ any read operation</p>
 <dt><cite>super_column</cite>: str</dt>
 <dd><p class="first last">Count the columns only in this super_column</p>
 </dd>
-<dt><cite>read_consistency_level</cite>: <tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></dt>
+<dt><cite>read_consistency_level</cite>: <a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></a></dt>
 <dd><p class="first last">Affects the guaranteed replication factor before returning from
 any read operation</p>
 </dd>
@@ -159,7 +159,7 @@ any read operation</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first docutils">
-<dt><cite>index_clause</cite>: <tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt></dt>
+<dt><cite>index_clause</cite>: <a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexClause" title="pycassa.cassandra.ttypes.IndexClause"><tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt></a></dt>
 <dd><p class="first last">Limits the keys that are returned based on expressions that compare
 the value of a column to a given value.  At least one of the
 expressions in the IndexClause must be on an indexed column.</p>
@@ -186,7 +186,7 @@ nothing unless you passed a dict_class to the constructor.</p>
 <dt><cite>super_column</cite>: str</dt>
 <dd><p class="first last">Return columns only in this super_column</p>
 </dd>
-<dt><cite>read_consistency_level</cite>: <tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></dt>
+<dt><cite>read_consistency_level</cite>: <a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></a></dt>
 <dd><p class="first last">Affects the guaranteed replication factor before returning from
 any read operation</p>
 </dd>
@@ -252,7 +252,7 @@ nothing unless you passed a dict_class to the constructor.</p>
 <dt><cite>super_column</cite>: string</dt>
 <dd><p class="first last">Return columns only in this super_column</p>
 </dd>
-<dt><cite>read_consistency_level</cite>: <tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></dt>
+<dt><cite>read_consistency_level</cite>: <a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></a></dt>
 <dd><p class="first last">Affects the guaranteed replication factor before returning from
 any read operation</p>
 </dd>
@@ -335,7 +335,7 @@ nothing unless you passed a dict_class to the constructor.</p>
 <dt><cite>super_column</cite>: str</dt>
 <dd><p class="first last">Return columns only in this super_column</p>
 </dd>
-<dt><cite>read_consistency_level</cite>: <tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></dt>
+<dt><cite>read_consistency_level</cite>: <a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">pycassa.cassandra.ttypes.ConsistencyLevel</span></tt></a></dt>
 <dd><p class="first last">Affects the guaranteed replication factor before returning from
 any read operation</p>
 </dd>
@@ -386,10 +386,10 @@ any read operation</p>
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="columnfamily.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">columnfamily</span></tt> &#8211; Column Family</a></p>
+                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">pycassa.columnfamily</span></tt> &#8211; Column Family</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="index.html"
-                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">index</span></tt> &#8211; Index Tools for Pycassa</a></p>
+                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">pycassa.index</span></tt> &#8211; Secondary Index Tools</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../sources/api/pycassa/columnfamilymap.txt"
@@ -422,12 +422,12 @@ any read operation</p>
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="index.html" title="index – Index Tools for Pycassa"
+          <a href="index.html" title="pycassa.index – Secondary Index Tools"
              >next</a> |</li>
         <li class="right" >
-          <a href="columnfamily.html" title="columnfamily – Column Family"
+          <a href="columnfamily.html" title="pycassa.columnfamily – Column Family"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v0.5.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v0.5.2 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

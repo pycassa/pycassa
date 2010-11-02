@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial &mdash; pycassa v0.5.1 documentation</title>
+    <title>Tutorial &mdash; pycassa v0.5.2 documentation</title>
     <link rel="stylesheet" href="static/default.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,7 +22,7 @@
     <script type="text/javascript" src="static/jquery.js"></script>
     <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="pycassa v0.5.1 documentation" href="index.html" />
+    <link rel="top" title="pycassa v0.5.2 documentation" href="index.html" />
     <link rel="next" title="pycassaShell" href="pycassa_shell.html" />
     <link rel="prev" title="Installing" href="installation.html" /> 
   </head>
@@ -42,7 +42,7 @@
         <li class="right" >
           <a href="installation.html" title="Installing"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">pycassa v0.5.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v0.5.2 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -315,8 +315,8 @@ will be indexed.  In a <tt class="docutils literal"><span class="pre">cassandra.
 </div>
 <p>In order to use <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_indexed_slices" title="pycassa.columnfamily.ColumnFamily.get_indexed_slices"><tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt></a>
 to get data from Indexed1 using the indexed column, we need to create an
-<tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt> which contains
-<tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt>.  The module
+<a class="reference internal" href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexClause" title="pycassa.cassandra.ttypes.IndexClause"><tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt></a> which contains
+<a class="reference internal" href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexExpression" title="pycassa.cassandra.ttypes.IndexExpression"><tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt></a>.  The module
 <a class="reference internal" href="api/pycassa/index.html#module-pycassa.index" title="pycassa.index"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.index</span></tt></a> is designed to make this easier.</p>
 <p>Suppose we are only interested in rows where birthdate is 1984. We might do
 the following:</p>
@@ -329,7 +329,7 @@ the following:</p>
 </pre></div>
 </div>
 <p>Although at least one
-<tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt> in every clause
+<a class="reference internal" href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexExpression" title="pycassa.cassandra.ttypes.IndexExpression"><tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt></a> in every clause
 must be on an indexed column, you may also have other expressions which are
 on non-indexed columns.</p>
 </div>
@@ -500,7 +500,7 @@ may continue to return removed rows for some time:</p>
         <li class="right" >
           <a href="installation.html" title="Installing"
              >previous</a> |</li>
-        <li><a href="index.html">pycassa v0.5.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v0.5.2 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

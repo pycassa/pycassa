@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Changelog &mdash; pycassa v0.5.1 documentation</title>
+    <title>Changelog &mdash; pycassa v0.5.2 documentation</title>
     <link rel="stylesheet" href="static/default.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.5.1',
+        VERSION:     '0.5.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,8 +22,8 @@
     <script type="text/javascript" src="static/jquery.js"></script>
     <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="pycassa v0.5.1 documentation" href="index.html" />
-    <link rel="prev" title="logging.pycassa_logger – Pycassa Logging" href="api/pycassa/logging/pycassa_logger.html" /> 
+    <link rel="top" title="pycassa v0.5.2 documentation" href="index.html" />
+    <link rel="prev" title="pycassa.cassandra.ttypes – Thrift Object Types" href="api/pycassa/cassandra/ttypes.html" /> 
   </head>
   <body>
     <div class="related">
@@ -36,9 +36,9 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="api/pycassa/logging/pycassa_logger.html" title="logging.pycassa_logger – Pycassa Logging"
+          <a href="api/pycassa/cassandra/ttypes.html" title="pycassa.cassandra.ttypes – Thrift Object Types"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">pycassa v0.5.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v0.5.2 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -49,6 +49,22 @@
             
   <div class="section" id="changelog">
 <h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="changes-in-version-0-5-2">
+<h2>Changes in Version 0.5.2<a class="headerlink" href="#changes-in-version-0-5-2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Support for adding/updating/dropping Keyspaces and CFs
+in <a class="reference internal" href="api/pycassa/connection.html#pycassa.connection.Connection" title="pycassa.connection.Connection"><tt class="xref py py-class docutils literal"><span class="pre">pycassa.connection.Connection</span></tt></a></li>
+<li><a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_range" title="pycassa.columnfamily.ColumnFamily.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a> optimization
+and more configurable batch size</li>
+<li>batch <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_indexed_slices" title="pycassa.columnfamily.ColumnFamily.get_indexed_slices"><tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt></a>
+similar to <a class="reference internal" href="api/pycassa/columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap.get_range" title="pycassa.columnfamilymap.ColumnFamilyMap.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a></li>
+<li>Reorganized pycassa logging</li>
+<li>More efficient packing of data types</li>
+<li>Fix error condition that results in infinite recursion</li>
+<li>Limit pooling retries to only appropriate exceptions</li>
+<li>Use Thrift API 19.3.0</li>
+</ul>
+</div>
 <div class="section" id="changes-in-version-0-5-1">
 <h2>Changes in Version 0.5.1<a class="headerlink" href="#changes-in-version-0-5-1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -130,6 +146,7 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Changelog</a><ul>
+<li><a class="reference internal" href="#changes-in-version-0-5-2">Changes in Version 0.5.2</a></li>
 <li><a class="reference internal" href="#changes-in-version-0-5-1">Changes in Version 0.5.1</a></li>
 <li><a class="reference internal" href="#changes-in-version-0-5-0">Changes in Version 0.5.0</a></li>
 <li><a class="reference internal" href="#changes-in-version-0-4-3">Changes in Version 0.4.3</a></li>
@@ -141,8 +158,8 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="api/pycassa/logging/pycassa_logger.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">logging.pycassa_logger</span></tt> &#8211; Pycassa Logging</a></p>
+  <p class="topless"><a href="api/pycassa/cassandra/ttypes.html"
+                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.cassandra.ttypes</span></tt> &#8211; Thrift Object Types</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="sources/changelog.txt"
@@ -175,9 +192,9 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="api/pycassa/logging/pycassa_logger.html" title="logging.pycassa_logger – Pycassa Logging"
+          <a href="api/pycassa/cassandra/ttypes.html" title="pycassa.cassandra.ttypes – Thrift Object Types"
              >previous</a> |</li>
-        <li><a href="index.html">pycassa v0.5.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v0.5.2 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

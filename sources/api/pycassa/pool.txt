@@ -1,5 +1,5 @@
-:mod:`pool` -- Connection Pooling
-=================================
+:mod:`pycassa.pool` -- Connection Pooling
+=========================================
 
 .. automodule:: pycassa.pool
     :members:
