@@ -134,7 +134,7 @@ class ColumnFamily(object):
 
         col_fam = None
         try:
-            col_fam = client.get_keyspace_description()[self.column_family]
+            col_fam = client.get_keyspace_description(use_dict_for_col_metadata=True)[self.column_family]
         except KeyError:
             raise NotFoundException('Column family %s not found.' % self.column_family)
 

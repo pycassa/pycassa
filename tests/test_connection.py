@@ -3,6 +3,7 @@ import unittest
 
 from nose.tools import assert_raises
 from pycassa import connect, connect_thread_local
+from pycassa.cassandra.ttypes import CfDef, KsDef
 
 class ConnectionCase(unittest.TestCase):
     def test_connections(self):
@@ -28,5 +29,27 @@ class ConnectionCase(unittest.TestCase):
         finally:
             reload(pycassa.connection)
 
+    def test_system_calls(self):
+        conn = connect('Keyspace1')
 
+        # keyspace modifications
+        try:
+            conn.drop_keyspace('TestKeyspace')
+        except:
+            pass
+        conn.add_keyspace(KsDef('TestKeyspace',
+            'org.apache.cassandra.locator.SimpleStrategy', None, 3, []))
+        conn.update_keyspace(KsDef('TestKeyspace',
+            'org.apache.cassandra.locator.SimpleStrategy', None, 2, []))
+        conn.drop_keyspace('TestKeyspace')
 
+        # column family modifications
+        try:
+            conn.drop_column_family('TestCF')
+        except:
+            pass
+        conn.add_column_family(CfDef('Keyspace1', 'TestCF', 'Standard'))
+        cfdef = conn.get_keyspace_description()['TestCF']
+        cfdef.comment = 'this is a test'
+        conn.update_column_family(cfdef)
+        conn.drop_column_family('TestCF')
