@@ -54,14 +54,23 @@ the names of the objects. You can use these to easily insert and retrieve data f
     {'colname': 'val'}
 
 If you are interested in the keyspace and column family definitions,
-the :meth:`system_*()` calls are also availble directly on ``CLIENT``.
-These allow you to create, drop, or edit keyspaces and column families,
-although they are not very friendly to use.
+**pycassa** provides several methods that can be used with ``CLIENT``:
+
+* :meth:`~pycassa.connection.Connection.add_keyspace()`
+* :meth:`~pycassa.connection.Connection.update_keyspace()`
+* :meth:`~pycassa.connection.Connection.drop_keyspace()`
+* :meth:`~pycassa.connection.Connection.add_column_family()`
+* :meth:`~pycassa.connection.Connection.update_column_family()`
+* :meth:`~pycassa.connection.Connection.drop_column_family()`
+
+Example usage:
 
 .. code-block:: python
 
     >>> CLIENT.describe_keyspace('Keyspace1')
     KsDef(strategy_options=None, cf_defs=[CfDef(comment='', min_compaction_threshold=4, name='SuperLongSubInt', column_type='Super', preload_row_cache=False, key_cache_size=200000.0, gc_grace_seconds=0, column_metadata=[], keyspace='Keyspace1', default_validation_class='org.apache.cassandra.db.marshal.BytesType', max_compaction_threshold=32, subcomparator_type='org.apache.cassandra.db.marshal.IntegerType', read_repair_chance=1.0, comparator_type='org.apache.cassandra.db.marshal.LongType', id=1021, row_cache_size=0.0)], strategy_class='org.apache.cassandra.locator.SimpleStrategy', name='Keyspace1', replication_factor=1)
-    >>> CLIENT.system_rename_keyspace('Keyspace1', 'NewKeyspaceName')
+    >>> cfdef = CLIENT.get_keyspace_description()['Standard1']
+    >>> cfdef.memtable_throughput_in_mb = 42
+    >>> CLIENT.update_column_family(cfdef)
     '6e8504ff-d001-11df-a513-e700f669bcfc'
 
