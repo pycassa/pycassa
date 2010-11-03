@@ -7,7 +7,7 @@ Make sure that you have Thrift's python bindings installed:
 
 .. code-block:: bash
 
-  $ easy_install thrift
+  $ easy_install thrift05
 
 You can download a release from 
 `github <http://github.com/pycassa/pycassa/downloads>`_
