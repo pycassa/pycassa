@@ -96,12 +96,21 @@ the names of the objects. You can use these to easily insert and retrieve data f
 </pre></div>
 </div>
 <p>If you are interested in the keyspace and column family definitions,
-the <tt class="xref py py-meth docutils literal"><span class="pre">system_*()</span></tt> calls are also availble directly on <tt class="docutils literal"><span class="pre">CLIENT</span></tt>.
-These allow you to create, drop, or edit keyspaces and column families,
-although they are not very friendly to use.</p>
+<strong>pycassa</strong> provides several methods that can be used with <tt class="docutils literal"><span class="pre">CLIENT</span></tt>:</p>
+<ul class="simple">
+<li><a class="reference internal" href="api/pycassa/connection.html#pycassa.connection.Connection.add_keyspace" title="pycassa.connection.Connection.add_keyspace"><tt class="xref py py-meth docutils literal"><span class="pre">add_keyspace()</span></tt></a></li>
+<li><a class="reference internal" href="api/pycassa/connection.html#pycassa.connection.Connection.update_keyspace" title="pycassa.connection.Connection.update_keyspace"><tt class="xref py py-meth docutils literal"><span class="pre">update_keyspace()</span></tt></a></li>
+<li><a class="reference internal" href="api/pycassa/connection.html#pycassa.connection.Connection.drop_keyspace" title="pycassa.connection.Connection.drop_keyspace"><tt class="xref py py-meth docutils literal"><span class="pre">drop_keyspace()</span></tt></a></li>
+<li><a class="reference internal" href="api/pycassa/connection.html#pycassa.connection.Connection.add_column_family" title="pycassa.connection.Connection.add_column_family"><tt class="xref py py-meth docutils literal"><span class="pre">add_column_family()</span></tt></a></li>
+<li><a class="reference internal" href="api/pycassa/connection.html#pycassa.connection.Connection.update_column_family" title="pycassa.connection.Connection.update_column_family"><tt class="xref py py-meth docutils literal"><span class="pre">update_column_family()</span></tt></a></li>
+<li><a class="reference internal" href="api/pycassa/connection.html#pycassa.connection.Connection.drop_column_family" title="pycassa.connection.Connection.drop_column_family"><tt class="xref py py-meth docutils literal"><span class="pre">drop_column_family()</span></tt></a></li>
+</ul>
+<p>Example usage:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">CLIENT</span><span class="o">.</span><span class="n">describe_keyspace</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
 <span class="go">KsDef(strategy_options=None, cf_defs=[CfDef(comment=&#39;&#39;, min_compaction_threshold=4, name=&#39;SuperLongSubInt&#39;, column_type=&#39;Super&#39;, preload_row_cache=False, key_cache_size=200000.0, gc_grace_seconds=0, column_metadata=[], keyspace=&#39;Keyspace1&#39;, default_validation_class=&#39;org.apache.cassandra.db.marshal.BytesType&#39;, max_compaction_threshold=32, subcomparator_type=&#39;org.apache.cassandra.db.marshal.IntegerType&#39;, read_repair_chance=1.0, comparator_type=&#39;org.apache.cassandra.db.marshal.LongType&#39;, id=1021, row_cache_size=0.0)], strategy_class=&#39;org.apache.cassandra.locator.SimpleStrategy&#39;, name=&#39;Keyspace1&#39;, replication_factor=1)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">CLIENT</span><span class="o">.</span><span class="n">system_rename_keyspace</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="s">&#39;NewKeyspaceName&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cfdef</span> <span class="o">=</span> <span class="n">CLIENT</span><span class="o">.</span><span class="n">get_keyspace_description</span><span class="p">()[</span><span class="s">&#39;Standard1&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cfdef</span><span class="o">.</span><span class="n">memtable_throughput_in_mb</span> <span class="o">=</span> <span class="mi">42</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">CLIENT</span><span class="o">.</span><span class="n">update_column_family</span><span class="p">(</span><span class="n">cfdef</span><span class="p">)</span>
 <span class="go">&#39;6e8504ff-d001-11df-a513-e700f669bcfc&#39;</span>
 </pre></div>
 </div>

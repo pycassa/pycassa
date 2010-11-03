@@ -82,7 +82,7 @@ And we can insert more than one row at a time:
 
 .. code-block:: python
 
-  >>> col_fam.batch_insert({'row1': {'name1':'val1'},
+  >>> col_fam.batch_insert({'row1': {'name1':'val1', 'name2':'val2'},
   ...                       'row2': {'foo':'bar'})
   1354491238721387
 
@@ -106,14 +106,14 @@ specify them using a `columns` argument:
 
 .. code-block:: python
 
-  >>> col_fam.get('row_key', columns=['name1', 'name2')
+  >>> col_fam.get('row_key', columns=['name1', 'name2'])
   {'name1': 'foo', 'name2': 'bar'}
 
 We may also get a slice (or subrange) or the columns in a row. To do this,
-use the `column_start` and `column_finish` parameters. If one of these may be
-left empty to allow the slice to extend to the end of the row in one direction.
-Also note that `column_finish` is inclusive. Assuming we've inserted several
-columns with names '1' through '9', we could do the following:
+use the `column_start` and `column_finish` parameters.  One or both of these may
+be left empty to allow the slice to extend to one or both ends the.
+Note that `column_finish` is inclusive. Assuming we've inserted several
+columns with names '1' through '9', we can do the following:
 
 .. code-block:: python
 
@@ -131,8 +131,8 @@ The first is to specify them by name using
 
 The other way is to get a range of keys at once by using
 :meth:`~pycassa.columnfamily.ColumnFamily.get_range()`. The parameter
-`finish` is also inclusive here too.  Assuming we've inserted some rows
-with keys 'row_key1' through 'row_key9', we could do this:
+`finish` is also inclusive here, too.  Assuming we've inserted some rows
+with keys 'row_key1' through 'row_key9', we can do this:
 
 .. code-block:: python
 
@@ -297,7 +297,7 @@ can turn it off when you create the
   ...                                autopack_values=False)
 
 This mainly needs to be done when working with
-:class:`~pycassa.columnfamily.ColumnFamilyMap`.
+:class:`~pycassa.columnfamilymap.ColumnFamilyMap`.
 
 Indexes
 -------
@@ -318,11 +318,11 @@ will be indexed.  In a ``cassandra.yaml`` file, this might look like:
 
 In order to use :meth:`~pycassa.columnfamily.ColumnFamily.get_indexed_slices()`
 to get data from Indexed1 using the indexed column, we need to create an 
-:class:`~pycassa.cassandra.ttypes.IndexClause` which contains 
-:class:`~pycassa.cassandra.ttypes.IndexExpression`.  The module
+:class:`~pycassa.cassandra.ttypes.IndexClause` which contains a list of
+:class:`~pycassa.cassandra.ttypes.IndexExpression` objects.  The module
 :mod:`pycassa.index` is designed to make this easier.
 
-Suppose we are only interested in rows where birthdate is 1984. We might do
+Suppose we are only interested in rows where 'birthdate' is 1984. We might do
 the following:
 
 .. code-block:: python
@@ -380,12 +380,12 @@ You can map existing classes to column families using
   ...     datetime_str_column = pycassa.DateTimeString() # default=None
 
 The defaults will be filled in whenever you retrieve instances from the
-Cassandra server and the column doesn't exist. If, for example, you add
-columns in the future, you simply add the relevant column and the default
-will be there when you get old instances.
+Cassandra server and the column doesn't exist. If you want to add a
+column in the future, you can simply add the relevant attribute to the class
+and the default value will be used when you get old instances.
 
 :class:`~pycassa.types.IntString`, :class:`~pycassa.types.FloatString`, and
-:class:`~pycassa.types.DateTimeString`, all use string representations for
+:class:`~pycassa.types.DateTimeString` all use string representations for
 storage. :class:`~pycassa.types.Float64` is stored as a double and is
 native-endian. Be aware of any endian issues if you use it on different
 architectures, or perhaps make your own column type.
