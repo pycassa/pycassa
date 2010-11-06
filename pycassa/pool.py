@@ -922,7 +922,7 @@ class NullPool(Pool):
         Instead, it opens and closes the underlying Cassandra connection
         per each :meth:`~Pool.get()` and :meth:`~Pool.return_conn()`.
 
-        ``NullPool``s support retry behavior.
+        ``NullPool`` supports retry behavior.
 
         Instead of using this with threadlocal storage, you should use a
         :class:`SingletonThreadPool`.
