@@ -64,6 +64,11 @@
 so creating a new instance will always give you the
 same result. This means that you can adjust all of
 pycassa&#8217;s logging by calling methods on any instance.</p>
+<p>pycassa does <em>not</em> automatically add a handler to the
+logger, so logs will not be captured by default. You
+<em>must</em> add a <tt class="xref py py-class docutils literal"><span class="pre">logging.Handler()</span></tt> object to
+the root handler for logs to be captured.  See the
+example usage below.</p>
 <p>By default, the root logger name is &#8216;pycassa&#8217; and the
 logging level is &#8216;info&#8217;.</p>
 <p>The available levels are:</p>

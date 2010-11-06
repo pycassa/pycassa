@@ -179,6 +179,8 @@ sequence of servers.</li>
 <p>Be careful when using a QueuePool with <tt class="docutils literal"><span class="pre">use_threadlocal=False</span></tt>,
 especially with retries enabled.  Synchronization may be required to
 prevent the connection from changing while another thread is using it.</p>
+<p>All of the parameters for <tt class="xref py py-meth docutils literal"><span class="pre">Pool.__init__()</span></tt> are available, as
+well as the following:</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -240,7 +242,8 @@ upon creation and adds them to the queue.  Default is <tt class="xref docutils l
 <dd><p>Creates a Pool that maintains one connection per thread.</p>
 <p>Maintains one connection per each thread, never moving a connection to a
 thread other than the one which it was created in.</p>
-<p>Options are the same as those of <a class="reference internal" href="#pycassa.pool.Pool" title="pycassa.pool.Pool"><tt class="xref py py-class docutils literal"><span class="pre">Pool</span></tt></a>, as well as:</p>
+<p>All of the parameters for <tt class="xref py py-meth docutils literal"><span class="pre">Pool.__init__()</span></tt> are available, as
+well as the following:</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -264,18 +267,20 @@ retries and setting to -1 allows unlimited retries. Defaults to 5.</li>
 <dd><p>Creates a pool with exactly one connection that is used
 for all requests.</p>
 <p>Automatic retries are not currently supported.</p>
+<p>All of the parameters for <tt class="xref py py-meth docutils literal"><span class="pre">Pool.__init__()</span></tt> are available.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="pycassa.pool.NullPool">
 <em class="property">class </em><tt class="descclassname">pycassa.pool.</tt><tt class="descname">NullPool</tt><big>(</big><em>max_retries=5</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pycassa.pool.NullPool" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a Pool which does not pool connections.</p>
+<dd><p>Creates a <a class="reference internal" href="#pycassa.pool.Pool" title="pycassa.pool.Pool"><tt class="xref py py-class docutils literal"><span class="pre">Pool</span></tt></a> which does not pool connections.</p>
 <p>Instead, it opens and closes the underlying Cassandra connection
 per each <a class="reference internal" href="#pycassa.pool.Pool.get" title="pycassa.pool.Pool.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a> and <a class="reference internal" href="#pycassa.pool.Pool.return_conn" title="pycassa.pool.Pool.return_conn"><tt class="xref py py-meth docutils literal"><span class="pre">return_conn()</span></tt></a>.</p>
-<p>NullPools support retry behavior.</p>
+<p><tt class="docutils literal"><span class="pre">NullPool</span></tt> supports retry behavior.</p>
 <p>Instead of using this with threadlocal storage, you should use a
 <a class="reference internal" href="#pycassa.pool.SingletonThreadPool" title="pycassa.pool.SingletonThreadPool"><tt class="xref py py-class docutils literal"><span class="pre">SingletonThreadPool</span></tt></a>.</p>
-<p>Options are the same as those of <a class="reference internal" href="#pycassa.pool.Pool" title="pycassa.pool.Pool"><tt class="xref py py-class docutils literal"><span class="pre">Pool</span></tt></a>, as well as:</p>
+<p>All of the parameters for <tt class="xref py py-meth docutils literal"><span class="pre">Pool.__init__()</span></tt> are available,
+as well as:</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -300,7 +305,8 @@ time.</p>
 out at a time.  Useful for debugging code that is using more connections
 than desired.</p>
 <p>AssertionPools support automatic retries.</p>
-<p>Options are the same as those of <a class="reference internal" href="#pycassa.pool.Pool" title="pycassa.pool.Pool"><tt class="xref py py-class docutils literal"><span class="pre">Pool</span></tt></a>, as well as:</p>
+<p>All of the parameters for <tt class="xref py py-meth docutils literal"><span class="pre">Pool.__init__()</span></tt> are available,
+as well as:</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -609,7 +615,7 @@ the retries do not have to be on the same operation.</p>
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="connection.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.connection</span></tt> &#8211; Non-pooled connections to Cassandra servers</a></p>
+                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">pycassa.connection</span></tt> &#8211; Non-pooled connections to Cassandra servers</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="columnfamily.html"
                         title="next chapter"><tt class="docutils literal"><span class="pre">pycassa.columnfamily</span></tt> &#8211; Column Family</a></p>

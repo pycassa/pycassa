@@ -77,7 +77,7 @@ manipulation of data inside Cassandra.</p>
 
 <dl class="class">
 <dt id="pycassa.columnfamily.ColumnFamily">
-<em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">ColumnFamily</tt><big>(</big><em>client</em>, <em>column_family</em>, <em>buffer_size=1024</em>, <em>read_consistency_level=1</em>, <em>write_consistency_level=1</em>, <em>timestamp=&lt;function gm_timestamp at 0x1885b18&gt;</em>, <em>super=False</em>, <em>dict_class=&lt;type 'dict'&gt;</em>, <em>autopack_names=True</em>, <em>autopack_values=True</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">ColumnFamily</tt><big>(</big><em>client</em>, <em>column_family</em>, <em>buffer_size=1024</em>, <em>read_consistency_level=1</em>, <em>write_consistency_level=1</em>, <em>timestamp=&lt;function gm_timestamp at 0x232bc80&gt;</em>, <em>super=False</em>, <em>dict_class=&lt;type 'dict'&gt;</em>, <em>autopack_names=True</em>, <em>autopack_values=True</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructs an abstraction of a Cassandra column family or super column family.</p>
 <p>Operations on this, such as <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.get" title="pycassa.columnfamily.ColumnFamily.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a> or <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.insert" title="pycassa.columnfamily.ColumnFamily.insert"><tt class="xref py py-meth docutils literal"><span class="pre">insert()</span></tt></a> will get data from or
 insert data into the corresponding Cassandra column family.</p>
@@ -88,11 +88,11 @@ insert data into the corresponding Cassandra column family.</p>
 <tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>client</strong> (<a class="reference internal" href="connection.html#pycassa.connection.Connection" title="pycassa.connection.Connection"><tt class="xref py py-class docutils literal"><span class="pre">Connection</span></tt></a>) &#8211; Connection to a Cassandra node</li>
 <li><strong>column_family</strong> (<em>string</em>) &#8211; The name of the column family</li>
-<li><strong>buffer_size</strong> (<em>int</em>) &#8211; When calling <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.get_range" title="pycassa.columnfamily.ColumnFamily.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a>, the
-intermediate results need to be buffered if we are fetching
-many rows, otherwise the Cassandra server will overallocate
-memory and fail.  This is the size of that buffer in number
-of rows.</li>
+<li><strong>buffer_size</strong> (<em>int</em>) &#8211; When calling <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.get_range" title="pycassa.columnfamily.ColumnFamily.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a> or
+<a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.get_indexed_slices" title="pycassa.columnfamily.ColumnFamily.get_indexed_slices"><tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt></a>, the intermediate results need
+to be buffered if we are fetching many rows, otherwise the
+Cassandra server will overallocate memory and fail.  This
+is the size of that buffer in number of rows.</li>
 <li><strong>read_consistency_level</strong> (<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt></a>) &#8211; Affects the guaranteed replication factor
 before returning from any read operation</li>
 <li><strong>write_consistency_level</strong> (<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt></a>) &#8211; Affects the guaranteed replication
@@ -423,10 +423,10 @@ before returning from any write operation</li>
 <dt id="pycassa.columnfamily.ColumnFamily.truncate">
 <tt class="descname">truncate</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.truncate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Marks the entire ColumnFamily as deleted.</p>
-<p>From the user&#8217;s perspective a successful call to truncate will result
-complete data deletion from cfname. Internally, however, disk space
-will not be immediatily released, as with all deletes in cassandra,
-this one only marks the data as deleted.</p>
+<p>From the user&#8217;s perspective, a successful call to <tt class="docutils literal"><span class="pre">truncate</span></tt> will
+result complete data deletion from this column family. Internally,
+however, disk space will not be immediatily released, as with all
+deletes in Cassandra, this one only marks the data as deleted.</p>
 <p>The operation succeeds only if all hosts in the cluster at available
 and will throw an <a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.UnavailableException" title="pycassa.cassandra.ttypes.UnavailableException"><tt class="xref py py-exc docutils literal"><span class="pre">UnavailableException</span></tt></a> if some hosts are
 down.</p>
