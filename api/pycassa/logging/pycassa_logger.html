@@ -74,12 +74,12 @@ logging level is &#8216;info&#8217;.</p>
 <li>error</li>
 <li>critical</li>
 </ul>
-<p>Usage:</p>
+<p>Example Usage:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">logging</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">log</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">PycassaLogger</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="o">.</span><span class="n">set_logger_name</span><span class="p">(</span><span class="s">&#39;pycassa_library&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="o">.</span><span class="n">set_logger_level</span><span class="p">(</span><span class="s">&#39;debug&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="o">.</span><span class="n">get_logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="o">.</span><span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">())</span>
 </pre></div>
 </div>
 <dl class="method">
@@ -134,7 +134,7 @@ updated when the logger name changes.</p>
                         title="previous chapter"><tt class="docutils literal"><span class="pre">pycassa.util</span></tt> &#8211; Utilities</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="../cassandra/ttypes.html"
-                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">pycassa.cassandra.ttypes</span></tt> &#8211; Thrift Object Types</a></p>
+                        title="next chapter"><tt class="docutils literal"><span class="pre">pycassa.cassandra.ttypes</span></tt> &#8211; Thrift Object Types</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../../sources/api/pycassa/logging/pycassa_logger.txt"

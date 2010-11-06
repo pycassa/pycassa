@@ -89,9 +89,9 @@ the &#8220;name&#8221; field of logging records generated within the
 &#8220;pycassa.pool&#8221; logger. Defaults to <tt class="docutils literal"><span class="pre">id(pool)</span></tt>.</li>
 <li><strong>use_threadlocal</strong> &#8211; If set to <tt class="xref docutils literal"><span class="pre">True</span></tt>, repeated calls to
 <a class="reference internal" href="#pycassa.pool.Pool.get" title="pycassa.pool.Pool.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a> within the same application thread will
-return the same ConnectionWrapper object, if one has already
-been retrieved from the pool and has not been
-returned yet.</li>
+return the same <a class="reference internal" href="#pycassa.pool.ConnectionWrapper" title="pycassa.pool.ConnectionWrapper"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionWrapper</span></tt></a>
+object, if one has already been retrieved from the pool and
+has not been returned yet.</li>
 <li><strong>listeners</strong> &#8211; A list of
 <a class="reference internal" href="#pycassa.pool.PoolListener" title="pycassa.pool.PoolListener"><tt class="xref py py-class docutils literal"><span class="pre">PoolListener</span></tt></a>-like objects or
 dictionaries of callables that receive events when
@@ -160,7 +160,7 @@ constructed by <a class="reference internal" href="#pycassa.pool.Pool.recreate" 
 <tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>server_list</strong> &#8211; A sequence of servers in the form &#8216;host:port&#8217; that
 the pool will connect to.  The list will be randomly permuted before
-being used. server_list may also be a function that returns the
+being used. <cite>server_list</cite> may also be a function that returns the
 sequence of servers.</li>
 </ul>
 </td>
@@ -200,9 +200,9 @@ size set in pool_size, additional connections will be
 returned up to this limit. When those additional connections
 are returned to the pool, they are disconnected and
 discarded. It follows then that the total number of
-simultaneous connections the pool will allow is pool_size +
-<cite>max_overflow</cite>, and the total number of &#8220;sleeping&#8221;
-connections the pool will allow is pool_size. <cite>max_overflow</cite>
+simultaneous connections the pool will allow is
+<tt class="docutils literal"><span class="pre">pool_size</span> <span class="pre">+</span> <span class="pre">max_overflow</span></tt>, and the total number of &#8220;sleeping&#8221;
+connections the pool will allow is <tt class="docutils literal"><span class="pre">pool_size</span></tt>. <cite>max_overflow</cite>
 can be set to -1 to indicate no overflow limit; no limit
 will be placed on the total number of concurrent
 connections. Defaults to 10.</li>
@@ -216,15 +216,15 @@ connection if necessary. Defaults to 10000.</li>
 <li><strong>max_retries</strong> &#8211; If set to non -1, the number times a connection
 can failover before an Exception is raised. Setting to 0 disables
 retries and setting to -1 allows unlimited retries. Defaults to 5.</li>
-<li><strong>prefill</strong> &#8211; If True, the pool creates <tt class="docutils literal"><span class="pre">pool_size</span></tt> connections
-upon creation and adds them to the queue.  Default is True.</li>
+<li><strong>prefill</strong> &#8211; If <tt class="xref docutils literal"><span class="pre">True</span></tt>, the pool creates <tt class="docutils literal"><span class="pre">pool_size</span></tt> connections
+upon creation and adds them to the queue.  Default is <tt class="xref docutils literal"><span class="pre">True</span></tt>.</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
 <p>Example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">QueuePool</span><span class="p">(</span><span class="n">keyspace</span><span class="o">=</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="n">prefill</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">QueuePool</span><span class="p">(</span><span class="n">keyspace</span><span class="o">=</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="n">server_list</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;10.0.0.4:9160&#39;</span><span class="p">,</span> <span class="s">&#39;10.0.0.5:9160&#39;</span><span class="p">],</span> <span class="n">prefill</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">conn</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="s">&#39;Standard1&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;col&#39;</span><span class="p">:</span> <span class="s">&#39;val&#39;</span><span class="p">})</span>
@@ -612,7 +612,7 @@ the retries do not have to be on the same operation.</p>
                         title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.connection</span></tt> &#8211; Non-pooled connections to Cassandra servers</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="columnfamily.html"
-                        title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.columnfamily</span></tt> &#8211; Column Family</a></p>
+                        title="next chapter"><tt class="docutils literal"><span class="pre">pycassa.columnfamily</span></tt> &#8211; Column Family</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../sources/api/pycassa/pool.txt"
