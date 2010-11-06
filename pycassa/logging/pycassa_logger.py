@@ -33,13 +33,13 @@ class PycassaLogger:
     * error
     * critical
 
-    Usage::
+    Example Usage::
 
         >>> import logging
         >>> log = pycassa.PycassaLogger()
         >>> log.set_logger_name('pycassa_library')
         >>> log.set_logger_level('debug')
-        >>> log.get_logger.addHandler(logging.StreamHandler())
+        >>> log.get_logger().addHandler(logging.StreamHandler())
 
     """
 
