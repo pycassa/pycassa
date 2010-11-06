@@ -66,9 +66,9 @@ class Pool(object):
 
         :param use_threadlocal: If set to ``True``, repeated calls to
           :meth:`get()` within the same application thread will
-          return the same ConnectionWrapper object, if one has already
-          been retrieved from the pool and has not been
-          returned yet.
+          return the same :class:`ConnectionWrapper`
+          object, if one has already been retrieved from the pool and
+          has not been returned yet.
 
         :param listeners: A list of
           :class:`PoolListener`-like objects or
@@ -114,7 +114,7 @@ class Pool(object):
 
         :param server_list: A sequence of servers in the form 'host:port' that
           the pool will connect to.  The list will be randomly permuted before
-          being used. server_list may also be a function that returns the
+          being used. `server_list` may also be a function that returns the
           sequence of servers.
 
         """
@@ -363,7 +363,7 @@ class ConnectionWrapper(connection.Connection):
         access to the thrift API calls.
 
         These should not be created directly, only obtained through
-        Pool's :meth:`~pycassa.pool.Pool.get()` method.
+        Pool's :meth:`~.Pool.get()` method.
 
         """
         self._pool = pool
@@ -612,9 +612,9 @@ class QueuePool(Pool):
           returned up to this limit. When those additional connections
           are returned to the pool, they are disconnected and
           discarded. It follows then that the total number of
-          simultaneous connections the pool will allow is pool_size +
-          `max_overflow`, and the total number of "sleeping"
-          connections the pool will allow is pool_size. `max_overflow`
+          simultaneous connections the pool will allow is
+          ``pool_size + max_overflow``, and the total number of "sleeping"
+          connections the pool will allow is ``pool_size``. `max_overflow`
           can be set to -1 to indicate no overflow limit; no limit
           will be placed on the total number of concurrent
           connections. Defaults to 10.
@@ -632,12 +632,12 @@ class QueuePool(Pool):
           can failover before an Exception is raised. Setting to 0 disables
           retries and setting to -1 allows unlimited retries. Defaults to 5.
 
-        :param prefill: If True, the pool creates ``pool_size`` connections
-          upon creation and adds them to the queue.  Default is True.
+        :param prefill: If ``True``, the pool creates ``pool_size`` connections
+          upon creation and adds them to the queue.  Default is ``True``.
 
         Example::
 
-            >>> pool = pycassa.QueuePool(keyspace='Keyspace1', prefill=False)
+            >>> pool = pycassa.QueuePool(keyspace='Keyspace1', server_list=['10.0.0.4:9160', '10.0.0.5:9160'], prefill=False)
             >>> conn = pool.get()
             >>> cf = pycassa.ColumnFamily(conn, 'Standard1')
             >>> cf.insert('key', {'col': 'val'})
