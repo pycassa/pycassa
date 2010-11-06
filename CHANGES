@@ -1,3 +1,14 @@
+Changes in Version 0.5.2
+
+    * Support for adding/updating/dropping Keyspaces and CFs in pycassa.connection.Connection
+    * get_range() optimization and more configurable batch size
+    * batch get_indexed_slices() similar to get_range()
+    * Reorganized pycassa logging
+    * More efficient packing of data types
+    * Fix error condition that results in infinite recursion
+    * Limit pooling retries to only appropriate exceptions
+    * Use Thrift API 19.3.0
+
 Changes in Version 0.5.1
 
     * Automatically detect if a column family is a standard column family or a super column family
