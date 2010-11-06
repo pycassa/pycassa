@@ -595,6 +595,9 @@ class QueuePool(Pool):
         especially with retries enabled.  Synchronization may be required to
         prevent the connection from changing while another thread is using it.
 
+        All of the parameters for :meth:`Pool.__init__()` are available, as
+        well as the following:
+
         :param pool_size: The size of the pool to be maintained,
           defaults to 5. This is the largest number of connections that
           will be kept in the pool at one time.
@@ -832,7 +835,8 @@ class SingletonThreadPool(Pool):
         Maintains one connection per each thread, never moving a connection to a
         thread other than the one which it was created in.
 
-        Options are the same as those of :class:`Pool`, as well as:
+        All of the parameters for :meth:`Pool.__init__()` are available, as
+        well as the following:
 
         :param pool_size: The number of threads in which to maintain connections
             at once.  Defaults to five.
@@ -913,17 +917,18 @@ class NullPool(Pool):
 
     def __init__(self, max_retries=5, *args, **kwargs):
         """
-        Creates a Pool which does not pool connections.
+        Creates a :class:`Pool` which does not pool connections.
 
         Instead, it opens and closes the underlying Cassandra connection
         per each :meth:`~Pool.get()` and :meth:`~Pool.return_conn()`.
 
-        NullPools support retry behavior.
+        ``NullPool``s support retry behavior.
 
         Instead of using this with threadlocal storage, you should use a
         :class:`SingletonThreadPool`.
 
-        Options are the same as those of :class:`Pool`, as well as:
+        All of the parameters for :meth:`Pool.__init__()` are available,
+        as well as:
 
         :param max_retries: If set to non -1, the number times a connection
           can failover before an Exception is raised. Setting to 0 disables
@@ -976,6 +981,8 @@ class StaticPool(Pool):
         for all requests.
 
         Automatic retries are not currently supported.
+
+        All of the parameters for :meth:`Pool.__init__()` are available.
 
         """
         Pool.__init__(self, *args, **kwargs)
@@ -1034,7 +1041,8 @@ class AssertionPool(Pool):
 
         AssertionPools support automatic retries.
 
-        Options are the same as those of :class:`Pool`, as well as:
+        All of the parameters for :meth:`Pool.__init__()` are available,
+        as well as:
 
         :param max_retries: If set to non -1, the number times a connection
           can failover before an Exception is raised. Setting to 0 disables

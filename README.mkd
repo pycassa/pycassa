@@ -1,24 +1,25 @@
 # Note
 
-If you are using the 0.6.x series of Cassandra then get Pycassa 0.3 from the
+If you are using the 0.6.x series of Cassandra then get pycassa 0.3 from the
 Downloads section and read the documentation contained within.  This README
-applies to the current state of Pycassa which tracks Cassandra's development
+applies to the current state of pycassa which tracks Cassandra's development
 (work in-progress toward Cassandra 0.7).
 
 pycassa
 =======
 
-pycassa is a Cassandra library with the following features:
+pycassa is a Cassandra client library with the following features:
 
-1. Auto-failover single or thread-local connections and connection pooling
-2. A simplified version of the thrift interface
-3. A method to map an existing class to a Cassandra ColumnFamily.
-4. Support for SuperColumns
+1. Auto-failover single or thread-local connections
+2. Connection pooling
+3. A batch interface
+4. Simplified version of the Thrift interface
+5. A method to map an existing class to a Cassandra column family
 
 Documentation
 -------------
 
-While this readme includes a lot of information, the official and more
+While this README includes a lot of information, the official and more
 thorough documentation can be found here:
 
 [http://pycassa.github.com/pycassa/](http://pycassa.github.com/pycassa/)
@@ -36,7 +37,7 @@ Requirements
 
 To install thrift's python bindings:
 
-    easy_install thrift
+    easy_install thrift05
 
 pycassa comes with the Cassandra python files for convenience, but you can replace them with your own.
 
@@ -52,29 +53,24 @@ Connecting
 ----------
 
 All functions are documented with docstrings.
-To read usage documentation:
+To read usage documentation, you can use help:
 
     >>> import pycassa
     >>> help(pycassa.ColumnFamily.get)
 
-For a single connection (which is _not_ thread-safe), pass a list of servers.
+To get a single connection, pass a Keyspace and an optional list of servers:
 
     >>> client = pycassa.connect('Keyspace1') # Defaults to connecting to the server at 'localhost:9160'
     >>> client = pycassa.connect('Keyspace1', ['localhost:9160'])
 
-Framed transport is the default in Cassandra 0.7 and pycassa. You may disable it by passing framed_transport=False.
-
-    >>> client = pycassa.connect('Keyspace1', framed_transport=False)
-
-Thread-local connections opens a connection for every thread that calls a Cassandra function. It also automatically balances the number of connections between servers, unless round_robin=False.
-
-    >>> client = pycassa.connect_thread_local('Keyspace1') # Defaults to connecting to the server at 'localhost:9160'
-    >>> client = pycassa.connect_thread_local('Keyspace1', ['localhost:9160', 'other_server:9160']) # Round robin connections
-    >>> client = pycassa.connect_thread_local('Keyspace1', ['localhost:9160', 'other_server:9160'], round_robin=False) # Connect in list order
+By default, all connections are thread-local, so every thread that calls
+connect() will receive a new connection. The list of servers is randomly
+permuted before it is used, then each new connection uses the next available
+server in the list.
 
 Connections are robust to server failures. Upon a disconnection, it will attempt to connect to each server in the list in turn. If no server is available, it will raise a NoServerAvailable exception.
 
-Timeouts are also supported and should be used in production to prevent a thread from freezing while waiting for Cassandra to return.
+Timeouts are also supported and should be used in production to prevent a thread from hanging while waiting for Cassandra to return.
 
     >>> client = pycassa.connect('Keyspace1', timeout=3.5) # 3.5 second timeout
     (Make some pycassa calls and the connection to the server suddenly becomes unresponsive.)
@@ -97,21 +93,21 @@ To use the standard interface, create a ColumnFamily instance.
 
     >>> cf = pycassa.ColumnFamily(client, 'Test ColumnFamily')
 
-The value returned by an insert is the timestamp used for insertion, or int(time.time() * 1e6). You may replace this function with your own (see Extra Documentation).
+The value returned by insert() is the timestamp used for insertion, or int(time.time() * 1e6), by default.
 
     >>> cf.insert('foo', {'column1': 'val1'})
     1261349837816957
     >>> cf.get('foo')
     {'column1': 'val1'}
 
-Insert also acts to update values.
+insert() also acts to update values:
 
     >>> cf.insert('foo', {'column1': 'val2'})
     1261349910511572
     >>> cf.get('foo')
     {'column1': 'val2'}
 
-You may insert multiple columns at once.
+You may insert multiple columns at once:
 
     >>> cf.insert('bar', {'column1': 'val3', 'column2': 'val4'})
     1261350013606860
@@ -139,18 +135,6 @@ You can remove entire keys or just a certain column.
     Traceback (most recent call last):
     ...
     cassandra.ttypes.NotFoundException: NotFoundException()
-
-pycassa retains the behavior of Cassandra in that get_range() may return removed keys for a while. Cassandra will eventually delete them, so that they disappear.
-
-    >>> cf.remove('foo')
-    >>> cf.remove('bar')
-    >>> list(cf.get_range())
-    [('bar', {}), ('foo', {})]
-
-    ... After some amount of time
-
-    >>> list(cf.get_range())
-    []
 
 Class Mapping
 -------------
@@ -218,20 +202,12 @@ supplied class when possible.
     ...
     cassandra.ttypes.NotFoundException: NotFoundException()
 
-Note that, as mentioned previously, get_range() may continue to return removed rows for some time:
+Super Columns
+-------------
 
-    >>> Test.objects.remove(t)
-    1261395603756875
-    >>> list(Test.objects.get_range())
-    [<__main__.Test object at 0x7fac9c85ea90>]
-    >>> list(Test.objects.get_range())[0].string_column
-    'Your Default'
-
-SuperColumns
-------------
-
-SuperColumnFamilies are created exactly the same way that regular
-ColumnFamilies are.  When using them, just include an extra layer
+ColumnFamilies that deal with super column familes
+are created exactly the same way that they are for standard
+column families.  When using them, just include an extra layer
 in the column dictionaries.
 
     >>> cf = pycassa.ColumnFamily(client, 'Test SuperColumnFamily')
@@ -250,7 +226,7 @@ in the column dictionaries.
     >>> list(cf.get_range(super_column='2'))
     [('key1', {'sub3': 'val3', 'sub4': 'val4'})]
 
-You may also use a ColumnFamilyMap with SuperColumns:
+You may also use a ColumnFamilyMap with super columns:
 
     >>> Test.objects = pycassa.ColumnFamilyMap(Test, cf)
     >>> t = Test()
@@ -266,7 +242,7 @@ You may also use a ColumnFamilyMap with SuperColumns:
     >>> Test.objects.multiget([t.key])
     {'key1': {'super1': <__main__.Test object at 0x20ab550>}}
 
-These output values retain the same format as given by the Cassandra thrift interface.
+These output values retain the same format given by the Cassandra Thrift interface.
 
 Batch Mutations
 ---------------
@@ -342,10 +318,23 @@ To create a pool and use a connection:
 
 Automatic retries (or failover) are supported with all types of pools except for StaticPools.  This means that if any operation fails, it will be transparently retried on other servers until it succeeds or a maximum number of failures is reached.
 
+Raw Thrift API
+--------------
+
+All of the underlying Cassandra interface functions are available through Connection objects:
+
+    >>> client = pycassa.connect()
+    >>> client.describe_version()
+    '8.1.0'
+    >>> client.describe_keyspaces()
+    ['Test Keyspace', 'system']
+    >>> client.describe_keyspace('system')
+    {'LocationInfo': {'Type': 'Standard', 'CompareWith': 'org.apache.cassandra.db.marshal.UTF8Type', 'Desc': 'persistent metadata for the local node'}, 'HintsColumnFamily': {'CompareSubcolumnsWith': 'org.apache.cassandra.db.marshal.BytesType', 'Type': 'Super', 'CompareWith': 'org.apache.cassandra.db.marshal.UTF8Type', 'Desc': 'hinted handoff data'}}
+
 Advanced
 --------
 
-pycassa currently returns Cassandra Columns and SuperColumns as python dictionaries. Sometimes, though, you care about the order of elements. If you have access to an ordered dictionary class (such as collections.OrderedDict in python 2.7), then you may pass it to the constructor. All returned values will be of that class.
+pycassa currently returns Cassandra columns and super columns as python dictionaries. Sometimes, though, you care about the order of elements. If you have access to an ordered dictionary class (such as collections.OrderedDict in python 2.7), then you may pass it to the constructor. All returned values will be of that class.
 
     >>> cf = pycassa.ColumnFamily(client, 'Test ColumnFamily',
                                   dict_class=collections.OrderedDict)
@@ -358,17 +347,3 @@ You may also define your own Column types for the mapper. For example, the IntSt
     ...     def unpack(self, val):
     ...         return int(val)
     ... 
-
-Meta API
---------
-
-All of the underlying Cassandra interface functions are available through the connection.
-
-    >>> client = pycassa.connect()
-    >>> client.describe_version()
-    '8.1.0'
-    >>> client.describe_keyspaces()
-    ['Test Keyspace', 'system']
-    >>> client.describe_keyspace('system')
-    {'LocationInfo': {'Type': 'Standard', 'CompareWith': 'org.apache.cassandra.db.marshal.UTF8Type', 'Desc': 'persistent metadata for the local node'}, 'HintsColumnFamily': {'CompareSubcolumnsWith': 'org.apache.cassandra.db.marshal.BytesType', 'Type': 'Super', 'CompareWith': 'org.apache.cassandra.db.marshal.UTF8Type', 'Desc': 'hinted handoff data'}}
-

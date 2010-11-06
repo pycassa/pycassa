@@ -66,11 +66,11 @@ class ColumnFamily(object):
         :param column_family: The name of the column family
         :type column_family: string
 
-        :param buffer_size: When calling :meth:`get_range()`, the
-          intermediate results need to be buffered if we are fetching
-          many rows, otherwise the Cassandra server will overallocate
-          memory and fail.  This is the size of that buffer in number
-          of rows.
+        :param buffer_size: When calling :meth:`get_range()` or
+          :meth:`get_indexed_slices()`, the intermediate results need
+          to be buffered if we are fetching many rows, otherwise the
+          Cassandra server will overallocate memory and fail.  This
+          is the size of that buffer in number of rows.
         :type buffer_size: int
 
         :param read_consistency_level: Affects the guaranteed replication factor
@@ -809,10 +809,10 @@ class ColumnFamily(object):
         """
         Marks the entire ColumnFamily as deleted.
 
-        From the user's perspective a successful call to truncate will result
-        complete data deletion from cfname. Internally, however, disk space
-        will not be immediatily released, as with all deletes in cassandra,
-        this one only marks the data as deleted.
+        From the user's perspective, a successful call to ``truncate`` will
+        result complete data deletion from this column family. Internally,
+        however, disk space will not be immediatily released, as with all
+        deletes in Cassandra, this one only marks the data as deleted.
 
         The operation succeeds only if all hosts in the cluster at available
         and will throw an :exc:`.UnavailableException` if some hosts are
