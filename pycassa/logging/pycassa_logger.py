@@ -22,6 +22,12 @@ class PycassaLogger:
     same result. This means that you can adjust all of
     pycassa's logging by calling methods on any instance.
 
+    pycassa does *not* automatically add a handler to the
+    logger, so logs will not be captured by default. You
+    *must* add a :class:`logging.Handler()` object to
+    the root handler for logs to be captured.  See the
+    example usage below.
+
     By default, the root logger name is 'pycassa' and the
     logging level is 'info'.
 
