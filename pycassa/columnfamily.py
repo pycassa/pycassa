@@ -16,7 +16,7 @@ import sys
 import uuid
 import struct
 
-from batch import CfMutator
+from batch import CfMutator, PooledCfMutator
 
 if hasattr(struct, 'Struct'): # new in Python 2.5
    _have_struct = True
@@ -26,7 +26,7 @@ if hasattr(struct, 'Struct'): # new in Python 2.5
 else:
     _have_struct = False
 
-__all__ = ['gm_timestamp', 'ColumnFamily']
+__all__ = ['gm_timestamp', 'ColumnFamily', 'PooledColumnFamily']
 
 _TYPES = ['BytesType', 'LongType', 'IntegerType', 'UTF8Type', 'AsciiType',
          'LexicalUUIDType', 'TimeUUIDType']
@@ -134,7 +134,7 @@ class ColumnFamily(object):
 
         col_fam = None
         try:
-            col_fam = client.get_keyspace_description(use_dict_for_col_metadata=True)[self.column_family]
+            col_fam = self.client.get_keyspace_description(use_dict_for_col_metadata=True)[self.column_family]
         except KeyError:
             raise NotFoundException('Column family %s not found.' % self.column_family)
 
@@ -820,3 +820,97 @@ class ColumnFamily(object):
 
         """
         self.client.truncate(self.column_family)
+
+class PooledColumnFamily(ColumnFamily):
+    """   
+    A ColumnFamily that uses a :class:`.Pool` object instead of a
+    :class:`.Connection` object to perform its operations.
+
+    """
+
+    def __init__(self, pool, keyspace, **kwargs):
+        """
+        A ColumnFamily that uses a :class:`.Pool` object instead of a
+        :class:`.Connection` object to perform its operations.  Connections
+        are automatically retrieved before every operation and returned to the
+        pool when the operation completes.
+
+        """
+ 
+        self.pool = pool
+        conn = self.pool.get()
+        super(PooledColumnFamily, self).__init__(conn, keyspace, **kwargs)
+        conn.return_to_pool()
+
+    def get(self, *args, **kwargs):
+        self.client = self.pool.get()
+        try:
+            return super(PooledColumnFamily, self).get(*args, **kwargs)
+        finally:
+            self.client.return_to_pool()
+
+    def multiget(self, *args, **kwargs):
+        self.client = self.pool.get()
+        try:
+            return super(PooledColumnFamily, self).multiget(*args, **kwargs)
+        finally:
+            self.client.return_to_pool()
+
+    def get_indexed_slices(self, *args, **kwargs):
+        self.client = self.pool.get()
+        try:
+            return super(PooledColumnFamily, self).get_indexed_slices(*args, **kwargs)
+        finally:
+            self.client.return_to_pool()
+
+    def get_count(self, *args, **kwargs):
+        self.client = self.pool.get()
+        try:
+            return super(PooledColumnFamily, self).get_count(*args, **kwargs)
+        finally:
+            self.client.return_to_pool()
+
+    def multiget_count(self, *args, **kwargs):
+        self.client = self.pool.get()
+        try:
+            return super(PooledColumnFamily, self).multiget_count(*args, **kwargs)
+        finally:
+            self.client.return_to_pool()
+
+    def get_range(self, *args, **kwargs):
+        self.client = self.pool.get()
+        try:
+            return super(PooledColumnFamily, self).get_range(*args, **kwargs)
+        finally:
+            self.client.return_to_pool()
+
+    def insert(self, *args, **kwargs):
+        self.client = self.pool.get()
+        try:
+            return super(PooledColumnFamily, self).insert(*args, **kwargs)
+        finally:
+            self.client.return_to_pool()
+
+    def batch_insert(self, *args, **kwargs):
+        self.client = self.pool.get()
+        try:
+            return super(PooledColumnFamily, self).batch_insert(*args, **kwargs)
+        finally:
+            self.client.return_to_pool()
+
+    def remove(self, *args, **kwargs):
+        self.client = self.pool.get()
+        try:
+            return super(PooledColumnFamily, self).remove(*args, **kwargs)
+        finally:
+            self.client.return_to_pool()
+
+    def truncate(self, *args, **kwargs):
+        self.client = self.pool.get()
+        try:
+            return super(PooledColumnFamily, self).truncate(*args, **kwargs)
+        finally:
+            self.client.return_to_pool()
+
+    def batch(self, queue_size=100, write_consistency_level=None):
+        return PooledCfMutator(self, queue_size, self._wcl(write_consistency_level))
