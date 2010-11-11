@@ -1,3 +1,7 @@
+Changes in Version 0.5.3
+
+    * Added PooledColumnFamily, which makes it easy to use connection pooling automatically with a ColumnFamily.
+
 Changes in Version 0.5.2
 
     * Support for adding/updating/dropping Keyspaces and CFs in pycassa.connection.Connection
