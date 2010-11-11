@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.columnfamily – Column Family &mdash; pycassa v0.5.2 documentation</title>
+    <title>pycassa.columnfamily – Column Family &mdash; pycassa v0.5.3 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.2',
+        VERSION:     '0.5.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,7 +22,7 @@
     <script type="text/javascript" src="../../static/jquery.js"></script>
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
-    <link rel="top" title="pycassa v0.5.2 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v0.5.3 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.columnfamilymap – Maps Classes to Column Families" href="columnfamilymap.html" />
     <link rel="prev" title="pycassa.pool – Connection Pooling" href="pool.html" /> 
@@ -43,7 +43,7 @@
         <li class="right" >
           <a href="pool.html" title="pycassa.pool – Connection Pooling"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v0.5.2 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v0.5.3 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -77,7 +77,7 @@ manipulation of data inside Cassandra.</p>
 
 <dl class="class">
 <dt id="pycassa.columnfamily.ColumnFamily">
-<em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">ColumnFamily</tt><big>(</big><em>client</em>, <em>column_family</em>, <em>buffer_size=1024</em>, <em>read_consistency_level=1</em>, <em>write_consistency_level=1</em>, <em>timestamp=&lt;function gm_timestamp at 0x232bc80&gt;</em>, <em>super=False</em>, <em>dict_class=&lt;type 'dict'&gt;</em>, <em>autopack_names=True</em>, <em>autopack_values=True</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">ColumnFamily</tt><big>(</big><em>client</em>, <em>column_family</em>, <em>buffer_size=1024</em>, <em>read_consistency_level=1</em>, <em>write_consistency_level=1</em>, <em>timestamp=&lt;function gm_timestamp at 0x1432500&gt;</em>, <em>super=False</em>, <em>dict_class=&lt;type 'dict'&gt;</em>, <em>autopack_names=True</em>, <em>autopack_values=True</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructs an abstraction of a Cassandra column family or super column family.</p>
 <p>Operations on this, such as <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.get" title="pycassa.columnfamily.ColumnFamily.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a> or <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.insert" title="pycassa.columnfamily.ColumnFamily.insert"><tt class="xref py py-meth docutils literal"><span class="pre">insert()</span></tt></a> will get data from or
 insert data into the corresponding Cassandra column family.</p>
@@ -434,6 +434,15 @@ down.</p>
 
 </dd></dl>
 
+<dl class="class">
+<dt id="pycassa.columnfamily.PooledColumnFamily">
+<em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">PooledColumnFamily</tt><big>(</big><em>pool</em>, <em>keyspace</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.PooledColumnFamily" title="Permalink to this definition">¶</a></dt>
+<dd><p>A ColumnFamily that uses a <a class="reference internal" href="pool.html#pycassa.pool.Pool" title="pycassa.pool.Pool"><tt class="xref py py-class docutils literal"><span class="pre">Pool</span></tt></a> object instead of a
+<a class="reference internal" href="connection.html#pycassa.connection.Connection" title="pycassa.connection.Connection"><tt class="xref py py-class docutils literal"><span class="pre">Connection</span></tt></a> object to perform its operations.  Connections
+are automatically retrieved before every operation and returned to the
+pool when the operation completes.</p>
+</dd></dl>
+
 </div>
 
 
@@ -485,7 +494,7 @@ down.</p>
         <li class="right" >
           <a href="pool.html" title="pycassa.pool – Connection Pooling"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v0.5.2 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v0.5.3 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>
