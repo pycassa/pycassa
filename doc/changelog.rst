@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Changes in Version 0.5.3
+------------------------
+
+- Added :class:`~pycassa.columnfamily.PooledColumnFamily`, which makes
+  it easy to use connection pooling automatically with a ColumnFamily.
+
 Changes in Version 0.5.2
 ------------------------
 

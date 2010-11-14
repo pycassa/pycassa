@@ -145,3 +145,27 @@ class CfMutator(Mutator):
                                              super_column=super_column,
                                              timestamp=timestamp)
 
+class PooledCfMutator(CfMutator):
+
+    def __init__(self, *args, **kwargs):
+        super(PooledCfMutator, self).__init__(*args, **kwargs)
+
+    def send(self, write_consistency_level=None):
+        if write_consistency_level is None:
+            write_consistency_level = self.write_consistency_level
+        mutations = {}
+        conn = None
+        self._lock.acquire()
+        try:
+            for key, column_family, cols in self._buffer:
+                mutations.setdefault(key, {}).setdefault(column_family, []).extend(cols)
+            if mutations:
+                conn = self._column_family.pool.get()
+                conn.batch_mutate(mutations, write_consistency_level)
+            self._buffer = []
+        finally:
+            if conn:
+                conn.return_to_pool()
+            self._lock.release()
+
+
