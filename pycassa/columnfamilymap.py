@@ -343,15 +343,15 @@ class ColumnFamilyMap(object):
 
         return self.column_family.insert(instance.key, insert_dict)
 
-    def remove(self, instance, column=None):
+    def remove(self, instance, columns=None, super_column=None):
         """
         Remove this instance
 
         :Parameters:
             `instance`: Class instance
                 Remove the instance where the key is instance.key
-            `column`: str
-                If set, remove only this Column. Doesn't do anything for SuperColumns
+            `columns`: list
+                If not None, remove only these Columns. Doesn't do anything for SuperColumns
 
         :Returns:
             int timestamp
@@ -360,5 +360,6 @@ class ColumnFamilyMap(object):
         # It's slower, so we'll leave it out.
 
         if self.column_family.super:
-            return self.column_family.remove(instance.key, column=instance.super_column)
-        return self.column_family.remove(instance.key, column)
+            return self.column_family.remove(instance.key, super_column=instance.super_column)
+        else:
+            return self.column_family.remove(instance.key, columns)
