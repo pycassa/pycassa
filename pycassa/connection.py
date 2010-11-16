@@ -47,6 +47,7 @@ class ClientTransport(object):
     """Encapsulation of a client session."""
 
     def __init__(self, keyspace, server, framed_transport, timeout, credentials, recycle):
+        self.server = server
         host, port = server.split(":")
         socket = TSocket.TSocket(host, int(port))
         if timeout is not None:
@@ -232,6 +233,7 @@ class Connection(object):
             except (UnavailableException, TimedOutException), exc:
                 log.exception(exc)
                 self.close()
+                self._servers.mark_dead(conn.server)
                 return _client_call(*args, **kwargs) # Retry
             except (Thrift.TException, socket.timeout, socket.error), exc:
                 log.exception('Client error: %s', exc)
