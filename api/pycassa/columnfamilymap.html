@@ -351,7 +351,7 @@ any read operation</p>
 
 <dl class="method">
 <dt id="pycassa.columnfamilymap.ColumnFamilyMap.remove">
-<tt class="descname">remove</tt><big>(</big><em>instance</em>, <em>column=None</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap.remove" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">remove</tt><big>(</big><em>instance</em>, <em>columns=None</em>, <em>super_column=None</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap.remove" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove this instance</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -361,8 +361,8 @@ any read operation</p>
 <dt><cite>instance</cite>: Class instance</dt>
 <dd><p class="first last">Remove the instance where the key is instance.key</p>
 </dd>
-<dt><cite>column</cite>: str</dt>
-<dd><p class="first last">If set, remove only this Column. Doesn&#8217;t do anything for SuperColumns</p>
+<dt><cite>columns</cite>: list</dt>
+<dd><p class="first last">If not None, remove only these Columns. Doesn&#8217;t do anything for SuperColumns</p>
 </dd>
 </dl>
 </td>
