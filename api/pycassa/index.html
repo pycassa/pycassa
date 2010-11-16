@@ -56,6 +56,19 @@
   <div class="section" id="module-pycassa.index">
 <span id="pycassa-index-secondary-index-tools"></span><h1><a class="reference internal" href="#module-pycassa.index" title="pycassa.index"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.index</span></tt></a> &#8211; Secondary Index Tools<a class="headerlink" href="#module-pycassa.index" title="Permalink to this headline">¶</a></h1>
 <p>Tools for using Cassandra&#8217;s secondary indexes.</p>
+<p>Example Usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pycassa</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conn</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="s">&#39;Indexed1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index_expr1</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">create_index_expression</span><span class="p">(</span><span class="s">&#39;birthdate&#39;</span><span class="p">,</span> <span class="mi">1970</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index_expr2</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">create_index_expression</span><span class="p">(</span><span class="s">&#39;age&#39;</span><span class="p">,</span> <span class="mi">40</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index_clause</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">create_index_clause</span><span class="p">([</span><span class="n">index_expr1</span><span class="p">,</span> <span class="n">index_expr2</span><span class="p">],</span> <span class="n">count</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cf</span><span class="o">.</span><span class="n">get_indexed_slices</span><span class="p">(</span><span class="n">index_clause</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">pass</span> <span class="c"># do stuff here, or use list() on the result instead</span>
+</pre></div>
+</div>
+<p>This is give you all of the rows (up to 10000) which have a &#8216;birthdate&#8217; value
+of 1970 and an &#8216;age&#8217; value of 40.</p>
 <dl class="function">
 <dt id="pycassa.index.create_index_clause">
 <tt class="descclassname">pycassa.index.</tt><tt class="descname">create_index_clause</tt><big>(</big><em>expr_list</em>, <em>start_key=''</em>, <em>count=100</em><big>)</big><a class="headerlink" href="#pycassa.index.create_index_clause" title="Permalink to this definition">¶</a></dt>
@@ -112,10 +125,10 @@ to <cite>IndexOperator.EQ</cite>, which tests for equality.</li>
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="columnfamilymap.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.columnfamilymap</span></tt> &#8211; Maps Classes to Column Families</a></p>
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">pycassa.columnfamilymap</span></tt> &#8211; Maps Classes to Column Families</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="batch.html"
-                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">pycassa.batch</span></tt> &#8211; Batch Operations</a></p>
+                        title="next chapter"><tt class="docutils literal"><span class="pre">pycassa.batch</span></tt> &#8211; Batch Operations</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../sources/api/pycassa/index.txt"
