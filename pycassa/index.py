@@ -1,6 +1,22 @@
 """
 Tools for using Cassandra's secondary indexes.
 
+Example Usage:
+
+.. code-block:: python
+
+    >>> import pycassa
+    >>> conn = pycassa.connect('Keyspace1')
+    >>> cf = pycassa.ColumnFamily(conn, 'Indexed1')
+    >>> index_expr1 = pycassa.create_index_expression('birthdate', 1970)
+    >>> index_expr2 = pycassa.create_index_expression('age', 40)
+    >>> index_clause = pycassa.create_index_clause([index_expr1, index_expr2], count=10000)
+    >>> for row in cf.get_indexed_slices(index_clause):
+    >>>     pass # do stuff here, or use list() on the result instead
+
+This is give you all of the rows (up to 10000) which have a 'birthdate' value
+of 1970 and an 'age' value of 40.
+
 """
 
 from pycassa.cassandra.ttypes import IndexClause, IndexExpression,\

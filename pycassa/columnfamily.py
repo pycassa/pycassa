@@ -828,18 +828,28 @@ class PooledColumnFamily(ColumnFamily):
 
     """
 
-    def __init__(self, pool, keyspace, **kwargs):
+    def __init__(self, pool, column_family, **kwargs):
         """
         A ColumnFamily that uses a :class:`.Pool` object instead of a
         :class:`.Connection` object to perform its operations.  Connections
         are automatically retrieved before every operation and returned to the
         pool when the operation completes.
 
+        Example Usage:
+
+        .. code-block:: python
+
+            >>> pool = QueuePool(keyspace='Keyspace1', pool_size=10)
+            >>> cf = PooledColumnFamily(pool, 'Standard1')
+            >>> cf.insert('key' {'colname': 'colval'})
+            >>> cf.get('key')
+            {'colname': 'colval'}
+
         """
  
         self.pool = pool
         conn = self.pool.get()
-        super(PooledColumnFamily, self).__init__(conn, keyspace, **kwargs)
+        super(PooledColumnFamily, self).__init__(conn, column_family, **kwargs)
         conn.return_to_pool()
 
     def get(self, *args, **kwargs):
