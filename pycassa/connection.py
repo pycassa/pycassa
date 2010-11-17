@@ -35,7 +35,7 @@ __all__ = ['connect', 'connect_thread_local', 'NoServerAvailable',
            'Connection']
 
 DEFAULT_SERVER = 'localhost:9160'
-API_VERSION = VERSION.split('.')
+LOWEST_COMPATIBLE_VERSION = 17
 
 log = PycassaLogger().get_logger()
 
@@ -60,10 +60,10 @@ class ClientTransport(object):
         client = Cassandra.Client(protocol)
         transport.open()
 
-        server_api_version = client.describe_version().split('.', 1)
-        assert server_api_version[0] == API_VERSION[0], \
-                "Thrift API version mismatch. " \
-                 "(Client: %s, Server: %s)" % (API_VERSION[0], server_api_version[0])
+        server_api_version = int(client.describe_version().split('.', 1)[0])
+        assert (server_api_version >= LOWEST_COMPATIBLE_VERSION), \
+                "Thrift API version incompatibility. " \
+                 "(Server: %s, Lowest compatible version: %d)" % (server_api_version, LOWEST_COMPATIBLE_VERSION)
 
         client.set_keyspace(keyspace)
 

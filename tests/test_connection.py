@@ -8,7 +8,7 @@ from pycassa.cassandra.ttypes import CfDef, KsDef
 class ConnectionCase(unittest.TestCase):
     def test_connections(self):
         def version_check(connection, version):
-            assert connection.describe_version() == version
+            assert connection.describe_version() >= version
 
         version = connect('Keyspace1').describe_version()
 
@@ -23,7 +23,10 @@ class ConnectionCase(unittest.TestCase):
 
     def test_api_version_check(self):
         import pycassa.connection
-        pycassa.connection.API_VERSION = ['FOO']
+        conn = connect('Keyspace1')
+        ver = int(conn.describe_version().split('.',1)[0]) + 1
+        pycassa.connection.LOWEST_COMPATIBLE_VERSION = ver
+        conn.close()
         try:
             assert_raises(AssertionError, connect('Keyspace1').describe_version)
         finally:
