@@ -1,6 +1,13 @@
 Changelog
 =========
 
+Changes in Version 0.5.4
+------------------------
+
+- Allow for more backward and forward compatibility
+- Mark a server as being down more quickly in
+  :class:`~pycassa.connection.Connection`
+
 Changes in Version 0.5.3
 ------------------------
 
