@@ -1,3 +1,8 @@
+Changes in Version 0.5.4
+
+    * Allow for more backward and forward compatibility
+    * Mark a server as being down more quickly in Connection
+
 Changes in Version 0.5.3
 
     * Added PooledColumnFamily, which makes it easy to use connection pooling automatically with a ColumnFamily.
