@@ -1,19 +1,9 @@
-# pool.py - Connection pooling for SQLAlchemy
-# Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Michael Bayer
-# mike_mp@zzzcomputing.com
-#
-# This module is part of SQLAlchemy and is released under
-# the MIT License: http://www.opensource.org/licenses/mit-license.php
-
-
 """
 Connection pooling for Cassandra connections.
 
 Provides a number of connection pool implementations for a variety of
 usage scenarios and thread behavior requirements imposed by the
 application.
-
-.. seealso:: :mod:`pycassa.connection`
 
 """
 
@@ -28,12 +18,14 @@ from thrift import Thrift
 
 import threading
 
-__all__ = ['Pool', 'QueuePool', 'SingletonThreadPool', 'StaticPool',
-           'NullPool', 'AssertionPool', 'PoolListener', 'ConnectionWrapper',
-           'ImmutableConnectionWrapper', 'MutableConnectionWrapper',
-           'ReplaceableConnectionWrapper', 'AllServersUnavailable',
-           'MaximumRetryException', 'NoConnectionAvailable',
-           'InvalidRequestError']
+__all__ = ['Pool', 'QueuePool', 'PoolListener', 'ConnectionWrapper',
+           'AllServersUnavailable', 'MaximumRetryException',
+           'NoConnectionAvailable', 'InvalidRequestError']
+
+class NoServerAvailable(Exception):
+    """Raised if all servers are currently marked dead."""
+    pass
+
 
 class Pool(object):
     """An abstract base class for all other pools."""
@@ -86,7 +78,8 @@ class Pool(object):
         self.keyspace = keyspace
         self.credentials = credentials
         self.timeout = timeout
-        self._tlocal = threading.local()
+        if use_threadlocal:
+            self._tlocal = threading.local()
 
         # Listener groups
         self.listeners = []
@@ -157,7 +150,7 @@ class Pool(object):
                 server = self._get_next_server()
                 wrapper = self._get_new_wrapper(server)
                 return wrapper
-            except connection.NoServerAvailable, exc:
+            except Thrift.TException, exc:
                 self._notify_on_failure(exc, server)
                 failure_count += 1
         raise AllServersUnavailable('An attempt was made to connect to each of the servers '
@@ -356,7 +349,7 @@ class ConnectionWrapper(connection.Connection):
     _CHECKED_OUT = 1
     _DISPOSED = 2
 
-    def __init__(self, pool, *args, **kwargs):
+    def __init__(self, pool, max_retries, *args, **kwargs):
         """
         Creates a wrapper for a :class:`pycassa.connection.Connection`
         object, adding pooling related functionality while still allowing
@@ -367,14 +360,18 @@ class ConnectionWrapper(connection.Connection):
 
         """
         self._pool = pool
+        self._retry_count = 0
+        self._max_retries = max_retries
         self._lock = threading.Lock()
         self.info = {}
         self.starttime = time.time()
         self.operation_count = 0
         self._state = ConnectionWrapper._CHECKED_OUT
         super(ConnectionWrapper, self).__init__(*args, **kwargs)
-        self.connect()
         self._pool._notify_on_connect(self)
+
+        self._should_fail = False
+        self._original_meth = self.send_batch_mutate
 
     def return_to_pool(self):
         """
@@ -427,78 +424,29 @@ class ConnectionWrapper(connection.Connection):
         self.close()
         self._pool._notify_on_dispose(self, msg=reason)
 
-    def __getattr__(self, attr):
-        raise NotImplementedError()
-
-class ImmutableConnectionWrapper(ConnectionWrapper):
-    """A connection wrapper that may not be altered."""
-
-    def __init__(self, pool, *args, **kwargs):
-        """
-        Create a ConnectionWrapper that does not support retries through replacing
-        one wrapper with another or by swapping out the lower-level
-        :class:`pycassa.connection.Connection`.
-
-        This is currently only used by :class:`StaticPool`.  Here, the connection
-        is immutable because multiple threads may be using the same connection
-        at the same time.
-
-        These should not be created directly.
-
-        """
-        super(ImmutableConnectionWrapper, self).__init__(pool, *args, **kwargs)
-
-    def __getattr__(self, attr):
-        def _client_call(*args, **kwargs):
-            self.operation_count += 1
-            try:
-                conn = self._ensure_connection()
-                return getattr(conn.client, attr)(*args, **kwargs)
-            except (TimedoutException, UnavailableException), exc:
-                self._pool._notify_on_failure(exc, server=self._servers._servers[0],
-                                              connection=self)
-                raise
-        setattr(self, attr, _client_call)
-        return getattr(self, attr)
-
-class ReplaceableConnectionWrapper(ConnectionWrapper):
-    """A connection wrapper that may be replaced by another wrapper."""
-
-    def __init__(self, pool, max_retries, *args, **kwargs):
-        """
-        Create a ConnectionWrapper that supports retries by obtaining another
-        wrapper from the pool and swapping all contents with it.
-
-        Caution should be used when this is used with ``use_threadlocal=False``.
-
-        These should not be created directly.
-
-        """
-        super(ReplaceableConnectionWrapper, self).__init__(pool, *args, **kwargs)
-        self._retry_count = 0
-        self._max_retries = max_retries
-
     def _replace(self, new_conn_wrapper):
         """
         Get another wrapper from the pool and replace our own contents
         with its contents.
 
         """
-        super(ConnectionWrapper, self)._replace(new_conn_wrapper)
+        self.transport = new_conn_wrapper.transport
+        self._iprot = new_conn_wrapper._iprot
+        self._oprot = new_conn_wrapper._oprot
         self._lock = new_conn_wrapper._lock
         self._info = new_conn_wrapper.info
         self._starttime = new_conn_wrapper.starttime
         self.operation_count = new_conn_wrapper.operation_count
         self._state = ConnectionWrapper._CHECKED_OUT
+        self._should_fail = new_conn_wrapper._should_fail
 
-    def __getattr__(self, attr):
-        def _client_call(*args, **kwargs):
+    def _retry(f):
+        def new_f(self, *args, **kwargs):
             self.operation_count += 1
             try:
-                conn = self._ensure_connection()
-                return getattr(conn.client, attr)(*args, **kwargs)
+                return getattr(super(ConnectionWrapper, self), f.__name__)(*args, **kwargs)
             except (TimedOutException, UnavailableException), exc:
-                self._pool._notify_on_failure(exc, server=self._servers._servers[0],
+                self._pool._notify_on_failure(exc, server=self.server,
                                               connection=self)
 
                 self._retry_count += 1
@@ -515,70 +463,70 @@ class ReplaceableConnectionWrapper(ConnectionWrapper):
                 if hasattr(self._pool, '_replace_wrapper'):
                     self._pool._replace_wrapper()
                 self._replace(self._pool.get())
-                return self.__getattr__(attr)(*args, **kwargs)
-        setattr(self, attr, _client_call)
-        return getattr(self, attr)
+                return new_f(self, *args, **kwargs)
+        new_f.__name__ = f.__name__
+        return new_f
 
-class MutableConnectionWrapper(ConnectionWrapper):
-    """A connection wrapper that may be altered."""
+    def _fail_once(self, *args, **kwargs):
+        if self._should_fail:
+            self._should_fail = False
+            raise TimedOutException
+        else:
+            return self._original_meth(*args, **kwargs)
 
-    def __init__(self, pool, max_retries, *args, **kwargs):
+    @_retry
+    def get_slice(self, *args, **kwargs):
+        pass
+        
+    @_retry
+    def get_range_slices(self, *args, **kwargs):
+        pass
+
+    @_retry
+    def get_indexed_slices(self, *args, **kwargs):
+        pass
+
+    @_retry
+    def batch_mutate(self, *args, **kwargs):
+        pass
+
+    @_retry
+    def remove(self, *args, **kwargs):
+        pass
+
+    @_retry
+    def truncate(self, *args, **kwargs):
+        pass
+
+
+    def get_keyspace_description(self, keyspace=None, use_dict_for_col_metadata=False):
         """
-        Create a :class:`ConnectionWrapper` that supports retries by
-        opening a new connection to the next server in Pool's list.
+        Describes the given keyspace.
+        
+        :param keyspace: The keyspace to describe. Defaults to the current keyspace.
+        :type keyspace: str
 
-        Caution should be used when this is used with ``use_threadlocal=False``.
+        :param use_dict_for_col_metadata: whether or not store the column metadata as a
+          dictionary instead of a list
+        :type use_dict_for_col_metadata: bool
 
-        These should not be created directly.
-
-        """
-        super(MutableConnectionWrapper, self).__init__(pool, *args, **kwargs)
-        self._retry_count = 0
-        self._max_retries = max_retries
-
-    def _replace_conn(self):
-        """
-        Try getting servers from Pool's list and open connections to them
-        until one succeeds or we have failed enough times; if we succeed,
-        swap the contents of our pycassa.connection.Connection attributes with
-        that connection's.
+        :rtype: ``{column_family_name: CfDef}``
 
         """
-        self.close()
-        failure_count = 0
-        while failure_count < 2 * len(self._pool.server_list):
-            try:
-                new_serv = self._pool._get_next_server()
-                new_conn = connection.Connection(self._pool.keyspace, [new_serv],
-                                      credentials=self._pool.credentials,
-                                      use_threadlocal=self._pool._pool_threadlocal)
-                new_conn.connect()
-                super(MutableConnectionWrapper, self)._replace(new_conn)
-                return
-            except (TimedOutException, UnavailableException,
-                    Thrift.TException, NoServerAvailable), exc:
-                self._pool._notify_on_failure(exc, server=new_serv, 
-                                              connection=new_conn)
-                failure_count += 1
-        raise AllServersUnavailable('An attempt was made to connect to each of the servers '
-                'twice, but none of the attempts succeeded.')
+        if keyspace is None:
+            keyspace = self.keyspace
 
-    def __getattr__(self, attr):
-        def _client_call(*args, **kwargs):
-            self.operation_count += 1
-            try:
-                conn = self._ensure_connection()
-                return getattr(conn.client, attr)(*args, **kwargs)
-            except TimedOutException, exc:
-                self._pool._notify_on_failure(exc, server=self._servers._servers[0],
-                                              connection=self)
-                self._retry_count += 1
-                if self._max_retries != -1 and self._retry_count > self._max_retries:
-                    raise MaximumRetryException('Retried %d times' % self._retry_count)
-                self._replace_conn()
-                return self.__getattr__(attr)(*args, **kwargs)
-        setattr(self, attr, _client_call)
-        return getattr(self, attr)
+        ks_def = self.describe_keyspace(keyspace)
+        cf_defs = dict()
+        for cf_def in ks_def.cf_defs:
+            cf_defs[cf_def.name] = cf_def
+            if use_dict_for_col_metadata:
+                old_metadata = cf_def.column_metadata
+                new_metadata = dict()
+                for datum in old_metadata:
+                    new_metadata[datum.name] = datum
+                cf_def.column_metadata = new_metadata
+        return cf_defs
 
 class QueuePool(Pool):
     """A pool that maintains a queue of open connections."""
@@ -648,20 +596,28 @@ class QueuePool(Pool):
             >>> conn.return_to_pool()
 
         """
-        Pool.__init__(self, *args, **kwargs)
+
+        assert pool_size >= 0, "pool_size must be non-negative"
+        assert max_overflow >= 0, "max_overflow must be non-negative"
+        assert pool_timeout >= 0, "pool_timeout must be non-negative"
+        assert max_retries >= 0, "max_retries must be non-negative"
+        assert recycle > 0, "recycle must be positive"
+
+        super(QueuePool, self).__init__(*args, **kwargs)
         self._pool_size = pool_size
         self._q = pool_queue.Queue(pool_size)
         self._max_overflow = max_overflow
+        self._overflow_enabled = max_overflow > 0
         self._pool_timeout = pool_timeout
         self._recycle = recycle
         self._max_retries = max_retries
         self._prefill = prefill
-        self._overflow_lock = self._max_overflow > -1 and \
+        self._overflow_lock = self._overflow_enabled and \
                                     threading.Lock() or None
         if prefill:
-            self._overflow = 0
             for i in range(pool_size):
                 self._q.put(self._create_connection(), False)
+            self._overflow = 0
         else:
             self._overflow = 0 - pool_size
 
@@ -682,11 +638,10 @@ class QueuePool(Pool):
                          listeners=self.listeners)
 
     def _get_new_wrapper(self, server):
-        return ReplaceableConnectionWrapper(self, self._max_retries,
-                                            self.keyspace, [server],
-                                            credentials=self.credentials,
-                                            timeout=self.timeout,
-                                            use_threadlocal=self._pool_threadlocal)
+        return ConnectionWrapper(self, self._max_retries,
+                                 self.keyspace, server,
+                                 timeout=self.timeout,
+                                 credentials=self.credentials)
 
     def _replace_wrapper(self):
         """Try to replace the connection."""
@@ -749,44 +704,30 @@ class QueuePool(Pool):
             except AttributeError:
                 pass
         try:
-            wait = self._max_overflow > -1 and \
-                        self._overflow >= self._max_overflow
-            conn = self._q.get(wait, self._pool_timeout)
-        except pool_queue.Empty:
-            if self._max_overflow > -1 and \
-                        self._overflow >= self._max_overflow:
-                if not wait:
-                    return self._do_get()
-                else:
-                    self._notify_on_pool_max(
-                            pool_max=self.size() + self.overflow())
-                    raise NoConnectionAvailable(
-                            "QueuePool limit of size %d overflow %d reached, "
-                            "connection timed out, pool_timeout %d" %
-                            (self.size(), self.overflow(), self._pool_timeout))
-
-            if self._overflow_lock is not None:
+            if self._overflow_enabled and self._overflow_lock:
                 self._overflow_lock.acquire()
-
-            if self._max_overflow > -1 and \
-                        self._overflow >= self._max_overflow:
-                if self._overflow_lock is not None:
-                    self._overflow_lock.release()
-                return self._do_get()
-
-            try:
-                conn = self._create_connection()
-                self._overflow += 1
-            finally:
-                if self._overflow_lock is not None:
-                    self._overflow_lock.release()
-
-        # Check to make sure the connection is good
-        try:
-            conn._ensure_connection()
-        except connection.NoServerAvailable:
-            self._q.put(self._create_connection(), False)
-            return self._do_get()
+            # We don't want to waste time blocking if overflow is not enabled; similarly,
+            # if we're not at the max overflow, we can fail quickly and create a new
+            # connection
+            block = self._overflow_enabled and self._overflow >= self._max_overflow
+            conn = self._q.get(block, self._pool_timeout)
+        except pool_queue.Empty:
+            if self._overflow >= self._max_overflow:
+                self._notify_on_pool_max(pool_max=self.size() + self.overflow())
+                raise NoConnectionAvailable(
+                        "QueuePool limit of size %d overflow %d reached, "
+                        "connection timed out, pool_timeout %d" %
+                        (self.size(), self.overflow(), self._pool_timeout))
+            else:
+                try:
+                    conn = self._create_connection()
+                    self._overflow += 1
+                except AllServersUnavailable, exc:
+                    # TODO log exception
+                    raise
+        finally:
+            if self._overflow_lock is not None:
+                self._overflow_lock.release()
 
         if self._pool_threadlocal:
             self._tlocal.current = weakref.ref(conn)
@@ -824,288 +765,6 @@ class QueuePool(Pool):
 
     def checkedout(self):
         return self._pool_size - self._q.qsize() + self._overflow
-
-class SingletonThreadPool(Pool):
-    """A Pool that maintains one connection per thread."""
-
-    def __init__(self, pool_size=5, max_retries=5, *args, **kwargs):
-        """
-        Creates a Pool that maintains one connection per thread.
-
-        Maintains one connection per each thread, never moving a connection to a
-        thread other than the one which it was created in.
-
-        All of the parameters for :meth:`Pool.__init__()` are available, as
-        well as the following:
-
-        :param pool_size: The number of threads in which to maintain connections
-            at once.  Defaults to five.
-
-        :param max_retries: If set to non -1, the number times a connection
-          can failover before an Exception is raised. Setting to 0 disables
-          retries and setting to -1 allows unlimited retries. Defaults to 5.
-
-        """
-
-        kwargs['use_threadlocal'] = True
-        Pool.__init__(self, *args, **kwargs)
-        self._all_conns = set()
-        self.size = pool_size
-        self._max_retries = max_retries
-
-    def recreate(self):
-        self._notify_on_pool_recreate()
-        return SingletonThreadPool(
-            pool_size=self.size,
-            max_retries=self._max_retries,
-            keyspace=self.keyspace,
-            server_list=self.server_list,
-            credentials=self.credentials,
-            timeout=self.timeout,
-            logging_name=self._orig_logging_name,
-            use_threadlocal=self._pool_threadlocal,
-            listeners=self.listeners)
-
-    def dispose(self):
-        for conn in self._all_conns:
-            try:
-                conn._dispose_wrapper()
-            except (SystemExit, KeyboardInterrupt):
-                raise
-
-        self._all_conns.clear()
-        self._notify_on_pool_dispose()
-
-    def status(self):
-        return "SingletonThreadPool id:%d size: %d" % \
-                            (id(self), len(self._all_conns))
-
-    def _get_new_wrapper(self, server):
-        return MutableConnectionWrapper(self, self._max_retries,
-                                        self.keyspace, [server],
-                                        credentials=self.credentials,
-                                        timeout=self.timeout,
-                                        use_threadlocal=self._pool_threadlocal)
-
-    def _do_return_conn(self, conn):
-        if hasattr(self._tlocal, 'current'):
-            conn = self._tlocal.current()
-            self._all_conns.discard(conn)
-            del self._tlocal.current
-            self._notify_on_checkin(conn)
-            conn._retry_count = 0
-        pass
-
-    def _do_get(self):
-        try:
-            c = self._tlocal.current()
-            if c:
-                return c
-        except AttributeError:
-            pass
-        if len(self._all_conns) >= self.size:
-            self._notify_on_pool_max(pool_max=self.size)
-            raise NoConnectionAvailable()
-        else:
-            c = self._create_connection()
-            self._tlocal.current = weakref.ref(c)
-            self._all_conns.add(c)
-        return c
-
-class NullPool(Pool):
-    """A Pool which does not pool connections."""
-
-    def __init__(self, max_retries=5, *args, **kwargs):
-        """
-        Creates a :class:`Pool` which does not pool connections.
-
-        Instead, it opens and closes the underlying Cassandra connection
-        per each :meth:`~Pool.get()` and :meth:`~Pool.return_conn()`.
-
-        ``NullPool`` supports retry behavior.
-
-        Instead of using this with threadlocal storage, you should use a
-        :class:`SingletonThreadPool`.
-
-        All of the parameters for :meth:`Pool.__init__()` are available,
-        as well as:
-
-        :param max_retries: If set to non -1, the number times a connection
-          can failover before an Exception is raised. Setting to 0 disables
-          retries and setting to -1 allows unlimited retries. Defaults to 5.
-
-        """
-        Pool.__init__(self, *args, **kwargs)
-        self._max_retries = max_retries
-
-    def status(self):
-        return "NullPool"
-
-    def _get_new_wrapper(self, server):
-        return ReplaceableConnectionWrapper(self, self._max_retries,
-                                            self.keyspace, [server],
-                                            credentials=self.credentials,
-                                            timeout=self.timeout,
-                                            use_threadlocal=self._pool_threadlocal)
-
-    def _do_return_conn(self, conn):
-        conn._dispose_wrapper()
-        self._notify_on_checkin(conn)
-
-    def _do_get(self):
-        conn = self._create_connection()
-        self._notify_on_checkout(conn)
-        return conn
-
-    def recreate(self):
-        self._notify_on_pool_recreate()
-        return NullPool(max_retries=self._max_retries,
-                        keyspace=self.keyspace,
-                        server_list=self.server_list,
-                        credentials=self.credentials,
-                        timeout=self.timeout,
-                        logging_name=self._orig_logging_name,
-                        use_threadlocal=self._pool_threadlocal,
-                        listeners=self.listeners)
-
-    def dispose(self):
-        self._notify_on_pool_dispose()
-
-
-class StaticPool(Pool):
-    """A Pool of exactly one connection, used for all requests."""  
-
-    def __init__(self, *args, **kwargs):
-        """
-        Creates a pool with exactly one connection that is used
-        for all requests.
-
-        Automatic retries are not currently supported.
-
-        All of the parameters for :meth:`Pool.__init__()` are available.
-
-        """
-        Pool.__init__(self, *args, **kwargs)
-        self._conn = self._create_connection()
-
-    def status(self):
-        return "StaticPool"
-
-    def dispose(self):
-        if '_conn' in self.__dict__:
-            self._conn._dispose_wrapper()
-            self._conn = None
-        self._notify_on_pool_dispose()
-
-    def recreate(self):
-        self._notify_on_pool_recreate()
-        return self.__class__(keyspace=self.keyspace,
-                              server_list=self.server_list,
-                              credentials=self.credentials,
-                              timeout=self.timeout,
-                              use_threadlocal=self._pool_threadlocal,
-                              logging_name=self._orig_logging_name,
-                              listeners=self.listeners)
-
-    def _get_new_wrapper(self, server):
-        return ImmutableConnectionWrapper(self, self.keyspace, [server],
-                                  credentials=self.credentials,
-                                  timeout=self.timeout,
-                                  use_threadlocal=self._pool_threadlocal)
-
-
-    def _do_return_conn(self, conn):
-        self._notify_on_checkin(conn)
-        pass
-
-    def _do_get(self):
-        self._notify_on_checkout(self._conn)
-        try:
-            self._conn._ensure_connection()
-        except connection.NoServerAvailable:
-            self._conn = self._create_connection()
-        return self._conn
-
-class AssertionPool(Pool):
-    """A Pool that allows at most one checked out connection at any given
-    time."""
-
-    def __init__(self, max_retries=5, *args, **kwargs):
-        """
-        Creates a Pool that allows at most one checked out connection at any given
-        time.
-
-        This will raise an :exc:`AssertionError` if more than one connection is checked
-        out at a time.  Useful for debugging code that is using more connections
-        than desired.
-
-        AssertionPools support automatic retries.
-
-        All of the parameters for :meth:`Pool.__init__()` are available,
-        as well as:
-
-        :param max_retries: If set to non -1, the number times a connection
-          can failover before an Exception is raised. Setting to 0 disables
-          retries and setting to -1 allows unlimited retries. Defaults to 5.
-
-        """
-
-        Pool.__init__(self, *args, **kwargs)
-        self._conn = None
-        self._checked_out = False
-        self._max_retries = max_retries
-
-    def status(self):
-        return "AssertionPool"
-
-    def _get_new_wrapper(self, server):
-        return MutableConnectionWrapper(self, self._max_retries,
-                                        self.keyspace, [server],
-                                        credentials=self.credentials,
-                                        timeout=self.timeout,
-                                        use_threadlocal=self._pool_threadlocal)
-
-    def _do_return_conn(self, conn):
-        if not self._checked_out:
-            raise AssertionError("connection is not checked out")
-        self._checked_out = False
-        self._notify_on_checkin(conn)
-        conn._retry_count = 0
-        assert conn is self._conn
-
-    def dispose(self):
-        self._checked_out = False
-        if self._conn:
-            self._conn._dispose_wrapper()
-        self._notify_on_pool_dispose()
-
-    def recreate(self):
-        self._notify_on_pool_recreate()
-        return AssertionPool(max_retries=self._max_retries,
-                             keyspace=self.keyspace,
-                             server_list=self.server_list,
-                             credentials=self.credentials,
-                             timeout=self.timeout,
-                             logging_name=self._orig_logging_name,
-                             listeners=self.listeners)
-
-    def _do_get(self):
-        if self._checked_out:
-            self._notify_on_pool_max(pool_max=1)
-            raise AssertionError("connection is already checked out")
-
-        if not self._conn:
-            self._conn = self._create_connection()
-        else:
-            try:
-                self._conn._ensure_connection()
-            except connection.NoServerAvailable:
-                self._conn = self._create_connection()
-
-        self._checked_out = True
-        self._notify_on_checkout(self._conn)
-        return self._conn
-
 
 class PoolListener(object):
     """Hooks into the lifecycle of connections in a :class:`Pool`.

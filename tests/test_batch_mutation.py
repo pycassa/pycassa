@@ -4,7 +4,8 @@ import uuid
 
 from nose import SkipTest
 from nose.tools import assert_raises
-from pycassa import connect, ColumnFamily, ConsistencyLevel, NotFoundException
+from pycassa import QueuePool, PooledColumnFamily, ConsistencyLevel, NotFoundException
+import pycassa.batch as batch_mod
 
 ROWS = {'1': {'a': '123', 'b':'123'},
         '2': {'a': '234', 'b':'234'},
@@ -14,11 +15,11 @@ class TestMutator(unittest.TestCase):
 
     def setUp(self):
         credentials = {'username': 'jsmith', 'password': 'havebadpass'}
-        self.client = connect('Keyspace1', credentials=credentials)
-        self.cf = ColumnFamily(self.client, 'Standard2',
+        self.pool = QueuePool(keyspace='Keyspace1', credentials=credentials)
+        self.cf = PooledColumnFamily(self.pool, 'Standard2',
                                write_consistency_level=ConsistencyLevel.ONE,
                                timestamp=self.timestamp)
-        self.scf = ColumnFamily(self.client, 'Super1',
+        self.scf = PooledColumnFamily(self.pool, 'Super1',
                                 write_consistency_level=ConsistencyLevel.ONE,
                                 super=True, timestamp=self.timestamp)
         try:
@@ -106,7 +107,7 @@ class TestMutator(unittest.TestCase):
 assert self.cf.get('3') == ROWS['3']"""
 
     def test_multi_column_family(self):
-        batch = self.client.batch()
+        batch = batch_mod.Mutator(self.pool)
         cf2 = self.cf
         batch.insert(self.cf, '1', ROWS['1'])
         batch.insert(self.cf, '2', ROWS['2'])
@@ -114,6 +115,3 @@ assert self.cf.get('3') == ROWS['3']"""
         batch.send()
         assert self.cf.get('2') == ROWS['2']
         assert_raises(NotFoundException, self.cf.get, '1')
-
-
-

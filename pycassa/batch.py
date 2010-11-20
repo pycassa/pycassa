@@ -16,7 +16,7 @@ class Mutator(object):
 
     """
 
-    def __init__(self, client, queue_size=100, write_consistency_level=None):
+    def __init__(self, pool, queue_size=100, write_consistency_level=None):
         """Creates a new Mutator object.
 
         :Parameters:
@@ -31,7 +31,7 @@ class Mutator(object):
         """
         self._buffer = []
         self._lock = threading.RLock()
-        self.client = client
+        self.pool = pool
         self.limit = queue_size
         if write_consistency_level is None:
             self.write_consistency_level = ConsistencyLevel.ONE
@@ -59,15 +59,19 @@ class Mutator(object):
         if write_consistency_level is None:
             write_consistency_level = self.write_consistency_level
         mutations = {}
+        conn = None
         self._lock.acquire()
         try:
             for key, column_family, cols in self._buffer:
                 mutations.setdefault(key, {}).setdefault(column_family, []).extend(cols)
             if mutations:
-                self.client.batch_mutate(mutations, write_consistency_level)
+                conn = self.pool.get()
+                conn.batch_mutate(mutations, write_consistency_level)
             self._buffer = []
         finally:
             self._lock.release()
+            if conn:
+                conn.return_to_pool()
 
     def _make_mutations_insert(self, column_family, columns, timestamp, ttl):
         _pack_name = column_family._pack_name

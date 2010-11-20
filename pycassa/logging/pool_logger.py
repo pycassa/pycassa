@@ -16,12 +16,12 @@ class PoolLogger(object):
         if level <= logging.INFO:
             self.logger.log(level,
                     "Connection %s (%s) opened for %s (id = %s)",
-                    id(conn), conn._servers._servers[0], dic.get('pool_type'),
+                    id(conn), conn.server[0], dic.get('pool_type'),
                     dic.get('pool_id'))
         else:
             self.logger.log(level,
                     "Error opening connection (%s) for %s (id = %s): %s",
-                    conn._servers._servers[0], dic.get('pool_type'),
+                    conn.server, dic.get('pool_type'),
                     dic.get('pool_id'), dic.get('error'))
 
     def connection_checked_out(self, dic):
@@ -29,7 +29,7 @@ class PoolLogger(object):
         conn = dic.get('connection')
         self.logger.log(level,
                 "Connection %s (%s) was checked out from %s (id = %s)",
-                id(conn), conn._servers._servers[0], dic.get('pool_type'),
+                id(conn), conn.server, dic.get('pool_type'),
                 dic.get('pool_id'))
 
     def connection_checked_in(self, dic):
@@ -37,7 +37,7 @@ class PoolLogger(object):
         conn = dic.get('connection')
         self.logger.log(level,
                 "Connection %s (%s) was checked in to %s (id = %s)",
-                id(conn), conn._servers._servers[0], dic.get('pool_type'),
+                id(conn), conn.server, dic.get('pool_type'),
                 dic.get('pool_id'))
 
     def connection_disposed(self, dic):
@@ -46,14 +46,14 @@ class PoolLogger(object):
         if level <= logging.INFO:
             self.logger.log(level,
                     "Connection %s (%s) was closed; pool %s (id = %s), reason: %s",
-                    id(conn), conn._servers._servers[0], dic.get('pool_type'),
+                    id(conn), conn.server, dic.get('pool_type'),
                     dic.get('pool_id'), dic.get('message'))
         else:
             error = dic.get('error')
             self.logger.log(level,
                     "Error closing connection %s (%s) in %s (id = %s), "
                     "reason: %s, error: %s %s",
-                    id(conn), conn._servers._servers[0],
+                    id(conn), conn.server,
                     dic.get('pool_type'), dic.get('pool_id'),
                     dic.get('message'), error.__class__, error)
 
@@ -64,7 +64,7 @@ class PoolLogger(object):
         self.logger.log(level,
                 "Connection %s (%s) is being recycled in %s (id = %s) "
                 "after %d operations; it is replaced by connection %s (%s)",
-                id(old_conn), old_conn._servers._servers[0],
+                id(old_conn), old_conn.server,
                 dic.get('pool_type'), dic.get('pool_id'),
                 old_conn.operation_count, id(new_conn))
 

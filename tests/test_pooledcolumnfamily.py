@@ -1,4 +1,4 @@
-from pycassa import connect, connect_thread_local, index, PooledColumnFamily,\
+from pycassa import index, PooledColumnFamily,\
                     QueuePool, ConsistencyLevel, NotFoundException
 
 from nose.tools import assert_raises, assert_equal, assert_true
