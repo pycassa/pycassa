@@ -135,7 +135,7 @@ class CfMutator(Mutator):
 
         """
         wcl = write_consistency_level or column_family.write_consistency_level
-        super(CfMutator, self).__init__(column_family.client, queue_size=queue_size,
+        super(CfMutator, self).__init__(column_family.pool, queue_size=queue_size,
                                         write_consistency_level=wcl)
         self._column_family = column_family
 
@@ -148,11 +148,6 @@ class CfMutator(Mutator):
                                              columns=columns,
                                              super_column=super_column,
                                              timestamp=timestamp)
-
-class PooledCfMutator(CfMutator):
-
-    def __init__(self, *args, **kwargs):
-        super(PooledCfMutator, self).__init__(*args, **kwargs)
 
     def send(self, write_consistency_level=None):
         if write_consistency_level is None:
@@ -171,5 +166,3 @@ class PooledCfMutator(CfMutator):
             if conn:
                 conn.return_to_pool()
             self._lock.release()
-
-
