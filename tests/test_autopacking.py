@@ -39,7 +39,8 @@ class TestStandardCFs(unittest.TestCase):
 
     def tearDown(self):
         for cf in self.cfs:
-            cf.truncate()
+            for key, cols in cf.get_range():
+                cf.remove(key)
         self.pool.dispose()
 
     def make_group(self, cf, cols):
@@ -179,7 +180,8 @@ class TestSuperCFs(unittest.TestCase):
 
     def tearDown(self):
         for cf in self.cfs:
-            cf.truncate()
+            for key, cols in cf.get_range():
+                cf.remove(key)
         self.pool.dispose()
 
     def make_super_group(self, cf, cols):
@@ -320,7 +322,8 @@ class TestSuperSubCFs(unittest.TestCase):
 
     def tearDown(self):
         for cf in self.cfs:
-            cf.truncate()
+            for key, cols in cf.get_range():
+                cf.remove(key)
         self.pool.dispose()
 
     def make_sub_group(self, cf, cols):
@@ -443,7 +446,8 @@ class TestValidators(unittest.TestCase):
 
     def tearDown(self):
         for cf in self.cfs:
-            cf.truncate()
+            for key, cols in cf.get_range():
+                cf.remove(key)
         self.pool.dispose()
 
     def test_validated_columns(self):
@@ -486,7 +490,8 @@ class TestDefaultValidators(unittest.TestCase):
         self.cf_def_valid = ColumnFamily(self.pool, 'DefaultValidator')
 
     def tearDown(self):
-        self.cf_def_valid.truncate()
+        for key, cols in self.cf_def_valid.get_range():
+            self.cf_def_valid.remove(key)
         self.pool.dispose()
 
     def test_default_validated_columns(self):
@@ -515,7 +520,8 @@ class TestTimeUUIDs(unittest.TestCase):
         self.cf_time = ColumnFamily(self.pool, 'StdTimeUUID')
 
     def tearDown(self):
-        self.cf_time.truncate()
+        for key, cols in self.cf_time.get_range():
+            self.cf_time.remove(key)
         self.pool.dispose()
 
     def test_datetime_to_uuid(self):

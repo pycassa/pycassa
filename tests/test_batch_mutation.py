@@ -16,25 +16,14 @@ class TestMutator(unittest.TestCase):
     def setUp(self):
         credentials = {'username': 'jsmith', 'password': 'havebadpass'}
         self.pool = ConnectionPool(keyspace='Keyspace1', credentials=credentials)
-        self.cf = ColumnFamily(self.pool, 'Standard2',
-                               write_consistency_level=ConsistencyLevel.ONE,
-                               timestamp=self.timestamp)
-        self.scf = ColumnFamily(self.pool, 'Super1',
-                                write_consistency_level=ConsistencyLevel.ONE,
-                                super=True, timestamp=self.timestamp)
-        try:
-            self.timestamp_n = int(self.cf.get('meta')['timestamp'])
-        except NotFoundException:
-            self.timestamp_n = 0
-        self.clear()
+        self.cf = ColumnFamily(self.pool, 'Standard2')
+        self.scf = ColumnFamily(self.pool, 'Super1')
 
-    def clear(self):
-        self.cf.truncate()
-        self.scf.truncate()
-
-    def timestamp(self):
-        self.timestamp_n += 1
-        return self.timestamp_n
+    def tearDown(self):
+        for key, cols in self.cf.get_range():
+            self.cf.remove(key)
+        for key, cols in self.scf.get_range():
+            self.scf.remove(key)
 
     def test_insert(self):
         batch = self.cf.batch()
