@@ -16,7 +16,7 @@ import sys
 import uuid
 import struct
 
-from batch import CfMutator, PooledCfMutator
+from batch import CfMutator
 
 if hasattr(struct, 'Struct'): # new in Python 2.5
    _have_struct = True
@@ -45,7 +45,6 @@ def gm_timestamp():
     """
     return int(time.time() * 1e6)
 
-PooledColumnFamily = ColumnFamily
 
 class ColumnFamily(object):
     """ An abstraction of a Cassandra column family or super column family. """
@@ -844,3 +843,5 @@ class ColumnFamily(object):
 
         """
         self.client.truncate(self.column_family)
+
+PooledColumnFamily = ColumnFamily

@@ -32,7 +32,7 @@ class Pool(object):
 
     def __init__(self, keyspace, server_list=['localhost:9160'],
                  credentials=None, timeout=0.5, logging_name=None,
-                 use_threadlocal=True, listeners=[]):
+                 use_threadlocal=True, listeners=[], framed_transport=True):
         """
         Construct an instance of the abstract base class :class:`Pool`.  This
         should not be called directly, only by subclass :meth:`__init__()`
@@ -78,6 +78,7 @@ class Pool(object):
         self.keyspace = keyspace
         self.credentials = credentials
         self.timeout = timeout
+        self.framed_transport = framed_transport
         if use_threadlocal:
             self._tlocal = threading.local()
 
@@ -640,6 +641,7 @@ class QueuePool(Pool):
     def _get_new_wrapper(self, server):
         return ConnectionWrapper(self, self._max_retries,
                                  self.keyspace, server,
+                                 framed_transport=self.framed_transport,
                                  timeout=self.timeout,
                                  credentials=self.credentials)
 

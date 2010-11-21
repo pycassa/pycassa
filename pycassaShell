@@ -54,9 +54,12 @@ if options.user or options.passwd:
         exit(1)
     credentials = {'username': options.user, 'password': options.passwd}
 
-CLIENT = pycassa.connect(options.keyspace, ['%s:%d' % (hostname, port)],
+pool = pycassa.QueuePool(keyspace=options.keyspace,
+                         server_list=['%s:%d' % (hostname, port)],
                          credentials=credentials,
                          framed_transport=framed)
+
+SYSTEM_MANAGER = pycassa.SystemManager('%s:%d' % (hostname, port), credentials, framed)
 
 print """
 Cassandra Interactive Python Shell
@@ -65,13 +68,13 @@ Cassandra Interactive Python Shell
 
 Available column family instances:""" % (options.keyspace, hostname, port)
 
-for cfname in CLIENT.get_keyspace_description(options.keyspace).keys():
-    cfinstance = pycassa.ColumnFamily(CLIENT, cfname)
+for cfname in SYSTEM_MANAGER.get_keyspace_description(options.keyspace).keys():
+    cfinstance = pycassa.ColumnFamily(pool, cfname)
     exec('%s = cfinstance' % cfname.upper())
     print " *", cfname.upper()
 
 print """
-Raw Thrift client available as CLIENT.
+Schema definition modifications are available through SYSTEM_MANAGER.
 
 Enjoy!"""
 

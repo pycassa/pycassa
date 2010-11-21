@@ -1,18 +1,17 @@
 from logging.pycassa_logger import *
 import time
 
-from pycassa.cassandra import Cassandra
-from pycassa.cassandra.ttypes import KsDef
+from connection import Connection
 
 __all__ = ['SystemManager']
 
 class SystemManager(object):
 
-    def __init__(server='localhost:9160', credentials=None, framed_transport=True):
-        self.conn = ClientTransport(None, server, framed_transport, 0.5, credentials)
+    def __init__(self, server='localhost:9160', credentials=None, framed_transport=True):
+        self._conn = Connection(None, server, framed_transport, 0.5, credentials)
 
     def close(self):
-        self.conn.close()
+        self._conn.close()
 
     def describe_keyspace(self, keyspace, use_dict_for_col_metadata=False):
         """
@@ -31,7 +30,7 @@ class SystemManager(object):
         if keyspace is None:
             keyspace = self._keyspace
 
-        ks_def = self.describe_keyspace(keyspace)
+        ks_def = self._conn.describe_keyspace(keyspace)
         cf_defs = dict()
         for cf_def in ks_def.cf_defs:
             cf_defs[cf_def.name] = cf_def
@@ -43,14 +42,16 @@ class SystemManager(object):
                 cf_def.column_metadata = new_metadata
         return cf_defs
 
+    get_keyspace_description = describe_keyspace
+
     def describe_ring(self, keyspace):
-        return self.conn.client.describe_ring(keyspace)
+        return self._conn.describe_ring(keyspace)
 
     def describe_cluster_name(self):
-        return self.conn.client.describe_cluster_name()
+        return self._conn.describe_cluster_name()
 
     def describe_version(self):
-        return self.conn.client.describe_version()
+        return self._conn.describe_version()
 
     def add_keyspace(self, ksdef, block=True, sample_period=0.25):
         """
@@ -69,7 +70,7 @@ class SystemManager(object):
         :rtype: new schema version
 
         """
-        schema_version = self.conn.client.system_add_keyspace(ksdef) 
+        schema_version = self._conn.system_add_keyspace(ksdef) 
         if block:
             self._wait_for_agreement(sample_period)
         return schema_version
@@ -91,7 +92,7 @@ class SystemManager(object):
         :rtype: new schema version
 
         """
-        schema_version = self.conn.client.system_update_keyspace(ksdef) 
+        schema_version = self._conn.system_update_keyspace(ksdef) 
         if block:
             self._wait_for_agreement(sample_period)
         return schema_version
@@ -113,7 +114,7 @@ class SystemManager(object):
         :rtype: new schema version
 
         """
-        schema_version = self.conn.client.system_drop_keyspace(name)
+        schema_version = self._conn.system_drop_keyspace(name)
         if block:
             self._wait_for_agreement(sample_period)
         return schema_version
@@ -135,7 +136,7 @@ class SystemManager(object):
         :rtype: new schema version
 
         """
-        schema_version = self.conn.client.system_add_column_family(cfdef) 
+        schema_version = self._conn.system_add_column_family(cfdef) 
         if block:
             self._wait_for_agreement(sample_period)
         return schema_version
@@ -152,10 +153,10 @@ class SystemManager(object):
 
         Example usage::
 
-            >>> conn = pycassa.connect('Keyspace1')
-            >>> cfdef = conn.get_keyspace_description()['MyColumnFamily']
+            >>> sys = pycassa.SystemManager('192.168.10.12:9160')
+            >>> cfdef = sys.get_keyspace_description()['MyColumnFamily']
             >>> cfdef.memtable_throughput_in_mb = 256
-            >>> conn.update_column_family(cfdef)
+            >>> sys.update_column_family(cfdef)
 
         :param cfdef: the column family definition
         :type cfdef: :class:`~pycassa.cassandra.ttypes.CfDef`
@@ -170,7 +171,7 @@ class SystemManager(object):
         :rtype: new schema version
 
         """
-        schema_version = self.conn.client.system_update_column_family(cfdef) 
+        schema_version = self._conn.system_update_column_family(cfdef) 
         if block:
             self._wait_for_agreement(sample_period)
         return schema_version
@@ -192,14 +193,14 @@ class SystemManager(object):
         :rtype: new schema version
 
         """
-        schema_version = self.conn.client.system_drop_column_family(name)
+        schema_version = self._conn.system_drop_column_family(name)
         if block:
             self._wait_for_agreement(sample_period)
         return schema_version
 
     def _wait_for_agreement(self, sample_period): 
         while True:
-            versions = self.conn.client.describe_schema_versions()
+            versions = self._conn.describe_schema_versions()
             if len(versions) == 1:
                 break
             time.sleep(sample_period)
