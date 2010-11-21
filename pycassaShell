@@ -71,10 +71,11 @@ Available column family instances:""" % (options.keyspace, hostname, port)
 for cfname in SYSTEM_MANAGER.get_keyspace_description(options.keyspace).keys():
     cfinstance = pycassa.ColumnFamily(pool, cfname)
     exec('%s = cfinstance' % cfname.upper())
-    print " *", cfname.upper()
+    spaces = " " * (25 - len(cfname))
+    print " *", cfname.upper(), spaces, "(", cfname, ")"
 
 print """
-Schema definition modifications are available through SYSTEM_MANAGER.
+Schema definition tools and cluster information are available through SYSTEM_MANAGER.
 
 Enjoy!"""
 
