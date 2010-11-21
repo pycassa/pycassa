@@ -62,7 +62,7 @@ class ColumnFamily(object):
         insert data into the corresponding Cassandra column family.
 
         :param pool: A pool pool to a Cassandra cluster
-        :type client: :class:`~pycassa.pool.Pool`
+        :type client: :class:`~pycassa.pool.AbstractPool`
 
         :param column_family: The name of the column family
         :type column_family: string

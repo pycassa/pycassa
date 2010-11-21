@@ -14,6 +14,8 @@ from pycassa.cassandra.ttypes import AuthenticationRequest
 
 __all__ = ['Connection', 'connect', 'connect_thread_local']
 
+DEFAULT_SERVER = 'localhost:9160'
+
 LOWEST_COMPATIBLE_VERSION = 17
 
 class Connection(Cassandra.Client):
@@ -104,10 +106,10 @@ def connect(keyspace, servers=None, framed_transport=True, timeout=None,
 
     if servers is None:
         servers = [DEFAULT_SERVER]
-    return pool.QueuePool(keyspace=keyspace, server_list=servers,
-                          credentials=credentials, timeout=timeout,
-                          use_threadlocal=use_threadlocal, prefill=False,
-                          pool_size=len(servers), max_overflow=len(servers),
-                          max_retries=len(servers))
+    return pool.ConnectionPool(keyspace=keyspace, server_list=servers,
+                               credentials=credentials, timeout=timeout,
+                               use_threadlocal=use_threadlocal, prefill=False,
+                               pool_size=len(servers), max_overflow=len(servers),
+                               max_retries=len(servers))
 
 connect_thread_local = connect
