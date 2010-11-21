@@ -1,7 +1,7 @@
 import uuid
 
-from pycassa import QueuePool,\
-                    PooledColumnFamily, NotFoundException
+from pycassa import ConnectionPool,\
+                    ColumnFamily, NotFoundException
 from pycassa.util import *
 
 import unittest
@@ -22,17 +22,17 @@ class TestStandardCFs(unittest.TestCase):
 
     def setUp(self):
         credentials = {'username': 'jsmith', 'password': 'havebadpass'}
-        self.pool = QueuePool(pool_size=10, keyspace='Keyspace1', credentials=credentials)
+        self.pool = ConnectionPool(pool_size=10, keyspace='Keyspace1', credentials=credentials)
 
-        self.cf       = PooledColumnFamily(self.pool, 'Standard2')
+        self.cf       = ColumnFamily(self.pool, 'Standard2')
 
-        self.cf_long  = PooledColumnFamily(self.pool, 'StdLong')
-        self.cf_int   = PooledColumnFamily(self.pool, 'StdInteger')
-        self.cf_time  = PooledColumnFamily(self.pool, 'StdTimeUUID')
-        self.cf_lex   = PooledColumnFamily(self.pool, 'StdLexicalUUID')
-        self.cf_ascii = PooledColumnFamily(self.pool, 'StdAscii')
-        self.cf_utf8  = PooledColumnFamily(self.pool, 'StdUTF8')
-        self.cf_bytes = PooledColumnFamily(self.pool, 'StdBytes')
+        self.cf_long  = ColumnFamily(self.pool, 'StdLong')
+        self.cf_int   = ColumnFamily(self.pool, 'StdInteger')
+        self.cf_time  = ColumnFamily(self.pool, 'StdTimeUUID')
+        self.cf_lex   = ColumnFamily(self.pool, 'StdLexicalUUID')
+        self.cf_ascii = ColumnFamily(self.pool, 'StdAscii')
+        self.cf_utf8  = ColumnFamily(self.pool, 'StdUTF8')
+        self.cf_bytes = ColumnFamily(self.pool, 'StdBytes')
 
         self.cfs = [self.cf_long, self.cf_int, self.cf_time, self.cf_lex,
                     self.cf_ascii, self.cf_utf8, self.cf_bytes]
@@ -164,14 +164,14 @@ class TestSuperCFs(unittest.TestCase):
 
     def setUp(self):
         credentials = {'username': 'jsmith', 'password': 'havebadpass'}
-        self.pool = QueuePool(pool_size=10, keyspace='Keyspace1', credentials=credentials)
-        self.cf_suplong  = PooledColumnFamily(self.pool, 'SuperLong')
-        self.cf_supint   = PooledColumnFamily(self.pool, 'SuperInt')
-        self.cf_suptime  = PooledColumnFamily(self.pool, 'SuperTime')
-        self.cf_suplex   = PooledColumnFamily(self.pool, 'SuperLex')
-        self.cf_supascii = PooledColumnFamily(self.pool, 'SuperAscii')
-        self.cf_suputf8  = PooledColumnFamily(self.pool, 'SuperUTF8')
-        self.cf_supbytes = PooledColumnFamily(self.pool, 'SuperBytes')
+        self.pool = ConnectionPool(pool_size=10, keyspace='Keyspace1', credentials=credentials)
+        self.cf_suplong  = ColumnFamily(self.pool, 'SuperLong')
+        self.cf_supint   = ColumnFamily(self.pool, 'SuperInt')
+        self.cf_suptime  = ColumnFamily(self.pool, 'SuperTime')
+        self.cf_suplex   = ColumnFamily(self.pool, 'SuperLex')
+        self.cf_supascii = ColumnFamily(self.pool, 'SuperAscii')
+        self.cf_suputf8  = ColumnFamily(self.pool, 'SuperUTF8')
+        self.cf_supbytes = ColumnFamily(self.pool, 'SuperBytes')
 
         self.cfs = [self.cf_suplong, self.cf_supint, self.cf_suptime,
                     self.cf_suplex, self.cf_supascii, self.cf_suputf8,
@@ -304,14 +304,14 @@ class TestSuperSubCFs(unittest.TestCase):
 
     def setUp(self):
         credentials = {'username': 'jsmith', 'password': 'havebadpass'}
-        self.pool = QueuePool(pool_size=10, keyspace='Keyspace1', credentials=credentials)
-        self.cf_suplong_sublong  = PooledColumnFamily(self.pool, 'SuperLongSubLong')
-        self.cf_suplong_subint   = PooledColumnFamily(self.pool, 'SuperLongSubInt')
-        self.cf_suplong_subtime  = PooledColumnFamily(self.pool, 'SuperLongSubTime')
-        self.cf_suplong_sublex   = PooledColumnFamily(self.pool, 'SuperLongSubLex')
-        self.cf_suplong_subascii = PooledColumnFamily(self.pool, 'SuperLongSubAscii')
-        self.cf_suplong_subutf8  = PooledColumnFamily(self.pool, 'SuperLongSubUTF8')
-        self.cf_suplong_subbytes = PooledColumnFamily(self.pool, 'SuperLongSubBytes')
+        self.pool = ConnectionPool(pool_size=10, keyspace='Keyspace1', credentials=credentials)
+        self.cf_suplong_sublong  = ColumnFamily(self.pool, 'SuperLongSubLong')
+        self.cf_suplong_subint   = ColumnFamily(self.pool, 'SuperLongSubInt')
+        self.cf_suplong_subtime  = ColumnFamily(self.pool, 'SuperLongSubTime')
+        self.cf_suplong_sublex   = ColumnFamily(self.pool, 'SuperLongSubLex')
+        self.cf_suplong_subascii = ColumnFamily(self.pool, 'SuperLongSubAscii')
+        self.cf_suplong_subutf8  = ColumnFamily(self.pool, 'SuperLongSubUTF8')
+        self.cf_suplong_subbytes = ColumnFamily(self.pool, 'SuperLongSubBytes')
 
         self.cfs = [self.cf_suplong_subint, self.cf_suplong_subint,
                     self.cf_suplong_subtime, self.cf_suplong_sublex,
@@ -428,14 +428,14 @@ class TestValidators(unittest.TestCase):
 
     def setUp(self):
         credentials = {'username': 'jsmith', 'password': 'havebadpass'}
-        self.pool = QueuePool(pool_size=10, keyspace='Keyspace1', credentials=credentials)
-        self.cf_valid_long = PooledColumnFamily(self.pool, 'ValidatorLong')
-        self.cf_valid_int = PooledColumnFamily(self.pool, 'ValidatorInt')
-        self.cf_valid_time = PooledColumnFamily(self.pool, 'ValidatorTime')
-        self.cf_valid_lex = PooledColumnFamily(self.pool, 'ValidatorLex')
-        self.cf_valid_ascii = PooledColumnFamily(self.pool, 'ValidatorAscii')
-        self.cf_valid_utf8 = PooledColumnFamily(self.pool, 'ValidatorUTF8')
-        self.cf_valid_bytes = PooledColumnFamily(self.pool, 'ValidatorBytes')
+        self.pool = ConnectionPool(pool_size=10, keyspace='Keyspace1', credentials=credentials)
+        self.cf_valid_long = ColumnFamily(self.pool, 'ValidatorLong')
+        self.cf_valid_int = ColumnFamily(self.pool, 'ValidatorInt')
+        self.cf_valid_time = ColumnFamily(self.pool, 'ValidatorTime')
+        self.cf_valid_lex = ColumnFamily(self.pool, 'ValidatorLex')
+        self.cf_valid_ascii = ColumnFamily(self.pool, 'ValidatorAscii')
+        self.cf_valid_utf8 = ColumnFamily(self.pool, 'ValidatorUTF8')
+        self.cf_valid_bytes = ColumnFamily(self.pool, 'ValidatorBytes')
 
         self.cfs = [self.cf_valid_long, self.cf_valid_int, self.cf_valid_time,
                     self.cf_valid_lex, self.cf_valid_ascii, self.cf_valid_utf8,
@@ -482,8 +482,8 @@ class TestDefaultValidators(unittest.TestCase):
 
     def setUp(self):
         credentials = {'username': 'jsmith', 'password': 'havebadpass'}
-        self.pool = QueuePool(pool_size=5, keyspace='Keyspace1', credentials=credentials)
-        self.cf_def_valid = PooledColumnFamily(self.pool, 'DefaultValidator')
+        self.pool = ConnectionPool(pool_size=5, keyspace='Keyspace1', credentials=credentials)
+        self.cf_def_valid = ColumnFamily(self.pool, 'DefaultValidator')
 
     def tearDown(self):
         self.cf_def_valid.truncate()
@@ -511,8 +511,8 @@ class TestTimeUUIDs(unittest.TestCase):
 
     def setUp(self):
         credentials = {'username': 'jsmith', 'password': 'havebadpass'}
-        self.pool = QueuePool(pool_size=5, keyspace='Keyspace1', credentials=credentials)
-        self.cf_time = PooledColumnFamily(self.pool, 'StdTimeUUID')
+        self.pool = ConnectionPool(pool_size=5, keyspace='Keyspace1', credentials=credentials)
+        self.cf_time = ColumnFamily(self.pool, 'StdTimeUUID')
 
     def tearDown(self):
         self.cf_time.truncate()

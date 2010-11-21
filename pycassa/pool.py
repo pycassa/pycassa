@@ -18,23 +18,24 @@ from thrift import Thrift
 
 import threading
 
-__all__ = ['Pool', 'QueuePool', 'PoolListener', 'ConnectionWrapper',
-           'AllServersUnavailable', 'MaximumRetryException',
-           'NoConnectionAvailable', 'InvalidRequestError']
+__all__ = ['QueuePool', 'ConnectionPool', 'PoolListener',
+           'ConnectionWrapper', 'AllServersUnavailable',
+           'MaximumRetryException', 'NoConnectionAvailable',
+           'InvalidRequestError']
 
 class NoServerAvailable(Exception):
     """Raised if all servers are currently marked dead."""
     pass
 
 
-class Pool(object):
+class AbstractPool(object):
     """An abstract base class for all other pools."""
 
     def __init__(self, keyspace, server_list=['localhost:9160'],
                  credentials=None, timeout=0.5, logging_name=None,
                  use_threadlocal=True, listeners=[], framed_transport=True):
         """
-        Construct an instance of the abstract base class :class:`Pool`.  This
+        Construct an instance of the abstract base class :class:`AbstractPool`.  This
         should not be called directly, only by subclass :meth:`__init__()`
         methods.
 
@@ -66,6 +67,11 @@ class Pool(object):
           :class:`PoolListener`-like objects or
           dictionaries of callables that receive events when
           pool or connection events occur.
+
+        :param framed_transport: Whether to use a framed or buffered
+          transport.  Cassandra 0.7 uses framed by default, while
+          Cassandra 0.6 uses buffered by default.
+        :type framed_transport: boolean
 
         """
         if logging_name:
@@ -357,7 +363,7 @@ class ConnectionWrapper(connection.Connection):
         access to the thrift API calls.
 
         These should not be created directly, only obtained through
-        Pool's :meth:`~.Pool.get()` method.
+        Pool's :meth:`~.AbstractPool.get()` method.
 
         """
         self._pool = pool
@@ -378,7 +384,7 @@ class ConnectionWrapper(connection.Connection):
         """
         Returns this to the pool.
 
-        This has the same effect as calling :meth:`Pool.return_conn()`
+        This has the same effect as calling :meth:`AbstractPool.return_conn()`
         on the wrapper.
 
         """
@@ -529,7 +535,7 @@ class ConnectionWrapper(connection.Connection):
                 cf_def.column_metadata = new_metadata
         return cf_defs
 
-class QueuePool(Pool):
+class ConnectionPool(AbstractPool):
     """A pool that maintains a queue of open connections."""
 
     def __init__(self, pool_size=5, max_overflow=10,
@@ -540,11 +546,11 @@ class QueuePool(Pool):
 
         This is typically what you want to use for connection pooling.
 
-        Be careful when using a QueuePool with ``use_threadlocal=False``,
+        Be careful when using a this with ``use_threadlocal=False``,
         especially with retries enabled.  Synchronization may be required to
         prevent the connection from changing while another thread is using it.
 
-        All of the parameters for :meth:`Pool.__init__()` are available, as
+        All of the parameters for :meth:`AbstractPool.__init__()` are available, as
         well as the following:
 
         :param pool_size: The size of the pool to be maintained,
@@ -589,7 +595,7 @@ class QueuePool(Pool):
 
         Example::
 
-            >>> pool = pycassa.QueuePool(keyspace='Keyspace1', server_list=['10.0.0.4:9160', '10.0.0.5:9160'], prefill=False)
+            >>> pool = pycassa.ConnectionPool(keyspace='Keyspace1', server_list=['10.0.0.4:9160', '10.0.0.5:9160'], prefill=False)
             >>> conn = pool.get()
             >>> cf = pycassa.ColumnFamily(conn, 'Standard1')
             >>> cf.insert('key', {'col': 'val'})
@@ -604,7 +610,7 @@ class QueuePool(Pool):
         assert max_retries >= 0, "max_retries must be non-negative"
         assert recycle > 0, "recycle must be positive"
 
-        super(QueuePool, self).__init__(*args, **kwargs)
+        super(ConnectionPool, self).__init__(*args, **kwargs)
         self._pool_size = pool_size
         self._q = pool_queue.Queue(pool_size)
         self._max_overflow = max_overflow
@@ -624,7 +630,7 @@ class QueuePool(Pool):
 
     def recreate(self):
         self._notify_on_pool_recreate()
-        return QueuePool(pool_size=self._q.maxsize,
+        return ConnectionPool(pool_size=self._q.maxsize,
                          max_overflow=self._max_overflow,
                          pool_timeout=self._pool_timeout,
                          keyspace=self.keyspace,
@@ -717,7 +723,7 @@ class QueuePool(Pool):
             if self._overflow >= self._max_overflow:
                 self._notify_on_pool_max(pool_max=self.size() + self.overflow())
                 raise NoConnectionAvailable(
-                        "QueuePool limit of size %d overflow %d reached, "
+                        "ConnectionPool limit of size %d overflow %d reached, "
                         "connection timed out, pool_timeout %d" %
                         (self.size(), self.overflow(), self._pool_timeout))
             else:
@@ -768,8 +774,10 @@ class QueuePool(Pool):
     def checkedout(self):
         return self._pool_size - self._q.qsize() + self._overflow
 
+QueuePool = ConnectionPool
+
 class PoolListener(object):
-    """Hooks into the lifecycle of connections in a :class:`Pool`.
+    """Hooks into the lifecycle of connections in a :class:`AbstractPool`.
 
     Usage::
 
@@ -779,12 +787,12 @@ class PoolListener(object):
             # etc.
 
         # create a new pool with a listener
-        p = QueuePool(..., listeners=[MyListener()])
+        p = ConnectionPool(..., listeners=[MyListener()])
 
         # or add a listener after the fact
         p.add_listener(MyListener())
 
-    All of the standard connection :class:`Pool` types can
+    All of the standard connection :class:`AbstractPool` types can
     accept event listeners for key connection lifecycle events.
 
     Listeners receive a dictionary that contains event information and
@@ -794,7 +802,7 @@ class PoolListener(object):
 
     There is no need to subclass :class:`PoolListener` to handle events.
     Any class that implements one or more of these methods can be used
-    as a pool listener.  The :class:`Pool` will inspect the methods
+    as a pool listener.  The :class:`AbstractPool` will inspect the methods
     provided by a listener object and add the listener to one or more
     internal event queues based on its capabilities.  In terms of
     efficiency and function call overhead, you're much better off only
@@ -815,7 +823,7 @@ class PoolListener(object):
             An error that occured while closing the connection, if any.
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`QueuePool`
+          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))
@@ -833,7 +841,7 @@ class PoolListener(object):
           The :class:`ConnectionWrapper` that persistently manages the connection
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`QueuePool`
+          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))
@@ -853,7 +861,7 @@ class PoolListener(object):
           The :class:`ConnectionWrapper` that persistently manages the connection
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`QueuePool`
+          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))
@@ -877,7 +885,7 @@ class PoolListener(object):
             An error that occured while closing the connection, if any.
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`QueuePool`
+          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))
@@ -898,7 +906,7 @@ class PoolListener(object):
             The :class:`ConnectionWrapper` that is replacing it
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`QueuePool`
+          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))
@@ -916,7 +924,7 @@ class PoolListener(object):
           The connection error (Exception).
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`QueuePool`
+          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))
@@ -933,7 +941,7 @@ class PoolListener(object):
             The randomly permuted list of servers.
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`QueuePool`
+          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))
@@ -948,7 +956,7 @@ class PoolListener(object):
         """Called when a pool is recreated.
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`QueuePool`
+          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))
@@ -963,7 +971,7 @@ class PoolListener(object):
         """Called when a pool is recreated.
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`QueuePool`
+          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))
@@ -980,7 +988,7 @@ class PoolListener(object):
         pool, but the pool is already at its max size.
 
         dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`QueuePool`
+          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
 
         dic['pool_id']
           The logging name of the connection's pool (defaults to id(pool))

@@ -4,7 +4,7 @@ import uuid
 
 from nose import SkipTest
 from nose.tools import assert_raises
-from pycassa import QueuePool, PooledColumnFamily, ConsistencyLevel, NotFoundException
+from pycassa import ConnectionPool, ColumnFamily, ConsistencyLevel, NotFoundException
 import pycassa.batch as batch_mod
 
 ROWS = {'1': {'a': '123', 'b':'123'},
@@ -15,11 +15,11 @@ class TestMutator(unittest.TestCase):
 
     def setUp(self):
         credentials = {'username': 'jsmith', 'password': 'havebadpass'}
-        self.pool = QueuePool(keyspace='Keyspace1', credentials=credentials)
-        self.cf = PooledColumnFamily(self.pool, 'Standard2',
+        self.pool = ConnectionPool(keyspace='Keyspace1', credentials=credentials)
+        self.cf = ColumnFamily(self.pool, 'Standard2',
                                write_consistency_level=ConsistencyLevel.ONE,
                                timestamp=self.timestamp)
-        self.scf = PooledColumnFamily(self.pool, 'Super1',
+        self.scf = ColumnFamily(self.pool, 'Super1',
                                 write_consistency_level=ConsistencyLevel.ONE,
                                 super=True, timestamp=self.timestamp)
         try:

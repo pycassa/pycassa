@@ -1,5 +1,5 @@
-from pycassa import index, PooledColumnFamily,\
-                    QueuePool, ConsistencyLevel, NotFoundException
+from pycassa import index, ColumnFamily,\
+                    ConnectionPool, ConsistencyLevel, NotFoundException
 
 from nose.tools import assert_raises, assert_equal, assert_true
 
@@ -11,8 +11,8 @@ class TestDict(dict):
 class TestColumnFamily:
     def setUp(self):
         credentials = {'username': 'jsmith', 'password': 'havebadpass'}
-        self.pool = QueuePool(pool_size=5, keyspace='Keyspace1', credentials=credentials)
-        self.cf = PooledColumnFamily(self.pool, 'Standard2',
+        self.pool = ConnectionPool(pool_size=5, keyspace='Keyspace1', credentials=credentials)
+        self.cf = ColumnFamily(self.pool, 'Standard2',
                                write_consistency_level=ConsistencyLevel.ONE,
                                buffer_size=2, timestamp=self.timestamp,
                                dict_class=TestDict)
@@ -246,7 +246,7 @@ class TestColumnFamily:
         assert_equal(count, 3)
 
     def test_get_indexed_slices_batching(self):
-        indexed_cf = PooledColumnFamily(self.pool, 'Indexed1')
+        indexed_cf = ColumnFamily(self.pool, 'Indexed1')
 
         columns = {'birthdate': 1L}
 
@@ -300,8 +300,8 @@ class TestColumnFamily:
 class TestSuperColumnFamily:
     def setUp(self):
         credentials = {'username': 'jsmith', 'password': 'havebadpass'}
-        self.pool = QueuePool(pool_size=5, keyspace='Keyspace1', credentials=credentials)
-        self.cf = PooledColumnFamily(self.pool, 'Super2',
+        self.pool = ConnectionPool(pool_size=5, keyspace='Keyspace1', credentials=credentials)
+        self.cf = ColumnFamily(self.pool, 'Super2',
                                write_consistency_level=ConsistencyLevel.ONE,
                                buffer_size=2, timestamp=self.timestamp,
                                super=True)

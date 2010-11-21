@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pycassa import index, gm_timestamp, PooledColumnFamily, QueuePool, \
+from pycassa import index, gm_timestamp, ColumnFamily, ConnectionPool, \
     ColumnFamilyMap, ConsistencyLevel, NotFoundException, String, Int64, \
     Float64, DateTime, IntString, FloatString, DateTimeString
 from nose.tools import assert_raises
@@ -37,13 +37,13 @@ class TestEmpty(object):
 class TestColumnFamilyMap:
     def setUp(self):
         credentials = {'username': 'jsmith', 'password': 'havebadpass'}
-        self.pool = QueuePool(keyspace='Keyspace1', credentials=credentials)
-        self.cf = PooledColumnFamily(self.pool, 'Standard2',
+        self.pool = ConnectionPool(keyspace='Keyspace1', credentials=credentials)
+        self.cf = ColumnFamily(self.pool, 'Standard2',
                                write_consistency_level=ConsistencyLevel.ONE,
                                timestamp=self.timestamp,
                                autopack_names=False,
                                autopack_values=False)
-        self.indexed_cf = PooledColumnFamily(self.pool, 'Indexed1',
+        self.indexed_cf = ColumnFamily(self.pool, 'Indexed1',
                                        autopack_names=False,
                                        autopack_values=False)
         self.map = ColumnFamilyMap(TestUTF8, self.cf)
@@ -180,8 +180,8 @@ class TestColumnFamilyMap:
 class TestSuperColumnFamilyMap:
     def setUp(self):
         credentials = {'username': 'jsmith', 'password': 'havebadpass'}
-        self.pool = QueuePool(keyspace='Keyspace1', credentials=credentials)
-        self.cf = PooledColumnFamily(self.pool, 'Super2', timestamp=self.timestamp)
+        self.pool = ConnectionPool(keyspace='Keyspace1', credentials=credentials)
+        self.cf = ColumnFamily(self.pool, 'Super2', timestamp=self.timestamp)
         self.map = ColumnFamilyMap(TestUTF8, self.cf)
         try:
             self.timestamp_n = int(self.cf.get('meta')['meta']['timestamp'])

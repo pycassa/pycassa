@@ -3,7 +3,7 @@ import unittest
 import time
 
 from nose.tools import assert_raises, assert_equal, assert_not_equal
-from pycassa import PooledColumnFamily, QueuePool,\
+from pycassa import ColumnFamily, ConnectionPool,\
                     ColumnFamily, PoolListener, InvalidRequestError,\
                     NoConnectionAvailable, MaximumRetryException,\
                     AllServersUnavailable, PycassaLogger
@@ -14,7 +14,7 @@ from pycassa.cassandra.ttypes import TimedOutException
 from pycassa.cassandra.Cassandra import Client
 
 _credentials = {'username':'jsmith', 'password':'havebadpass'}
-_pools = [QueuePool]
+_pools = [ConnectionPool]
 _should_tlocal_fail = True
 
 logger = PycassaLogger()
@@ -31,21 +31,21 @@ class PoolingCase(unittest.TestCase):
             pool = pool_cls(keyspace='Keyspace1', credentials=_credentials)
             pool.dispose()
             pool = pool.recreate()
-            cf = PooledColumnFamily(pool, 'Standard1')
+            cf = ColumnFamily(pool, 'Standard1')
             cf.insert('key1', {'col':'val'})
             pool.status()
             pool.dispose()
 
     def test_server_list_func(self):
         listener = _TestListener()
-        pool = QueuePool(keyspace='Keyspace1', server_list=_get_list,
+        pool = ConnectionPool(keyspace='Keyspace1', server_list=_get_list,
                          listeners=[listener], prefill=False)
         assert_equal(listener.serv_list, ['foo:bar'])
         assert_equal(listener.list_count, 1)
 
     def test_queue_pool(self):
         listener = _TestListener()
-        pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
+        pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
                          prefill=True, pool_timeout=0.5, timeout=1,
                          keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=False)
@@ -105,7 +105,7 @@ class PoolingCase(unittest.TestCase):
 
     def test_queue_pool_threadlocal(self):
         listener = _TestListener()
-        pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
+        pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
                          prefill=True, pool_timeout=0.5, timeout=1,
                          keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=True)
@@ -170,12 +170,12 @@ class PoolingCase(unittest.TestCase):
 
     def test_queue_pool_recycle(self):
         listener = _TestListener()
-        pool = QueuePool(pool_size=5, max_overflow=5, recycle=1,
+        pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=1,
                          prefill=True, pool_timeout=0.5, timeout=1,
                          keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=False)
 
-        cf = PooledColumnFamily(pool, 'Standard1')
+        cf = ColumnFamily(pool, 'Standard1')
         for i in range(10):
             cf.insert('key', {'col': 'val'})
 
@@ -185,12 +185,12 @@ class PoolingCase(unittest.TestCase):
         listener.reset()
 
         # Try with threadlocal=True
-        pool = QueuePool(pool_size=5, max_overflow=5, recycle=1,
+        pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=1,
                          prefill=False, pool_timeout=0.5, timeout=1,
                          keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=True)
 
-        cf = PooledColumnFamily(pool, 'Standard1')
+        cf = ColumnFamily(pool, 'Standard1')
         for i in range(10):
             cf.insert('key', {'col': 'val'})
 
@@ -208,7 +208,7 @@ class PoolingCase(unittest.TestCase):
             else:
                 return 1
 
-        pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
+        pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
                          prefill=True,
                          keyspace='Keyspace1', credentials=_credentials,
                          timeout=0.05,
@@ -225,7 +225,7 @@ class PoolingCase(unittest.TestCase):
         pool.dispose()
         listener.reset()
 
-        pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
+        pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
                          prefill=True,
                          keyspace='Keyspace1', credentials=_credentials,
                          timeout=0.05,
@@ -247,13 +247,13 @@ class PoolingCase(unittest.TestCase):
 
     def test_queue_failover(self):
         listener = _TestListener()
-        pool = QueuePool(pool_size=1, max_overflow=0, recycle=10000,
+        pool = ConnectionPool(pool_size=1, max_overflow=0, recycle=10000,
                          prefill=True, timeout=0.05,
                          keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=False,
                          server_list=['localhost:9160', 'localhost:9160'])
 
-        cf = PooledColumnFamily(pool, 'Standard1')
+        cf = ColumnFamily(pool, 'Standard1')
 
         for i in range(1,5):
             conn = pool.get()
@@ -271,13 +271,13 @@ class PoolingCase(unittest.TestCase):
 
     def test_queue_threadlocal_failover(self):
         listener = _TestListener()
-        pool = QueuePool(pool_size=1, max_overflow=0, recycle=10000,
+        pool = ConnectionPool(pool_size=1, max_overflow=0, recycle=10000,
                          prefill=True, timeout=0.05,
                          keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=True,
                          server_list=['localhost:9160', 'localhost:9160'])
 
-        cf = PooledColumnFamily(pool, 'Standard1')
+        cf = ColumnFamily(pool, 'Standard1')
 
         for i in range(1,5):
             conn = pool.get()
@@ -294,13 +294,13 @@ class PoolingCase(unittest.TestCase):
         pool.dispose()
         listener.reset()
 
-        pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
+        pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
                          prefill=True, timeout=0.05,
                          keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=False,
                          server_list=['localhost:9160', 'localhost:9160'])
 
-        cf = PooledColumnFamily(pool, 'Standard1')
+        cf = ColumnFamily(pool, 'Standard1')
 
         for i in range(5):
             conn = pool.get()
@@ -322,7 +322,7 @@ class PoolingCase(unittest.TestCase):
 
     def test_queue_retry_limit(self):
         listener = _TestListener()
-        pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
+        pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
                          prefill=True, max_retries=3, # allow 3 retries
                          keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=False,
@@ -335,7 +335,7 @@ class PoolingCase(unittest.TestCase):
             conn._should_fail = True
             conn.return_to_pool()
 
-        cf = PooledColumnFamily(pool, 'Standard1')
+        cf = ColumnFamily(pool, 'Standard1')
         assert_raises(MaximumRetryException, cf.insert, 'key', {'col':'val'})
         assert_equal(listener.failure_count, 4) # On the 4th failure, didn't retry
 
@@ -343,7 +343,7 @@ class PoolingCase(unittest.TestCase):
 
     def test_queue_threadlocal_retry_limit(self):
         listener = _TestListener()
-        pool = QueuePool(pool_size=5, max_overflow=5, recycle=10000,
+        pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
                          prefill=True, max_retries=3, # allow 3 retries
                          keyspace='Keyspace1', credentials=_credentials,
                          listeners=[listener], use_threadlocal=True,
@@ -356,7 +356,7 @@ class PoolingCase(unittest.TestCase):
             conn._should_fail = True
             conn.return_to_pool()
 
-        cf = PooledColumnFamily(pool, 'Standard1')
+        cf = ColumnFamily(pool, 'Standard1')
         assert_raises(MaximumRetryException, cf.insert, 'key', {'col':'val'})
         assert_equal(listener.failure_count, 4) # On the 4th failure, didn't retry
 

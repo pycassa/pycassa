@@ -61,8 +61,8 @@ class ColumnFamily(object):
         Operations on this, such as :meth:`get` or :meth:`insert` will get data from or
         insert data into the corresponding Cassandra column family.
 
-        :param client: Connection to a Cassandra node
-        :type client: :class:`~pycassa.connection.Connection`
+        :param pool: A pool pool to a Cassandra cluster
+        :type client: :class:`~pycassa.pool.Pool`
 
         :param column_family: The name of the column family
         :type column_family: string
@@ -139,7 +139,9 @@ class ColumnFamily(object):
             self.client = self.pool.get()
             col_fam = self.client.get_keyspace_description(use_dict_for_col_metadata=True)[self.column_family]
         except KeyError:
-            raise NotFoundException('Column family %s not found.' % self.column_family)
+            nfe = NotFoundException()
+            nfe.why = 'Column family %s not found.' % self.column_family
+            raise nfe
         finally:
             self.client.return_to_pool()
 
