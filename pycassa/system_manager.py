@@ -5,10 +5,12 @@ from connection import Connection
 
 __all__ = ['SystemManager']
 
+_TIMEOUT = 5
+
 class SystemManager(object):
 
     def __init__(self, server='localhost:9160', credentials=None, framed_transport=True):
-        self._conn = Connection(None, server, framed_transport, 0.5, credentials)
+        self._conn = Connection(None, server, framed_transport, _TIMEOUT, credentials)
 
     def close(self):
         self._conn.close()
@@ -136,6 +138,7 @@ class SystemManager(object):
         :rtype: new schema version
 
         """
+        self._conn.set_keyspace(cfdef.keyspace)
         schema_version = self._conn.system_add_column_family(cfdef) 
         if block:
             self._wait_for_agreement(sample_period)
@@ -176,7 +179,7 @@ class SystemManager(object):
             self._wait_for_agreement(sample_period)
         return schema_version
 
-    def drop_column_family(self, name, block=True, sample_period=0.25):
+    def drop_column_family(self, column_family_name, keyspace, block=True, sample_period=0.25):
         """
         Drops a column family from the cluster.
 
@@ -193,7 +196,8 @@ class SystemManager(object):
         :rtype: new schema version
 
         """
-        schema_version = self._conn.system_drop_column_family(name)
+        self._conn.set_keyspace(keyspace)
+        schema_version = self._conn.system_drop_column_family(column_family_name)
         if block:
             self._wait_for_agreement(sample_period)
         return schema_version
