@@ -2,7 +2,7 @@ from logging.pycassa_logger import *
 import time
 
 from connection import Connection
-from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef
+from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef
 
 __all__ = ['SystemManager']
 
@@ -22,6 +22,8 @@ class SystemManager(object):
     UTF8_TYPE = 'UTF8Type'
     TIME_UUID_TYPE = 'TimeUUIDType'
     LEXICAL_UUID_TYPE = 'LexicalUUIDType'
+
+    KEYS_INDEX = IndexType.KEYS
 
     def __init__(self, server='localhost:9160', credentials=None, framed_transport=True):
         self._conn = Connection(None, server, framed_transport, _TIMEOUT, credentials)
@@ -526,6 +528,42 @@ class SystemManager(object):
         schema_version = self._conn.system_drop_column_family(column_family)
         self._wait_for_agreement()
         return schema_version
+
+    def alter_column(self, keyspace, column, value_type):
+        self._conn.set_keyspace(keyspace)
+        cfdef = self.get_keyspace_description(keyspace)[column_family]
+
+        if value_type.find('.') == -1:
+            value_type = 'org.apache.cassandra.db.marshal.%s' % value_type
+
+        matched = False
+        for c in cfdef.column_metadata:
+            if c.name == column:
+                c.validation_class = value_type
+                matched = True
+                break
+        if not matched:
+            cfdef.column_metadata.append(ColumnDef(column, value_type, None, None))
+        self._system_update_column_family(cfdef)
+
+# This is dependent on CASSANDRA-1764
+#    def create_index(self, keyspace, column_family, column, value_type,
+#                     index_type=KEYS_INDEX, index_name=None):
+
+    def drop_index(self, keyspace, column_family, column):
+        self._conn.set_keyspace(keyspace)
+        cfdef = self.get_keyspace_description(keyspace)[column_family]
+
+        matched = False
+        for c in cfdef.column_metadata:
+            if c.name == column:
+                c.index_type = None
+                c.index_name = None
+                matched = True
+                break
+
+        if matched:
+            self._system_update_column_family(cfdef)
 
     def _wait_for_agreement(self): 
         while True:
