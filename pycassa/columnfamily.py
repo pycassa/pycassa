@@ -61,7 +61,7 @@ class ColumnFamily(object):
         Operations on this, such as :meth:`get` or :meth:`insert` will get data from or
         insert data into the corresponding Cassandra column family.
 
-        :param pool: A pool pool to a Cassandra cluster
+        :param pool: A connection pool to a Cassandra cluster
         :type client: :class:`~pycassa.pool.AbstractPool`
 
         :param column_family: The name of the column family
@@ -845,3 +845,5 @@ class ColumnFamily(object):
 
         """
         self.client.truncate(self.column_family)
+
+PooledColumnFamily = ColumnFamily
