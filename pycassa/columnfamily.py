@@ -53,7 +53,7 @@ class ColumnFamily(object):
                  read_consistency_level=ConsistencyLevel.ONE,
                  write_consistency_level=ConsistencyLevel.ONE,
                  timestamp=gm_timestamp, super=False,
-                 dict_class=dict, autopack_names=True,
+                 dict_class=OrderedDict, autopack_names=True,
                  autopack_values=True):
         """
         Constructs an abstraction of a Cassandra column family or super column family.
@@ -89,10 +89,8 @@ class ColumnFamily(object):
           Set this to replace the default timestamp function with your own.
         :type timestamp: function
 
-        :param dict_class: The default dict_class is :class:`dict`.
-          If the order of columns matter to you, pass your own dictionary
-          class, or python 2.7's new :class:`collections.OrderedDict`. All returned
-          rows and subcolumns are instances of this.
+        :param dict_class: The default dict_class is :class:`~pycassa.util.OrderedDict`.
+          All returned rows and subcolumns are instances of this.
         :type dict_class: class
 
         :param autopack_names: Whether column and supercolumn names should
