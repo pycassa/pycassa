@@ -1,9 +1,10 @@
 import uuid
 
-from pycassa import connect, connect_thread_local,\
+from pycassa import ConnectionPool,\
                     ColumnFamily, NotFoundException
 from pycassa.util import *
 
+import unittest
 from nose.tools import assert_raises, assert_equal, assert_almost_equal
 
 from datetime import datetime
@@ -17,130 +18,30 @@ TIME3 = uuid.UUID(hex='dc3d5234-a00b-11df-8abf-00234d21610a')
 VALS = ['val1', 'val2', 'val3']
 KEYS = ['key1', 'key2', 'key3']
 
-class TestAutoPacking:
+class TestStandardCFs(unittest.TestCase):
 
     def setUp(self):
         credentials = {'username': 'jsmith', 'password': 'havebadpass'}
-        self.client = connect_thread_local('Keyspace1', credentials=credentials)
+        self.pool = ConnectionPool(pool_size=10, keyspace='Keyspace1', credentials=credentials)
 
-        self.cf       = ColumnFamily(self.client, 'Standard2')
+        self.cf       = ColumnFamily(self.pool, 'Standard2')
 
-        self.cf_long  = ColumnFamily(self.client, 'StdLong')
-        self.cf_int   = ColumnFamily(self.client, 'StdInteger')
-        self.cf_time  = ColumnFamily(self.client, 'StdTimeUUID')
-        self.cf_lex   = ColumnFamily(self.client, 'StdLexicalUUID')
-        self.cf_ascii = ColumnFamily(self.client, 'StdAscii')
-        self.cf_utf8  = ColumnFamily(self.client, 'StdUTF8')
-        self.cf_bytes = ColumnFamily(self.client, 'StdBytes')
-
-        self.cf_suplong  = ColumnFamily(self.client, 'SuperLong', super=True)
-        self.cf_supint   = ColumnFamily(self.client, 'SuperInt', super=True)
-        self.cf_suptime  = ColumnFamily(self.client, 'SuperTime', super=True)
-        self.cf_suplex   = ColumnFamily(self.client, 'SuperLex', super=True)
-        self.cf_supascii = ColumnFamily(self.client, 'SuperAscii', super=True)
-        self.cf_suputf8  = ColumnFamily(self.client, 'SuperUTF8', super=True)
-        self.cf_supbytes = ColumnFamily(self.client, 'SuperBytes', super=True)
-
-        self.cf_suplong_sublong  = ColumnFamily(self.client, 'SuperLongSubLong', super=True)
-        self.cf_suplong_subint   = ColumnFamily(self.client, 'SuperLongSubInt', super=True)
-        self.cf_suplong_subtime  = ColumnFamily(self.client, 'SuperLongSubTime', super=True)
-        self.cf_suplong_sublex   = ColumnFamily(self.client, 'SuperLongSubLex', super=True)
-        self.cf_suplong_subascii = ColumnFamily(self.client, 'SuperLongSubAscii', super=True)
-        self.cf_suplong_subutf8  = ColumnFamily(self.client, 'SuperLongSubUTF8', super=True)
-        self.cf_suplong_subbytes = ColumnFamily(self.client, 'SuperLongSubBytes', super=True)
-
-        self.cf_valid_long = ColumnFamily(self.client, 'ValidatorLong')
-        self.cf_valid_int = ColumnFamily(self.client, 'ValidatorInt')
-        self.cf_valid_time = ColumnFamily(self.client, 'ValidatorTime')
-        self.cf_valid_lex = ColumnFamily(self.client, 'ValidatorLex')
-        self.cf_valid_ascii = ColumnFamily(self.client, 'ValidatorAscii')
-        self.cf_valid_utf8 = ColumnFamily(self.client, 'ValidatorUTF8')
-        self.cf_valid_bytes = ColumnFamily(self.client, 'ValidatorBytes')
-
-        self.cf_def_valid = ColumnFamily(self.client, 'DefaultValidator')
+        self.cf_long  = ColumnFamily(self.pool, 'StdLong')
+        self.cf_int   = ColumnFamily(self.pool, 'StdInteger')
+        self.cf_time  = ColumnFamily(self.pool, 'StdTimeUUID')
+        self.cf_lex   = ColumnFamily(self.pool, 'StdLexicalUUID')
+        self.cf_ascii = ColumnFamily(self.pool, 'StdAscii')
+        self.cf_utf8  = ColumnFamily(self.pool, 'StdUTF8')
+        self.cf_bytes = ColumnFamily(self.pool, 'StdBytes')
 
         self.cfs = [self.cf_long, self.cf_int, self.cf_time, self.cf_lex,
-                    self.cf_ascii, self.cf_utf8, self.cf_bytes,
-                    #
-                    self.cf_suplong, self.cf_supint, self.cf_suptime,
-                    self.cf_suplex, self.cf_supascii, self.cf_suputf8,
-                    self.cf_supbytes,
-                    #
-                    self.cf_suplong_subint, self.cf_suplong_subint,
-                    self.cf_suplong_subtime, self.cf_suplong_sublex,
-                    self.cf_suplong_subascii, self.cf_suplong_subutf8,
-                    self.cf_suplong_subbytes,
-                    #
-                    self.cf_valid_long, self.cf_valid_int, self.cf_valid_time,
-                    self.cf_valid_lex, self.cf_valid_ascii, self.cf_valid_utf8,
-                    self.cf_valid_bytes,
-                    #
-                    self.cf_def_valid,]
-
-        try:
-            self.timestamp_n = int(self.cf.get('meta')['timestamp'])
-        except NotFoundException:
-            self.timestamp_n = 0
-        self.clear()
+                    self.cf_ascii, self.cf_utf8, self.cf_bytes]
 
     def tearDown(self):
-        self.cf.insert('meta', {'timestamp': str(self.timestamp_n)})
-
-    def timestamp(self):
-        self.timestamp_n += 1
-        return self.timestamp_n
-
-    def clear(self):
-        for key, columns in self.cf.get_range(include_timestamp=True):
-            for value, timestamp in columns.itervalues():
-                self.timestamp_n = max(self.timestamp_n, timestamp)
-            self.cf.remove(key)
-
         for cf in self.cfs:
-            for key, columns in cf.get_range():
+            for key, cols in cf.get_range():
                 cf.remove(key)
-
-    def test_basic_inserts(self):
-
-        long_col = {1111111111111111L: VALS[0]}
-        int_col = {1: VALS[0]}
-        time_col = {TIME1: VALS[0]}
-        lex_col = {uuid.UUID(bytes='abc abc abc abcd'): VALS[0]}
-        ascii_col = {'foo': VALS[0]}
-        utf8_col = {u'\u0020': VALS[0]}
-        bytes_col = {'bytes': VALS[0]}
-
-        self.cf_long.insert(KEYS[0], long_col)
-        self.cf_int.insert(KEYS[0], int_col)
-        self.cf_time.insert(KEYS[0], time_col)
-        self.cf_lex.insert(KEYS[0], lex_col)
-        self.cf_ascii.insert(KEYS[0], ascii_col)
-        self.cf_utf8.insert(KEYS[0], utf8_col)
-        self.cf_bytes.insert(KEYS[0], bytes_col)
-
-        assert self.cf_long.get(KEYS[0]) == long_col
-        assert self.cf_int.get(KEYS[0]) == int_col
-        assert self.cf_time.get(KEYS[0]) == time_col
-        assert self.cf_lex.get(KEYS[0]) == lex_col
-        assert self.cf_ascii.get(KEYS[0]) == ascii_col
-        assert self.cf_utf8.get(KEYS[0]) == utf8_col
-        assert self.cf_bytes.get(KEYS[0]) == bytes_col
-
-        self.cf_suplong.insert(KEYS[0],  {123L: bytes_col})
-        self.cf_supint.insert(KEYS[0],   {111123: bytes_col})
-        self.cf_suptime.insert(KEYS[0],  {TIME1: bytes_col})
-        self.cf_suplex.insert(KEYS[0],   {uuid.UUID(bytes='aaa aaa aaa aaaa'): bytes_col})
-        self.cf_supascii.insert(KEYS[0], {'aaaa': bytes_col})
-        self.cf_suputf8.insert(KEYS[0],  {u'a\u0020': bytes_col})
-        self.cf_supbytes.insert(KEYS[0], {'aaaa': bytes_col})
-
-        self.cf_suplong_sublong.insert(KEYS[0], {123L: long_col})
-        self.cf_suplong_subint.insert(KEYS[0], {123L: int_col})
-        self.cf_suplong_subtime.insert(KEYS[0], {123L: time_col})
-        self.cf_suplong_sublex.insert(KEYS[0], {123L: lex_col})
-        self.cf_suplong_subascii.insert(KEYS[0], {123L: ascii_col})
-        self.cf_suplong_subutf8.insert(KEYS[0], {123L: utf8_col})
-        self.cf_suplong_subbytes.insert(KEYS[0], {123L: bytes_col})
+        self.pool.dispose()
 
     def make_group(self, cf, cols):
         diction = { cols[0]: VALS[0],
@@ -149,7 +50,6 @@ class TestAutoPacking:
         return { 'cf': cf, 'cols': cols, 'dict': diction}
 
     def test_standard_column_family(self):
-        self.clear()
 
         # For each data type, create a group that includes its column family,
         # a set of column names, and a dictionary that maps from the column
@@ -260,6 +160,30 @@ class TestAutoPacking:
             for sub_res in res:
                 assert sub_res[1] == group.get('dict')
 
+
+class TestSuperCFs(unittest.TestCase):
+
+    def setUp(self):
+        credentials = {'username': 'jsmith', 'password': 'havebadpass'}
+        self.pool = ConnectionPool(pool_size=10, keyspace='Keyspace1', credentials=credentials)
+        self.cf_suplong  = ColumnFamily(self.pool, 'SuperLong')
+        self.cf_supint   = ColumnFamily(self.pool, 'SuperInt')
+        self.cf_suptime  = ColumnFamily(self.pool, 'SuperTime')
+        self.cf_suplex   = ColumnFamily(self.pool, 'SuperLex')
+        self.cf_supascii = ColumnFamily(self.pool, 'SuperAscii')
+        self.cf_suputf8  = ColumnFamily(self.pool, 'SuperUTF8')
+        self.cf_supbytes = ColumnFamily(self.pool, 'SuperBytes')
+
+        self.cfs = [self.cf_suplong, self.cf_supint, self.cf_suptime,
+                    self.cf_suplex, self.cf_supascii, self.cf_suputf8,
+                    self.cf_supbytes]
+
+    def tearDown(self):
+        for cf in self.cfs:
+            for key, cols in cf.get_range():
+                cf.remove(key)
+        self.pool.dispose()
+
     def make_super_group(self, cf, cols):
         diction = { cols[0]: {'bytes': VALS[0]},
                     cols[1]: {'bytes': VALS[1]},
@@ -267,7 +191,6 @@ class TestAutoPacking:
         return { 'cf': cf, 'cols': cols, 'dict': diction}
 
     def test_super_column_families(self):
-        self.clear()
 
         # For each data type, create a group that includes its column family,
         # a set of column names, and a dictionary that maps from the column
@@ -379,6 +302,30 @@ class TestAutoPacking:
                 assert sub_res[1] == group.get('dict')
 
 
+class TestSuperSubCFs(unittest.TestCase):
+
+    def setUp(self):
+        credentials = {'username': 'jsmith', 'password': 'havebadpass'}
+        self.pool = ConnectionPool(pool_size=10, keyspace='Keyspace1', credentials=credentials)
+        self.cf_suplong_sublong  = ColumnFamily(self.pool, 'SuperLongSubLong')
+        self.cf_suplong_subint   = ColumnFamily(self.pool, 'SuperLongSubInt')
+        self.cf_suplong_subtime  = ColumnFamily(self.pool, 'SuperLongSubTime')
+        self.cf_suplong_sublex   = ColumnFamily(self.pool, 'SuperLongSubLex')
+        self.cf_suplong_subascii = ColumnFamily(self.pool, 'SuperLongSubAscii')
+        self.cf_suplong_subutf8  = ColumnFamily(self.pool, 'SuperLongSubUTF8')
+        self.cf_suplong_subbytes = ColumnFamily(self.pool, 'SuperLongSubBytes')
+
+        self.cfs = [self.cf_suplong_subint, self.cf_suplong_subint,
+                    self.cf_suplong_subtime, self.cf_suplong_sublex,
+                    self.cf_suplong_subascii, self.cf_suplong_subutf8,
+                    self.cf_suplong_subbytes]
+
+    def tearDown(self):
+        for cf in self.cfs:
+            for key, cols in cf.get_range():
+                cf.remove(key)
+        self.pool.dispose()
+
     def make_sub_group(self, cf, cols):
         diction = {123L: {cols[0]: VALS[0],
                           cols[1]: VALS[1],
@@ -386,7 +333,6 @@ class TestAutoPacking:
         return { 'cf': cf, 'cols': cols, 'dict': diction}
 
     def test_super_column_family_subs(self):
-        self.clear()
 
         # For each data type, create a group that includes its column family,
         # a set of column names, and a dictionary that maps from the column
@@ -466,22 +412,45 @@ class TestAutoPacking:
 
             res = group.get('cf').get_range(start=KEYS[0])
             for sub_res in res:
-                assert sub_res[1] == group.get('dict')
+                assert_equal(sub_res[1], group.get('dict'))
 
             res = group.get('cf').get_range(start=KEYS[0], column_start=123L, column_finish=123L)
             for sub_res in res:
-                assert sub_res[1] == group.get('dict')
+                assert_equal(sub_res[1], group.get('dict'))
 
             res = group.get('cf').get_range(start=KEYS[0], columns=[123L])
             for sub_res in res:
-                assert sub_res[1] == group.get('dict')
+                assert_equal(sub_res[1], group.get('dict'))
 
             res = group.get('cf').get_range(start=KEYS[0], super_column=123L)
             for sub_res in res:
-                assert sub_res[1] == group.get('dict').get(123L)
+                assert_equal(sub_res[1], group.get('dict').get(123L))
+
+
+class TestValidators(unittest.TestCase):
+
+    def setUp(self):
+        credentials = {'username': 'jsmith', 'password': 'havebadpass'}
+        self.pool = ConnectionPool(pool_size=10, keyspace='Keyspace1', credentials=credentials)
+        self.cf_valid_long = ColumnFamily(self.pool, 'ValidatorLong')
+        self.cf_valid_int = ColumnFamily(self.pool, 'ValidatorInt')
+        self.cf_valid_time = ColumnFamily(self.pool, 'ValidatorTime')
+        self.cf_valid_lex = ColumnFamily(self.pool, 'ValidatorLex')
+        self.cf_valid_ascii = ColumnFamily(self.pool, 'ValidatorAscii')
+        self.cf_valid_utf8 = ColumnFamily(self.pool, 'ValidatorUTF8')
+        self.cf_valid_bytes = ColumnFamily(self.pool, 'ValidatorBytes')
+
+        self.cfs = [self.cf_valid_long, self.cf_valid_int, self.cf_valid_time,
+                    self.cf_valid_lex, self.cf_valid_ascii, self.cf_valid_utf8,
+                    self.cf_valid_bytes]
+
+    def tearDown(self):
+        for cf in self.cfs:
+            for key, cols in cf.get_range():
+                cf.remove(key)
+        self.pool.dispose()
 
     def test_validated_columns(self):
-        self.clear()
 
         key = 'key1'
 
@@ -513,8 +482,19 @@ class TestAutoPacking:
         self.cf_valid_bytes.insert(key, col)
         assert self.cf_valid_bytes.get(key) == col
 
+class TestDefaultValidators(unittest.TestCase):
+
+    def setUp(self):
+        credentials = {'username': 'jsmith', 'password': 'havebadpass'}
+        self.pool = ConnectionPool(pool_size=5, keyspace='Keyspace1', credentials=credentials)
+        self.cf_def_valid = ColumnFamily(self.pool, 'DefaultValidator')
+
+    def tearDown(self):
+        for key, cols in self.cf_def_valid.get_range():
+            self.cf_def_valid.remove(key)
+        self.pool.dispose()
+
     def test_default_validated_columns(self):
-        self.clear()
 
         key = 'key1'
 
@@ -532,8 +512,19 @@ class TestAutoPacking:
         assert_raises(TypeError, self.cf_def_valid.insert, key,col_ncf)
         assert_raises(TypeError, self.cf_def_valid.insert, key,col_ncm)
 
+class TestTimeUUIDs(unittest.TestCase):
+
+    def setUp(self):
+        credentials = {'username': 'jsmith', 'password': 'havebadpass'}
+        self.pool = ConnectionPool(pool_size=5, keyspace='Keyspace1', credentials=credentials)
+        self.cf_time = ColumnFamily(self.pool, 'StdTimeUUID')
+
+    def tearDown(self):
+        for key, cols in self.cf_time.get_range():
+            self.cf_time.remove(key)
+        self.pool.dispose()
+
     def test_datetime_to_uuid(self):
-        self.clear()
 
         key = 'key1'
 
@@ -563,7 +554,6 @@ class TestAutoPacking:
         assert_equal(self.cf_time.get(key, column_start=timeline[1], column_finish=timeline[2]) , col2)
 
     def test_time_to_uuid(self):
-        self.clear()
 
         key = 'key1'
 
@@ -593,7 +583,6 @@ class TestAutoPacking:
         assert_equal(self.cf_time.get(key, column_start=timeline[1], column_finish=timeline[2]) , col2)
 
     def test_auto_time_to_uuid1(self):
-        self.clear()
 
         key = 'key'
 

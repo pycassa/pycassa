@@ -15,7 +15,7 @@ except:
   fastbinary = None
 
 
-class Iface:
+class Iface(object):
   def login(self, auth_request):
     """
     Parameters:

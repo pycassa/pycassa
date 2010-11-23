@@ -16,7 +16,7 @@ import sys
 import uuid
 import struct
 
-from batch import CfMutator, PooledCfMutator
+from batch import CfMutator
 
 if hasattr(struct, 'Struct'): # new in Python 2.5
    _have_struct = True
@@ -45,10 +45,11 @@ def gm_timestamp():
     """
     return int(time.time() * 1e6)
 
+
 class ColumnFamily(object):
     """ An abstraction of a Cassandra column family or super column family. """
 
-    def __init__(self, client, column_family, buffer_size=1024,
+    def __init__(self, pool, column_family, buffer_size=1024,
                  read_consistency_level=ConsistencyLevel.ONE,
                  write_consistency_level=ConsistencyLevel.ONE,
                  timestamp=gm_timestamp, super=False,
@@ -60,8 +61,8 @@ class ColumnFamily(object):
         Operations on this, such as :meth:`get` or :meth:`insert` will get data from or
         insert data into the corresponding Cassandra column family.
 
-        :param client: Connection to a Cassandra node
-        :type client: :class:`~pycassa.connection.Connection`
+        :param pool: A pool pool to a Cassandra cluster
+        :type client: :class:`~pycassa.pool.AbstractPool`
 
         :param column_family: The name of the column family
         :type column_family: string
@@ -115,7 +116,8 @@ class ColumnFamily(object):
 
         """
 
-        self.client = client
+        self.pool = pool
+        self.client = None
         self.column_family = column_family
         self.buffer_size = buffer_size
         self.read_consistency_level = read_consistency_level
@@ -134,9 +136,14 @@ class ColumnFamily(object):
 
         col_fam = None
         try:
+            self.client = self.pool.get()
             col_fam = self.client.get_keyspace_description(use_dict_for_col_metadata=True)[self.column_family]
         except KeyError:
-            raise NotFoundException('Column family %s not found.' % self.column_family)
+            nfe = NotFoundException()
+            nfe.why = 'Column family %s not found.' % self.column_family
+            raise nfe
+        finally:
+            self.client.return_to_pool()
 
         if col_fam is not None:
             self.super = col_fam.column_type == 'Super'
@@ -345,6 +352,17 @@ class ColumnFamily(object):
         else: # BytesType
             return b
 
+    def _pooled(f):
+        def new_f(self, *args, **kwargs):
+            self.client = self.pool.get()
+            try:
+                return f(self, *args, **kwargs)
+            finally:
+                self.client.return_to_pool()
+        new_f.__name__ = f.__name__
+        return new_f
+
+    @_pooled
     def get(self, key, columns=None, column_start="", column_finish="",
             column_reversed=False, column_count=100, include_timestamp=False,
             super_column=None, read_consistency_level = None):
@@ -395,6 +413,7 @@ class ColumnFamily(object):
             raise NotFoundException()
         return self._convert_ColumnOrSuperColumns_to_dict_class(list_col_or_super, include_timestamp)
 
+    @_pooled
     def get_indexed_slices(self, index_clause, columns=None, column_start="", column_finish="",
                            column_reversed=False, column_count=100, include_timestamp=False,
                            super_column=None, read_consistency_level=None,
@@ -496,6 +515,7 @@ class ColumnFamily(object):
             last_key = key_slices[-1].key
             i += 1
 
+    @_pooled
     def multiget(self, keys, columns=None, column_start="", column_finish="",
                  column_reversed=False, column_count=100, include_timestamp=False,
                  super_column=None, read_consistency_level = None):
@@ -561,6 +581,7 @@ class ColumnFamily(object):
         return ret
 
     MAX_COUNT = 2**31-1
+    @_pooled
     def get_count(self, key, super_column=None, read_consistency_level=None,
                   columns=None, column_start="", column_finish=""):
         """
@@ -592,6 +613,7 @@ class ColumnFamily(object):
         return self.client.get_count(key, cp, sp,
                                      self._rcl(read_consistency_level))
 
+    @_pooled
     def multiget_count(self, keys, super_column=None,
                        read_consistency_level=None,
                        columns=None, column_start="",
@@ -625,7 +647,7 @@ class ColumnFamily(object):
         return self.client.multiget_count(keys, cp, sp,
                                      self._rcl(read_consistency_level))
 
-
+    @_pooled
     def get_range(self, start="", finish="", columns=None, column_start="",
                   column_finish="", column_reversed=False, column_count=100,
                   row_count=None, include_timestamp=False,
@@ -712,6 +734,7 @@ class ColumnFamily(object):
             last_key = key_slices[-1].key
             i += 1
 
+    #@_pooled
     def insert(self, key, columns, timestamp=None, ttl=None,
                write_consistency_level=None):
         """
@@ -760,6 +783,7 @@ class ColumnFamily(object):
         batch.send()
         return timestamp
 
+    #@_pooled
     def remove(self, key, columns=None, super_column=None, write_consistency_level=None):
         """
         Remove a specified row or a set of columns within a row.
@@ -805,6 +829,7 @@ class ColumnFamily(object):
 
         return CfMutator(self, queue_size, self._wcl(write_consistency_level))
 
+    @_pooled
     def truncate(self):
         """
         Marks the entire ColumnFamily as deleted.
@@ -820,107 +845,3 @@ class ColumnFamily(object):
 
         """
         self.client.truncate(self.column_family)
-
-class PooledColumnFamily(ColumnFamily):
-    """   
-    A ColumnFamily that uses a :class:`.Pool` object instead of a
-    :class:`.Connection` object to perform its operations.
-
-    """
-
-    def __init__(self, pool, column_family, **kwargs):
-        """
-        A ColumnFamily that uses a :class:`.Pool` object instead of a
-        :class:`.Connection` object to perform its operations.  Connections
-        are automatically retrieved before every operation and returned to the
-        pool when the operation completes.
-
-        Example Usage:
-
-        .. code-block:: python
-
-            >>> pool = QueuePool(keyspace='Keyspace1', pool_size=10)
-            >>> cf = PooledColumnFamily(pool, 'Standard1')
-            >>> cf.insert('key' {'colname': 'colval'})
-            >>> cf.get('key')
-            {'colname': 'colval'}
-
-        """
- 
-        self.pool = pool
-        conn = self.pool.get()
-        super(PooledColumnFamily, self).__init__(conn, column_family, **kwargs)
-        conn.return_to_pool()
-
-    def get(self, *args, **kwargs):
-        self.client = self.pool.get()
-        try:
-            return super(PooledColumnFamily, self).get(*args, **kwargs)
-        finally:
-            self.client.return_to_pool()
-
-    def multiget(self, *args, **kwargs):
-        self.client = self.pool.get()
-        try:
-            return super(PooledColumnFamily, self).multiget(*args, **kwargs)
-        finally:
-            self.client.return_to_pool()
-
-    def get_indexed_slices(self, *args, **kwargs):
-        self.client = self.pool.get()
-        try:
-            return super(PooledColumnFamily, self).get_indexed_slices(*args, **kwargs)
-        finally:
-            self.client.return_to_pool()
-
-    def get_count(self, *args, **kwargs):
-        self.client = self.pool.get()
-        try:
-            return super(PooledColumnFamily, self).get_count(*args, **kwargs)
-        finally:
-            self.client.return_to_pool()
-
-    def multiget_count(self, *args, **kwargs):
-        self.client = self.pool.get()
-        try:
-            return super(PooledColumnFamily, self).multiget_count(*args, **kwargs)
-        finally:
-            self.client.return_to_pool()
-
-    def get_range(self, *args, **kwargs):
-        self.client = self.pool.get()
-        try:
-            return super(PooledColumnFamily, self).get_range(*args, **kwargs)
-        finally:
-            self.client.return_to_pool()
-
-    def insert(self, *args, **kwargs):
-        self.client = self.pool.get()
-        try:
-            return super(PooledColumnFamily, self).insert(*args, **kwargs)
-        finally:
-            self.client.return_to_pool()
-
-    def batch_insert(self, *args, **kwargs):
-        self.client = self.pool.get()
-        try:
-            return super(PooledColumnFamily, self).batch_insert(*args, **kwargs)
-        finally:
-            self.client.return_to_pool()
-
-    def remove(self, *args, **kwargs):
-        self.client = self.pool.get()
-        try:
-            return super(PooledColumnFamily, self).remove(*args, **kwargs)
-        finally:
-            self.client.return_to_pool()
-
-    def truncate(self, *args, **kwargs):
-        self.client = self.pool.get()
-        try:
-            return super(PooledColumnFamily, self).truncate(*args, **kwargs)
-        finally:
-            self.client.return_to_pool()
-
-    def batch(self, queue_size=100, write_consistency_level=None):
-        return PooledCfMutator(self, queue_size, self._wcl(write_consistency_level))
