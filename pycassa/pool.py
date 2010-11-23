@@ -538,7 +538,7 @@ class ConnectionWrapper(connection.Connection):
 class ConnectionPool(AbstractPool):
     """A pool that maintains a queue of open connections."""
 
-    def __init__(self, pool_size=5, max_overflow=10,
+    def __init__(self, keyspace, pool_size=5, max_overflow=10,
                  pool_timeout=30, recycle=10000, max_retries=5,
                  prefill=True, *args, **kwargs):
         """
@@ -610,7 +610,7 @@ class ConnectionPool(AbstractPool):
         assert max_retries >= 0, "max_retries must be non-negative"
         assert recycle > 0, "recycle must be positive"
 
-        super(ConnectionPool, self).__init__(*args, **kwargs)
+        super(ConnectionPool, self).__init__(keyspace, *args, **kwargs)
         self._pool_size = pool_size
         self._q = pool_queue.Queue(pool_size)
         self._max_overflow = max_overflow

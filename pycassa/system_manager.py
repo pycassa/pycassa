@@ -4,45 +4,83 @@ import time
 from connection import Connection
 from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef
 
-__all__ = ['SystemManager']
-
 _TIMEOUT = 5
 _SAMPLE_PERIOD = 0.25
 
+SIMPLE_STRATEGY = 'SimpleStrategy'
+""" Replication strategy that simply chooses consecutive nodes in the ring for replicas """
+
+NETWORK_TOPOLOGY_STRATEGY = 'NetworkTopologyStrategy'
+""" Replication strategy that puts a number of replicas in each datacenter """
+
+OLD_NETWORK_TOPOLOGY_STRATEGY = 'OldNetworkTopologyStrategy'
+"""
+Original replication strategy for putting a number of replicas in each datacenter.
+This was originally called 'RackAwareStrategy'.
+"""
+
+BYTES_TYPE = 'BytesType'
+""" Stores data as a byte array """
+LONG_TYPE = 'LongType'
+""" Stores data as an 8 byte integer """
+INT_TYPE = 'IntegerType'
+""" Stores data as an 4 byte integer """
+ASCII_TYPE = 'AsciiType'
+""" Stores data as ASCII text """
+UTF8_TYPE = 'UTF8Type'
+""" Stores data as UTF8 encoded text """
+TIME_UUID_TYPE = 'TimeUUIDType'
+""" Stores data as a version 1 UUID """
+LEXICAL_UUID_TYPE = 'LexicalUUIDType'
+""" Stores data as a non-version 1 UUID """
+
+KEYS_INDEX = IndexType.KEYS
+""" A secondary index type where each indexed value receives its own row """
+
+
 class SystemManager(object):
+    """
+    Lets you examine and modify schema definitions as well as get basic
+    information about the cluster.
 
-    SIMPLE_STRATEGY = 'SimpleStrategy'
-    NETWORK_TOPOLOGY_STRATEGY = 'NetworkTopologyStrategy'
-    OLD_NETWORK_TOPOLOGY_STRATEGY = 'OldNetworkTopologyStrategy'
+    This class is mainly designed to be used manually in a python shell,
+    not as part of a program, although it can be used that way.
 
-    BYTES_TYPE = 'BytesType'
-    LONG_TYPE = 'LongType'
-    INT_TYPE = 'IntegerType'
-    ASCII_TYPE = 'AsciiType'
-    UTF8_TYPE = 'UTF8Type'
-    TIME_UUID_TYPE = 'TimeUUIDType'
-    LEXICAL_UUID_TYPE = 'LexicalUUIDType'
+    All operations which modify a keyspace or column family definition
+    will block until the cluster reports that all nodes have accepted
+    the modification.
 
-    KEYS_INDEX = IndexType.KEYS
+    Example Usage:
+
+    .. code-block:: python
+
+        >>> from pycassa.system_manager import *
+        >>> sys = SystemManager('192.168.10.2:9160')
+        >>> sys.create_keyspace('TestKeyspace', replication_factor=1)
+        >>> sys.create_column_family('TestKeyspace', 'TestCF', column_type='Standard',
+        ...                          comparator_type=LONG_TYPE)
+        >>> sys.alter_column_family('TestKeyspace', 'TestCF', key_cache_size=42, gc_grace_seconds=1000)
+        >>> sys.drop_keyspace('TestKeyspace')
+        >>> sys.close()
+
+    """
 
     def __init__(self, server='localhost:9160', credentials=None, framed_transport=True):
         self._conn = Connection(None, server, framed_transport, _TIMEOUT, credentials)
 
     def close(self):
+        """ Closes the underlying connection """
         self._conn.close()
 
     def get_keyspace_description(self, keyspace, use_dict_for_col_metadata=False):
         """
-        Describes the given keyspace.
+        Returns a raw description of the keyspace, which is more useful for use
+        in programs than :meth:`describe_keyspace()`.
         
-        :param keyspace: The keyspace to describe. Defaults to the current keyspace.
-        :type keyspace: str
+        If `use_dict_for_col_metadata` is ``True``, the CfDef's column_metadata will
+        be stored as a dictionary where the keys are column names instead of a list.
 
-        :param use_dict_for_col_metadata: whether or not store the column metadata as a
-          dictionary instead of a list
-        :type use_dict_for_col_metadata: bool
-
-        :rtype: ``{column_family_name: CfDef}``
+        Returns a dictionary of the form ``{column_family_name: CfDef}``
 
         """
         if keyspace is None:
@@ -61,6 +99,12 @@ class SystemManager(object):
         return cf_defs
 
     def describe_keyspace(self, keyspace):
+        """
+        Returns a human readable description of the Keyspace.
+
+        For use in a program, use :meth:`get_keyspace_description()` instead.
+
+        """
         ksdef = self._conn.describe_keyspace(keyspace)
 
         print
@@ -86,6 +130,8 @@ class SystemManager(object):
         print
 
     def describe_column_family(self, keyspace, column_family):
+        """ Returns a human readable description of the Column Family """
+
         try:
             cfdef = self.get_keyspace_description(keyspace)[column_family]
         except KeyError:
@@ -212,12 +258,15 @@ class SystemManager(object):
                 print
 
     def describe_ring(self, keyspace):
+        """ Describes the Cassandra cluster """
         return self._conn.describe_ring(keyspace)
 
     def describe_cluster_name(self):
+        """ Gives the cluster name """
         return self._conn.describe_cluster_name()
 
     def describe_version(self):
+        """ Gives the server's API version """
         return self._conn.describe_version()
 
     def _system_add_keyspace(self, ksdef):
@@ -234,6 +283,35 @@ class SystemManager(object):
                         replication_strategy=SIMPLE_STRATEGY,
                         strategy_options=None):
 
+        """
+        Creates a new keyspace.  Column families may be added to this keyspace
+        after it is created using :meth:`create_column_family()`.
+
+        `replication_strategy` determines how replicas are chosen for this keyspace.
+        The strategies that Cassandra provides by default
+        are available as :const:`SIMPLE_STRATEGY`, :const:`NETWORK_TOPOLOGY_STRATEGY`,
+        and :const:`OLD_NETWORK_TOPOLOGY_STRATEGY`.  `NETWORK_TOPOLOGY_STRATEGY` requires
+        `strategy_options` to be present.
+
+        `strategy_options` is an optional dictionary of strategy options. By default, these
+        are only used by NetworkTopologyStrategy; in this case, the dictionary should
+        look like: ``{'Datacenter1': '2', 'Datacenter2': '1'}``.  This maps each
+        datacenter (as defined in a Cassandra property file) to a replica count.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            >>> from pycassa.system_manager import *
+            >>> sys = SystemManager('192.168.10.2:9160')
+            >>> # Create a SimpleStrategy keyspace
+            >>> sys.create_keyspace('SimpleKS', 1)
+            >>> # Create a NetworkTopologyStrategy keyspace
+            >>> sys.create_keyspace('NTS_KS', 3, NETWORK_TOPOLOGY_STRATEGY, {'DC1': '2', 'DC2': '1'})
+            >>> sys.close()
+
+        """
+
         if replication_strategy.find('.') == -1:
             strategy_class = 'org.apache.cassandra.locator.%s' % replication_strategy
         else:
@@ -241,12 +319,20 @@ class SystemManager(object):
         ksdef = KsDef(name, strategy_class, strategy_options, replication_factor, [])
         self._system_add_keyspace(ksdef)
 
-    def alter_keyspace(self, keyspace,
+    def alter_keyspace(self, keyspace, replication_factor=None,
                        replication_strategy=None,
-                       strategy_options=None,
-                       replication_factor=None):
+                       strategy_options=None):
 
-        ksdef = self.describe_keyspace(keyspace)
+        """
+        Alters an existing keyspace. 
+
+        .. warning:: Don't use this unless you know what you are doing.
+
+        Parameters are the same as for :meth:`create_keyspace()`.
+
+        """
+
+        ksdef = self._conn.describe_keyspace(keyspace)
 
         ksdef.cf_defs = []
         if replication_strategy is not None:
@@ -263,15 +349,10 @@ class SystemManager(object):
 
     def drop_keyspace(self, keyspace):
         """
-        Drop a keyspace from the cluster.
-
-        :param keyspace: the keyspace to drop
-        :type keyspace: string
-
-        :rtype: new schema version
+        Drops a keyspace from the cluster.
 
         """
-        schema_version = self._conn.system_drop_keyspace(name)
+        schema_version = self._conn.system_drop_keyspace(keyspace)
         self._wait_for_agreement()
         return schema_version
 
@@ -281,7 +362,7 @@ class SystemManager(object):
         self._wait_for_agreement()
         return schema_version
 
-    def create_column_family(self, keyspace, name, column_type,
+    def create_column_family(self, keyspace, name, super=False,
                              comparator_type=None,
                              subcomparator_type=None,
                              key_cache_size=None,
@@ -297,6 +378,67 @@ class SystemManager(object):
                              memtable_throughput_in_mb=None,
                              memtable_throughput_in_millions=None,
                              comment=None):
+
+        """
+        Creates a new column family in a given keyspace.  If a value is not
+        supplied for any of optional parameters, Cassandra will use a reasonable
+        default value.
+
+        :param str keyspace: what keyspace the column family will be created in
+
+        :param str name: the name of the column family
+
+        :param bool super: Whether or not this column family is a super column family
+
+        :param str comparator_type: What type the column names will be, which affects
+          their sort order.  By default, :const:`LONG_TYPE`, :const:`INTEGER_TYPE`,
+          :const:`ASCII_TYPE`, :const:`UTF8_TYPE`, :const:`TIME_UUID_TYPE`,
+          :const:`LEXICAL_UUID_TYPE` and :const:`BYTES_TYPE` are provided.  Custom
+          types may be used as well by providing the class name; if the custom
+          comparator class is not in ``org.apache.cassandra.db.marshal``, the fully
+          qualified class name must be given.
+
+        :param str subcomparator_type: Like `comparator_type`, but if the column family
+          is a super column family, this applies to the type of the subcolumn names
+
+        :param int or float key_cache_size: The size of the key cache, either in a
+          percentage of total keys (0.15, for example) or in an absolute number of
+          keys (20000, for example).
+
+        :param int or float row_cache_size: Same as `key_cache_size`, but for the row cache
+
+        :param int gc_grace_seconds: Number of seconds before tombstones are removed
+
+        :param float read_repair_chance: probability of a read repair occuring
+
+        :param str default_validation_class: the data type for all column values in the CF.
+          the choices for this are the same as for `comparator_type`.
+
+        :param int min_compaction_threshold: Number of similarly sized SSTables that must
+          be present before a minor compaction is scheduled. Setting to 0 disables minor
+          compactions.
+
+        :param int max_compaction_threshold: Number of similarly sized SSTables that must
+          be present before a minor compaction is performed immediately. Setting to 0
+          disables minor compactions.
+
+        :param int key_cache_save_in_seconds: How often the key cache should be saved; this
+          helps to avoid a cold cache on restart
+
+        :param int row_cache_save_in_seconds: How often the row cache should be saved; this
+          helps to avoid a cold cache on restart
+
+        :param int memtable_flush_after_mins: Memtables are flushed when they reach this age
+
+        :param int memtable_throughput_in_mb: Memtables are flushed when this many MBs have
+          been written to them
+
+        :param int memtable_throughput_in_mb: Memtables are flushed when this many operations
+          have been performed on them
+
+        :param str comment: A human readable description
+
+        """
 
         self._conn.set_keyspace(keyspace)
         cfdef = CfDef()
@@ -423,6 +565,15 @@ class SystemManager(object):
                             memtable_throughput_in_millions=None,
                             comment=None):
 
+        """
+        Alters an existing column family.
+
+        Parameter meanings are the same as for :meth:`create_column_family`,
+        but column family attributes which may not be modified are not
+        included here.
+
+        """
+
         self._conn.set_keyspace(keyspace)
         cfdef = self.get_keyspace_description(keyspace)[column_family]
 
@@ -516,12 +667,7 @@ class SystemManager(object):
 
     def drop_column_family(self, keyspace, column_family):
         """
-        Drops a column family from the cluster.
-
-        :param name: the column family to drop
-        :type name: string
-
-        :rtype: new schema version
+        Drops a column family from the keyspace.
 
         """
         self._conn.set_keyspace(keyspace)
@@ -529,7 +675,20 @@ class SystemManager(object):
         self._wait_for_agreement()
         return schema_version
 
-    def alter_column(self, keyspace, column, value_type):
+    def alter_column(self, keyspace, column_family, column, value_type):
+        """
+        Sets a data type for the value of a specific column.
+
+        `value_type` is a string that determines what type the column value will be.
+        By default, :const:`LONG_TYPE`, :const:`INTEGER_TYPE`,
+        :const:`ASCII_TYPE`, :const:`UTF8_TYPE`, :const:`TIME_UUID_TYPE`,
+        :const:`LEXICAL_UUID_TYPE` and :const:`BYTES_TYPE` are provided.  Custom
+        types may be used as well by providing the class name; if the custom
+        comparator class is not in ``org.apache.cassandra.db.marshal``, the fully
+        qualified class name must be given.
+
+        """
+
         self._conn.set_keyspace(keyspace)
         cfdef = self.get_keyspace_description(keyspace)[column_family]
 
@@ -546,11 +705,56 @@ class SystemManager(object):
             cfdef.column_metadata.append(ColumnDef(column, value_type, None, None))
         self._system_update_column_family(cfdef)
 
-# This is dependent on CASSANDRA-1764
-#    def create_index(self, keyspace, column_family, column, value_type,
-#                     index_type=KEYS_INDEX, index_name=None):
+    def create_index(self, keyspace, column_family, column, value_type,
+                     index_type=KEYS_INDEX, index_name=None):
+        """
+        Creates an index on a column.
+
+        This allows efficient for index usage via 
+        :meth:`~pycassa.columnfamily.ColumnFamily.get_indexed_slices()`
+
+        `column` specifies what column to index, and `value_type` is a string
+        that describes that column's value's data type; see
+        :meth:`alter_column()` for a full description of `value_type`.
+
+        `index_type` determines how the index will be stored internally. Currently,
+        :const:`KEYS_INDEX` is the only option.  `index_name` is an optional name
+        for the index.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            >>> from pycassa.system_manager import *
+            >>> sys = SystemManager('192.168.2.10:9160')
+            >>> sys.create_index('Keyspace1', 'Standard1', 'birthdate', LONG_TYPE, 'bday_index')
+            >>> sys.close
+
+        """
+
+        self._conn.set_keyspace(keyspace)
+        cfdef = self.get_keyspace_description(keyspace)[column_family]
+
+        if value_type.find('.') == -1:
+            value_type = 'org.apache.cassandra.db.marshal.%s' % value_type
+
+        coldef = ColumnDef(column, value_type, index_type, index_name)
+
+        matched = False
+        for c in cfdef.column_metadata:
+            if c.name == column:
+                c = coldef
+                matched = True
+                break
+        if not matched:
+            cfdef.column_metadata.append(coldef)
+        self._system_update_column_family(cfdef)
 
     def drop_index(self, keyspace, column_family, column):
+        """
+        Drops an index on a column.
+
+        """
         self._conn.set_keyspace(keyspace)
         cfdef = self.get_keyspace_description(keyspace)[column_family]
 

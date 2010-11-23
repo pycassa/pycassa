@@ -11,6 +11,7 @@ Pycassa Modules
    pycassa/pool
    pycassa/columnfamily
    pycassa/columnfamilymap
+   pycassa/system_manager
    pycassa/index
    pycassa/batch
    pycassa/types

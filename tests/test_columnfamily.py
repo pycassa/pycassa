@@ -16,11 +16,11 @@ class TestColumnFamily(unittest.TestCase):
         self.cf = ColumnFamily(self.pool, 'Standard2', dict_class=TestDict)
 
     def tearDown(self):
-        for key, columns in self.cf.get_range(include_timestamp=True):
+        for key, columns in self.cf.get_range():
             self.cf.remove(key)
 
     def clear(self):
-        for key, columns in self.cf.get_range(include_timestamp=True):
+        for key, columns in self.cf.get_range():
             self.cf.remove(key)
 
     def test_empty(self):
@@ -50,7 +50,7 @@ class TestColumnFamily(unittest.TestCase):
         assert_equal(len(rows), 2)
         assert_equal(rows[key1], columns1)
         assert_equal(rows[key2], columns2)
-        assert missing_key not in rows
+        assert_true(missing_key not in rows)
 
     def test_insert_get_count(self):
         key = 'TestColumnFamily.test_insert_get_count'

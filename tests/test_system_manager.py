@@ -18,12 +18,10 @@ class SystemManagerTest(unittest.TestCase):
         # keyspace modifications
         try:
             self.sys.drop_keyspace('TestKeyspace')
-        except:
+        except InvalidRequestException:
             pass
-        self.sys.add_keyspace(KsDef('TestKeyspace',
-            'org.apache.cassandra.locator.SimpleStrategy', None, 3, []))
-        self.sys.update_keyspace(KsDef('TestKeyspace',
-            'org.apache.cassandra.locator.SimpleStrategy', None, 2, []))
+        self.sys.create_keyspace('TestKeyspace', 3, 'SimpleStrategy')
+        self.sys.alter_keyspace('TestKeyspace', replication_factor=2)
         self.sys.drop_keyspace('TestKeyspace')
 
         # column family modifications
@@ -31,11 +29,9 @@ class SystemManagerTest(unittest.TestCase):
             self.sys.drop_column_family('TestCF', 'Keyspace1')
         except InvalidRequestException:
             pass
-        self.sys.add_column_family(CfDef('Keyspace1', 'TestCF', 'Standard'))
-        cfdef = self.sys.get_keyspace_description('Keyspace1')['TestCF']
-        cfdef.comment = 'this is a test'
-        self.sys.update_column_family(cfdef)
-        self.sys.drop_column_family('TestCF', 'Keyspace1')
+        self.sys.create_column_family('Keyspace1', 'TestCF')
+        self.sys.alter_column_family('Keyspace1', 'TestCF', comment='testing')
+        self.sys.drop_column_family('Keyspace1', 'TestCF')
 
     def test_misc(self):
         
