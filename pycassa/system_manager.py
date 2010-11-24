@@ -445,6 +445,9 @@ class SystemManager(object):
         cfdef.keyspace = keyspace
         cfdef.name = name
 
+        if super:
+            cfdef.column_type = 'Super'
+
         if comparator_type is not None:
             if comparator_type.find('.') == -1:
                 cfdef.comparator_type = 'org.apache.cassandra.db.marshal.%s' % comparator_type
