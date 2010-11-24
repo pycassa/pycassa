@@ -83,82 +83,86 @@ class TestStandardCFs(unittest.TestCase):
 
         # Begin the actual inserting and getting
         for group in type_groups:
-            group.get('cf').insert(KEYS[0], group.get('dict'))
+            cf = group.get('cf')
+            gdict = group.get('dict')
+            gcols = group.get('cols')
 
-            assert group.get('cf').get(KEYS[0]) == group.get('dict')
+            cf.insert(KEYS[0], gdict)
+            assert_equal(cf.get(KEYS[0]), gdict)
 
             # Check each column individually
             for i in range(3):
-                assert group.get('cf').get(KEYS[0], columns=[group.get('cols')[i]]) == \
-                        {group.get('cols')[i]: VALS[i]}
+                assert_equal(cf.get(KEYS[0], columns=[gcols[i]]),
+                             {gcols[i]: VALS[i]})
 
             # Check that if we list all columns, we get the full dict
-            assert group.get('cf').get(KEYS[0], columns=group.get('cols')[:]) == group.get('dict')
+            assert_equal(cf.get(KEYS[0], columns=gcols[:]), gdict)
             # The same thing with a start and end instead
-            assert group.get('cf').get(KEYS[0], column_start=group.get('cols')[0], column_finish=group.get('cols')[2]) == group.get('dict')
+            assert_equal(cf.get(KEYS[0], column_start=gcols[0], column_finish=gcols[2]),
+                         gdict)
             # A start and end that are the same
-            assert group.get('cf').get(KEYS[0], column_start=group.get('cols')[0], column_finish=group.get('cols')[0]) == \
-                    {group.get('cols')[0]: VALS[0]}
+            assert_equal(cf.get(KEYS[0], column_start=gcols[0], column_finish=gcols[0]),
+                         {gcols[0]: VALS[0]})
 
-            assert group.get('cf').get_count(KEYS[0]) == 3
+            assert_equal(cf.get_count(KEYS[0]), 3)
 
             # Test removing rows
-            group.get('cf').remove(KEYS[0], columns=group.get('cols')[:1])
-            assert group.get('cf').get_count(KEYS[0]) == 2
+            cf.remove(KEYS[0], columns=gcols[:1])
+            assert_equal(cf.get_count(KEYS[0]), 2)
 
-            group.get('cf').remove(KEYS[0], columns=group.get('cols')[1:])
-            assert group.get('cf').get_count(KEYS[0]) == 0
+            cf.remove(KEYS[0], columns=gcols[1:])
+            assert_equal(cf.get_count(KEYS[0]), 0)
 
             # Insert more than one row now
-            group.get('cf').insert(KEYS[0], group.get('dict'))
-            group.get('cf').insert(KEYS[1], group.get('dict'))
-            group.get('cf').insert(KEYS[2], group.get('dict'))
+            cf.insert(KEYS[0], gdict)
+            cf.insert(KEYS[1], gdict)
+            cf.insert(KEYS[2], gdict)
 
 
             ### multiget() tests ###
 
-            res = group.get('cf').multiget(KEYS[:])
+            res = cf.multiget(KEYS[:])
             for i in range(3):
-                assert res.get(KEYS[i]) == group.get('dict')
+                assert_equal(res.get(KEYS[i]), gdict)
 
-            res = group.get('cf').multiget(KEYS[2:])
-            assert res.get(KEYS[2]) == group.get('dict')
+            res = cf.multiget(KEYS[2:])
+            assert_equal(res.get(KEYS[2]), gdict)
 
             # Check each column individually
             for i in range(3):
-                res = group.get('cf').multiget(KEYS[:], columns=[group.get('cols')[i]])
+                res = cf.multiget(KEYS[:], columns=[gcols[i]])
                 for j in range(3):
-                    assert res.get(KEYS[j]) == {group.get('cols')[i]: VALS[i]}
+                    assert_equal(res.get(KEYS[j]), {gcols[i]: VALS[i]})
 
             # Check that if we list all columns, we get the full dict
-            res = group.get('cf').multiget(KEYS[:], columns=group.get('cols')[:])
+            res = cf.multiget(KEYS[:], columns=gcols[:])
             for j in range(3):
-                assert res.get(KEYS[j]) == group.get('dict')
+                assert_equal(res.get(KEYS[j]), gdict)
 
             # The same thing with a start and end instead
-            res = group.get('cf').multiget(KEYS[:], column_start=group.get('cols')[0], column_finish=group.get('cols')[2])
+            res = cf.multiget(KEYS[:], column_start=gcols[0], column_finish=gcols[2])
             for j in range(3):
-                assert res.get(KEYS[j]) == group.get('dict')
+                assert_equal(res.get(KEYS[j]), gdict)
 
             # A start and end that are the same
-            res = group.get('cf').multiget(KEYS[:], column_start=group.get('cols')[0], column_finish=group.get('cols')[0])
+            res = cf.multiget(KEYS[:], column_start=gcols[0], column_finish=gcols[0])
             for j in range(3):
-                assert res.get(KEYS[j]) == {group.get('cols')[0]: VALS[0]}
+                assert_equal(res.get(KEYS[j]), {gcols[0]: VALS[0]})
 
 
             ### get_range() tests ###
 
-            res = group.get('cf').get_range(start=KEYS[0])
+            res = cf.get_range(start=KEYS[0])
             for sub_res in res:
-                assert sub_res[1] == group.get('dict')
+                assert_equal(sub_res[1], gdict)
 
-            res = group.get('cf').get_range(start=KEYS[0], column_start=group.get('cols')[0], column_finish=group.get('cols')[2])
+            res = cf.get_range(start=KEYS[0], column_start=gcols[0], column_finish=gcols[2])
             for sub_res in res:
-                assert sub_res[1] == group.get('dict')
+                assert_equal(sub_res[1], gdict)
 
-            res = group.get('cf').get_range(start=KEYS[0], columns=group.get('cols')[:])
+            res = cf.get_range(start=KEYS[0], columns=gcols[:])
             for sub_res in res:
-                assert sub_res[1] == group.get('dict')
+                assert_equal(sub_res[1], gdict)
 
 
 class TestSuperCFs(unittest.TestCase):
@@ -224,82 +228,86 @@ class TestSuperCFs(unittest.TestCase):
 
         # Begin the actual inserting and getting
         for group in type_groups:
-            group.get('cf').insert(KEYS[0], group.get('dict'))
+            cf = group.get('cf')
+            gdict = group.get('dict')
+            gcols = group.get('cols')
 
-            assert group.get('cf').get(KEYS[0]) == group.get('dict')
+            cf.insert(KEYS[0], gdict)
+            assert_equal(cf.get(KEYS[0]), gdict)
 
             # Check each supercolumn individually
             for i in range(3):
-                res = group.get('cf').get(KEYS[0], columns=[group.get('cols')[i]])
-                assert res == {group.get('cols')[i]: {'bytes': VALS[i]}}
+                print gcols[i]
+                res = cf.get(KEYS[0], columns=[gcols[i]])
+                assert_equal(res, {gcols[i]: {'bytes': VALS[i]}})
 
             # Check that if we list all columns, we get the full dict
-            assert group.get('cf').get(KEYS[0], columns=group.get('cols')[:]) == group.get('dict')
+            assert_equal(cf.get(KEYS[0], columns=gcols[:]), gdict)
             # The same thing with a start and end instead
-            assert group.get('cf').get(KEYS[0], column_start=group.get('cols')[0], column_finish=group.get('cols')[2]) == group.get('dict')
+            assert_equal(cf.get(KEYS[0], column_start=gcols[0], column_finish=gcols[2]), gdict)
             # A start and end that are the same
-            assert group.get('cf').get(KEYS[0], column_start=group.get('cols')[0], column_finish=group.get('cols')[0]) == \
-                    {group.get('cols')[0]: {'bytes': VALS[0]}}
+            assert_equal(cf.get(KEYS[0], column_start=gcols[0], column_finish=gcols[0]),
+                         {gcols[0]: {'bytes': VALS[0]}})
 
-            assert group.get('cf').get_count(KEYS[0]) == 3
+            assert_equal(cf.get_count(KEYS[0]), 3)
 
             # Test removing rows
-            group.get('cf').remove(KEYS[0], columns=group.get('cols')[:1])
-            assert group.get('cf').get_count(KEYS[0]) == 2
+            cf.remove(KEYS[0], columns=gcols[:1])
+            assert_equal(cf.get_count(KEYS[0]), 2)
 
-            group.get('cf').remove(KEYS[0], columns=group.get('cols')[1:])
-            assert group.get('cf').get_count(KEYS[0]) == 0
+            cf.remove(KEYS[0], columns=gcols[1:])
+            assert_equal(cf.get_count(KEYS[0]), 0)
 
             # Insert more than one row now
-            group.get('cf').insert(KEYS[0], group.get('dict'))
-            group.get('cf').insert(KEYS[1], group.get('dict'))
-            group.get('cf').insert(KEYS[2], group.get('dict'))
+            cf.insert(KEYS[0], gdict)
+            cf.insert(KEYS[1], gdict)
+            cf.insert(KEYS[2], gdict)
 
 
             ### multiget() tests ###
 
-            res = group.get('cf').multiget(KEYS[:])
+            res = cf.multiget(KEYS[:])
             for i in range(3):
-                assert res.get(KEYS[i]) == group.get('dict')
+                assert_equal(res.get(KEYS[i]), gdict)
 
-            res = group.get('cf').multiget(KEYS[2:])
-            assert res.get(KEYS[2]) == group.get('dict')
+            res = cf.multiget(KEYS[2:])
+            assert_equal(res.get(KEYS[2]), gdict)
 
             # Check each column individually
             for i in range(3):
-                res = group.get('cf').multiget(KEYS[:], columns=[group.get('cols')[i]])
+                res = cf.multiget(KEYS[:], columns=[gcols[i]])
                 for j in range(3):
-                    assert res.get(KEYS[j]) == {group.get('cols')[i]: {'bytes': VALS[i]}}
+                    assert_equal(res.get(KEYS[j]), {gcols[i]: {'bytes': VALS[i]}})
 
             # Check that if we list all columns, we get the full dict
-            res = group.get('cf').multiget(KEYS[:], columns=group.get('cols')[:])
+            res = cf.multiget(KEYS[:], columns=gcols[:])
             for j in range(3):
-                assert res.get(KEYS[j]) == group.get('dict')
+                assert_equal(res.get(KEYS[j]), gdict)
 
             # The same thing with a start and end instead
-            res = group.get('cf').multiget(KEYS[:], column_start=group.get('cols')[0], column_finish=group.get('cols')[2])
+            res = cf.multiget(KEYS[:], column_start=gcols[0], column_finish=gcols[2])
             for j in range(3):
-                assert res.get(KEYS[j]) == group.get('dict')
+                assert_equal(res.get(KEYS[j]), gdict)
 
             # A start and end that are the same
-            res = group.get('cf').multiget(KEYS[:], column_start=group.get('cols')[0], column_finish=group.get('cols')[0])
+            res = cf.multiget(KEYS[:], column_start=gcols[0], column_finish=gcols[0])
             for j in range(3):
-                assert res.get(KEYS[j]) == {group.get('cols')[0]: {'bytes': VALS[0]}}
+                assert_equal(res.get(KEYS[j]), {gcols[0]: {'bytes': VALS[0]}})
 
 
             ### get_range() tests ###
 
-            res = group.get('cf').get_range(start=KEYS[0])
+            res = cf.get_range(start=KEYS[0])
             for sub_res in res:
-                assert sub_res[1] == group.get('dict')
+                assert_equal(sub_res[1], gdict)
 
-            res = group.get('cf').get_range(start=KEYS[0], column_start=group.get('cols')[0], column_finish=group.get('cols')[2])
+            res = cf.get_range(start=KEYS[0], column_start=gcols[0], column_finish=gcols[2])
             for sub_res in res:
-                assert sub_res[1] == group.get('dict')
+                assert_equal(sub_res[1], gdict)
 
-            res = group.get('cf').get_range(start=KEYS[0], columns=group.get('cols')[:])
+            res = cf.get_range(start=KEYS[0], columns=gcols[:])
             for sub_res in res:
-                assert sub_res[1] == group.get('dict')
+                assert_equal(sub_res[1], gdict)
 
 
 class TestSuperSubCFs(unittest.TestCase):
@@ -366,65 +374,67 @@ class TestSuperSubCFs(unittest.TestCase):
 
         # Begin the actual inserting and getting
         for group in type_groups:
-            group.get('cf').insert(KEYS[0], group.get('dict'))
+            cf = group.get('cf')
+            gdict = group.get('dict')
 
-            assert group.get('cf').get(KEYS[0]) == group.get('dict')
-            assert group.get('cf').get(KEYS[0], columns=[123L]) == group.get('dict')
+            cf.insert(KEYS[0], gdict)
+
+            assert_equal(cf.get(KEYS[0]), gdict)
+            assert_equal(cf.get(KEYS[0], columns=[123L]), gdict)
 
             # A start and end that are the same
-            assert group.get('cf').get(KEYS[0], column_start=123L, column_finish=123L) == \
-                    group.get('dict')
+            assert_equal(cf.get(KEYS[0], column_start=123L, column_finish=123L), gdict)
 
-            assert group.get('cf').get_count(KEYS[0]) == 1
+            assert_equal(cf.get_count(KEYS[0]), 1)
 
             # Test removing rows
-            group.get('cf').remove(KEYS[0], super_column=123L)
-            assert group.get('cf').get_count(KEYS[0]) == 0
+            cf.remove(KEYS[0], super_column=123L)
+            assert_equal(cf.get_count(KEYS[0]), 0)
 
             # Insert more than one row now
-            group.get('cf').insert(KEYS[0], group.get('dict'))
-            group.get('cf').insert(KEYS[1], group.get('dict'))
-            group.get('cf').insert(KEYS[2], group.get('dict'))
+            cf.insert(KEYS[0], gdict)
+            cf.insert(KEYS[1], gdict)
+            cf.insert(KEYS[2], gdict)
 
 
             ### multiget() tests ###
 
-            res = group.get('cf').multiget(KEYS[:])
+            res = cf.multiget(KEYS[:])
             for i in range(3):
-                assert res.get(KEYS[i]) == group.get('dict')
+                assert_equal(res.get(KEYS[i]), gdict)
 
-            res = group.get('cf').multiget(KEYS[2:])
-            assert res.get(KEYS[2]) == group.get('dict')
+            res = cf.multiget(KEYS[2:])
+            assert_equal(res.get(KEYS[2]), gdict)
 
-            res = group.get('cf').multiget(KEYS[:], columns=[123L])
+            res = cf.multiget(KEYS[:], columns=[123L])
             for i in range(3):
-                assert res.get(KEYS[i]) == group.get('dict')
+                assert_equal(res.get(KEYS[i]), gdict)
 
-            res = group.get('cf').multiget(KEYS[:], super_column=123L)
+            res = cf.multiget(KEYS[:], super_column=123L)
             for i in range(3):
-                assert res.get(KEYS[i]) == group.get('dict').get(123L)
+                assert_equal(res.get(KEYS[i]), gdict.get(123L))
 
-            res = group.get('cf').multiget(KEYS[:], column_start=123L, column_finish=123L)
+            res = cf.multiget(KEYS[:], column_start=123L, column_finish=123L)
             for j in range(3):
-                assert res.get(KEYS[j]) == group.get('dict')
+                assert_equal(res.get(KEYS[j]), gdict)
 
             ### get_range() tests ###
 
-            res = group.get('cf').get_range(start=KEYS[0])
+            res = cf.get_range(start=KEYS[0])
             for sub_res in res:
-                assert_equal(sub_res[1], group.get('dict'))
+                assert_equal(sub_res[1], gdict)
 
-            res = group.get('cf').get_range(start=KEYS[0], column_start=123L, column_finish=123L)
+            res = cf.get_range(start=KEYS[0], column_start=123L, column_finish=123L)
             for sub_res in res:
-                assert_equal(sub_res[1], group.get('dict'))
+                assert_equal(sub_res[1], gdict)
 
-            res = group.get('cf').get_range(start=KEYS[0], columns=[123L])
+            res = cf.get_range(start=KEYS[0], columns=[123L])
             for sub_res in res:
-                assert_equal(sub_res[1], group.get('dict'))
+                assert_equal(sub_res[1], gdict)
 
-            res = group.get('cf').get_range(start=KEYS[0], super_column=123L)
+            res = cf.get_range(start=KEYS[0], super_column=123L)
             for sub_res in res:
-                assert_equal(sub_res[1], group.get('dict').get(123L))
+                assert_equal(sub_res[1], gdict.get(123L))
 
 
 class TestValidators(unittest.TestCase):

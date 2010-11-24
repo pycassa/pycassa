@@ -214,6 +214,11 @@ class ColumnFamily(object):
             return self.write_consistency_level
         return alternative
 
+    def _create_column_path(self, super_column=None, column=None):
+        return ColumnPath(self.column_family,
+                          self._pack_name(super_column, is_supercol_name=True),
+                          self._pack_name(column, False))
+
     def _create_column_parent(self, super_column=None):
         return ColumnParent(column_family=self.column_family,
                             super_column=self._pack_name(super_column, is_supercol_name=True))
@@ -379,9 +384,7 @@ class ColumnFamily(object):
 
         :param column_reversed:
           Fetch the columns or super_columns in reverse order. If `column_count` is
-          used with this, columns will be drawn from the end. The returned dictionary
-          of columns may not be in reversed order if an ordered ``dict_class`` is not
-          passed to the constructor.
+          used with this, columns will be drawn from the end.
         :type column_reversed: bool
 
         :param column_count: Limit the number of columns or super columns fetched per row
@@ -400,16 +403,35 @@ class ColumnFamily(object):
 
         """
 
-        cp = self._create_column_parent(super_column)
-        sp = self._create_slice_predicate(columns, column_start, column_finish,
-                                    column_reversed, column_count)
+        # Use the more performant get() instead of get_slice() if possible
+        if super_column is None and (columns is not None and len(columns) == 1) or \
+           super_column is not None and (columns is None or len(columns) == 1):
+            super_col_orig = super_column is not None
+            column = None
+            if columns is not None and len(columns) == 1:
+                if self.super and super_column is None:
+                    super_column = columns[0]
+                else:
+                    column = columns[0]
+            cp = self._create_column_path(super_column, column)
+            col_or_super = self.client.get(key, cp, self._rcl(read_consistency_level))
+            res = self._convert_ColumnOrSuperColumns_to_dict_class([col_or_super], include_timestamp)
+            if super_col_orig:
+                return res.popitem()[1]
+            else:
+                return res
+        else:
+            cp = self._create_column_parent(super_column)
+            sp = self._create_slice_predicate(columns, column_start, column_finish,
+                                        column_reversed, column_count)
 
-        list_col_or_super = self.client.get_slice(key, cp, sp,
-                                                  self._rcl(read_consistency_level))
 
-        if len(list_col_or_super) == 0:
-            raise NotFoundException()
-        return self._convert_ColumnOrSuperColumns_to_dict_class(list_col_or_super, include_timestamp)
+            list_col_or_super = self.client.get_slice(key, cp, sp,
+                                                      self._rcl(read_consistency_level))
+
+            if len(list_col_or_super) == 0:
+                raise NotFoundException()
+            return self._convert_ColumnOrSuperColumns_to_dict_class(list_col_or_super, include_timestamp)
 
     @_pooled
     def get_indexed_slices(self, index_clause, columns=None, column_start="", column_finish="",
