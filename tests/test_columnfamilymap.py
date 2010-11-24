@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pycassa import index, gm_timestamp, ColumnFamily, ConnectionPool, \
+from pycassa import index, ColumnFamily, ConnectionPool, \
     ColumnFamilyMap, ConsistencyLevel, NotFoundException, String, Int64, \
     Float64, DateTime, IntString, FloatString, DateTimeString
 from nose.tools import assert_raises, assert_equal, assert_true
@@ -39,8 +39,6 @@ class TestColumnFamilyMap:
         credentials = {'username': 'jsmith', 'password': 'havebadpass'}
         self.pool = ConnectionPool(keyspace='Keyspace1', credentials=credentials)
         self.cf = ColumnFamily(self.pool, 'Standard2',
-                               write_consistency_level=ConsistencyLevel.ONE,
-                               timestamp=self.timestamp,
                                autopack_names=False,
                                autopack_values=False)
         self.indexed_cf = ColumnFamily(self.pool, 'Indexed1',
@@ -49,26 +47,11 @@ class TestColumnFamilyMap:
         self.map = ColumnFamilyMap(TestUTF8, self.cf)
         self.indexed_map = ColumnFamilyMap(TestIndex, self.indexed_cf)
         self.empty_map = ColumnFamilyMap(TestEmpty, self.cf, raw_columns=True)
-        try:
-            self.timestamp_n = int(self.cf.get('meta')['timestamp'])
-        except NotFoundException:
-            self.timestamp_n = 0
-        self.clear()
 
     def tearDown(self):
-        self.cf.insert('meta', {'timestamp': str(self.timestamp_n)})
-
-    # Since the timestamp passed to Cassandra will be in the same second
-    # with the default timestamp function, causing problems with removing
-    # and inserting (Cassandra doesn't know which is later), we supply our own
-    def timestamp(self):
-        self.timestamp_n += 1
-        return self.timestamp_n
-
-    def clear(self):
-        for key, columns in self.cf.get_range(include_timestamp=True):
-            for value, timestamp in columns.itervalues():
-                self.timestamp_n = max(self.timestamp_n, timestamp)
+        for key, columns in self.cf.get_range():
+            self.cf.remove(key)
+        for key, columns in self.indexed_cf.get_range():
             self.cf.remove(key)
 
     def instance(self, key):
@@ -181,29 +164,11 @@ class TestSuperColumnFamilyMap:
     def setUp(self):
         credentials = {'username': 'jsmith', 'password': 'havebadpass'}
         self.pool = ConnectionPool(keyspace='Keyspace1', credentials=credentials)
-        self.cf = ColumnFamily(self.pool, 'Super2', timestamp=self.timestamp)
+        self.cf = ColumnFamily(self.pool, 'Super2')
         self.map = ColumnFamilyMap(TestUTF8, self.cf)
-        try:
-            self.timestamp_n = int(self.cf.get('meta')['meta']['timestamp'])
-        except NotFoundException:
-            self.timestamp_n = 0
-        self.clear()
 
     def tearDown(self):
-        self.cf.insert('meta', {'meta': {'timestamp': str(self.timestamp_n)}})
-
-    # Since the timestamp passed to Cassandra will be in the same second
-    # with the default timestamp function, causing problems with removing
-    # and inserting (Cassandra doesn't know which is later), we supply our own
-    def timestamp(self):
-        self.timestamp_n += 1
-        return self.timestamp_n
-
-    def clear(self):
-        for key, columns in self.cf.get_range(include_timestamp=True):
-            for subcolumns in columns.itervalues():
-                for value, timestamp in subcolumns.itervalues():
-                    self.timestamp_n = max(self.timestamp_n, timestamp)
+        for key, columns in self.cf.get_range():
             self.cf.remove(key)
 
     def instance(self, key, super_column):
@@ -224,6 +189,7 @@ class TestSuperColumnFamilyMap:
         instance = self.instance('TestSuperColumnFamilyMap.test_super', 'super1')
         assert_raises(NotFoundException, self.map.get, instance.key)
         self.map.insert(instance)
-        assert_equal(self.map.get(instance.key)[instance.super_column], instance)
+        res = self.map.get(instance.key)[instance.super_column]
+        assert_equal(res, instance)
         assert_equal(self.map.multiget([instance.key])[instance.key][instance.super_column], instance)
         assert_equal(list(self.map.get_range(start=instance.key, finish=instance.key)), [{instance.super_column: instance}])

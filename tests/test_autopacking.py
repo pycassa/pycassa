@@ -237,7 +237,6 @@ class TestSuperCFs(unittest.TestCase):
 
             # Check each supercolumn individually
             for i in range(3):
-                print gcols[i]
                 res = cf.get(KEYS[0], columns=[gcols[i]])
                 assert_equal(res, {gcols[i]: {'bytes': VALS[i]}})
 

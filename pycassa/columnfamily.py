@@ -425,7 +425,6 @@ class ColumnFamily(object):
             sp = self._create_slice_predicate(columns, column_start, column_finish,
                                         column_reversed, column_count)
 
-
             list_col_or_super = self.client.get_slice(key, cp, sp,
                                                       self._rcl(read_consistency_level))
 
@@ -754,7 +753,6 @@ class ColumnFamily(object):
             last_key = key_slices[-1].key
             i += 1
 
-    #@_pooled
     def insert(self, key, columns, timestamp=None, ttl=None,
                write_consistency_level=None):
         """
@@ -775,8 +773,32 @@ class ColumnFamily(object):
         :rtype: int timestamp
 
         """
-        return self.batch_insert({key: columns}, timestamp=timestamp, ttl=ttl,
-                                 write_consistency_level=write_consistency_level)
+        if ((not self.super) and len(columns) == 1) or \
+           (self.super and len(columns) == 1 and len(columns.values()[0]) == 1):
+
+            if timestamp is None:
+                timestamp = self.timestamp()
+
+            if self.super:
+                super_col = columns.keys()[0]
+                cp = self._create_column_path(super_col)
+                columns = columns.values()[0]
+            else:
+                cp = self._create_column_path()
+
+            colname = columns.keys()[0]
+            colval = self._pack_value(columns.values()[0], colname)
+            colname = self._pack_name(colname, False)
+            column = Column(colname, colval, timestamp, ttl)
+            self.client = self.pool.get()
+            try:
+                res = self.client.insert(key, cp, column, self._wcl(write_consistency_level))
+            finally:
+                self.client.return_to_pool()
+            return res
+        else:
+            return self.batch_insert({key: columns}, timestamp=timestamp, ttl=ttl,
+                                     write_consistency_level=write_consistency_level)
 
     def batch_insert(self, rows, timestamp=None, ttl=None, write_consistency_level = None):
         """
@@ -803,7 +825,6 @@ class ColumnFamily(object):
         batch.send()
         return timestamp
 
-    #@_pooled
     def remove(self, key, columns=None, super_column=None, write_consistency_level=None):
         """
         Remove a specified row or a set of columns within a row.

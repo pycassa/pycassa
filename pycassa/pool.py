@@ -482,6 +482,10 @@ class ConnectionWrapper(connection.Connection):
             return self._original_meth(*args, **kwargs)
 
     @_retry
+    def get(self, *args, **kwargs):
+        pass
+ 
+    @_retry
     def get_slice(self, *args, **kwargs):
         pass
         
@@ -495,6 +499,10 @@ class ConnectionWrapper(connection.Connection):
 
     @_retry
     def batch_mutate(self, *args, **kwargs):
+        pass
+
+    @_retry
+    def insert(self, *args, **kwargs):
         pass
 
     @_retry

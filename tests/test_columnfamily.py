@@ -19,10 +19,6 @@ class TestColumnFamily(unittest.TestCase):
         for key, columns in self.cf.get_range():
             self.cf.remove(key)
 
-    def clear(self):
-        for key, columns in self.cf.get_range():
-            self.cf.remove(key)
-
     def test_empty(self):
         key = 'TestColumnFamily.test_empty'
         assert_raises(NotFoundException, self.cf.get, key)
@@ -286,29 +282,10 @@ class TestSuperColumnFamily:
     def setUp(self):
         credentials = {'username': 'jsmith', 'password': 'havebadpass'}
         self.pool = ConnectionPool(keyspace='Keyspace1', credentials=credentials)
-        self.cf = ColumnFamily(self.pool, 'Super2', timestamp=self.timestamp)
-
-        try:
-            self.timestamp_n = int(self.cf.get('meta')['meta']['timestamp'])
-        except NotFoundException:
-            self.timestamp_n = 0
-        self.clear()
+        self.cf = ColumnFamily(self.pool, 'Super2')
 
     def tearDown(self):
-        self.cf.insert('meta', {'meta': {'timestamp': str(self.timestamp_n)}})
-
-    # Since the timestamp passed to Cassandra will be in the same second
-    # with the default timestamp function, causing problems with removing
-    # and inserting (Cassandra doesn't know which is later), we supply our own
-    def timestamp(self):
-        self.timestamp_n += 1
-        return self.timestamp_n
-
-    def clear(self):
-        for key, columns in self.cf.get_range(include_timestamp=True):
-            for subcolumns in columns.itervalues():
-                for value, timestamp in subcolumns.itervalues():
-                    self.timestamp_n = max(self.timestamp_n, timestamp)
+        for key, columns in self.cf.get_range():
             self.cf.remove(key)
 
     def test_super(self):

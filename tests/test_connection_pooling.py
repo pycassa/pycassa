@@ -25,9 +25,14 @@ def _get_list():
 
 class PoolingCase(unittest.TestCase):
 
+    def tearDown(self):
+        pool = ConnectionPool(keyspace='Keyspace1')
+        cf = ColumnFamily(pool, 'Standard1')
+        for key, cols in cf.get_range():
+            cf.remove(key)
+
     def test_basic_pools(self):
         for pool_cls in _pools:
-            print "Pool class: %s" % pool_cls.__name__
             pool = pool_cls(keyspace='Keyspace1', credentials=_credentials)
             pool.dispose()
             pool = pool.recreate()
@@ -176,8 +181,9 @@ class PoolingCase(unittest.TestCase):
                          listeners=[listener], use_threadlocal=False)
 
         cf = ColumnFamily(pool, 'Standard1')
+        columns = {'col1': 'val', 'col2': 'val'}
         for i in range(10):
-            cf.insert('key', {'col': 'val'})
+            cf.insert('key', columns)
 
         assert_equal(listener.recycle_count, 5)
 
@@ -192,7 +198,7 @@ class PoolingCase(unittest.TestCase):
 
         cf = ColumnFamily(pool, 'Standard1')
         for i in range(10):
-            cf.insert('key', {'col': 'val'})
+            cf.insert('key', columns)
 
         pool.dispose()
         assert_equal(listener.recycle_count, 5)
@@ -263,9 +269,9 @@ class PoolingCase(unittest.TestCase):
 
             # The first insert attempt should fail, but failover should occur
             # and the insert should succeed
-            cf.insert('key', {'col': 'val%d' % i})
+            cf.insert('key', {'col': 'val%d' % i, 'col2': 'val'})
             assert_equal(listener.failure_count, i)
-            assert_equal(cf.get('key'), {'col': 'val%d' % i})
+            assert_equal(cf.get('key'), {'col': 'val%d' % i, 'col2': 'val'})
 
         pool.dispose()
 
@@ -287,9 +293,9 @@ class PoolingCase(unittest.TestCase):
 
             # The first insert attempt should fail, but failover should occur
             # and the insert should succeed
-            cf.insert('key', {'col': 'val%d' % i})
+            cf.insert('key', {'col': 'val%d' % i, 'col2': 'val'})
             assert_equal(listener.failure_count, i)
-            assert_equal(cf.get('key'), {'col': 'val%d' % i})
+            assert_equal(cf.get('key'), {'col': 'val%d' % i, 'col2': 'val'})
 
         pool.dispose()
         listener.reset()
@@ -297,7 +303,7 @@ class PoolingCase(unittest.TestCase):
         pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
                          prefill=True, timeout=0.05,
                          keyspace='Keyspace1', credentials=_credentials,
-                         listeners=[listener], use_threadlocal=False,
+                         listeners=[listener], use_threadlocal=True,
                          server_list=['localhost:9160', 'localhost:9160'])
 
         cf = ColumnFamily(pool, 'Standard1')
@@ -309,7 +315,7 @@ class PoolingCase(unittest.TestCase):
             conn.return_to_pool()
 
         threads = []
-        args=('key', {'col': 'val'})
+        args=('key', {'col': 'val', 'col2': 'val'})
         for i in range(5):
             threads.append(threading.Thread(target=cf.insert, args=args))
             threads[-1].start()
@@ -336,7 +342,7 @@ class PoolingCase(unittest.TestCase):
             conn.return_to_pool()
 
         cf = ColumnFamily(pool, 'Standard1')
-        assert_raises(MaximumRetryException, cf.insert, 'key', {'col':'val'})
+        assert_raises(MaximumRetryException, cf.insert, 'key', {'col':'val', 'col2': 'val'})
         assert_equal(listener.failure_count, 4) # On the 4th failure, didn't retry
 
         pool.dispose()
@@ -357,7 +363,7 @@ class PoolingCase(unittest.TestCase):
             conn.return_to_pool()
 
         cf = ColumnFamily(pool, 'Standard1')
-        assert_raises(MaximumRetryException, cf.insert, 'key', {'col':'val'})
+        assert_raises(MaximumRetryException, cf.insert, 'key', {'col':'val', 'col2': 'val'})
         assert_equal(listener.failure_count, 4) # On the 4th failure, didn't retry
 
         pool.dispose()
