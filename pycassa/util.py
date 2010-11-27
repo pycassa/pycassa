@@ -219,8 +219,11 @@ def as_interface(obj, cls=None, methods=None, required=None):
 from UserDict import DictMixin
 
 class OrderedDict(dict, DictMixin):
+    """ A dictionary which maintains the insertion order of keys. """
 
     def __init__(self, *args, **kwds):
+        """ A dictionary which maintains the insertion order of keys. """
+
         if len(args) > 1:
             raise TypeError('expected at most 1 arguments, got %d' % len(args))
         try:

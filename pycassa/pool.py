@@ -31,49 +31,10 @@ class NoServerAvailable(Exception):
 class AbstractPool(object):
     """An abstract base class for all other pools."""
 
-    def __init__(self, keyspace, server_list=['localhost:9160'],
-                 credentials=None, timeout=0.5, logging_name=None,
-                 use_threadlocal=True, listeners=[], framed_transport=True):
-        """
-        Construct an instance of the abstract base class :class:`AbstractPool`.  This
-        should not be called directly, only by subclass :meth:`__init__()`
-        methods.
+    def __init__(self, keyspace, server_list, credentials, timeout,
+                 logging_name, use_threadlocal, listeners, framed_transport):
+        """An abstract base class for all other pools."""
 
-        :param keyspace: The keyspace this connection pool will
-          make all connections to.
-
-        :param server_list: A sequence of servers in the form 'host:port' that
-          the pool will connect to.  The list will be randomly permuted before
-          being used. `server_list` may also be a function that returns the
-          sequence of servers.
-
-        :param credentials: A dictionary containing 'username' and 'password'
-          keys and appropriate string values.
-
-        :param timeout: The amount of time in seconds before a connection
-          will time out.  Defaults to 0.5 (half a second).
-
-        :param logging_name:  String identifier which will be used within
-          the "name" field of logging records generated within the
-          "pycassa.pool" logger. Defaults to ``id(pool)``.
-
-        :param use_threadlocal: If set to ``True``, repeated calls to
-          :meth:`get()` within the same application thread will
-          return the same :class:`ConnectionWrapper`
-          object, if one has already been retrieved from the pool and
-          has not been returned yet.
-
-        :param listeners: A list of
-          :class:`PoolListener`-like objects or
-          dictionaries of callables that receive events when
-          pool or connection events occur.
-
-        :param framed_transport: Whether to use a framed or buffered
-          transport.  Cassandra 0.7 uses framed by default, while
-          Cassandra 0.6 uses buffered by default.
-        :type framed_transport: boolean
-
-        """
         if logging_name:
             self.logging_name = self._orig_logging_name = logging_name
         else:
@@ -172,15 +133,7 @@ class AbstractPool(object):
         raise NotImplementedError()
 
     def dispose(self):
-        """
-        Dispose of this pool.
-
-        This method leaves the possibility of checked-out connections
-        remaining open, It is advised to not reuse the pool once
-        :meth:`dispose()` is called, and to instead use a new pool
-        constructed by :meth:`recreate()`.
-
-        """
+        """ Dispose of this pool.  """
         raise NotImplementedError()
 
     def return_conn(self, record):
@@ -193,16 +146,9 @@ class AbstractPool(object):
         self._do_return_conn(record)
 
     def get(self):
-        """
-        Get a :class:`ConnectionWrapper` from the pool.
-
-        """
-        return self._do_get()
-
-    def _do_get(self):
         raise NotImplementedError()
 
-    def _do_return_conn(self, conn):
+    def return_conn(self, conn):
         raise NotImplementedError()
 
     def status(self):
@@ -518,14 +464,10 @@ class ConnectionWrapper(connection.Connection):
         """
         Describes the given keyspace.
         
-        :param keyspace: The keyspace to describe. Defaults to the current keyspace.
-        :type keyspace: str
+        If `use_dict_for_col_metadata` is ``True``, the column metadata will be stored
+        as a dictionary instead of a list
 
-        :param use_dict_for_col_metadata: whether or not store the column metadata as a
-          dictionary instead of a list
-        :type use_dict_for_col_metadata: bool
-
-        :rtype: ``{column_family_name: CfDef}``
+        A dictionary of the form ``{column_family_name: CfDef}`` is returned.
 
         """
         if keyspace is None:
@@ -546,79 +488,109 @@ class ConnectionWrapper(connection.Connection):
 class ConnectionPool(AbstractPool):
     """A pool that maintains a queue of open connections."""
 
-    def __init__(self, keyspace, pool_size=5, max_overflow=10,
-                 pool_timeout=30, recycle=10000, max_retries=5,
-                 prefill=True, *args, **kwargs):
+    def __init__(self, keyspace,
+                 server_list=['localhost:9160'],
+                 credentials=None,
+                 timeout=0.5,
+                 use_threadlocal=True,
+                 pool_size=5, max_overflow=10, prefill=True,
+                 pool_timeout=30,
+                 recycle=10000,
+                 max_retries=5,
+                 listeners=[],
+                 logging_name=None,
+                 framed_transport=True):
         """
-        Construct a Pool that maintains a queue of open connections.
+        Constructs a pool that maintains a queue of open connections.
 
-        This is typically what you want to use for connection pooling.
+        All connections in the pool will be opened to `keyspace`.
 
-        Be careful when using a this with ``use_threadlocal=False``,
-        especially with retries enabled.  Synchronization may be required to
-        prevent the connection from changing while another thread is using it.
+        `server_list` is a sequence of servers in the form 'host:port' that
+        the pool will connect to.  The list will be randomly permuted before
+        being drawn from sequentially. `server_list` may also be a function
+        that returns the sequence of servers.
 
-        All of the parameters for :meth:`AbstractPool.__init__()` are available, as
-        well as the following:
+        If authentication or autorization is required, `credentials` must
+        be supplied.  This should be a dictionary containing 'username' and
+        'password' keys with appropriate string values.
 
-        :param pool_size: The size of the pool to be maintained,
-          defaults to 5. This is the largest number of connections that
-          will be kept in the pool at one time.
+        `timeout` specifies in seconds how long individual connections will 
+        block before timing out. If set to ``None``, connections will never
+        timeout.
+        
+        If `use_threadlocal` is set to ``True``, repeated calls to
+        :meth:`get()` within the same application thread will
+        return the same :class:`ConnectionWrapper` object if one has
+        already been retrieved from the pool and has not been returned yet.
+        Be careful when setting `use_threadlocal` to ``False`` in a multithreaded
+        application, especially with retries enabled.  Synchronization may be
+        required to prevent the connection from changing while another thread is
+        using it.
 
-          A good choice for this is usually a multiple of the number of servers
-          passed to the Pool constructor.  If a size less than this is chosen,
-          the last ``(len(server_list) - pool_size)`` servers may not be used until
-          either overflow occurs, a connection is recycled, or a connection
-          fails. Similarly, if a multiple of ``len(server_list)`` is not chosen,
-          those same servers would have a decreased load.
+        The pool will keep up `pool_size` open connections in the pool
+        at any time.  When a connection is returned to the pool, the
+        connection will be discarded is the pool already contains `pool_size`
+        connections.  Whether or not a new connection may be opened when the
+        pool is empty is controlled by `max_overflow`.  This specifies how many
+        additional connections may be opened after the pool has reached `pool_size`;
+        keep in mind that these extra connections will be discarded upon checkin
+        until the pool is below `pool_size`. It follows then that the total number
+        of simultaneous connections the pool will allow is ``pool_size + max_overflow``,
+        and the number of "sleeping" connections the pool will allow is ``pool_size``.
+        `max_overflow` may be set to -1 to indicate no overflow limit.
 
-        :param max_overflow: The maximum overflow size of the
-          pool. When the number of checked-out connections reaches the
-          size set in pool_size, additional connections will be
-          returned up to this limit. When those additional connections
-          are returned to the pool, they are disconnected and
-          discarded. It follows then that the total number of
-          simultaneous connections the pool will allow is
-          ``pool_size + max_overflow``, and the total number of "sleeping"
-          connections the pool will allow is ``pool_size``. `max_overflow`
-          can be set to -1 to indicate no overflow limit; no limit
-          will be placed on the total number of concurrent
-          connections. Defaults to 10.
+        A good choice for `pool_size` is a multiple of the number of servers
+        passed to the Pool constructor.  If a size less than this is chosen,
+        the last ``(len(server_list) - pool_size)`` servers may not be used until
+        either overflow occurs, a connection is recycled, or a connection
+        fails. Similarly, if a multiple of ``len(server_list)`` is not chosen,
+        those same servers would have a decreased load.
 
-        :param pool_timeout: The number of seconds to wait before giving up
-          on returning a connection. Defaults to 30.
+        If `prefill` is set to ``True``, `pool_size` connections will be opened
+        when the pool is created.
 
-        :param recycle: If set to non -1, number of operations between
-          connection recycling, which means upon checkin, if this
-          this many thrift operations have been performed,
-          the connection will be closed and replaced with a newly opened
-          connection if necessary. Defaults to 10000.
+        If ``pool_size + max_overflow`` connections have already been checked
+        out, an attempt to retrieve a new connection from the pool will wait
+        up to `pool_timeout` seconds for a connection to be returned to the
+        pool before giving up. This may be set to 0 to fail immediately or -1
+        to wait forever.
 
-        :param max_retries: If set to non -1, the number times a connection
-          can failover before an Exception is raised. Setting to 0 disables
-          retries and setting to -1 allows unlimited retries. Defaults to 5.
+        After performing `recycle` number of operations, connections will
+        be replaced when checked back in to the pool.  This may be set to
+        -1 to disable connection recycling.
 
-        :param prefill: If ``True``, the pool creates ``pool_size`` connections
-          upon creation and adds them to the queue.  Default is ``True``.
+        When an operation on a connection fails due to an :exc:`TimedOutException`
+        or :exc:`UnavailableException`, which tend to indicate single or
+        multiple node failure, the operation will be retried on different nodes
+        up to `max_retries` times before an :exc:`Exception` is raised. Setting to
+        0 disables retries and setting to -1 allows unlimited retries.
 
-        Example::
+        Pool monitoring may be achieved by supplying `listeners`, which should
+        be a list of :class:`PoolListener`-like objects or dictionaries of
+        callables that receive events when pool or connection events occur.
+
+        By default, each pool identifies itself in the logs using ``id(self)``.
+        If multiple pools are in use for different purposes, setting `logging_name`
+        will help individual pools to be identified in the logs.
+
+        `framed_transport` determines whether framed or buffered transport will
+        be used.  Cassandra 0.7 uses framed by default, while Cassandra 0.6 uses
+        buffered by default.
+
+        Example Usage:
+
+        .. code-block:: python
 
             >>> pool = pycassa.ConnectionPool(keyspace='Keyspace1', server_list=['10.0.0.4:9160', '10.0.0.5:9160'], prefill=False)
-            >>> conn = pool.get()
-            >>> cf = pycassa.ColumnFamily(conn, 'Standard1')
+            >>> cf = pycassa.ColumnFamily(pool, 'Standard1')
             >>> cf.insert('key', {'col': 'val'})
             1287785685530679
-            >>> conn.return_to_pool()
 
         """
 
-        assert pool_size >= 0, "pool_size must be non-negative"
-        assert max_overflow >= 0, "max_overflow must be non-negative"
-        assert pool_timeout >= 0, "pool_timeout must be non-negative"
-        assert max_retries >= 0, "max_retries must be non-negative"
-        assert recycle > 0, "recycle must be positive"
-
-        super(ConnectionPool, self).__init__(keyspace, *args, **kwargs)
+        super(ConnectionPool, self).__init__(keyspace, server_list, credentials,
+                                             timeout, logging_name, use_threadlocal,
+                                             listeners, framed_transport)
         self._pool_size = pool_size
         self._q = pool_queue.Queue(pool_size)
         self._max_overflow = max_overflow
@@ -637,6 +609,7 @@ class ConnectionPool(AbstractPool):
             self._overflow = 0 - pool_size
 
     def recreate(self):
+        """ Returns a new instance with idential creation arguments. """
         self._notify_on_pool_recreate()
         return ConnectionPool(pool_size=self._q.maxsize,
                          max_overflow=self._max_overflow,
@@ -667,7 +640,8 @@ class ConnectionPool(AbstractPool):
             except pool_queue.Full:
                 pass
 
-    def _do_return_conn(self, conn):
+    def return_conn(self, conn):
+        """ Returns a connection to the pool. """
         try:
             if self._pool_threadlocal:
                 if hasattr(self._tlocal, 'current'):
@@ -709,7 +683,8 @@ class ConnectionPool(AbstractPool):
             self._q.put(conn, False)
             return conn
 
-    def _do_get(self):
+    def get(self):
+        """ Gets a connection from the pool. """
         if self._pool_threadlocal:
             try:
                 conn = None
@@ -751,6 +726,7 @@ class ConnectionPool(AbstractPool):
         return conn
 
     def dispose(self):
+        """ Closes all checked in connections in the pool. """
         while True:
             try:
                 conn = self._q.get(False)
@@ -762,7 +738,21 @@ class ConnectionPool(AbstractPool):
         self._overflow = 0 - self.size()
         self._notify_on_pool_dispose()
 
+    def add_listener(self, listener):
+        """
+        Add a :class:`PoolListener`-like object to this pool.
+
+        `listener` may be an object that implements some or all of
+        :class:`PoolListener`, or a dictionary of callables containing implementations
+        of some or all of the named methods in :class:`PoolListener`.
+
+        """
+        super(ConnectionPool, self).add_listener(listener)
+
+
+
     def status(self):
+        """ Returns the status of the pool. """
         return "Pool size: %d  Connections in pool: %d "\
                 "Current Overflow: %d Current Checked out "\
                 "connections: %d" % (self.size(),
@@ -799,9 +789,6 @@ class PoolListener(object):
 
         # or add a listener after the fact
         p.add_listener(MyListener())
-
-    All of the standard connection :class:`AbstractPool` types can
-    accept event listeners for key connection lifecycle events.
 
     Listeners receive a dictionary that contains event information and
     is indexed by a string describing that piece of info.  For example,

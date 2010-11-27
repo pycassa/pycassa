@@ -12,7 +12,7 @@ from pycassa.cassandra import Cassandra
 from pycassa.cassandra.constants import VERSION
 from pycassa.cassandra.ttypes import AuthenticationRequest
 
-__all__ = ['Connection', 'connect', 'connect_thread_local']
+__all__ = ['connect', 'connect_thread_local']
 
 DEFAULT_SERVER = 'localhost:9160'
 
@@ -57,53 +57,15 @@ class Connection(Cassandra.Client):
 
 
 def connect(keyspace, servers=None, framed_transport=True, timeout=None,
-            credentials=None, retry_time=60, recycle=None, round_robin=None,
-            use_threadlocal=True):
+            credentials=None, retry_time=60, recycle=None, use_threadlocal=True):
     """
-    Constructs a single :class:`.Connection`. Connects to a randomly chosen
-    server on the list.
-
-    If the connection fails, it will attempt to connect to each server on the
-    list in turn until one succeeds. If it is unable to find an active server,
-    it will throw a :exc:`.NoServerAvailable` exception.
-
-    Failing servers are kept on a separate list and eventually retried, no
-    sooner than `retry_time` seconds after failure.
-
-    :param keyspace: The keyspace to associate this connection with.
-    :type keyspace: str
-
-    :param servers: List of Cassandra servers with format: "hostname:port".
-      Default: ``['localhost:9160']``
-    :type servers: str[]
-
-    :param framed_transport: If ``True``, use a :class:`TFramedTransport` instead of a
-      :class:`TBufferedTransport`. Cassandra 0.7.x uses framed transport, while
-      Cassandra 0.6.x uses buffered.
-    :type framed_transport: bool
-
-    :param timeout: Timeout in seconds (e.g. 0.5). Default: ``None`` (it will stall forever)
-    :type timeout: float
-
-    :param retry_time: Minimum time in seconds until a failed server is reinstated
-      (e.g. 0.5). Default: 60.
-    :type retry_time: float
-
-    :param credentials: Dictionary of user credentials. Example:
-      ``{'username':'jsmith', 'password':'havebadpass'}``
-    :type credentials: dict
-
-    :param recycle: Max time in seconds before an open connection is closed and replaced.
-      Default: ``None`` (never recycle)
-    :type recycle: float
-
-    :param round_robin: *DEPRECATED*
-    :type round_robin: bool
-
-    :rtype: :class:`~pycassa.pool.Pool`
+    Constructs a :class:`~pycassa.pool.ConnectionPool`. This is primarily available
+    for reasons of backwards-compatibility; creating a ConnectionPool directly
+    provides more options.  All of the parameters here correspond directly
+    with parameters of the same name in 
+    :meth:`pycassa.pool.ConnectionPool.__init__()`
 
     """
-
     if servers is None:
         servers = [DEFAULT_SERVER]
     return pool.ConnectionPool(keyspace=keyspace, server_list=servers,
@@ -112,4 +74,6 @@ def connect(keyspace, servers=None, framed_transport=True, timeout=None,
                                pool_size=len(servers), max_overflow=len(servers),
                                max_retries=len(servers))
 
-connect_thread_local = connect
+def connect_thread_local(*args, **kwargs):
+    """ Alias of :meth:`connect` """
+    return connect(*args, **kwargs)
