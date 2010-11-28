@@ -20,6 +20,7 @@ except NameError:
     pass
 
 import pycassa, optparse
+from pycassa.system_manager import *
 from sys import stderr, exit
 
 parser = optparse.OptionParser(usage='Usage: %prog [OPTIONS]')

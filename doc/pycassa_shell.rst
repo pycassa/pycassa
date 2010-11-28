@@ -54,23 +54,71 @@ the names of the objects. You can use these to easily insert and retrieve data f
     {'colname': 'val'}
 
 If you are interested in the keyspace and column family definitions,
-**pycassa** provides several methods that can be used with ``CLIENT``:
+**pycassa** provides several methods that can be used with ``SYSTEM_MANAGER``:
 
-* :meth:`~pycassa.connection.Connection.add_keyspace()`
-* :meth:`~pycassa.connection.Connection.update_keyspace()`
-* :meth:`~pycassa.connection.Connection.drop_keyspace()`
-* :meth:`~pycassa.connection.Connection.add_column_family()`
-* :meth:`~pycassa.connection.Connection.update_column_family()`
-* :meth:`~pycassa.connection.Connection.drop_column_family()`
+* :meth:`~pycassa.system_manager.SystemManager.create_keyspace()`
+* :meth:`~pycassa.system_manager.SystemManager.alter_keyspace()`
+* :meth:`~pycassa.system_manager.SystemManager.drop_keyspace()`
+* :meth:`~pycassa.system_manager.SystemManager.create_column_family()`
+* :meth:`~pycassa.system_manager.SystemManager.alter_column_family()`
+* :meth:`~pycassa.system_manager.SystemManager.drop_column_family()`
 
 Example usage:
 
 .. code-block:: python
 
-    >>> CLIENT.describe_keyspace('Keyspace1')
-    KsDef(strategy_options=None, cf_defs=[CfDef(comment='', min_compaction_threshold=4, name='SuperLongSubInt', column_type='Super', preload_row_cache=False, key_cache_size=200000.0, gc_grace_seconds=0, column_metadata=[], keyspace='Keyspace1', default_validation_class='org.apache.cassandra.db.marshal.BytesType', max_compaction_threshold=32, subcomparator_type='org.apache.cassandra.db.marshal.IntegerType', read_repair_chance=1.0, comparator_type='org.apache.cassandra.db.marshal.LongType', id=1021, row_cache_size=0.0)], strategy_class='org.apache.cassandra.locator.SimpleStrategy', name='Keyspace1', replication_factor=1)
-    >>> cfdef = CLIENT.get_keyspace_description()['Standard1']
-    >>> cfdef.memtable_throughput_in_mb = 42
-    >>> CLIENT.update_column_family(cfdef)
-    '6e8504ff-d001-11df-a513-e700f669bcfc'
+    >>> SYSTEM_MANAGER.describe_keyspace('Keyspace1')
+
+    Name:                                Keyspace1
+
+    Replication Strategy:                SimpleStrategy
+    Replication Factor:                  1
+
+    Column Families:
+       Indexed1
+       Standard2
+       Standard1
+       Super1
+
+    >>> SYSTEM_MANAGER.describe_column_family('Keyspace1', 'Indexed1')
+
+    Name:                                Indexed1
+    Description:                         
+    Column Type:                         Standard
+
+    Comparator Type:                     BytesType
+    Default Validation Class:            BytesType
+
+    Cache Sizes
+      Row Cache:                         Disabled
+      Key Cache:                         200000 keys
+
+    Read Repair Chance:                  100.0%
+
+    GC Grace Seconds:                    864000
+
+    Compaction Thresholds
+      Min:                               4
+      Max:                               32
+
+    Memtable Flush After Thresholds
+      Throughput:                        63 MiB
+      Operations:                        295312 operations
+      Time:                              60 minutes
+
+    Cache Save Periods
+      Row Cache:                         Disabled
+      Key Cache:                         3600 seconds
+
+    Column Metadata
+      - Name:                            birthdate
+        Value Type:                      LongType
+        Index Type:                      KEYS
+        Index Name:                      None
+
+    >>> SYSTEM_MANAGER.create_keyspace('Keyspace1', replication_factor=1)
+    >>> SYSTEM_MANAGER.create_column_family('Keyspace1', 'Users', comparator_type=INT_TYPE)
+    >>> SYSTEM_MANAGER.alter_column_family('Keyspace1', 'Users', key_cache_size=100)
+    >>> SYSTEM_MANAGER.create_index('Keyspace1', 'Users', 'birthdate', LONG_TYPE, index_name='bday_index')
+    >>> SYSTEM_MANAGER.drop_keyspace('Keyspace1')
 
