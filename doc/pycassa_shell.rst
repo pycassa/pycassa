@@ -1,3 +1,5 @@
+.. _pycassa-shell:
+
 pycassaShell 
 ============
 **pycassaShell** is an interactive Cassandra python shell. It is useful for
@@ -40,7 +42,7 @@ The available options are:
 * ``-u``, ``--user`` - If authentication or authorization are enabled, this username is used.
 * ``-P``, ``--passwd`` - If authentication or authorization are enabled, this password is used.
 * ``-S``, ``--streaming`` - Use a streaming transport. Works with Cassandra 0.6.x and below.
-* ``-F``, ``--framed`` - Use a streaming transport. Works with Cassandra 0.7.x. This is the default.
+* ``-F``, ``--framed`` - Use a framed transport. Works with Cassandra 0.7.x. This is the default.
 
 When pycassaShell starts, it creates a
 :class:`~pycassa.columnfamily.ColumnFamily` for every existing column family and prints
@@ -50,8 +52,10 @@ the names of the objects. You can use these to easily insert and retrieve data f
 
     >>> STANDARD1.insert('key', {'colname': 'val'})
     1286048238391943
-    >>> column_family.get('key')
+    >>> STANDARD1.get('key')
     {'colname': 'val'}
+
+.. _pycassa-shell-sys-man:
 
 If you are interested in the keyspace and column family definitions,
 **pycassa** provides several methods that can be used with ``SYSTEM_MANAGER``:
@@ -62,6 +66,8 @@ If you are interested in the keyspace and column family definitions,
 * :meth:`~pycassa.system_manager.SystemManager.create_column_family()`
 * :meth:`~pycassa.system_manager.SystemManager.alter_column_family()`
 * :meth:`~pycassa.system_manager.SystemManager.drop_column_family()`
+* :meth:`~pycassa.system_manager.SystemManager.create_index()`
+* :meth:`~pycassa.system_manager.SystemManager.drop_index()`
 
 Example usage:
 

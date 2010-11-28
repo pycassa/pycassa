@@ -4,6 +4,8 @@ Tutorial
 This tutorial is intended as an introduction to working with
 Cassandra and **pycassa**.
 
+.. toctree::
+
 Prerequisites
 -------------
 Before we start, make sure that you have **pycassa**
@@ -485,3 +487,13 @@ instances of the supplied class when possible.
   Traceback (most recent call last):
   ...
   cassandra.ttypes.NotFoundException: NotFoundException()
+
+Keyspace and Column Family Creation and Alteration
+--------------------------------------------------
+Keyspaces and column families may be created, altered,
+and dropped using :class:`pycassa.system_manager.SystemManager`. Additionally,
+indexes may be created and dropped using this class as well.
+
+Although most of SystemManager's methods may be used in a program,
+it is recommended use this manually using a tool like :ref:`pycassa-shell`. There
+is a :ref:`provided example <pycassa-shell-sys-man>` of this usage.
