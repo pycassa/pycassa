@@ -33,33 +33,47 @@ and import the included schema to start out:
 
   $ bin/schematool localhost 8080 import
 
-Making a Connection
--------------------
-The first step when working with **pycassa** is to create a
-:class:`~pycassa.connection.Connection` to the running cassandra instance:
+Connecting to Cassandra
+-----------------------
+The first step when working with **pycassa** is to connect to the
+running cassandra instance:
 
 .. code-block:: python
 
   >>> import pycassa
-  >>> connection = pycassa.connect('Keyspace1')
+  >>> pool = pycassa.connect('Keyspace1')
 
-The above code will connect on the default host and port. We can also
-specify the host and port explicitly, as follows:
+The above code will connect by default to 'localhost:9160'. We can
+also specify the host and port explicitly, as follows:
 
 .. code-block:: python
 
-  >>> connection = pycassa.connect('Keyspace1', ['localhost:9160'])
+  >>> pool = pycassa.connect('Keyspace1', ['localhost:9160'])
+
+This creates a small connection pool for use with
+:class:`~pycassa.columnfamily.ColumnFamily` . See `Connection Pooling`_
+for more details.
 
 Getting a ColumnFamily
 ----------------------
 A column family is a collection of rows and columns in Cassandra,
 and can be thought of as roughly the equivalent of a table in a
 relational database. We'll use one of the column families that
-were already included in the schema file:
+are included in the default schema file:
 
 .. code-block:: python
 
-  >>> col_fam = pycassa.ColumnFamily(connection, 'Standard1')
+  >>> pool = pycassa.connect('Keyspace1')
+  >>> col_fam = pycassa.ColumnFamily(pool, 'Standard1')
+
+If you get an error about the keyspace or column family not
+existing, make sure you imported the yaml file. This can
+be done using Cassandra's :file:`bin/schematool`:
+
+.. code-block:: bash
+
+  cd $CASSANDRA_HOME
+  bin/schematool localhost 8080 import
 
 Inserting Data
 --------------
@@ -120,7 +134,24 @@ columns with names '1' through '9', we can do the following:
   >>> col_fam.get('row_key', column_start='5', column_finish='7')
   {'5':'foo', '6':'bar', '7':'baz'}
 
-There are also two ways to get multiple rows at the same time.
+Sometimes you want to get columns in reverse sorted order.  A common
+example of this is getting the last N columns from a row that
+represents a timeline.  To do this, set `column_reversed` to ``True``.
+If you think of the columns as being sorted from left to right, when
+`column_reversed` is ``True``, `column_start` will determine the right
+end of the range while `column_finish` will determine the left.
+
+Here's an example of getting the last three columns in a row:
+
+.. code-block:: python
+
+  >>> for i in range(20):
+  ...     col_fam.insert('key', {i: 'val'}
+  ...
+  >>> col_fam.get('key', column_reversed=True, column_count=3)
+  {20: 'val', 19: 'val', 18: 'val'}
+
+There are a few ways to get multiple rows at the same time.
 The first is to specify them by name using
 :meth:`~pycassa.columnfamily.ColumnFamily.multiget()`:
 
@@ -129,15 +160,27 @@ The first is to specify them by name using
   >>> col_fam.multiget(['row_key1', 'row_key2'])
   {'row_key1': {'name':'val'}, 'row_key2': {'name':'val'}}
 
-The other way is to get a range of keys at once by using
+Another way is to get a range of keys at once by using
 :meth:`~pycassa.columnfamily.ColumnFamily.get_range()`. The parameter
 `finish` is also inclusive here, too.  Assuming we've inserted some rows
 with keys 'row_key1' through 'row_key9', we can do this:
 
 .. code-block:: python
 
-  >>> col_fam.get_range(start='row_key5', finish='row_key7')
-  {'row_key5': {'name':'val'}, 'row_key6': {'name':'val'}, 'row_key7': {'name':'val'}}
+  >>> result = col_fam.get_range(start='row_key5', finish='row_key7')
+  >>> for key, columns in result:
+  ...     print key, '=>', columns
+  ...
+  'row_key5' => {'name':'val'}
+  'row_key6' => {'name':'val'}
+  'row_key7' => {'name':'val'}
+
+.. note:: You must use an OrderPreservingPartitioner to be able to
+          get a meaningful range of rows.
+
+The last way to get multiple rows at a time is to take advantage of
+secondary indexes by using :meth:`~pycassa.columnfamily.ColumnFamily.get_indexed_slices()`,
+which is described in the `Indexes`_ section.
 
 It's also possible to specify a set of columns or a slice for 
 :meth:`~pycassa.columnfamily.ColumnFamily.multiget()` and
@@ -327,43 +370,43 @@ the following:
 
 .. code-block:: python
 
-  >>> col_fam = pycassa.ColumnFamily(connection, 'Indexed1')
-  >>> from pycassa.index import *
-  >>> index_exp = create_index_expression('birthdate', 1984)
-  >>> index_clause = create_index_clause([index_exp])
-  >>> col_fam.get_indexed_slices(index_clause)
+  >>> import pycassa
+  >>> pool = pycassa.ConnectionPool('Keyspace1')
+  >>> col_fam = pycassa.ColumnFamily(pool, 'Indexed1')
+  >>> index_exp = pycassa.create_index_expression('birthdate', 1984)
+  >>> index_clause = pycassa.create_index_clause([index_exp])
+  >>> result = col_fam.get_indexed_slices(index_clause)
+  >>> list(result)
   {'winston smith': {'birthdate': 1984}}
 
 Although at least one
-:class:`~pycassa.cassandra.ttypes.IndexExpression` in every clause
+:class:`~pycassa.cassandra.ttypes.IndexExpression` in the clause
 must be on an indexed column, you may also have other expressions which are
 on non-indexed columns.
 
 Connection Pooling
 ------------------
-Several types of connection pools are offered for different usages:
-
-* :class:`~pycassa.pool.QueuePool` – typical connection pool that maintains a queue of open connections
-* :class:`~pycassa.pool.SingletonThreadPool` – one connection per thread
-* :class:`~pycassa.pool.StaticPool` – a single connection used for all operations
-* :class:`~pycassa.pool.NullPool` – no pooling is performed, but failover is supported
-* :class:`~pycassa.pool.AssertionPool` – asserts that at most one connection is open at a time; useful for debugging
-
-For example, to create a :class:`~pycassa.pool.QueuePool` and use a connection:
+Pycassa uses connection pools to maintain connections to Cassandra servers.
+The :class:`~pycassa.pool.ConnectionPool` class is used to create the connection
+pool.  After creating the pool, it may be used to create multiple
+:class:`~pycassa.columnfamily.ColumnFamily` objects.
 
 .. code-block:: python
 
-  >>> pool = pycassa.QueuePool(keyspace='Keyspace1')
-  >>> connection = pool.get()
-  >>> cf = pycassa.ColumnFamily(connection, 'Standard1')
-  >>> cf.insert('key', {'col': 'val'})
+  >>> pool = pycassa.Connection('Keyspace1', pool_size=20)
+  >>> standard_cf = pycassa.ColumnFamily(pool, 'Standard1')
+  >>> standard_cf.insert('key', {'col': 'val'})
   1354491238782746
-  >>> connection.return_to_pool()
+  >>> super_cf = pycassa.ColumnFamily(pool, 'Super1')
+  >>> super_cf.insert('key2', {'col': 'val'})
+  1354491239779182
+  >>> standard_cf.get('key')
+  {'col': 'val'}
+  >>> pool.dispose()
 
-Automatic retries (or failover) are supported with all types of pools except
-for :class:`~pycassa.pool.StaticPool`. This means that if any operation fails,
-it will be transparently retried on other servers until it succeeds or a
-maximum number of failures is reached.
+Automatic retries (or "failover") happen by default with ConectionPools.
+This means that if any operation fails, it will be transparently retried
+on other servers until it succeeds or a maximum number of failures is reached.
 
 Class Mapping with Column Family Map
 ------------------------------------
@@ -392,9 +435,15 @@ architectures, or perhaps make your own column type.
 
 .. code-block:: python
 
+  >>> pool = pycassa.ConnectionPool('Keyspace1')
+  >>> cf = pycassa.ColumnFamily(pool, 'Standard1', autopack_names=False, autopack_values=False)
   >>> Test.objects = pycassa.ColumnFamilyMap(Test, cf)
 
-All the functions are exactly the same, except that they return instances of the supplied class when possible.
+.. note:: As shown in the example, `autopack_names` and `autopack_values` should
+          be set to ``False`` when a ColumnFamily is used with a ColumnFamilyMap.
+
+All the functions are exactly the same, except that they return
+instances of the supplied class when possible.
 
 .. code-block:: python
 
@@ -436,16 +485,3 @@ All the functions are exactly the same, except that they return instances of the
   Traceback (most recent call last):
   ...
   cassandra.ttypes.NotFoundException: NotFoundException()
-
-Note that, as mentioned previously,
-:meth:`~pycassa.columnfamilymap.ColumnFamilyMap.get_range()`
-may continue to return removed rows for some time:
-
-.. code-block:: python
-
-  >>> Test.objects.remove(t)
-  1261395603756875
-  >>> list(Test.objects.get_range())
-  [<__main__.Test object at 0x7fac9c85ea90>]
-  >>> list(Test.objects.get_range())[0].string_column
-  'Your Default'
