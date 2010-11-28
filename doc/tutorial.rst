@@ -393,7 +393,7 @@ pool.  After creating the pool, it may be used to create multiple
 
 .. code-block:: python
 
-  >>> pool = pycassa.Connection('Keyspace1', pool_size=20)
+  >>> pool = pycassa.ConnectionPool('Keyspace1', pool_size=20)
   >>> standard_cf = pycassa.ColumnFamily(pool, 'Standard1')
   >>> standard_cf.insert('key', {'col': 'val'})
   1354491238782746
