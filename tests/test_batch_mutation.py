@@ -16,14 +16,13 @@ class TestMutator(unittest.TestCase):
     def setUp(self):
         credentials = {'username': 'jsmith', 'password': 'havebadpass'}
         self.pool = ConnectionPool(keyspace='Keyspace1', credentials=credentials)
-        self.cf = ColumnFamily(self.pool, 'Standard2')
+        self.cf = ColumnFamily(self.pool, 'Standard1')
         self.scf = ColumnFamily(self.pool, 'Super1')
 
     def tearDown(self):
-        for key, cols in self.cf.get_range():
-            self.cf.remove(key)
-        for key, cols in self.scf.get_range():
-            self.scf.remove(key)
+        self.cf.truncate()
+        self.scf.truncate()
+        self.pool.dispose()
 
     def test_insert(self):
         batch = self.cf.batch()
