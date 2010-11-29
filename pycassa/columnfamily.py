@@ -119,7 +119,8 @@ class ColumnFamily(object):
             nfe.why = 'Column family %s not found.' % self.column_family
             raise nfe
         finally:
-            self.client.return_to_pool()
+            if self.client is not None:
+                self.client.return_to_pool()
 
         if col_fam is not None:
             self.super = col_fam.column_type == 'Super'
