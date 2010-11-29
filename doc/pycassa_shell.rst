@@ -66,6 +66,7 @@ If you are interested in the keyspace and column family definitions,
 * :meth:`~pycassa.system_manager.SystemManager.create_column_family()`
 * :meth:`~pycassa.system_manager.SystemManager.alter_column_family()`
 * :meth:`~pycassa.system_manager.SystemManager.drop_column_family()`
+* :meth:`~pycassa.system_manager.SystemManager.alter_column()`
 * :meth:`~pycassa.system_manager.SystemManager.create_index()`
 * :meth:`~pycassa.system_manager.SystemManager.drop_index()`
 

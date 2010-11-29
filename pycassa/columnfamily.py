@@ -361,6 +361,8 @@ class ColumnFamily(object):
         been fetched or `column_finish` is reached.  If `column_start` is left as the
         empty string, the slice will begin with the start of the row; leaving
         `column_finish` blank will cause the slice to extend to the end of the row.
+        Note that `column_count` defaults to 100, so rows over this size will not be
+        completely fetched by default.
 
         If `column_reversed` is ``True``, columns are fetched in reverse sorted order,
         beginning with `column_start`.  In this case, if `column_start` is the empty
@@ -574,6 +576,10 @@ class ColumnFamily(object):
         Note that if RandomPartitioner is used, rows are stored in the
         order of the MD5 hash of their keys, so getting a lexicographical range
         of keys is not feasible.
+
+        The `row_count` parameter limits the total number of rows that may be
+        returned. If left as ``None``, the number of rows that may be returned
+        is unlimted (this is the default).
 
         When calling `get_range()`, the intermediate results need to be
         buffered if we are fetching many rows, otherwise the Cassandra

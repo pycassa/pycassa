@@ -7,7 +7,6 @@ Pycassa Modules
 .. toctree::
    :maxdepth: 3
 
-   pycassa/connection
    pycassa/pool
    pycassa/columnfamily
    pycassa/columnfamilymap
@@ -16,6 +15,7 @@ Pycassa Modules
    pycassa/batch
    pycassa/types
    pycassa/util
+   pycassa/connection
    pycassa/logging/pycassa_logger
 
 Thrift Generated Modules
