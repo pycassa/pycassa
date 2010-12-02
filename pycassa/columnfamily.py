@@ -695,7 +695,8 @@ class ColumnFamily(object):
         batch.send()
         return timestamp
 
-    def remove(self, key, columns=None, super_column=None, write_consistency_level=None):
+    def remove(self, key, columns=None, super_column=None,
+               write_consistency_level=None, timestamp=None):
         """
         Remove a specified row or a set of columns within the row with key `key`.
 
@@ -709,11 +710,12 @@ class ColumnFamily(object):
         If `columns` and `super_column` are both ``None``, the entire row is
         removed.
 
-        The timestamp Cassandra reports as being used for remove is returned.
+        The timestamp used for remove is returned.
 
         """
 
-        timestamp = self.timestamp()
+        if timestamp is None:
+            timestamp = self.timestamp()
         batch = self.batch(write_consistency_level=write_consistency_level)
         batch.remove(key, columns, super_column, timestamp)
         batch.send()
