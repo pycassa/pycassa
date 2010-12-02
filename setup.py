@@ -16,7 +16,7 @@ use_setuptools()
 from setuptools import setup
 from distutils.cmd import Command
 
-__version_info__ = (0, 7, 'a', 1)
+__version_info__ = (1, 0, 0)
 __version__ = '.'.join([str(v) for v in __version_info__])
 
 long_description = """pycassa is a Cassandra library with the following features:

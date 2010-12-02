@@ -1,3 +1,20 @@
+Changes in Version 1.0.0
+
+    * Created the SystemManager class to allow for keyspace, column family, and index creation, modification, and deletion. These operations are no longer provided by a Connection class.
+    * Updated pycassaShell to use the SystemManager class
+    * Improved retry behavior, including exponential backoff and proper resetting of the retry attempt counter
+    * Condensed connection pooling classes into only pycassa.pool.ConnectionPool to provide a simpler API
+    * Changed pycassa.connection.connect() to return a connection pool
+    * Use more performant Thrift API methods for insert() and get() where possible
+    * Bundled OrderedDict and set it as the default dictionary class for column families
+    * Provide better TypeError feedback when columns are the wrong type
+    * Use Thrift API 19.4.0
+
+Changes in Version 0.5.4
+
+    * Allow for more backward and forward compatibility
+    * Mark a server as being down more quickly in Connection
+
 Changes in Version 0.5.3
 
     * Added PooledColumnFamily, which makes it easy to use connection pooling automatically with a ColumnFamily.
