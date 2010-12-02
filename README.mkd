@@ -8,7 +8,7 @@ applies to the current state of pycassa which tracks Cassandra's development
 pycassa
 =======
 
-pycassa is a Cassandra client library with the following features:
+pycassa is a python client library for Apache Cassandra with the following features:
 
 1. Auto-failover single or thread-local connections
 2. Connection pooling
