@@ -24,10 +24,16 @@ thorough documentation can be found here:
 
 [http://pycassa.github.com/pycassa/](http://pycassa.github.com/pycassa/)
 
-IRC
----
+Getting Help
+------------
 
-If you have any Cassandra questions, try the IRC channel #cassandra on irc.freenode.net
+IRC:
+ - Use channel #cassandra on irc.freenode.net. If you don't have an IRC client,
+   you can use [freenode's web based client](http://webchat.freenode.net/?channels=#cassandra).
+
+Mailing List:
+ - User list: [http://groups.google.com/group/pycassa-discuss](http://groups.google.com/group/pycassa-discuss)
+ - Developer list: [http://groups.google.com/group/pycassa-devel](http://groups.google.com/group/pycassa-devel)
 
 Requirements
 ------------
@@ -39,59 +45,41 @@ To install thrift's python bindings:
 
     easy_install thrift05
 
-pycassa comes with the Cassandra python files for convenience, but you can replace them with your own.
-
 Installation
 ------------
 
-The simplest way to get started is to copy the pycassa directories to your program.
-If you want to install, run setup.py as a superuser.
+If easy_install is available, you can use:
+
+    easy_install pycassa
+
+The simplest way to install manually is to copy the pycassa directories to
+your program.  If you want to install, run setup.py as a superuser.
 
     python setup.py install
 
 Connecting
 ----------
 
-All functions are documented with docstrings.
-To read usage documentation, you can use help:
+All functions are documented with docstrings.  To read usage documentation,
+you can use help:
 
     >>> import pycassa
     >>> help(pycassa.ColumnFamily.get)
 
-To get a single connection, pass a Keyspace and an optional list of servers:
+To get a connection pool, pass a Keyspace and an optional list of servers:
 
-    >>> client = pycassa.connect('Keyspace1') # Defaults to connecting to the server at 'localhost:9160'
-    >>> client = pycassa.connect('Keyspace1', ['localhost:9160'])
+    >>> pool = pycassa.connect('Keyspace1') # Defaults to connecting to the server at 'localhost:9160'
+    >>> pool = pycassa.connect('Keyspace1', ['192.168.2.10:9160'])
 
-By default, all connections are thread-local, so every thread that calls
-connect() will receive a new connection. The list of servers is randomly
-permuted before it is used, then each new connection uses the next available
-server in the list.
-
-Connections are robust to server failures. Upon a disconnection, it will attempt to connect to each server in the list in turn. If no server is available, it will raise a NoServerAvailable exception.
-
-Timeouts are also supported and should be used in production to prevent a thread from hanging while waiting for Cassandra to return.
-
-    >>> client = pycassa.connect('Keyspace1', timeout=3.5) # 3.5 second timeout
-    (Make some pycassa calls and the connection to the server suddenly becomes unresponsive.)
-
-    Traceback (most recent call last):
-    ...
-    pycassa.connection.NoServerAvailable
-
-Note that this only handles socket timeouts. The TimedOutException from Cassandra may still be raised.
-
-If simple authentication is in use, you can pass in a dict of credentials using the credentials keyword.
-
-    >>> credentials = {'username': 'jsmith', 'password': 'havebadpass'}
-    >>> client = pycassa.connect('Keyspace1', credentials=credentials)
+See the [tutorial](http://pycassa.github.com/pycassa/tutorial.html#making-a-connection) for more details.
 
 Basic Usage
 -----------
 
 To use the standard interface, create a ColumnFamily instance.
 
-    >>> cf = pycassa.ColumnFamily(client, 'Test ColumnFamily')
+    >>> pool = pycassa.connect('Keyspace1')
+    >>> cf = pycassa.ColumnFamily(pool, 'Standard1')
 
 The value returned by insert() is the timestamp used for insertion, or int(time.time() * 1e6), by default.
 
@@ -162,7 +150,7 @@ When creating a ColumnFamily object for use with a ColumnFamilyMap, it's
 important to disable autopacking in the ColumnFamily by setting
 autopack_names=False and autopack_values=False in the constructor.
 
-    >>> cf = pycassa.ColumnFamily(connection, 'Standard1',
+    >>> cf = pycassa.ColumnFamily(pool, 'Standard1',
     ...                           autopack_names=False, autopack_values=False)
     >>> Test.objects = pycassa.ColumnFamilyMap(Test, cf)
 
@@ -242,13 +230,12 @@ You may also use a ColumnFamilyMap with super columns:
     >>> Test.objects.multiget([t.key])
     {'key1': {'super1': <__main__.Test object at 0x20ab550>}}
 
-These output values retain the same format given by the Cassandra Thrift interface.
-
 Batch Mutations
 ---------------
 
 The batch interface allows insert/update/remove operations to be performed in
-batches. This allows a convenient mechanism for streaming updates or doing a large number of operations while reducing number of RPC roundtrips.
+batches. This allows a convenient mechanism for streaming updates or doing a
+large number of operations while reducing number of RPC roundtrips.
 
 Batch mutator objects are synchronized and can be safely passed around threads.
 
@@ -274,7 +261,7 @@ Supercolumns are supported:
 You may also create a batch mutator from a client instance, allowing operations
 on multiple column families:
 
-    >>> b = client.batch()
+    >>> b = Mutator(pool)
     >>> b.insert(cf, 'key1', {'col1':'value1', 'col2':'value2'})
     >>> b.insert(supercf, 'key1', {'subkey1': {'col1':'value1', 'col2':'value2'}})
     >>> b.send()
@@ -300,44 +287,18 @@ Calls to `insert` and `remove` can also be chained:
 Connection Pooling
 ------------------
 
-pycassa offers several types of connection pools for different usage scenarios. These include:
-
-* QueuePool - typical connection pool that maintains a queue of open connections
-* SingletonThreadPool - one connection per thread
-* StaticPool - a single connection used for all operations
-* NullPool - no pooling is performed, but failover is supported
-* AssertionPool - asserts that at most one connection is open at a time; useful for debugging
-
-To create a pool and use a connection:
-
-    >>> pool = pycassa.QueuePool(keyspace='Keyspace1')
-    >>> connection = pool.get()
-    >>> cf = pycassa.ColumnFamily(connection, 'Standard1')
-    >>> cf.insert('key', {'col': 'val'})
-    >>> connection.return_to_pool()
-
-Automatic retries (or failover) are supported with all types of pools except for StaticPools.  This means that if any operation fails, it will be transparently retried on other servers until it succeeds or a maximum number of failures is reached.
-
-Raw Thrift API
---------------
-
-All of the underlying Cassandra interface functions are available through Connection objects:
-
-    >>> client = pycassa.connect()
-    >>> client.describe_version()
-    '8.1.0'
-    >>> client.describe_keyspaces()
-    ['Test Keyspace', 'system']
-    >>> client.describe_keyspace('system')
-    {'LocationInfo': {'Type': 'Standard', 'CompareWith': 'org.apache.cassandra.db.marshal.UTF8Type', 'Desc': 'persistent metadata for the local node'}, 'HintsColumnFamily': {'CompareSubcolumnsWith': 'org.apache.cassandra.db.marshal.BytesType', 'Type': 'Super', 'CompareWith': 'org.apache.cassandra.db.marshal.UTF8Type', 'Desc': 'hinted handoff data'}}
+See the [tutorial](http://pycassa.github.com/pycassa/tutorial.html#connection-pooling) and
+[pool section](http://pycassa.github.com/pycassa/api/pycassa/pool.html) of the API for
+more details on connection pooling.
 
 Advanced
 --------
 
-pycassa currently returns Cassandra columns and super columns as python dictionaries. Sometimes, though, you care about the order of elements. If you have access to an ordered dictionary class (such as collections.OrderedDict in python 2.7), then you may pass it to the constructor. All returned values will be of that class.
+pycassa currently returns Cassandra columns and super columns as OrderedDicts
+to preserve column and row order. Other dictionaries, such as 'dict' may be
+used instead. All returned values will be of that class.
 
-    >>> cf = pycassa.ColumnFamily(client, 'Test ColumnFamily',
-                                  dict_class=collections.OrderedDict)
+    >>> cf = pycassa.ColumnFamily(pool, 'Standard1', dict_class=dict)
 
 You may also define your own Column types for the mapper. For example, the IntString may be defined as:
 
