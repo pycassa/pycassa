@@ -601,3 +601,28 @@ class TestTimeUUIDs(unittest.TestCase):
         uuid_res = self.cf_time.get(key).keys()[0]
         timestamp = convert_uuid_to_time(uuid_res)
         assert_almost_equal(timestamp, t, places=3)
+
+class TestTypeErrors(unittest.TestCase):
+
+    def setUp(self):
+        credentials = {'username': 'jsmith', 'password': 'havebadpass'}
+        self.pool = ConnectionPool(pool_size=2, keyspace='Keyspace1', credentials=credentials)
+
+    def tearDown(self):
+        self.pool.dispose()
+
+    def test_packing_enabled(self):
+        self.cf = ColumnFamily(self.pool, 'Standard1')
+        self.cf.insert('key', {'col': 'val'})
+        assert_raises(TypeError, self.cf.insert, args=('key', {123: 'val'}))
+        assert_raises(TypeError, self.cf.insert, args=('key', {'col': 123}))
+        assert_raises(TypeError, self.cf.insert, args=('key', {123: 123}))
+        self.cf.remove('key')
+
+    def test_packing_disabled(self):
+        self.cf = ColumnFamily(self.pool, 'Standard1', autopack_names=False, autopack_values=False)
+        self.cf.insert('key', {'col': 'val'})
+        assert_raises(TypeError, self.cf.insert, args=('key', {123: 'val'}))
+        assert_raises(TypeError, self.cf.insert, args=('key', {'col': 123}))
+        assert_raises(TypeError, self.cf.insert, args=('key', {123: 123}))
+        self.cf.remove('key')

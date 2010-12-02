@@ -225,6 +225,9 @@ class ColumnFamily(object):
     def _pack_name(self, value, is_supercol_name=False,
             slice_end=_NON_SLICE):
         if not self.autopack_names:
+            if value is not None and not (isinstance(value, str) or isinstance(value, unicode)):
+                raise TypeError("A str or unicode column name was expected, but %s was received instead (%s)"
+                        % (value.__class__.__name__, str(value)))
             return value
         if value is None: return
 
@@ -241,6 +244,9 @@ class ColumnFamily(object):
             else:
                 value = convert_time_to_uuid(value,
                         randomize=True)
+        elif d_type == 'BytesType' and not (isinstance(value, str) or isinstance(value, unicode)):
+            raise TypeError("A str or unicode column name was expected, but %s was received instead (%s)"
+                    % (value.__class__.__name__, str(value)))
 
         return self._pack(value, d_type)
 
@@ -263,8 +269,17 @@ class ColumnFamily(object):
 
     def _pack_value(self, value, col_name):
         if not self.autopack_values:
+            if value is not None and not (isinstance(value, str) or isinstance(value, unicode)):
+                raise TypeError("A str or unicode column value was expected for column '%s', but %s was received instead (%s)"
+                        % (str(col_name), value.__class__.__name__, str(value)))
             return value
-        return self._pack(value, self._get_data_type_for_col(col_name))
+
+        d_type = self._get_data_type_for_col(col_name)
+        if d_type == 'BytesType' and not (isinstance(value, str) or isinstance(value, unicode)):
+            raise TypeError("A str or unicode column value was expected for column '%s', but %s was received instead (%s)"
+                    % (str(col_name), value.__class__.__name__, str(value)))
+
+        return self._pack(value, d_type)
 
     def _unpack_value(self, value, col_name):
         if not self.autopack_values:
