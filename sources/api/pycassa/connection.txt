@@ -1,5 +1,5 @@
-:mod:`pycassa.connection` -- Non-pooled connections to Cassandra servers
-========================================================================
+:mod:`pycassa.connection` -- Low Level Connections
+==================================================
 
 .. automodule:: pycassa.connection
     :members:

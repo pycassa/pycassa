@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.batch – Batch Operations &mdash; pycassa v0.5.4 documentation</title>
+    <title>pycassa.batch – Batch Operations &mdash; pycassa v1.0.0 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.4',
+        VERSION:     '1.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,7 +22,7 @@
     <script type="text/javascript" src="../../static/jquery.js"></script>
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
-    <link rel="top" title="pycassa v0.5.4 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v1.0.0 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.types – Column Types for ColumnFamilyMaps" href="types.html" />
     <link rel="prev" title="pycassa.index – Secondary Index Tools" href="index.html" /> 
@@ -43,7 +43,7 @@
         <li class="right" >
           <a href="index.html" title="pycassa.index – Secondary Index Tools"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v0.5.4 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.0.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -55,57 +55,109 @@
             
   <div class="section" id="module-pycassa.batch">
 <span id="pycassa-batch-batch-operations"></span><h1><a class="reference internal" href="#module-pycassa.batch" title="pycassa.batch"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.batch</span></tt></a> &#8211; Batch Operations<a class="headerlink" href="#module-pycassa.batch" title="Permalink to this headline">¶</a></h1>
-<p>Tools to support batch operations.</p>
+<p>The batch interface allows insert, update, and remove operations to be performed
+in batches. This allows a convenient mechanism for streaming updates or doing a
+large number of operations while reducing number of RPC roundtrips.</p>
+<p>Batch mutator objects are synchronized and can be safely passed around threads.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="n">queue_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key1&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;col1&#39;</span><span class="p">:</span><span class="s">&#39;value11&#39;</span><span class="p">,</span> <span class="s">&#39;col2&#39;</span><span class="p">:</span><span class="s">&#39;value21&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key2&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;col1&#39;</span><span class="p">:</span><span class="s">&#39;value12&#39;</span><span class="p">,</span> <span class="s">&#39;col2&#39;</span><span class="p">:</span><span class="s">&#39;value22&#39;</span><span class="p">},</span> <span class="n">ttl</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&#39;key1&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;col2&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&#39;key2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">send</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>One can use the <cite>queue_size</cite> argument to control how many mutations will be
+queued before an automatic <tt class="xref py py-meth docutils literal"><span class="pre">send()</span></tt> is performed. This allows simple streaming
+of updates. If set to <tt class="xref docutils literal"><span class="pre">None</span></tt>, automatic checkpoints are disabled. Default is 100.</p>
+<p>Supercolumns are supported:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">batch</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key1&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;supercol1&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;colA&#39;</span><span class="p">:</span><span class="s">&#39;value1a&#39;</span><span class="p">,</span> <span class="s">&#39;colB&#39;</span><span class="p">:</span><span class="s">&#39;value1b&#39;</span><span class="p">}</span>
+<span class="gp">... </span>                 <span class="p">{</span><span class="s">&#39;supercol2&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;colA&#39;</span><span class="p">:</span><span class="s">&#39;value2a&#39;</span><span class="p">,</span> <span class="s">&#39;colB&#39;</span><span class="p">:</span><span class="s">&#39;value2b&#39;</span><span class="p">}})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&#39;key1&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;colA&#39;</span><span class="p">],</span> <span class="s">&#39;supercol1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">send</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You may also create a <a class="reference internal" href="#pycassa.batch.Mutator" title="pycassa.batch.Mutator"><tt class="xref py py-class docutils literal"><span class="pre">Mutator</span></tt></a> directly, allowing operations
+on multiple column families:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">Mutator</span><span class="p">(</span><span class="n">pool</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">cf</span><span class="p">,</span> <span class="s">&#39;key1&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;col1&#39;</span><span class="p">:</span><span class="s">&#39;value1&#39;</span><span class="p">,</span> <span class="s">&#39;col2&#39;</span><span class="p">:</span><span class="s">&#39;value2&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">supercf</span><span class="p">,</span> <span class="s">&#39;key1&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;subkey1&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;col1&#39;</span><span class="p">:</span><span class="s">&#39;value1&#39;</span><span class="p">,</span> <span class="s">&#39;col2&#39;</span><span class="p">:</span><span class="s">&#39;value2&#39;</span><span class="p">}})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">send</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This interface does not implement atomic operations across column
+families. All the limitations of the <cite>batch_mutate</cite> Thrift API call
+applies. Remember, a mutation in Cassandra is always atomic per key per
+column family only.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If a single operation in a batch fails, the whole batch fails.</p>
+</div>
+<p>In Python &gt;= 2.5, mutators can be used as context managers, where an implicit
+<tt class="xref py py-meth docutils literal"><span class="pre">send()</span></tt> will be called upon exit.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">cf</span><span class="o">.</span><span class="n">batch</span><span class="p">()</span> <span class="k">as</span> <span class="n">b</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">b</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key1&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;col1&#39;</span><span class="p">:</span><span class="s">&#39;value11&#39;</span><span class="p">,</span> <span class="s">&#39;col2&#39;</span><span class="p">:</span><span class="s">&#39;value21&#39;</span><span class="p">})</span>
+<span class="gp">... </span>    <span class="n">b</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key2&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;col1&#39;</span><span class="p">:</span><span class="s">&#39;value12&#39;</span><span class="p">,</span> <span class="s">&#39;col2&#39;</span><span class="p">:</span><span class="s">&#39;value22&#39;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>Calls to <tt class="xref py py-meth docutils literal"><span class="pre">insert()</span></tt> and <tt class="xref py py-meth docutils literal"><span class="pre">remove()</span></tt> can also be chained:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span><span class="o">.</span><span class="n">batch</span><span class="p">()</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&#39;foo&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&#39;bar&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">send</span><span class="p">()</span>
+</pre></div>
+</div>
 <dl class="class">
 <dt id="pycassa.batch.Mutator">
-<em class="property">class </em><tt class="descclassname">pycassa.batch.</tt><tt class="descname">Mutator</tt><big>(</big><em>client</em>, <em>queue_size=100</em>, <em>write_consistency_level=None</em><big>)</big><a class="headerlink" href="#pycassa.batch.Mutator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">pycassa.batch.</tt><tt class="descname">Mutator</tt><big>(</big><em>pool</em>, <em>queue_size=100</em>, <em>write_consistency_level=None</em><big>)</big><a class="headerlink" href="#pycassa.batch.Mutator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a new Mutator object.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first last docutils">
-<dt><cite>client</cite>: <a class="reference internal" href="connection.html#pycassa.connection.Connection" title="pycassa.connection.Connection"><tt class="xref py py-class docutils literal"><span class="pre">Connection</span></tt></a></dt>
-<dd><p class="first last">The connection that will be used.</p>
-</dd>
-<dt><cite>queue_size</cite>: int</dt>
-<dd><p class="first last">The number of operations to queue before they are executed
-automatically.</p>
-</dd>
-<dt><cite>write_consistency_level</cite>: <a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt></a></dt>
-<dd><p class="first last">The Cassandra write consistency level.</p>
-</dd>
-</dl>
-</td>
-</tr>
-</tbody>
-</table>
+<p><cite>pool</cite> is the <a class="reference internal" href="pool.html#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a> that will be used
+for operations.</p>
+<p>After <cite>queue_size</cite> operations, <a class="reference internal" href="#pycassa.batch.Mutator.send" title="pycassa.batch.Mutator.send"><tt class="xref py py-meth docutils literal"><span class="pre">send()</span></tt></a> will be executed
+automatically.  Use 0 to disable automatic sends.</p>
+<dl class="method">
+<dt id="pycassa.batch.Mutator.insert">
+<tt class="descname">insert</tt><big>(</big><em>column_family, key, columns[, timestamp][, ttl]</em><big>)</big><a class="headerlink" href="#pycassa.batch.Mutator.insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a single row insert to the batch.</p>
+<p><cite>column_family</cite> is the <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>
+that the insert will be executed on.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.batch.Mutator.remove">
+<tt class="descname">remove</tt><big>(</big><em>column_family, key[, columns][, super_column][, timestamp]</em><big>)</big><a class="headerlink" href="#pycassa.batch.Mutator.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a single row remove to the batch.</p>
+<p><cite>column_family</cite> is the <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>
+that the remove will be executed on.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.batch.Mutator.send">
+<tt class="descname">send</tt><big>(</big><span class="optional">[</span><em>write_consistency_level</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#pycassa.batch.Mutator.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends all operations currently in the batch and clears the batch.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="pycassa.batch.CfMutator">
 <em class="property">class </em><tt class="descclassname">pycassa.batch.</tt><tt class="descname">CfMutator</tt><big>(</big><em>column_family</em>, <em>queue_size=100</em>, <em>write_consistency_level=None</em><big>)</big><a class="headerlink" href="#pycassa.batch.CfMutator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a new CfMutator object.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first last docutils">
-<dt><cite>column_family</cite>: <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a></dt>
-<dd><p class="first last">The column family that all operations will be on.</p>
-</dd>
-<dt><cite>queue_size</cite>: int</dt>
-<dd><p class="first last">The number of operations to queue before they are executed
-automatically.</p>
-</dd>
-<dt><cite>write_consistency_level</cite>: <a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel" title="pycassa.cassandra.ttypes.ConsistencyLevel"><tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt></a></dt>
-<dd><p class="first last">The Cassandra write consistency level.</p>
-</dd>
-</dl>
-</td>
-</tr>
-</tbody>
-</table>
+<dd><p>A <a class="reference internal" href="#pycassa.batch.Mutator" title="pycassa.batch.Mutator"><tt class="xref py py-class docutils literal"><span class="pre">Mutator</span></tt></a> that deals only with one column family.</p>
+<p><cite>column_family</cite> is the <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>
+that all operations will be executed on.</p>
+<dl class="method">
+<dt id="pycassa.batch.CfMutator.insert">
+<tt class="descname">insert</tt><big>(</big><em>key, cols[, timestamp][, ttl]</em><big>)</big><a class="headerlink" href="#pycassa.batch.CfMutator.insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a single row insert to the batch.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.batch.CfMutator.remove">
+<tt class="descname">remove</tt><big>(</big><em>key[, columns][, super_column][, timestamp]</em><big>)</big><a class="headerlink" href="#pycassa.batch.CfMutator.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a single row remove to the batch.</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -159,7 +211,7 @@ automatically.</p>
         <li class="right" >
           <a href="index.html" title="pycassa.index – Secondary Index Tools"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v0.5.4 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.0.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

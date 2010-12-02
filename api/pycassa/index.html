@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.index – Secondary Index Tools &mdash; pycassa v0.5.4 documentation</title>
+    <title>pycassa.index – Secondary Index Tools &mdash; pycassa v1.0.0 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5.4',
+        VERSION:     '1.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,10 +22,10 @@
     <script type="text/javascript" src="../../static/jquery.js"></script>
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
-    <link rel="top" title="pycassa v0.5.4 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v1.0.0 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.batch – Batch Operations" href="batch.html" />
-    <link rel="prev" title="pycassa.columnfamilymap – Maps Classes to Column Families" href="columnfamilymap.html" /> 
+    <link rel="prev" title="pycassa.system_manager – Manage Schema Definitions" href="system_manager.html" /> 
   </head>
   <body>
     <div class="related">
@@ -41,9 +41,9 @@
           <a href="batch.html" title="pycassa.batch – Batch Operations"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="columnfamilymap.html" title="pycassa.columnfamilymap – Maps Classes to Column Families"
+          <a href="system_manager.html" title="pycassa.system_manager – Manage Schema Definitions"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v0.5.4 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.0.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -69,27 +69,24 @@
 </div>
 <p>This is give you all of the rows (up to 10000) which have a &#8216;birthdate&#8217; value
 of 1970 and an &#8216;age&#8217; value of 40.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="system_manager.html#pycassa.system_manager.SystemManager.create_index" title="pycassa.system_manager.SystemManager.create_index"><tt class="xref py py-meth docutils literal"><span class="pre">create_index()</span></tt></a>
+and <a class="reference internal" href="system_manager.html#pycassa.system_manager.SystemManager.drop_index" title="pycassa.system_manager.SystemManager.drop_index"><tt class="xref py py-meth docutils literal"><span class="pre">drop_index()</span></tt></a></p>
+</div>
 <dl class="function">
 <dt id="pycassa.index.create_index_clause">
 <tt class="descclassname">pycassa.index.</tt><tt class="descname">create_index_clause</tt><big>(</big><em>expr_list</em>, <em>start_key=''</em>, <em>count=100</em><big>)</big><a class="headerlink" href="#pycassa.index.create_index_clause" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructs an <a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexClause" title="pycassa.cassandra.ttypes.IndexClause"><tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt></a> for use with 
 <tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>expr_list</strong> &#8211; [<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexExpression" title="pycassa.cassandra.ttypes.IndexExpression"><tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt></a>]
-A list of <cite>IndexExpressions</cite> to match</li>
-<li><strong>start_key</strong> &#8211; str
-The key to begin searching from</li>
-<li><strong>count</strong> &#8211; int
-The number of results to return</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
+<p><cite>expr_list</cite> should be a list of
+<a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexExpression" title="pycassa.cassandra.ttypes.IndexExpression"><tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt></a> objects that
+must be matched for a row to be returned.  At least one of these expressions
+must be on an indexed column.</p>
+<p>Cassandra will only return matching rows with keys after <cite>start_key</cite>.  If this
+is the empty string, all rows will be considered.  Keep in mind that this
+is not as meaningful unless an OrderPreservingPartitioner is used.</p>
+<p>The number of rows to return is limited by <cite>count</cite>, which defaults to 100.</p>
 </dd></dl>
 
 <dl class="function">
@@ -97,22 +94,11 @@ The number of results to return</li>
 <tt class="descclassname">pycassa.index.</tt><tt class="descname">create_index_expression</tt><big>(</big><em>column_name</em>, <em>value</em>, <em>op=0</em><big>)</big><a class="headerlink" href="#pycassa.index.create_index_expression" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructs an <a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexExpression" title="pycassa.cassandra.ttypes.IndexExpression"><tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt></a> to use
 in an <a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexClause" title="pycassa.cassandra.ttypes.IndexClause"><tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt></a></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>column_name</strong> &#8211; string
-Name of an indexed or non-indexed column</li>
-<li><strong>value</strong> &#8211; The value that will be compared to column values using op</li>
-<li><strong>op</strong> &#8211; <tt class="xref py py-class docutils literal"><span class="pre">IndexOperator</span></tt>
-The binary operator to apply to column values and <cite>value</cite>.  Defaults
-to <cite>IndexOperator.EQ</cite>, which tests for equality.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
+<p>The expression will be applied to the column with name <cite>column_name</cite>. A match
+will only occur if the operator specified with <cite>op</cite> returns <tt class="xref docutils literal"><span class="pre">True</span></tt> when used
+on the actual column value and the <cite>value</cite> parameter.</p>
+<p>The default operator is <tt class="xref py py-const docutils literal"><span class="pre">pycassa.cassandra.ttypes.IndexOperator.EQ</span></tt>, which
+tests for equality.</p>
 </dd></dl>
 
 </div>
@@ -124,8 +110,8 @@ to <cite>IndexOperator.EQ</cite>, which tests for equality.</li>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="columnfamilymap.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.columnfamilymap</span></tt> &#8211; Maps Classes to Column Families</a></p>
+  <p class="topless"><a href="system_manager.html"
+                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">pycassa.system_manager</span></tt> &#8211; Manage Schema Definitions</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="batch.html"
                         title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">pycassa.batch</span></tt> &#8211; Batch Operations</a></p>
@@ -164,9 +150,9 @@ to <cite>IndexOperator.EQ</cite>, which tests for equality.</li>
           <a href="batch.html" title="pycassa.batch – Batch Operations"
              >next</a> |</li>
         <li class="right" >
-          <a href="columnfamilymap.html" title="pycassa.columnfamilymap – Maps Classes to Column Families"
+          <a href="system_manager.html" title="pycassa.system_manager – Manage Schema Definitions"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v0.5.4 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.0.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

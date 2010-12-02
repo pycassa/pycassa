@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassaShell &mdash; pycassa v0.5.4 documentation</title>
+    <title>pycassaShell &mdash; pycassa v1.0.0 documentation</title>
     <link rel="stylesheet" href="static/default.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.5.4',
+        VERSION:     '1.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,7 +22,7 @@
     <script type="text/javascript" src="static/jquery.js"></script>
     <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="pycassa v0.5.4 documentation" href="index.html" />
+    <link rel="top" title="pycassa v1.0.0 documentation" href="index.html" />
     <link rel="next" title="Twissandra Example" href="example/index.html" />
     <link rel="prev" title="Tutorial" href="tutorial.html" /> 
   </head>
@@ -42,7 +42,7 @@
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">pycassa v0.5.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v1.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -52,7 +52,7 @@
           <div class="body">
             
   <div class="section" id="pycassashell">
-<h1>pycassaShell<a class="headerlink" href="#pycassashell" title="Permalink to this headline">¶</a></h1>
+<span id="pycassa-shell"></span><h1>pycassaShell<a class="headerlink" href="#pycassashell" title="Permalink to this headline">¶</a></h1>
 <p><strong>pycassaShell</strong> is an interactive Cassandra python shell. It is useful for
 exploring Cassandra, especially for those who are just beginning.</p>
 <div class="section" id="requirements">
@@ -84,34 +84,85 @@ arrow keys!</p>
 <li><tt class="docutils literal"><span class="pre">-u</span></tt>, <tt class="docutils literal"><span class="pre">--user</span></tt> - If authentication or authorization are enabled, this username is used.</li>
 <li><tt class="docutils literal"><span class="pre">-P</span></tt>, <tt class="docutils literal"><span class="pre">--passwd</span></tt> - If authentication or authorization are enabled, this password is used.</li>
 <li><tt class="docutils literal"><span class="pre">-S</span></tt>, <tt class="docutils literal"><span class="pre">--streaming</span></tt> - Use a streaming transport. Works with Cassandra 0.6.x and below.</li>
-<li><tt class="docutils literal"><span class="pre">-F</span></tt>, <tt class="docutils literal"><span class="pre">--framed</span></tt> - Use a streaming transport. Works with Cassandra 0.7.x. This is the default.</li>
+<li><tt class="docutils literal"><span class="pre">-F</span></tt>, <tt class="docutils literal"><span class="pre">--framed</span></tt> - Use a framed transport. Works with Cassandra 0.7.x. This is the default.</li>
 </ul>
 <p>When pycassaShell starts, it creates a
 <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a> for every existing column family and prints
 the names of the objects. You can use these to easily insert and retrieve data from Cassandra.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">STANDARD1</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;colname&#39;</span><span class="p">:</span> <span class="s">&#39;val&#39;</span><span class="p">})</span>
 <span class="go">1286048238391943</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">column_family</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">STANDARD1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">)</span>
 <span class="go">{&#39;colname&#39;: &#39;val&#39;}</span>
 </pre></div>
 </div>
-<p>If you are interested in the keyspace and column family definitions,
-<strong>pycassa</strong> provides several methods that can be used with <tt class="docutils literal"><span class="pre">CLIENT</span></tt>:</p>
+<p id="pycassa-shell-sys-man">If you are interested in the keyspace and column family definitions,
+<strong>pycassa</strong> provides several methods that can be used with <tt class="docutils literal"><span class="pre">SYSTEM_MANAGER</span></tt>:</p>
 <ul class="simple">
-<li><a class="reference internal" href="api/pycassa/connection.html#pycassa.connection.Connection.add_keyspace" title="pycassa.connection.Connection.add_keyspace"><tt class="xref py py-meth docutils literal"><span class="pre">add_keyspace()</span></tt></a></li>
-<li><a class="reference internal" href="api/pycassa/connection.html#pycassa.connection.Connection.update_keyspace" title="pycassa.connection.Connection.update_keyspace"><tt class="xref py py-meth docutils literal"><span class="pre">update_keyspace()</span></tt></a></li>
-<li><a class="reference internal" href="api/pycassa/connection.html#pycassa.connection.Connection.drop_keyspace" title="pycassa.connection.Connection.drop_keyspace"><tt class="xref py py-meth docutils literal"><span class="pre">drop_keyspace()</span></tt></a></li>
-<li><a class="reference internal" href="api/pycassa/connection.html#pycassa.connection.Connection.add_column_family" title="pycassa.connection.Connection.add_column_family"><tt class="xref py py-meth docutils literal"><span class="pre">add_column_family()</span></tt></a></li>
-<li><a class="reference internal" href="api/pycassa/connection.html#pycassa.connection.Connection.update_column_family" title="pycassa.connection.Connection.update_column_family"><tt class="xref py py-meth docutils literal"><span class="pre">update_column_family()</span></tt></a></li>
-<li><a class="reference internal" href="api/pycassa/connection.html#pycassa.connection.Connection.drop_column_family" title="pycassa.connection.Connection.drop_column_family"><tt class="xref py py-meth docutils literal"><span class="pre">drop_column_family()</span></tt></a></li>
+<li><a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.create_keyspace" title="pycassa.system_manager.SystemManager.create_keyspace"><tt class="xref py py-meth docutils literal"><span class="pre">create_keyspace()</span></tt></a></li>
+<li><a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.alter_keyspace" title="pycassa.system_manager.SystemManager.alter_keyspace"><tt class="xref py py-meth docutils literal"><span class="pre">alter_keyspace()</span></tt></a></li>
+<li><a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.drop_keyspace" title="pycassa.system_manager.SystemManager.drop_keyspace"><tt class="xref py py-meth docutils literal"><span class="pre">drop_keyspace()</span></tt></a></li>
+<li><a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.create_column_family" title="pycassa.system_manager.SystemManager.create_column_family"><tt class="xref py py-meth docutils literal"><span class="pre">create_column_family()</span></tt></a></li>
+<li><a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.alter_column_family" title="pycassa.system_manager.SystemManager.alter_column_family"><tt class="xref py py-meth docutils literal"><span class="pre">alter_column_family()</span></tt></a></li>
+<li><a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.drop_column_family" title="pycassa.system_manager.SystemManager.drop_column_family"><tt class="xref py py-meth docutils literal"><span class="pre">drop_column_family()</span></tt></a></li>
+<li><a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.alter_column" title="pycassa.system_manager.SystemManager.alter_column"><tt class="xref py py-meth docutils literal"><span class="pre">alter_column()</span></tt></a></li>
+<li><a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.create_index" title="pycassa.system_manager.SystemManager.create_index"><tt class="xref py py-meth docutils literal"><span class="pre">create_index()</span></tt></a></li>
+<li><a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.drop_index" title="pycassa.system_manager.SystemManager.drop_index"><tt class="xref py py-meth docutils literal"><span class="pre">drop_index()</span></tt></a></li>
 </ul>
 <p>Example usage:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">CLIENT</span><span class="o">.</span><span class="n">describe_keyspace</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
-<span class="go">KsDef(strategy_options=None, cf_defs=[CfDef(comment=&#39;&#39;, min_compaction_threshold=4, name=&#39;SuperLongSubInt&#39;, column_type=&#39;Super&#39;, preload_row_cache=False, key_cache_size=200000.0, gc_grace_seconds=0, column_metadata=[], keyspace=&#39;Keyspace1&#39;, default_validation_class=&#39;org.apache.cassandra.db.marshal.BytesType&#39;, max_compaction_threshold=32, subcomparator_type=&#39;org.apache.cassandra.db.marshal.IntegerType&#39;, read_repair_chance=1.0, comparator_type=&#39;org.apache.cassandra.db.marshal.LongType&#39;, id=1021, row_cache_size=0.0)], strategy_class=&#39;org.apache.cassandra.locator.SimpleStrategy&#39;, name=&#39;Keyspace1&#39;, replication_factor=1)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cfdef</span> <span class="o">=</span> <span class="n">CLIENT</span><span class="o">.</span><span class="n">get_keyspace_description</span><span class="p">()[</span><span class="s">&#39;Standard1&#39;</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cfdef</span><span class="o">.</span><span class="n">memtable_throughput_in_mb</span> <span class="o">=</span> <span class="mi">42</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">CLIENT</span><span class="o">.</span><span class="n">update_column_family</span><span class="p">(</span><span class="n">cfdef</span><span class="p">)</span>
-<span class="go">&#39;6e8504ff-d001-11df-a513-e700f669bcfc&#39;</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">SYSTEM_MANAGER</span><span class="o">.</span><span class="n">describe_keyspace</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
+
+<span class="go">Name:                                Keyspace1</span>
+
+<span class="go">Replication Strategy:                SimpleStrategy</span>
+<span class="go">Replication Factor:                  1</span>
+
+<span class="go">Column Families:</span>
+<span class="go">   Indexed1</span>
+<span class="go">   Standard2</span>
+<span class="go">   Standard1</span>
+<span class="go">   Super1</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SYSTEM_MANAGER</span><span class="o">.</span><span class="n">describe_column_family</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="s">&#39;Indexed1&#39;</span><span class="p">)</span>
+
+<span class="go">Name:                                Indexed1</span>
+<span class="go">Description:</span>
+<span class="go">Column Type:                         Standard</span>
+
+<span class="go">Comparator Type:                     BytesType</span>
+<span class="go">Default Validation Class:            BytesType</span>
+
+<span class="go">Cache Sizes</span>
+<span class="go">  Row Cache:                         Disabled</span>
+<span class="go">  Key Cache:                         200000 keys</span>
+
+<span class="go">Read Repair Chance:                  100.0%</span>
+
+<span class="go">GC Grace Seconds:                    864000</span>
+
+<span class="go">Compaction Thresholds</span>
+<span class="go">  Min:                               4</span>
+<span class="go">  Max:                               32</span>
+
+<span class="go">Memtable Flush After Thresholds</span>
+<span class="go">  Throughput:                        63 MiB</span>
+<span class="go">  Operations:                        295312 operations</span>
+<span class="go">  Time:                              60 minutes</span>
+
+<span class="go">Cache Save Periods</span>
+<span class="go">  Row Cache:                         Disabled</span>
+<span class="go">  Key Cache:                         3600 seconds</span>
+
+<span class="go">Column Metadata</span>
+<span class="go">  - Name:                            birthdate</span>
+<span class="go">    Value Type:                      LongType</span>
+<span class="go">    Index Type:                      KEYS</span>
+<span class="go">    Index Name:                      None</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SYSTEM_MANAGER</span><span class="o">.</span><span class="n">create_keyspace</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="n">replication_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SYSTEM_MANAGER</span><span class="o">.</span><span class="n">create_column_family</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="s">&#39;Users&#39;</span><span class="p">,</span> <span class="n">comparator_type</span><span class="o">=</span><span class="n">INT_TYPE</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SYSTEM_MANAGER</span><span class="o">.</span><span class="n">alter_column_family</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="s">&#39;Users&#39;</span><span class="p">,</span> <span class="n">key_cache_size</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SYSTEM_MANAGER</span><span class="o">.</span><span class="n">create_index</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="s">&#39;Users&#39;</span><span class="p">,</span> <span class="s">&#39;birthdate&#39;</span><span class="p">,</span> <span class="n">LONG_TYPE</span><span class="p">,</span> <span class="n">index_name</span><span class="o">=</span><span class="s">&#39;bday_index&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SYSTEM_MANAGER</span><span class="o">.</span><span class="n">drop_keyspace</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -175,7 +226,7 @@ the names of the objects. You can use these to easily insert and retrieve data f
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
              >previous</a> |</li>
-        <li><a href="index.html">pycassa v0.5.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v1.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

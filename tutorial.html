@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial &mdash; pycassa v0.5.4 documentation</title>
+    <title>Tutorial &mdash; pycassa v1.0.0 documentation</title>
     <link rel="stylesheet" href="static/default.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.5.4',
+        VERSION:     '1.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,7 +22,7 @@
     <script type="text/javascript" src="static/jquery.js"></script>
     <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="pycassa v0.5.4 documentation" href="index.html" />
+    <link rel="top" title="pycassa v1.0.0 documentation" href="index.html" />
     <link rel="next" title="pycassaShell" href="pycassa_shell.html" />
     <link rel="prev" title="Installing" href="installation.html" /> 
   </head>
@@ -42,7 +42,7 @@
         <li class="right" >
           <a href="installation.html" title="Installing"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">pycassa v0.5.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v1.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -55,6 +55,10 @@
 <h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
 <p>This tutorial is intended as an introduction to working with
 Cassandra and <strong>pycassa</strong>.</p>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
 <div class="section" id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
 <p>Before we start, make sure that you have <strong>pycassa</strong>
@@ -79,27 +83,38 @@ You can start Cassandra like so:</p>
 </pre></div>
 </div>
 </div>
-<div class="section" id="making-a-connection">
-<h2>Making a Connection<a class="headerlink" href="#making-a-connection" title="Permalink to this headline">¶</a></h2>
-<p>The first step when working with <strong>pycassa</strong> is to create a
-<a class="reference internal" href="api/pycassa/connection.html#pycassa.connection.Connection" title="pycassa.connection.Connection"><tt class="xref py py-class docutils literal"><span class="pre">Connection</span></tt></a> to the running cassandra instance:</p>
+<div class="section" id="connecting-to-cassandra">
+<h2>Connecting to Cassandra<a class="headerlink" href="#connecting-to-cassandra" title="Permalink to this headline">¶</a></h2>
+<p>The first step when working with <strong>pycassa</strong> is to connect to the
+running cassandra instance:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pycassa</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">connection</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The above code will connect on the default host and port. We can also
-specify the host and port explicitly, as follows:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">connection</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;localhost:9160&#39;</span><span class="p">])</span>
+<p>The above code will connect by default to &#8216;localhost:9160&#8217;. We can
+also specify the host and port explicitly, as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;localhost:9160&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
+<p>This creates a small connection pool for use with
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a> . See <a class="reference internal" href="#connection-pooling">Connection Pooling</a>
+for more details.</p>
 </div>
 <div class="section" id="getting-a-columnfamily">
 <h2>Getting a ColumnFamily<a class="headerlink" href="#getting-a-columnfamily" title="Permalink to this headline">¶</a></h2>
 <p>A column family is a collection of rows and columns in Cassandra,
 and can be thought of as roughly the equivalent of a table in a
 relational database. We&#8217;ll use one of the column families that
-were already included in the schema file:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="s">&#39;Standard1&#39;</span><span class="p">)</span>
+are included in the default schema file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;Standard1&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you get an error about the keyspace or column family not
+existing, make sure you imported the yaml file. This can
+be done using Cassandra&#8217;s <tt class="file docutils literal"><span class="pre">bin/schematool</span></tt>:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nb">cd</span> <span class="nv">$CASSANDRA_HOME</span>
+bin/schematool localhost 8080 import
 </pre></div>
 </div>
 </div>
@@ -150,21 +165,48 @@ columns with names &#8216;1&#8217; through &#8216;9&#8217;, we can do the follow
 <span class="go">{&#39;5&#39;:&#39;foo&#39;, &#39;6&#39;:&#39;bar&#39;, &#39;7&#39;:&#39;baz&#39;}</span>
 </pre></div>
 </div>
-<p>There are also two ways to get multiple rows at the same time.
+<p>Sometimes you want to get columns in reverse sorted order.  A common
+example of this is getting the last N columns from a row that
+represents a timeline.  To do this, set <cite>column_reversed</cite> to <tt class="xref docutils literal"><span class="pre">True</span></tt>.
+If you think of the columns as being sorted from left to right, when
+<cite>column_reversed</cite> is <tt class="xref docutils literal"><span class="pre">True</span></tt>, <cite>column_start</cite> will determine the right
+end of the range while <cite>column_finish</cite> will determine the left.</p>
+<p>Here&#8217;s an example of getting the last three columns in a row:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="s">&#39;val&#39;</span><span class="p">}</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="n">column_reversed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">column_count</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">{20: &#39;val&#39;, 19: &#39;val&#39;, 18: &#39;val&#39;}</span>
+</pre></div>
+</div>
+<p>There are a few ways to get multiple rows at the same time.
 The first is to specify them by name using
 <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.multiget" title="pycassa.columnfamily.ColumnFamily.multiget"><tt class="xref py py-meth docutils literal"><span class="pre">multiget()</span></tt></a>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">multiget</span><span class="p">([</span><span class="s">&#39;row_key1&#39;</span><span class="p">,</span> <span class="s">&#39;row_key2&#39;</span><span class="p">])</span>
 <span class="go">{&#39;row_key1&#39;: {&#39;name&#39;:&#39;val&#39;}, &#39;row_key2&#39;: {&#39;name&#39;:&#39;val&#39;}}</span>
 </pre></div>
 </div>
-<p>The other way is to get a range of keys at once by using
+<p>Another way is to get a range of keys at once by using
 <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_range" title="pycassa.columnfamily.ColumnFamily.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a>. The parameter
 <cite>finish</cite> is also inclusive here, too.  Assuming we&#8217;ve inserted some rows
 with keys &#8216;row_key1&#8217; through &#8216;row_key9&#8217;, we can do this:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get_range</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="s">&#39;row_key5&#39;</span><span class="p">,</span> <span class="n">finish</span><span class="o">=</span><span class="s">&#39;row_key7&#39;</span><span class="p">)</span>
-<span class="go">{&#39;row_key5&#39;: {&#39;name&#39;:&#39;val&#39;}, &#39;row_key6&#39;: {&#39;name&#39;:&#39;val&#39;}, &#39;row_key7&#39;: {&#39;name&#39;:&#39;val&#39;}}</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">col_fam</span><span class="o">.</span><span class="n">get_range</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="s">&#39;row_key5&#39;</span><span class="p">,</span> <span class="n">finish</span><span class="o">=</span><span class="s">&#39;row_key7&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">columns</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">key</span><span class="p">,</span> <span class="s">&#39;=&gt;&#39;</span><span class="p">,</span> <span class="n">columns</span>
+<span class="gp">...</span>
+<span class="go">&#39;row_key5&#39; =&gt; {&#39;name&#39;:&#39;val&#39;}</span>
+<span class="go">&#39;row_key6&#39; =&gt; {&#39;name&#39;:&#39;val&#39;}</span>
+<span class="go">&#39;row_key7&#39; =&gt; {&#39;name&#39;:&#39;val&#39;}</span>
 </pre></div>
 </div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You must use an OrderPreservingPartitioner to be able to
+get a meaningful range of rows.</p>
+</div>
+<p>The last way to get multiple rows at a time is to take advantage of
+secondary indexes by using <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_indexed_slices" title="pycassa.columnfamily.ColumnFamily.get_indexed_slices"><tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt></a>,
+which is described in the <a class="reference internal" href="#indexes">Indexes</a> section.</p>
 <p>It&#8217;s also possible to specify a set of columns or a slice for
 <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.multiget" title="pycassa.columnfamily.ColumnFamily.multiget"><tt class="xref py py-meth docutils literal"><span class="pre">multiget()</span></tt></a> and
 <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_range" title="pycassa.columnfamily.ColumnFamily.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a> just like we did for
@@ -320,42 +362,42 @@ to get data from Indexed1 using the indexed column, we need to create an
 <a class="reference internal" href="api/pycassa/index.html#module-pycassa.index" title="pycassa.index"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.index</span></tt></a> is designed to make this easier.</p>
 <p>Suppose we are only interested in rows where &#8216;birthdate&#8217; is 1984. We might do
 the following:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="s">&#39;Indexed1&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pycassa.index</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">index_exp</span> <span class="o">=</span> <span class="n">create_index_expression</span><span class="p">(</span><span class="s">&#39;birthdate&#39;</span><span class="p">,</span> <span class="mi">1984</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">index_clause</span> <span class="o">=</span> <span class="n">create_index_clause</span><span class="p">([</span><span class="n">index_exp</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get_indexed_slices</span><span class="p">(</span><span class="n">index_clause</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pycassa</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ConnectionPool</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;Indexed1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index_exp</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">create_index_expression</span><span class="p">(</span><span class="s">&#39;birthdate&#39;</span><span class="p">,</span> <span class="mi">1984</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index_clause</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">create_index_clause</span><span class="p">([</span><span class="n">index_exp</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">col_fam</span><span class="o">.</span><span class="n">get_indexed_slices</span><span class="p">(</span><span class="n">index_clause</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 <span class="go">{&#39;winston smith&#39;: {&#39;birthdate&#39;: 1984}}</span>
 </pre></div>
 </div>
 <p>Although at least one
-<a class="reference internal" href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexExpression" title="pycassa.cassandra.ttypes.IndexExpression"><tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt></a> in every clause
+<a class="reference internal" href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexExpression" title="pycassa.cassandra.ttypes.IndexExpression"><tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt></a> in the clause
 must be on an indexed column, you may also have other expressions which are
 on non-indexed columns.</p>
 </div>
 <div class="section" id="connection-pooling">
 <h2>Connection Pooling<a class="headerlink" href="#connection-pooling" title="Permalink to this headline">¶</a></h2>
-<p>Several types of connection pools are offered for different usages:</p>
-<ul class="simple">
-<li><a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.QueuePool" title="pycassa.pool.QueuePool"><tt class="xref py py-class docutils literal"><span class="pre">QueuePool</span></tt></a> – typical connection pool that maintains a queue of open connections</li>
-<li><a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.SingletonThreadPool" title="pycassa.pool.SingletonThreadPool"><tt class="xref py py-class docutils literal"><span class="pre">SingletonThreadPool</span></tt></a> – one connection per thread</li>
-<li><a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.StaticPool" title="pycassa.pool.StaticPool"><tt class="xref py py-class docutils literal"><span class="pre">StaticPool</span></tt></a> – a single connection used for all operations</li>
-<li><a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.NullPool" title="pycassa.pool.NullPool"><tt class="xref py py-class docutils literal"><span class="pre">NullPool</span></tt></a> – no pooling is performed, but failover is supported</li>
-<li><a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.AssertionPool" title="pycassa.pool.AssertionPool"><tt class="xref py py-class docutils literal"><span class="pre">AssertionPool</span></tt></a> – asserts that at most one connection is open at a time; useful for debugging</li>
-</ul>
-<p>For example, to create a <a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.QueuePool" title="pycassa.pool.QueuePool"><tt class="xref py py-class docutils literal"><span class="pre">QueuePool</span></tt></a> and use a connection:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">QueuePool</span><span class="p">(</span><span class="n">keyspace</span><span class="o">=</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">connection</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="s">&#39;Standard1&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;col&#39;</span><span class="p">:</span> <span class="s">&#39;val&#39;</span><span class="p">})</span>
+<p>Pycassa uses connection pools to maintain connections to Cassandra servers.
+The <a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a> class is used to create the connection
+pool.  After creating the pool, it may be used to create multiple
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a> objects.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ConnectionPool</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="n">pool_size</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">standard_cf</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;Standard1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">standard_cf</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;col&#39;</span><span class="p">:</span> <span class="s">&#39;val&#39;</span><span class="p">})</span>
 <span class="go">1354491238782746</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">connection</span><span class="o">.</span><span class="n">return_to_pool</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">super_cf</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;Super1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">super_cf</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key2&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;col&#39;</span><span class="p">:</span> <span class="s">&#39;val&#39;</span><span class="p">})</span>
+<span class="go">1354491239779182</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">standard_cf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">)</span>
+<span class="go">{&#39;col&#39;: &#39;val&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span><span class="o">.</span><span class="n">dispose</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>Automatic retries (or failover) are supported with all types of pools except
-for <a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.StaticPool" title="pycassa.pool.StaticPool"><tt class="xref py py-class docutils literal"><span class="pre">StaticPool</span></tt></a>. This means that if any operation fails,
-it will be transparently retried on other servers until it succeeds or a
-maximum number of failures is reached.</p>
+<p>Automatic retries (or &#8220;failover&#8221;) happen by default with ConectionPools.
+This means that if any operation fails, it will be transparently retried
+on other servers until it succeeds or a maximum number of failures is reached.</p>
 </div>
 <div class="section" id="class-mapping-with-column-family-map">
 <h2>Class Mapping with Column Family Map<a class="headerlink" href="#class-mapping-with-column-family-map" title="Permalink to this headline">¶</a></h2>
@@ -378,10 +420,18 @@ and the default value will be used when you get old instances.</p>
 storage. <a class="reference internal" href="api/pycassa/types.html#pycassa.types.Float64" title="pycassa.types.Float64"><tt class="xref py py-class docutils literal"><span class="pre">Float64</span></tt></a> is stored as a double and is
 native-endian. Be aware of any endian issues if you use it on different
 architectures, or perhaps make your own column type.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamilyMap</span><span class="p">(</span><span class="n">Test</span><span class="p">,</span> <span class="n">cf</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ConnectionPool</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;Standard1&#39;</span><span class="p">,</span> <span class="n">autopack_names</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">autopack_values</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamilyMap</span><span class="p">(</span><span class="n">Test</span><span class="p">,</span> <span class="n">cf</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>All the functions are exactly the same, except that they return instances of the supplied class when possible.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">As shown in the example, <cite>autopack_names</cite> and <cite>autopack_values</cite> should
+be set to <tt class="xref docutils literal"><span class="pre">False</span></tt> when a ColumnFamily is used with a ColumnFamilyMap.</p>
+</div>
+<p>All the functions are exactly the same, except that they return
+instances of the supplied class when possible.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">Test</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="s">&#39;maptest&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">string_column</span> <span class="o">=</span> <span class="s">&#39;string test&#39;</span>
@@ -419,17 +469,31 @@ architectures, or perhaps make your own column type.</p>
 <span class="nc">cassandra.ttypes.NotFoundException</span>: <span class="n-Identifier">NotFoundException()</span>
 </pre></div>
 </div>
-<p>Note that, as mentioned previously,
-<a class="reference internal" href="api/pycassa/columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap.get_range" title="pycassa.columnfamilymap.ColumnFamilyMap.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a>
-may continue to return removed rows for some time:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
-<span class="go">1261395603756875</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_range</span><span class="p">())</span>
-<span class="go">[&lt;__main__.Test object at 0x7fac9c85ea90&gt;]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_range</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">string_column</span>
-<span class="go">&#39;Your Default&#39;</span>
+<p>You may also use a ColumnFamilyMap with super columns:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamilyMap</span><span class="p">(</span><span class="n">Test</span><span class="p">,</span> <span class="n">cf</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">Test</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="s">&#39;key1&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">super_column</span> <span class="o">=</span> <span class="s">&#39;super1&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">string_column</span> <span class="o">=</span> <span class="s">&#39;foobar&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">int_str_column</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">float_column</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">float_str_column</span> <span class="o">=</span> <span class="mf">35.8</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">datetime_str_column</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+<span class="go">{&#39;super1&#39;: &lt;__main__.Test object at 0x20ab350&gt;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">multiget</span><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="n">key</span><span class="p">])</span>
+<span class="go">{&#39;key1&#39;: {&#39;super1&#39;: &lt;__main__.Test object at 0x20ab550&gt;}}</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="keyspace-and-column-family-creation-and-alteration">
+<h2>Keyspace and Column Family Creation and Alteration<a class="headerlink" href="#keyspace-and-column-family-creation-and-alteration" title="Permalink to this headline">¶</a></h2>
+<p>Keyspaces and column families may be created, altered,
+and dropped using <a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager" title="pycassa.system_manager.SystemManager"><tt class="xref py py-class docutils literal"><span class="pre">pycassa.system_manager.SystemManager</span></tt></a>. Additionally,
+indexes may be created and dropped using this class as well.</p>
+<p>Although most of SystemManager&#8217;s methods may be used in a program,
+it is recommended use this manually using a tool like <a class="reference internal" href="pycassa_shell.html#pycassa-shell"><em>pycassaShell</em></a>. There
+is a <a class="reference internal" href="pycassa_shell.html#pycassa-shell-sys-man"><em>provided example</em></a> of this usage.</p>
 </div>
 </div>
 
@@ -443,7 +507,7 @@ may continue to return removed rows for some time:</p>
   <ul>
 <li><a class="reference internal" href="#">Tutorial</a><ul>
 <li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
-<li><a class="reference internal" href="#making-a-connection">Making a Connection</a></li>
+<li><a class="reference internal" href="#connecting-to-cassandra">Connecting to Cassandra</a></li>
 <li><a class="reference internal" href="#getting-a-columnfamily">Getting a ColumnFamily</a></li>
 <li><a class="reference internal" href="#inserting-data">Inserting Data</a></li>
 <li><a class="reference internal" href="#getting-data">Getting Data</a></li>
@@ -453,6 +517,7 @@ may continue to return removed rows for some time:</p>
 <li><a class="reference internal" href="#indexes">Indexes</a></li>
 <li><a class="reference internal" href="#connection-pooling">Connection Pooling</a></li>
 <li><a class="reference internal" href="#class-mapping-with-column-family-map">Class Mapping with Column Family Map</a></li>
+<li><a class="reference internal" href="#keyspace-and-column-family-creation-and-alteration">Keyspace and Column Family Creation and Alteration</a></li>
 </ul>
 </li>
 </ul>
@@ -500,7 +565,7 @@ may continue to return removed rows for some time:</p>
         <li class="right" >
           <a href="installation.html" title="Installing"
              >previous</a> |</li>
-        <li><a href="index.html">pycassa v0.5.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v1.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

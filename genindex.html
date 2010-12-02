@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Index &mdash; pycassa v0.5.4 documentation</title>
+    <title>Index &mdash; pycassa v1.0.0 documentation</title>
     <link rel="stylesheet" href="static/default.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.5.4',
+        VERSION:     '1.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,7 +22,7 @@
     <script type="text/javascript" src="static/jquery.js"></script>
     <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="pycassa v0.5.4 documentation" href="index.html" /> 
+    <link rel="top" title="pycassa v1.0.0 documentation" href="index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -34,7 +34,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">pycassa v0.5.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v1.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -47,19 +47,20 @@
    <h1 id="index">Index</h1>
 
    <div class="genindex-jumpbox">
-   <a href="#A"><strong>A</strong></a> | <a href="#B"><strong>B</strong></a> | <a href="#C"><strong>C</strong></a> | <a href="#D"><strong>D</strong></a> | <a href="#F"><strong>F</strong></a> | <a href="#G"><strong>G</strong></a> | <a href="#I"><strong>I</strong></a> | <a href="#K"><strong>K</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#N"><strong>N</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#Q"><strong>Q</strong></a> | <a href="#R"><strong>R</strong></a> | <a href="#S"><strong>S</strong></a> | <a href="#T"><strong>T</strong></a> | <a href="#U"><strong>U</strong></a> 
+   <a href="#A"><strong>A</strong></a> | <a href="#B"><strong>B</strong></a> | <a href="#C"><strong>C</strong></a> | <a href="#D"><strong>D</strong></a> | <a href="#F"><strong>F</strong></a> | <a href="#G"><strong>G</strong></a> | <a href="#I"><strong>I</strong></a> | <a href="#K"><strong>K</strong></a> | <a href="#L"><strong>L</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#N"><strong>N</strong></a> | <a href="#O"><strong>O</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#Q"><strong>Q</strong></a> | <a href="#R"><strong>R</strong></a> | <a href="#S"><strong>S</strong></a> | <a href="#T"><strong>T</strong></a> | <a href="#U"><strong>U</strong></a> 
    </div>
 <h2 id="A">A</h2>
 <table width="100%" class="indextable genindextable"><tr>
   <td width="33%" valign="top"><dl>
     <dt><a href="api/pycassa/logging/pycassa_logger.html#pycassa.logging.pycassa_logger.PycassaLogger.add_child_logger">add_child_logger() (pycassa.logging.pycassa_logger.PycassaLogger method)</a></dt>
-    <dt><a href="api/pycassa/connection.html#pycassa.connection.Connection.add_column_family">add_column_family() (pycassa.connection.Connection method)</a></dt>
-    <dt><a href="api/pycassa/connection.html#pycassa.connection.Connection.add_keyspace">add_keyspace() (pycassa.connection.Connection method)</a></dt>
-    <dt><a href="api/pycassa/pool.html#pycassa.pool.Pool.add_listener">add_listener() (pycassa.pool.Pool method)</a></dt>
+    <dt><a href="api/pycassa/pool.html#pycassa.pool.ConnectionPool.add_listener">add_listener() (pycassa.pool.ConnectionPool method)</a></dt>
     <dt><a href="api/pycassa/pool.html#pycassa.pool.AllServersUnavailable">AllServersUnavailable</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.alter_column">alter_column() (pycassa.system_manager.SystemManager method)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.alter_column_family">alter_column_family() (pycassa.system_manager.SystemManager method)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
-    <dt><a href="api/pycassa/pool.html#pycassa.pool.AssertionPool">AssertionPool (class in pycassa.pool)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.alter_keyspace">alter_keyspace() (pycassa.system_manager.SystemManager method)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.ASCII_TYPE">ASCII_TYPE (in module pycassa.system_manager)</a></dt>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.AuthenticationException">AuthenticationException</a></dt>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.AuthenticationRequest">AuthenticationRequest (class in pycassa.cassandra.ttypes)</a></dt>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.AuthorizationException">AuthorizationException</a></dt>
@@ -70,12 +71,10 @@
 <table width="100%" class="indextable genindextable"><tr>
   <td width="33%" valign="top"><dl>
     <dt><a href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.batch">batch() (pycassa.columnfamily.ColumnFamily method)</a></dt>
-    <dd><dl>
-      <dt><a href="api/pycassa/connection.html#pycassa.connection.Connection.batch">(pycassa.connection.Connection method)</a></dt>
-  </dl></dd>
+    <dt><a href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.batch_insert">batch_insert() (pycassa.columnfamily.ColumnFamily method)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
-    <dt><a href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.batch_insert">batch_insert() (pycassa.columnfamily.ColumnFamily method)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.BYTES_TYPE">BYTES_TYPE (in module pycassa.system_manager)</a></dt>
 </dl></td>
 </tr></table>
 
@@ -84,7 +83,7 @@
   <td width="33%" valign="top"><dl>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.CfDef">CfDef (class in pycassa.cassandra.ttypes)</a></dt>
     <dt><a href="api/pycassa/batch.html#pycassa.batch.CfMutator">CfMutator (class in pycassa.batch)</a></dt>
-    <dt><a href="api/pycassa/connection.html#pycassa.connection.Connection.close">close() (pycassa.connection.Connection method)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.close">close() (pycassa.system_manager.SystemManager method)</a></dt>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.Column">Column (class in pycassa.cassandra.ttypes)</a></dt>
     <dd><dl>
       <dt><a href="api/pycassa/types.html#pycassa.types.Column">(class in pycassa.types)</a></dt>
@@ -96,25 +95,25 @@
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.ColumnParent">ColumnParent (class in pycassa.cassandra.ttypes)</a></dt>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.ColumnPath">ColumnPath (class in pycassa.cassandra.ttypes)</a></dt>
     <dt><a href="api/pycassa/connection.html#pycassa.connection.connect">connect() (in module pycassa.connection)</a></dt>
-    <dd><dl>
-      <dt><a href="api/pycassa/connection.html#pycassa.connection.Connection.connect">(pycassa.connection.Connection method)</a></dt>
-  </dl></dd>
     <dt><a href="api/pycassa/connection.html#pycassa.connection.connect_thread_local">connect_thread_local() (in module pycassa.connection)</a></dt>
-    <dt><a href="api/pycassa/connection.html#pycassa.connection.Connection">Connection (class in pycassa.connection)</a></dt>
-</dl></td>
-  <td width="33%" valign="top"><dl>
     <dt><a href="api/pycassa/pool.html#pycassa.pool.PoolListener.connection_checked_in">connection_checked_in() (pycassa.pool.PoolListener method)</a></dt>
     <dt><a href="api/pycassa/pool.html#pycassa.pool.PoolListener.connection_checked_out">connection_checked_out() (pycassa.pool.PoolListener method)</a></dt>
+</dl></td>
+  <td width="33%" valign="top"><dl>
     <dt><a href="api/pycassa/pool.html#pycassa.pool.PoolListener.connection_created">connection_created() (pycassa.pool.PoolListener method)</a></dt>
     <dt><a href="api/pycassa/pool.html#pycassa.pool.PoolListener.connection_disposed">connection_disposed() (pycassa.pool.PoolListener method)</a></dt>
     <dt><a href="api/pycassa/pool.html#pycassa.pool.PoolListener.connection_failed">connection_failed() (pycassa.pool.PoolListener method)</a></dt>
     <dt><a href="api/pycassa/pool.html#pycassa.pool.PoolListener.connection_recycled">connection_recycled() (pycassa.pool.PoolListener method)</a></dt>
+    <dt><a href="api/pycassa/pool.html#pycassa.pool.ConnectionPool">ConnectionPool (class in pycassa.pool)</a></dt>
     <dt><a href="api/pycassa/pool.html#pycassa.pool.ConnectionWrapper">ConnectionWrapper (class in pycassa.pool)</a></dt>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.ConsistencyLevel">ConsistencyLevel (class in pycassa.cassandra.ttypes)</a></dt>
     <dt><a href="api/pycassa/util.html#pycassa.util.convert_time_to_uuid">convert_time_to_uuid() (in module pycassa.util)</a></dt>
     <dt><a href="api/pycassa/util.html#pycassa.util.convert_uuid_to_time">convert_uuid_to_time() (in module pycassa.util)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.create_column_family">create_column_family() (pycassa.system_manager.SystemManager method)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.create_index">create_index() (pycassa.system_manager.SystemManager method)</a></dt>
     <dt><a href="api/pycassa/index.html#pycassa.index.create_index_clause">create_index_clause() (in module pycassa.index)</a></dt>
     <dt><a href="api/pycassa/index.html#pycassa.index.create_index_expression">create_index_expression() (in module pycassa.index)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.create_keyspace">create_keyspace() (pycassa.system_manager.SystemManager method)</a></dt>
 </dl></td>
 </tr></table>
 
@@ -124,11 +123,17 @@
     <dt><a href="api/pycassa/types.html#pycassa.types.DateTime">DateTime (class in pycassa.types)</a></dt>
     <dt><a href="api/pycassa/types.html#pycassa.types.DateTimeString">DateTimeString (class in pycassa.types)</a></dt>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.Deletion">Deletion (class in pycassa.cassandra.ttypes)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.describe_cluster_name">describe_cluster_name() (pycassa.system_manager.SystemManager method)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.describe_column_family">describe_column_family() (pycassa.system_manager.SystemManager method)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.describe_keyspace">describe_keyspace() (pycassa.system_manager.SystemManager method)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
-    <dt><a href="api/pycassa/pool.html#pycassa.pool.Pool.dispose">dispose() (pycassa.pool.Pool method)</a></dt>
-    <dt><a href="api/pycassa/connection.html#pycassa.connection.Connection.drop_column_family">drop_column_family() (pycassa.connection.Connection method)</a></dt>
-    <dt><a href="api/pycassa/connection.html#pycassa.connection.Connection.drop_keyspace">drop_keyspace() (pycassa.connection.Connection method)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.describe_ring">describe_ring() (pycassa.system_manager.SystemManager method)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.describe_version">describe_version() (pycassa.system_manager.SystemManager method)</a></dt>
+    <dt><a href="api/pycassa/pool.html#pycassa.pool.ConnectionPool.dispose">dispose() (pycassa.pool.ConnectionPool method)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.drop_column_family">drop_column_family() (pycassa.system_manager.SystemManager method)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.drop_index">drop_index() (pycassa.system_manager.SystemManager method)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.drop_keyspace">drop_keyspace() (pycassa.system_manager.SystemManager method)</a></dt>
 </dl></td>
 </tr></table>
 
@@ -148,7 +153,7 @@
     <dt><a href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get">get() (pycassa.columnfamily.ColumnFamily method)</a></dt>
     <dd><dl>
       <dt><a href="api/pycassa/columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap.get">(pycassa.columnfamilymap.ColumnFamilyMap method)</a></dt>
-      <dt><a href="api/pycassa/pool.html#pycassa.pool.Pool.get">(pycassa.pool.Pool method)</a></dt>
+      <dt><a href="api/pycassa/pool.html#pycassa.pool.ConnectionPool.get">(pycassa.pool.ConnectionPool method)</a></dt>
   </dl></dd>
     <dt><a href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_count">get_count() (pycassa.columnfamily.ColumnFamily method)</a></dt>
     <dd><dl>
@@ -158,7 +163,10 @@
     <dd><dl>
       <dt><a href="api/pycassa/columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap.get_indexed_slices">(pycassa.columnfamilymap.ColumnFamilyMap method)</a></dt>
   </dl></dd>
-    <dt><a href="api/pycassa/connection.html#pycassa.connection.Connection.get_keyspace_description">get_keyspace_description() (pycassa.connection.Connection method)</a></dt>
+    <dt><a href="api/pycassa/pool.html#pycassa.pool.ConnectionWrapper.get_keyspace_description">get_keyspace_description() (pycassa.pool.ConnectionWrapper method)</a></dt>
+    <dd><dl>
+      <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.get_keyspace_description">(pycassa.system_manager.SystemManager method)</a></dt>
+  </dl></dd>
     <dt><a href="api/pycassa/logging/pycassa_logger.html#pycassa.logging.pycassa_logger.PycassaLogger.get_logger">get_logger() (pycassa.logging.pycassa_logger.PycassaLogger method)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
@@ -168,23 +176,25 @@
     <dd><dl>
       <dt><a href="api/pycassa/columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap.get_range">(pycassa.columnfamilymap.ColumnFamilyMap method)</a></dt>
   </dl></dd>
-    <dt><a href="api/pycassa/columnfamily.html#pycassa.columnfamily.gm_timestamp">gm_timestamp() (in module pycassa.columnfamily)</a></dt>
+    <dt><a href="api/pycassa/columnfamily.html#pycassa.columnfamily.gm_timestamp">gm_timestamp() (pycassa.columnfamily static method)</a></dt>
 </dl></td>
 </tr></table>
 
 <h2 id="I">I</h2>
 <table width="100%" class="indextable genindextable"><tr>
   <td width="33%" valign="top"><dl>
-    <dt><a href="api/pycassa/pool.html#pycassa.pool.ImmutableConnectionWrapper">ImmutableConnectionWrapper (class in pycassa.pool)</a></dt>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexClause">IndexClause (class in pycassa.cassandra.ttypes)</a></dt>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexExpression">IndexExpression (class in pycassa.cassandra.ttypes)</a></dt>
-    <dt><a href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.insert">insert() (pycassa.columnfamily.ColumnFamily method)</a></dt>
+    <dt><a href="api/pycassa/batch.html#pycassa.batch.CfMutator.insert">insert() (pycassa.batch.CfMutator method)</a></dt>
     <dd><dl>
+      <dt><a href="api/pycassa/batch.html#pycassa.batch.Mutator.insert">(pycassa.batch.Mutator method)</a></dt>
+      <dt><a href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.insert">(pycassa.columnfamily.ColumnFamily method)</a></dt>
       <dt><a href="api/pycassa/columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap.insert">(pycassa.columnfamilymap.ColumnFamilyMap method)</a></dt>
   </dl></dd>
+    <dt><a href="api/pycassa/types.html#pycassa.types.Int64">Int64 (class in pycassa.types)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
-    <dt><a href="api/pycassa/types.html#pycassa.types.Int64">Int64 (class in pycassa.types)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.INT_TYPE">INT_TYPE (in module pycassa.system_manager)</a></dt>
     <dt><a href="api/pycassa/types.html#pycassa.types.IntString">IntString (class in pycassa.types)</a></dt>
     <dt><a href="api/pycassa/pool.html#pycassa.pool.InvalidRequestError">InvalidRequestError</a></dt>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.InvalidRequestException">InvalidRequestException</a></dt>
@@ -196,10 +206,21 @@
   <td width="33%" valign="top"><dl>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.KeyCount">KeyCount (class in pycassa.cassandra.ttypes)</a></dt>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.KeyRange">KeyRange (class in pycassa.cassandra.ttypes)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.KEYS_INDEX">KEYS_INDEX (in module pycassa.system_manager)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.KeySlice">KeySlice (class in pycassa.cassandra.ttypes)</a></dt>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.KsDef">KsDef (class in pycassa.cassandra.ttypes)</a></dt>
+</dl></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table width="100%" class="indextable genindextable"><tr>
+  <td width="33%" valign="top"><dl>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.LEXICAL_UUID_TYPE">LEXICAL_UUID_TYPE (in module pycassa.system_manager)</a></dt>
+</dl></td>
+  <td width="33%" valign="top"><dl>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.LONG_TYPE">LONG_TYPE (in module pycassa.system_manager)</a></dt>
 </dl></td>
 </tr></table>
 
@@ -214,7 +235,6 @@
     <dt><a href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.multiget_count">multiget_count() (pycassa.columnfamily.ColumnFamily method)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
-    <dt><a href="api/pycassa/pool.html#pycassa.pool.MutableConnectionWrapper">MutableConnectionWrapper (class in pycassa.pool)</a></dt>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.Mutation">Mutation (class in pycassa.cassandra.ttypes)</a></dt>
     <dt><a href="api/pycassa/batch.html#pycassa.batch.Mutator">Mutator (class in pycassa.batch)</a></dt>
 </dl></td>
@@ -223,34 +243,42 @@
 <h2 id="N">N</h2>
 <table width="100%" class="indextable genindextable"><tr>
   <td width="33%" valign="top"><dl>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.NETWORK_TOPOLOGY_STRATEGY">NETWORK_TOPOLOGY_STRATEGY (in module pycassa.system_manager)</a></dt>
     <dt><a href="api/pycassa/pool.html#pycassa.pool.NoConnectionAvailable">NoConnectionAvailable</a></dt>
-    <dt><a href="api/pycassa/connection.html#pycassa.connection.NoServerAvailable">NoServerAvailable</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.NotFoundException">NotFoundException</a></dt>
-    <dt><a href="api/pycassa/pool.html#pycassa.pool.NullPool">NullPool (class in pycassa.pool)</a></dt>
+</dl></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table width="100%" class="indextable genindextable"><tr>
+  <td width="33%" valign="top"><dl>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.OLD_NETWORK_TOPOLOGY_STRATEGY">OLD_NETWORK_TOPOLOGY_STRATEGY (in module pycassa.system_manager)</a></dt>
+</dl></td>
+  <td width="33%" valign="top"><dl>
+    <dt><a href="api/pycassa/util.html#pycassa.util.OrderedDict">OrderedDict (class in pycassa.util)</a></dt>
 </dl></td>
 </tr></table>
 
 <h2 id="P">P</h2>
 <table width="100%" class="indextable genindextable"><tr>
   <td width="33%" valign="top"><dl>
-    <dt><a href="api/pycassa/pool.html#pycassa.pool.Pool">Pool (class in pycassa.pool)</a></dt>
     <dt><a href="api/pycassa/pool.html#pycassa.pool.PoolListener.pool_at_max">pool_at_max() (pycassa.pool.PoolListener method)</a></dt>
     <dt><a href="api/pycassa/pool.html#pycassa.pool.PoolListener.pool_disposed">pool_disposed() (pycassa.pool.PoolListener method)</a></dt>
     <dt><a href="api/pycassa/pool.html#pycassa.pool.PoolListener.pool_recreated">pool_recreated() (pycassa.pool.PoolListener method)</a></dt>
-    <dt><a href="api/pycassa/columnfamily.html#pycassa.columnfamily.PooledColumnFamily">PooledColumnFamily (class in pycassa.columnfamily)</a></dt>
     <dt><a href="api/pycassa/pool.html#pycassa.pool.PoolListener">PoolListener (class in pycassa.pool)</a></dt>
     <dt><a href="api/pycassa/batch.html#module-pycassa.batch">pycassa.batch (module)</a></dt>
     <dt><a href="api/pycassa/cassandra/ttypes.html#module-pycassa.cassandra.ttypes">pycassa.cassandra.ttypes (module)</a></dt>
     <dt><a href="api/pycassa/columnfamily.html#module-pycassa.columnfamily">pycassa.columnfamily (module)</a></dt>
+    <dt><a href="api/pycassa/columnfamilymap.html#module-pycassa.columnfamilymap">pycassa.columnfamilymap (module)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
-    <dt><a href="api/pycassa/columnfamilymap.html#module-pycassa.columnfamilymap">pycassa.columnfamilymap (module)</a></dt>
     <dt><a href="api/pycassa/connection.html#module-pycassa.connection">pycassa.connection (module)</a></dt>
     <dt><a href="api/pycassa/index.html#module-pycassa.index">pycassa.index (module)</a></dt>
     <dt><a href="api/pycassa/logging/pycassa_logger.html#module-pycassa.logging.pycassa_logger">pycassa.logging.pycassa_logger (module)</a></dt>
     <dt><a href="api/pycassa/pool.html#module-pycassa.pool">pycassa.pool (module)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#module-pycassa.system_manager">pycassa.system_manager (module)</a></dt>
     <dt><a href="api/pycassa/types.html#module-pycassa.types">pycassa.types (module)</a></dt>
     <dt><a href="api/pycassa/util.html#module-pycassa.util">pycassa.util (module)</a></dt>
     <dt><a href="api/pycassa/logging/pycassa_logger.html#pycassa.logging.pycassa_logger.PycassaLogger">PycassaLogger (class in pycassa.logging.pycassa_logger)</a></dt>
@@ -260,22 +288,23 @@
 <h2 id="Q">Q</h2>
 <table width="100%" class="indextable genindextable"><tr>
   <td width="33%" valign="top"><dl>
-    <dt><a href="api/pycassa/pool.html#pycassa.pool.QueuePool">QueuePool (class in pycassa.pool)</a></dt>
+    <dt><a href="api/pycassa/pool.html#pycassa.pool.QueuePool">QueuePool (in module pycassa.pool)</a></dt>
 </dl></td>
 </tr></table>
 
 <h2 id="R">R</h2>
 <table width="100%" class="indextable genindextable"><tr>
   <td width="33%" valign="top"><dl>
-    <dt><a href="api/pycassa/pool.html#pycassa.pool.Pool.recreate">recreate() (pycassa.pool.Pool method)</a></dt>
-    <dt><a href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.remove">remove() (pycassa.columnfamily.ColumnFamily method)</a></dt>
+    <dt><a href="api/pycassa/pool.html#pycassa.pool.ConnectionPool.recreate">recreate() (pycassa.pool.ConnectionPool method)</a></dt>
+    <dt><a href="api/pycassa/batch.html#pycassa.batch.CfMutator.remove">remove() (pycassa.batch.CfMutator method)</a></dt>
     <dd><dl>
+      <dt><a href="api/pycassa/batch.html#pycassa.batch.Mutator.remove">(pycassa.batch.Mutator method)</a></dt>
+      <dt><a href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.remove">(pycassa.columnfamily.ColumnFamily method)</a></dt>
       <dt><a href="api/pycassa/columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap.remove">(pycassa.columnfamilymap.ColumnFamilyMap method)</a></dt>
   </dl></dd>
-    <dt><a href="api/pycassa/pool.html#pycassa.pool.ReplaceableConnectionWrapper">ReplaceableConnectionWrapper (class in pycassa.pool)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
-    <dt><a href="api/pycassa/pool.html#pycassa.pool.Pool.return_conn">return_conn() (pycassa.pool.Pool method)</a></dt>
+    <dt><a href="api/pycassa/pool.html#pycassa.pool.ConnectionPool.return_conn">return_conn() (pycassa.pool.ConnectionPool method)</a></dt>
     <dt><a href="api/pycassa/pool.html#pycassa.pool.ConnectionWrapper.return_to_pool">return_to_pool() (pycassa.pool.ConnectionWrapper method)</a></dt>
 </dl></td>
 </tr></table>
@@ -283,28 +312,30 @@
 <h2 id="S">S</h2>
 <table width="100%" class="indextable genindextable"><tr>
   <td width="33%" valign="top"><dl>
+    <dt><a href="api/pycassa/batch.html#pycassa.batch.Mutator.send">send() (pycassa.batch.Mutator method)</a></dt>
     <dt><a href="api/pycassa/pool.html#pycassa.pool.PoolListener.server_list_obtained">server_list_obtained() (pycassa.pool.PoolListener method)</a></dt>
     <dt><a href="api/pycassa/logging/pycassa_logger.html#pycassa.logging.pycassa_logger.PycassaLogger.set_logger_level">set_logger_level() (pycassa.logging.pycassa_logger.PycassaLogger method)</a></dt>
     <dt><a href="api/pycassa/logging/pycassa_logger.html#pycassa.logging.pycassa_logger.PycassaLogger.set_logger_name">set_logger_name() (pycassa.logging.pycassa_logger.PycassaLogger method)</a></dt>
-    <dt><a href="api/pycassa/pool.html#pycassa.pool.Pool.set_server_list">set_server_list() (pycassa.pool.Pool method)</a></dt>
-    <dt><a href="api/pycassa/pool.html#pycassa.pool.SingletonThreadPool">SingletonThreadPool (class in pycassa.pool)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.SIMPLE_STRATEGY">SIMPLE_STRATEGY (in module pycassa.system_manager)</a></dt>
+    <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.SlicePredicate">SlicePredicate (class in pycassa.cassandra.ttypes)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
-    <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.SlicePredicate">SlicePredicate (class in pycassa.cassandra.ttypes)</a></dt>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.SliceRange">SliceRange (class in pycassa.cassandra.ttypes)</a></dt>
-    <dt><a href="api/pycassa/pool.html#pycassa.pool.StaticPool">StaticPool (class in pycassa.pool)</a></dt>
+    <dt><a href="api/pycassa/pool.html#pycassa.pool.ConnectionPool.status">status() (pycassa.pool.ConnectionPool method)</a></dt>
     <dt><a href="api/pycassa/types.html#pycassa.types.String">String (class in pycassa.types)</a></dt>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.SuperColumn">SuperColumn (class in pycassa.cassandra.ttypes)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager">SystemManager (class in pycassa.system_manager)</a></dt>
 </dl></td>
 </tr></table>
 
 <h2 id="T">T</h2>
 <table width="100%" class="indextable genindextable"><tr>
   <td width="33%" valign="top"><dl>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.TIME_UUID_TYPE">TIME_UUID_TYPE (in module pycassa.system_manager)</a></dt>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.TimedOutException">TimedOutException</a></dt>
-    <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.TokenRange">TokenRange (class in pycassa.cassandra.ttypes)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
+    <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.TokenRange">TokenRange (class in pycassa.cassandra.ttypes)</a></dt>
     <dt><a href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.truncate">truncate() (pycassa.columnfamily.ColumnFamily method)</a></dt>
 </dl></td>
 </tr></table>
@@ -313,10 +344,9 @@
 <table width="100%" class="indextable genindextable"><tr>
   <td width="33%" valign="top"><dl>
     <dt><a href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.UnavailableException">UnavailableException</a></dt>
-    <dt><a href="api/pycassa/connection.html#pycassa.connection.Connection.update_column_family">update_column_family() (pycassa.connection.Connection method)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
-    <dt><a href="api/pycassa/connection.html#pycassa.connection.Connection.update_keyspace">update_keyspace() (pycassa.connection.Connection method)</a></dt>
+    <dt><a href="api/pycassa/system_manager.html#pycassa.system_manager.UTF8_TYPE">UTF8_TYPE (in module pycassa.system_manager)</a></dt>
 </dl></td>
 </tr></table>
 
@@ -356,7 +386,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">pycassa v0.5.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v1.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
