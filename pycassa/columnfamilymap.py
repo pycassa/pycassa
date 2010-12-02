@@ -1,6 +1,21 @@
 """
 Provides a means for mapping an existing class to a column family.
 
+.. seealso:: :mod:`pycassa.types`
+
+In addition to the default :class:`~pycassa.types.Column` classes,
+you may also define your own types for the mapper. For example, the
+IntString may be defined as:
+
+.. code-block:: python
+
+    >>> class IntString(pycassa.Column):
+    ...     def pack(self, val):
+    ...         return str(val)
+    ...     def unpack(self, val):
+    ...         return int(val)
+    ... 
+
 """
 
 from pycassa.types import Column

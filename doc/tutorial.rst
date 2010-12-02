@@ -488,6 +488,24 @@ instances of the supplied class when possible.
   ...
   cassandra.ttypes.NotFoundException: NotFoundException()
 
+You may also use a ColumnFamilyMap with super columns:
+
+.. code-block:: python
+
+  >>> Test.objects = pycassa.ColumnFamilyMap(Test, cf)
+  >>> t = Test()
+  >>> t.key = 'key1'
+  >>> t.super_column = 'super1'
+  >>> t.string_column = 'foobar'
+  >>> t.int_str_column = 5
+  >>> t.float_column = t.float_str_column = 35.8
+  >>> t.datetime_str_column = datetime.now()
+  >>> Test.objects.insert(t)
+  >>> Test.objects.get(t.key)
+  {'super1': <__main__.Test object at 0x20ab350>}
+  >>> Test.objects.multiget([t.key])
+  {'key1': {'super1': <__main__.Test object at 0x20ab550>}}
+
 Keyspace and Column Family Creation and Alteration
 --------------------------------------------------
 Keyspaces and column families may be created, altered,

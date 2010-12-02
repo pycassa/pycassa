@@ -1,4 +1,5 @@
-# Note
+Note
+====
 
 If you are using the 0.6.x series of Cassandra then get pycassa 0.3 from the
 Downloads section and read the documentation contained within.  This README
@@ -19,21 +20,27 @@ pycassa is a python client library for Apache Cassandra with the following featu
 Documentation
 -------------
 
-While this README includes a lot of information, the official and more
-thorough documentation can be found here:
+Documentation can be found here:
 
 [http://pycassa.github.com/pycassa/](http://pycassa.github.com/pycassa/)
+
+It includes [installation instructions](http://pycassa.github.com/pycassa/installation.html),
+a [tutorial](http://pycassa.github.com/pycassa/tutorial.html),
+[API documentation](http://pycassa.github.com/pycassa/api/index.html),
+and a [change log](http://pycassa.github.com/pycassa/changelog.html).
 
 Getting Help
 ------------
 
 IRC:
- - Use channel #cassandra on irc.freenode.net. If you don't have an IRC client,
-   you can use [freenode's web based client](http://webchat.freenode.net/?channels=#cassandra).
+
+* Use channel #cassandra on irc.freenode.net. If you don't have an IRC client,
+  you can use [freenode's web based client](http://webchat.freenode.net/?channels=#cassandra).
 
 Mailing List:
- - User list: [http://groups.google.com/group/pycassa-discuss](http://groups.google.com/group/pycassa-discuss)
- - Developer list: [http://groups.google.com/group/pycassa-devel](http://groups.google.com/group/pycassa-devel)
+
+* User list: [http://groups.google.com/group/pycassa-discuss](http://groups.google.com/group/pycassa-discuss)
+* Developer list: [http://groups.google.com/group/pycassa-devel](http://groups.google.com/group/pycassa-devel)
 
 Requirements
 ------------
@@ -80,9 +87,6 @@ To use the standard interface, create a ColumnFamily instance.
 
     >>> pool = pycassa.connect('Keyspace1')
     >>> cf = pycassa.ColumnFamily(pool, 'Standard1')
-
-The value returned by insert() is the timestamp used for insertion, or int(time.time() * 1e6), by default.
-
     >>> cf.insert('foo', {'column1': 'val1'})
     1261349837816957
     >>> cf.get('foo')
@@ -123,188 +127,3 @@ You can remove entire keys or just a certain column.
     Traceback (most recent call last):
     ...
     cassandra.ttypes.NotFoundException: NotFoundException()
-
-Class Mapping
--------------
-
-You can also map existing classes using ColumnFamilyMap.
-
-    >>> class Test(object):
-    ...     string_column       = pycassa.String(default='Your Default')
-    ...     int_str_column      = pycassa.IntString(default=5)
-    ...     float_str_column    = pycassa.FloatString(default=8.0)
-    ...     float_column        = pycassa.Float64(default=0.0)
-    ...     datetime_str_column = pycassa.DateTimeString() # default=None
-
-The defaults will be filled in whenever you retrieve instances from the
-Cassandra server and the column doesn't exist. If, for example, you add columns
-in the future, you simply add the relevant column and the default will be there
-when you get old instances.
-
-IntString, FloatString, and DateTimeString all use string representations for
-storage. Float64 is stored as a double and is native-endian. Be aware of any
-endian issues if you use it on different architectures, or perhaps make your
-own column type.
-
-When creating a ColumnFamily object for use with a ColumnFamilyMap, it's
-important to disable autopacking in the ColumnFamily by setting
-autopack_names=False and autopack_values=False in the constructor.
-
-    >>> cf = pycassa.ColumnFamily(pool, 'Standard1',
-    ...                           autopack_names=False, autopack_values=False)
-    >>> Test.objects = pycassa.ColumnFamilyMap(Test, cf)
-
-All the functions are exactly the same, except that they return instances of the
-supplied class when possible.
-
-    >>> t = Test()
-    >>> t.key = 'maptest'
-    >>> t.string_column = 'string test'
-    >>> t.int_str_column = 18
-    >>> t.float_column = t.float_str_column = 35.8
-    >>> from datetime import datetime
-    >>> t.datetime_str_column = datetime.now()
-    >>> Test.objects.insert(t)
-    1261395560186855
-
-    >>> Test.objects.get(t.key).string_column
-    'string test'
-    >>> Test.objects.get(t.key).int_str_column
-    18
-    >>> Test.objects.get(t.key).float_column
-    35.799999999999997
-    >>> Test.objects.get(t.key).datetime_str_column
-    datetime.datetime(2009, 12, 23, 17, 6, 3)
-
-    >>> Test.objects.multiget([t.key])
-    {'maptest': <__main__.Test object at 0x7f8ddde0b9d0>}
-    >>> list(Test.objects.get_range())
-    [<__main__.Test object at 0x7f8ddde0b710>]
-    >>> Test.objects.get_count(t.key)
-    7
-
-    >>> Test.objects.remove(t)
-    1261395603906864
-    >>> Test.objects.get(t.key)
-    Traceback (most recent call last):
-    ...
-    cassandra.ttypes.NotFoundException: NotFoundException()
-
-Super Columns
--------------
-
-ColumnFamilies that deal with super column familes
-are created exactly the same way that they are for standard
-column families.  When using them, just include an extra layer
-in the column dictionaries.
-
-    >>> cf = pycassa.ColumnFamily(client, 'Test SuperColumnFamily')
-    >>> cf.insert('key1', {'1': {'sub1': 'val1', 'sub2': 'val2'}, '2': {'sub3': 'val3', 'sub4': 'val4'}})
-    1261490144457132
-    >>> cf.get('key1')
-    {'1': {'sub2': 'val2', 'sub1': 'val1'}, '2': {'sub4': 'val4', 'sub3': 'val3'}}
-    >>> cf.remove('key1', super_column='1')
-    1261490176976864
-    >>> cf.get('key1')
-    {'2': {'sub4': 'val4', 'sub3': 'val3'}}
-    >>> cf.get('key1', super_column='2')
-    {'sub3': 'val3', 'sub4': 'val4'}
-    >>> cf.multiget(['key1'], super_column='2')
-    {'key1': {'sub3': 'val3', 'sub4': 'val4'}}
-    >>> list(cf.get_range(super_column='2'))
-    [('key1', {'sub3': 'val3', 'sub4': 'val4'})]
-
-You may also use a ColumnFamilyMap with super columns:
-
-    >>> Test.objects = pycassa.ColumnFamilyMap(Test, cf)
-    >>> t = Test()
-    >>> t.key = 'key1'
-    >>> t.super_column = 'super1'
-    >>> t.string_column = 'foobar'
-    >>> t.int_str_column = 5
-    >>> t.float_column = t.float_str_column = 35.8
-    >>> t.datetime_str_column = datetime.now()
-    >>> Test.objects.insert(t)
-    >>> Test.objects.get(t.key)
-    {'super1': <__main__.Test object at 0x20ab350>}
-    >>> Test.objects.multiget([t.key])
-    {'key1': {'super1': <__main__.Test object at 0x20ab550>}}
-
-Batch Mutations
----------------
-
-The batch interface allows insert/update/remove operations to be performed in
-batches. This allows a convenient mechanism for streaming updates or doing a
-large number of operations while reducing number of RPC roundtrips.
-
-Batch mutator objects are synchronized and can be safely passed around threads.
-
-    >>> b = cf.batch(queue_size=10)
-    >>> b.insert('key1', {'col1':'value11', 'col2':'value21'})
-    >>> b.insert('key2', {'col1':'value12', 'col2':'value22'}, ttl=15)
-    >>> b.remove('key1', ['col2'])
-    >>> b.remove('key2')
-    >>> b.send()
-
-One can use the `queue_size` argument to control how many mutations will be
-queued before an automatic `send` is performed. This allows simple streaming of
-updates. If set to `None`, automatic checkpoints are disabled. Default is 100.
-
-Supercolumns are supported:
-
-    >>> b = scf.batch()
-    >>> b.insert('key1', {'supercol1': {'colA':'value1a', 'colB':'value1b'}
-                         {'supercol2': {'colA':'value2a', 'colB':'value2b'}})
-    >>> b.remove('key1', ['colA'], 'supercol1')
-    >>> b.send()
-
-You may also create a batch mutator from a client instance, allowing operations
-on multiple column families:
-
-    >>> b = Mutator(pool)
-    >>> b.insert(cf, 'key1', {'col1':'value1', 'col2':'value2'})
-    >>> b.insert(supercf, 'key1', {'subkey1': {'col1':'value1', 'col2':'value2'}})
-    >>> b.send()
-
-Note: This interface does not implement atomic operations across column
-      families. All the limitations of the `batch_mutate` Thrift API call
-      applies. Remember, a mutation in Cassandra is always atomic per key per
-      column family only.
-
-Note: If a single operation in a batch fails, the whole batch fails.
-
-In Python >= 2.5, mutators can be used as context managers, where an implicit
-`send` will be called upon exit.
-
-    >>> with cf.batch() as b:
-    >>>     b.insert('key1', {'col1':'value11', 'col2':'value21'})
-    >>>     b.insert('key2', {'col1':'value12', 'col2':'value22'})
-
-Calls to `insert` and `remove` can also be chained:
-
-    >>> cf.batch().remove('foo').remove('bar').send()
-
-Connection Pooling
-------------------
-
-See the [tutorial](http://pycassa.github.com/pycassa/tutorial.html#connection-pooling) and
-[pool section](http://pycassa.github.com/pycassa/api/pycassa/pool.html) of the API for
-more details on connection pooling.
-
-Advanced
---------
-
-pycassa currently returns Cassandra columns and super columns as OrderedDicts
-to preserve column and row order. Other dictionaries, such as 'dict' may be
-used instead. All returned values will be of that class.
-
-    >>> cf = pycassa.ColumnFamily(pool, 'Standard1', dict_class=dict)
-
-You may also define your own Column types for the mapper. For example, the IntString may be defined as:
-
-    >>> class IntString(pycassa.Column):
-    ...     def pack(self, val):
-    ...         return str(val)
-    ...     def unpack(self, val):
-    ...         return int(val)
-    ... 
