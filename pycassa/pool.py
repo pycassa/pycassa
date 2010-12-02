@@ -397,7 +397,9 @@ class ConnectionWrapper(connection.Connection):
         def new_f(self, *args, **kwargs):
             self.operation_count += 1
             try:
-                return getattr(super(ConnectionWrapper, self), f.__name__)(*args, **kwargs)
+                result = getattr(super(ConnectionWrapper, self), f.__name__)(*args, **kwargs)
+                self._retry_count = 0 # reset the count after a success
+                return result
             except (TimedOutException, UnavailableException), exc:
                 self._pool._notify_on_failure(exc, server=self.server,
                                               connection=self)
