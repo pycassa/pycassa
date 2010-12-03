@@ -376,7 +376,7 @@ class SystemManager(object):
                              row_cache_save_period_in_seconds=None,
                              memtable_flush_after_mins=None,
                              memtable_throughput_in_mb=None,
-                             memtable_throughput_in_millions=None,
+                             memtable_operations_in_millions=None,
                              comment=None):
 
         """
@@ -433,8 +433,8 @@ class SystemManager(object):
         :param int memtable_throughput_in_mb: Memtables are flushed when this many MBs have
           been written to them
 
-        :param int memtable_throughput_in_mb: Memtables are flushed when this many operations
-          have been performed on them
+        :param int memtable_operations_in_millions: Memtables are flushed when this many million
+          operations have been performed on them
 
         :param str comment: A human readable description
 
@@ -536,12 +536,12 @@ class SystemManager(object):
                 raise ire
             cfdef.memtable_throughput_in_mb = memtable_throughput_in_mb
 
-        if memtable_throughput_in_millions is not None:
-            if memtable_throughput_in_millions < 0:
+        if memtable_operations_in_millions is not None:
+            if memtable_operations_in_millions < 0:
                 ire = InvalidRequestException()
-                ire.why = 'memtable_throughput_in_millions must be non-negative'
+                ire.why = 'memtable_operations_in_millions must be non-negative'
                 raise ire
-            cfdef.memtable_throughput_in_millions = memtable_throughput_in_millions
+            cfdef.memtable_operations_in_millions = memtable_operations_in_millions
 
         if comment is not None:
             cfdef.comment = comment
@@ -565,7 +565,7 @@ class SystemManager(object):
                             row_cache_save_period_in_seconds=None,
                             memtable_flush_after_mins=None,
                             memtable_throughput_in_mb=None,
-                            memtable_throughput_in_millions=None,
+                            memtable_operations_in_millions=None,
                             comment=None):
 
         """
@@ -656,12 +656,12 @@ class SystemManager(object):
                 raise ire
             cfdef.memtable_throughput_in_mb = memtable_throughput_in_mb
 
-        if memtable_throughput_in_millions is not None:
-            if memtable_throughput_in_millions < 0:
+        if memtable_operations_in_millions is not None:
+            if memtable_operations_in_millions < 0:
                 ire = InvalidRequestException()
-                ire.why = 'memtable_throughput_in_millions must be non-negative'
+                ire.why = 'memtable_operations_in_millions must be non-negative'
                 raise ire
-            cfdef.memtable_throughput_in_millions = memtable_throughput_in_millions
+            cfdef.memtable_operations_in_millions = memtable_operations_in_millions
 
         if comment is not None:
             cfdef.comment = comment
