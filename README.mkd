@@ -1,21 +1,23 @@
 Note
 ====
 
-If you are using the 0.6.x series of Cassandra then get pycassa 0.3 from the
-Downloads section and read the documentation contained within.  This README
-applies to the current state of pycassa which tracks Cassandra's development
-(work in-progress toward Cassandra 0.7).
+If you are using the Cassandra 0.6, then get pycassa 0.3 from the
+[Downloads](https://github.com/pycassa/pycassa/downloads) section and read the
+documentation contained within.  This README applies to the current state of
+pycassa, which tracks Cassandra 0.7.
+
+See [the wiki](https://github.com/pycassa/pycassa/wiki/Pycassa-%2B-Cassandra-Compatibility)
+for more compatibility notes.
 
 pycassa
 =======
 
 pycassa is a python client library for Apache Cassandra with the following features:
 
-1. Auto-failover single or thread-local connections
+1. Auto-failover for normal or thread-local connections
 2. Connection pooling
 3. A batch interface
-4. Simplified version of the Thrift interface
-5. A method to map an existing class to a Cassandra column family
+4. A method to map an existing class to a Cassandra column family
 
 Documentation
 -------------
@@ -42,16 +44,6 @@ Mailing List:
 * User list: [http://groups.google.com/group/pycassa-discuss](http://groups.google.com/group/pycassa-discuss)
 * Developer list: [http://groups.google.com/group/pycassa-devel](http://groups.google.com/group/pycassa-devel)
 
-Requirements
-------------
-
-    thrift: http://incubator.apache.org/thrift/
-    Cassandra: http://cassandra.apache.org
-
-To install thrift's python bindings:
-
-    easy_install thrift05
-
 Installation
 ------------
 
@@ -60,8 +52,10 @@ If easy_install is available, you can use:
     easy_install pycassa
 
 The simplest way to install manually is to copy the pycassa directories to
-your program.  If you want to install, run setup.py as a superuser.
+your program.  If you want to install, make sure you have thrift installed,
+and run setup.py as a superuser.
 
+    easy_install thrift05
     python setup.py install
 
 Connecting
@@ -78,7 +72,7 @@ To get a connection pool, pass a Keyspace and an optional list of servers:
     >>> pool = pycassa.connect('Keyspace1') # Defaults to connecting to the server at 'localhost:9160'
     >>> pool = pycassa.connect('Keyspace1', ['192.168.2.10:9160'])
 
-See the [tutorial](http://pycassa.github.com/pycassa/tutorial.html#making-a-connection) for more details.
+See the [tutorial](http://pycassa.github.com/pycassa/tutorial.html#connecting-to-cassandra) for more details.
 
 Basic Usage
 -----------

@@ -69,13 +69,7 @@ are included in the default schema file:
   >>> col_fam = pycassa.ColumnFamily(pool, 'Standard1')
 
 If you get an error about the keyspace or column family not
-existing, make sure you imported the yaml file. This can
-be done using Cassandra's :file:`bin/schematool`:
-
-.. code-block:: bash
-
-  cd $CASSANDRA_HOME
-  bin/schematool localhost 8080 import
+existing, make sure you imported the schema with :file:`bin/schematool`.
 
 Inserting Data
 --------------
@@ -125,9 +119,9 @@ specify them using a `columns` argument:
   >>> col_fam.get('row_key', columns=['name1', 'name2'])
   {'name1': 'foo', 'name2': 'bar'}
 
-We may also get a slice (or subrange) or the columns in a row. To do this,
+We may also get a slice (or subrange) of the columns in a row. To do this,
 use the `column_start` and `column_finish` parameters.  One or both of these may
-be left empty to allow the slice to extend to one or both ends the.
+be left empty to allow the slice to extend to one or both ends.
 Note that `column_finish` is inclusive. Assuming we've inserted several
 columns with names '1' through '9', we can do the following:
 
@@ -177,8 +171,10 @@ with keys 'row_key1' through 'row_key9', we can do this:
   'row_key6' => {'name':'val'}
   'row_key7' => {'name':'val'}
 
-.. note:: You must use an OrderPreservingPartitioner to be able to
-          get a meaningful range of rows.
+.. note:: Cassandra must be using an OrderPreservingPartitioner for you to be
+          able to get a meaningful range of rows; the default, RandomPartitioner,
+          stores rows in the order of the MD5 hash of their keys. See
+          http://www.riptano.com/docs/0.6/operations/clustering#partitioners.
 
 The last way to get multiple rows at a time is to take advantage of
 secondary indexes by using :meth:`~pycassa.columnfamily.ColumnFamily.get_indexed_slices()`,
@@ -373,13 +369,17 @@ the following:
 .. code-block:: python
 
   >>> import pycassa
-  >>> pool = pycassa.ConnectionPool('Keyspace1')
-  >>> col_fam = pycassa.ColumnFamily(pool, 'Indexed1')
-  >>> index_exp = pycassa.create_index_expression('birthdate', 1984)
-  >>> index_clause = pycassa.create_index_clause([index_exp])
-  >>> result = col_fam.get_indexed_slices(index_clause)
-  >>> list(result)
-  {'winston smith': {'birthdate': 1984}}
+  >>> from pycassa.index import *
+  >>> pool = pycassa.connect('Keyspace1')
+  >>> users = pycassa.ColumnFamily(pool, 'Users')
+  >>> state_expr = create_index_expression('state', 'Utah')
+  >>> bday_expr = create_index_expression('birthdate', 1970, GT)
+  >>> clause = create_index_clause([state_expr, bday_expr], count=20)
+  >>> for key, user in users.get_indexed_slices(clause):
+  ...     print user['name'] + ",", user['state'], user['birthdate']
+  John Smith, Utah 1971
+  Mike Scott, Utah 1980
+  Jeff Bird, Utah 1973
 
 Although at least one
 :class:`~pycassa.cassandra.ttypes.IndexExpression` in the clause
@@ -513,5 +513,6 @@ and dropped using :class:`pycassa.system_manager.SystemManager`. Additionally,
 indexes may be created and dropped using this class as well.
 
 Although most of SystemManager's methods may be used in a program,
-it is recommended use this manually using a tool like :ref:`pycassa-shell`. There
-is a :ref:`provided example <pycassa-shell-sys-man>` of this usage.
+it is recommended that they be used manually with a tool like
+:ref:`pycassa-shell`. There is a
+:ref:`provided example <pycassa-shell-sys-man>` of this usage.
