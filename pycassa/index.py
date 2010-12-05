@@ -6,18 +6,23 @@ Example Usage:
 .. code-block:: python
 
     >>> import pycassa
-    >>> conn = pycassa.connect('Keyspace1')
-    >>> cf = pycassa.ColumnFamily(conn, 'Indexed1')
-    >>> index_expr1 = pycassa.create_index_expression('birthdate', 1970)
-    >>> index_expr2 = pycassa.create_index_expression('age', 40)
-    >>> index_clause = pycassa.create_index_clause([index_expr1, index_expr2], count=10000)
-    >>> for row in cf.get_indexed_slices(index_clause):
-    >>>     pass # do stuff here, or use list() on the result instead
+    >>> from pycassa.index import *
+    >>> pool = pycassa.connect('Keyspace1')
+    >>> users = pycassa.ColumnFamily(pool, 'Users')
+    >>> state_expr = create_index_expression('state', 'Utah')
+    >>> bday_expr = create_index_expression('birthdate', 1970, GT)
+    >>> clause = create_index_clause([state_expr, bday_expr], count=20)
+    >>> for key, user in users.get_indexed_slices(clause):
+    ...     print user['name'] + ",", user['state'], user['birthdate']
+    John Smith, Utah 1971
+    Mike Scott, Utah 1980
+    Jeff Bird, Utah 1973
 
-This is give you all of the rows (up to 10000) which have a 'birthdate' value
-of 1970 and an 'age' value of 40.
+This gives you all of the rows (up to 20) which have a 'birthdate' value
+above 1970 and a state value of 'Utah'.
 
-.. seealso:: :meth:`~pycassa.system_manager.SystemManager.create_index()`
+.. seealso:: :class:`~pycassa.system_manager.SystemManager` methods
+             :meth:`~pycassa.system_manager.SystemManager.create_index()`
              and :meth:`~pycassa.system_manager.SystemManager.drop_index()`
 
 """
@@ -25,7 +30,23 @@ of 1970 and an 'age' value of 40.
 from pycassa.cassandra.ttypes import IndexClause, IndexExpression,\
                                      IndexOperator
 
-__all__ = ['create_index_clause', 'create_index_expression']
+__all__ = ['create_index_clause', 'create_index_expression', 'EQ', 'GT', 'GTE',
+           'LT', 'LTE']
+
+EQ = IndexOperator.EQ
+""" Equality (==) operator for index expressions """
+
+GT = IndexOperator.GT
+""" Greater-than (>) operator for index expressions """
+
+GTE = IndexOperator.GTE
+""" Greater-than-or-equal (>=) operator for index expressions """
+
+LT = IndexOperator.LT
+""" Less-than (<) operator for index expressions """
+
+LTE = IndexOperator.LTE
+""" Less-than-or-equal (<=) operator for index expressions """
 
 def create_index_clause(expr_list, start_key='', count=100):
     """
@@ -47,7 +68,7 @@ def create_index_clause(expr_list, start_key='', count=100):
     return IndexClause(expressions=expr_list, start_key=start_key,
                        count=count)
 
-def create_index_expression(column_name, value, op=IndexOperator.EQ):
+def create_index_expression(column_name, value, op=EQ):
     """
     Constructs an :class:`~pycassa.cassandra.ttypes.IndexExpression` to use
     in an :class:`~pycassa.cassandra.ttypes.IndexClause`
@@ -56,8 +77,7 @@ def create_index_expression(column_name, value, op=IndexOperator.EQ):
     will only occur if the operator specified with `op` returns ``True`` when used
     on the actual column value and the `value` parameter.
 
-    The default operator is :const:`pycassa.cassandra.ttypes.IndexOperator.EQ`, which
-    tests for equality.
+    The default operator is :const:`~EQ`, which tests for equality.
 
     """
     return IndexExpression(column_name=column_name, op=op, value=value)
