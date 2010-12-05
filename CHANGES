@@ -1,9 +1,13 @@
 Changes in Version 1.0.0
 
-    * Created the SystemManager class to allow for keyspace, column family, and index creation, modification, and deletion. These operations are no longer provided by a Connection class.
+    * Created the SystemManager class to allow for keyspace, column family, and
+      index creation, modification, and deletion. These operations are no longer
+      provided by a Connection class.
     * Updated pycassaShell to use the SystemManager class
-    * Improved retry behavior, including exponential backoff and proper resetting of the retry attempt counter
-    * Condensed connection pooling classes into only pycassa.pool.ConnectionPool to provide a simpler API
+    * Improved retry behavior, including exponential backoff and proper resetting
+      of the retry attempt counter
+    * Condensed connection pooling classes into only pycassa.pool.ConnectionPool
+      to provide a simpler API
     * Changed pycassa.connection.connect() to return a connection pool
     * Use more performant Thrift API methods for insert() and get() where possible
     * Bundled OrderedDict and set it as the default dictionary class for column families
@@ -17,7 +21,8 @@ Changes in Version 0.5.4
 
 Changes in Version 0.5.3
 
-    * Added PooledColumnFamily, which makes it easy to use connection pooling automatically with a ColumnFamily.
+    * Added PooledColumnFamily, which makes it easy to use connection pooling
+      automatically with a ColumnFamily.
 
 Changes in Version 0.5.2
 
@@ -56,14 +61,15 @@ Changes in Version 0.4.2
     * Made bundled thrift-gen code a subpackage of pycassa
     * Don’t attempt to reencode already encoded UTF8 strings
 
-Changes in Version 0.4.¶
+Changes in Version 0.4.1
 
     * Added batch_insert()
     * Redifined insert() in terms of batch_insert()
     * Fixed UTF8 autopacking
     * Convert datetime slice args to uuids when appropriate
     * Changed how thrift-gen code is bundled
-    * Assert that the major version of the thrift API is the same on the client and on the server
+    * Assert that the major version of the thrift API is the same on the client
+      and on the server
     * Use Thrift API 12.0.0
 
 Changes in Version 0.4.0
@@ -76,6 +82,7 @@ Changes in Version 0.4.0
     * Specify keyspace as argument to connect()
     * Add support for framed transport and default to using it
     * Added autopacking for column names and values
-    * Added support for secondary indexes with get_indexed_slices() and pycassa.index
+    * Added support for secondary indexes with get_indexed_slices() and
+      pycassa.index
     * Added truncate()
     * Use Thrift API 11.0.0
