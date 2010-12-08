@@ -38,3 +38,4 @@ class SystemManagerTest(unittest.TestCase):
         self.sys.describe_ring('Keyspace1')
         self.sys.describe_cluster_name()
         self.sys.describe_version()
+        self.sys.describe_schema_versions()

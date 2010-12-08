@@ -269,6 +269,10 @@ class SystemManager(object):
         """ Gives the server's API version """
         return self._conn.describe_version()
 
+    def describe_schema_versions(self):
+        """ Lists what schema version each node has """
+        return self._conn.describe_schema_versions()
+
     def _system_add_keyspace(self, ksdef):
         schema_version = self._conn.system_add_keyspace(ksdef) 
         self._wait_for_agreement()
@@ -455,6 +459,10 @@ class SystemManager(object):
                 cfdef.comparator_type = comparator_type
 
         if subcomparator_type is not None:
+            if cfdef.column_type != 'Super':
+                ire = InvalidRequestException()
+                ire.why = 'subcomparator_type may only be used for super column families'
+                raise ire
             if subcomparator_type.find('.') == -1:
                 cfdef.subcomparator_type = 'org.apache.cassandra.db.marshal.%s' % subcomparator_type
             else:
