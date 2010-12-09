@@ -61,7 +61,7 @@ print "Keyspace: %s" % options.keyspace
 print "Host: %s:%d" % (hostname, port)
 
 if options.keyspace:
-    pool = pycassa.QueuePool(keyspace=keyspace,
+    pool = pycassa.QueuePool(keyspace=options.keyspace,
                              server_list=['%s:%d' % (hostname, port)],
                              credentials=credentials,
                              framed_transport=framed)
