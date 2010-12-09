@@ -1,3 +1,8 @@
+Changes in Version 1.0.1
+
+    * Allow pycassaShell to be run without specifying a keyspace
+    * Added pycassa.system_manager.SystemManager.describe_schema_versions()
+
 Changes in Version 1.0.0
 
     * Created the SystemManager class to allow for keyspace, column family, and

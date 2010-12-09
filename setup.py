@@ -16,15 +16,16 @@ use_setuptools()
 from setuptools import setup
 from distutils.cmd import Command
 
-__version_info__ = (1, 0, 0)
+__version_info__ = (1, 0, 1)
 __version__ = '.'.join([str(v) for v in __version_info__])
 
-long_description = """pycassa is a Cassandra library with the following features:
+long_description = """pycassa is a python client library for Apache Cassandra with the following features:
 
 1. Auto-failover single or thread-local connections
-2. A simplified version of the thrift interface
-3. A method to map an existing class to a Cassandra ColumnFamily.
-4. Support for SuperColumns
+2. Connection pooling
+3. A batch interface
+4. Simplified version of the Thrift interface
+5. A method to map an existing class to a Cassandra column family
 """
 
 class doc(Command):
@@ -82,7 +83,7 @@ setup(
       description = 'Python client library for Apache Cassandra',
       long_description = long_description,
       url = 'http://github.com/pycassa/pycassa',
-      download_url = 'http://github.com/downloads/pycassa/pycassa/pycassa-0.5.1.tar.gz',
+      download_url = 'http://github.com/downloads/pycassa/pycassa/pycassa-%s.tar.gz' % __version__,
       keywords = 'cassandra client db distributed thrift',
       packages = ['pycassa', 'pycassa.cassandra', 'pycassa.logging'],
       py_modules = ['ez_setup'],
