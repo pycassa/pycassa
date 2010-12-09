@@ -37,9 +37,6 @@ parser.add_option('-F', '--framed',
 
 (options, args) = parser.parse_args()
 
-if not options.keyspace:
-    print >>stderr, "You must specify a keyspace with -k/--keyspace."
-    exit(1)
 
 hostname = options.host and options.host or 'localhost'
 port = options.port and options.port or 9160
@@ -55,29 +52,29 @@ if options.user or options.passwd:
         exit(1)
     credentials = {'username': options.user, 'password': options.passwd}
 
-pool = pycassa.QueuePool(keyspace=options.keyspace,
-                         server_list=['%s:%d' % (hostname, port)],
-                         credentials=credentials,
-                         framed_transport=framed)
-
 SYSTEM_MANAGER = pycassa.SystemManager('%s:%d' % (hostname, port), credentials, framed)
 
-print """
-Cassandra Interactive Python Shell
+print "----------------------------------"
+print "Cassandra Interactive Python Shell"
+print "----------------------------------"
+print "Keyspace: %s" % options.keyspace
+print "Host: %s:%d" % (hostname, port)
 
-%s/%s:%d
+if options.keyspace:
+    pool = pycassa.QueuePool(keyspace=keyspace,
+                             server_list=['%s:%d' % (hostname, port)],
+                             credentials=credentials,
+                             framed_transport=framed)
 
-Available column family instances:""" % (options.keyspace, hostname, port)
+    print "\nAvailable ColumnFamily instances:"
+    for cfname in SYSTEM_MANAGER.get_keyspace_description(options.keyspace).keys():
+        cfinstance = pycassa.ColumnFamily(pool, cfname)
+        exec('%s = cfinstance' % cfname.upper())
+        spaces = " " * (25 - len(cfname))
+        print " *", cfname.upper(), spaces, "(", cfname, ")"
+else:
+    print "\nColumnFamily instances are only available if a keyspace is specified with -k/--keyspace"
 
-for cfname in SYSTEM_MANAGER.get_keyspace_description(options.keyspace).keys():
-    cfinstance = pycassa.ColumnFamily(pool, cfname)
-    exec('%s = cfinstance' % cfname.upper())
-    spaces = " " * (25 - len(cfname))
-    print " *", cfname.upper(), spaces, "(", cfname, ")"
-
-print """
-Schema definition tools and cluster information are available through SYSTEM_MANAGER.
-
-Enjoy!"""
+print "\nSchema definition tools and cluster information are available through SYSTEM_MANAGER."
 
 runshell()
