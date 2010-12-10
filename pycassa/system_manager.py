@@ -4,7 +4,7 @@ import time
 from connection import Connection
 from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef
 
-_TIMEOUT = 5
+_TIMEOUT = 10
 _SAMPLE_PERIOD = 0.25
 
 SIMPLE_STRATEGY = 'SimpleStrategy'

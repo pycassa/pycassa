@@ -64,7 +64,8 @@ if options.keyspace:
     pool = pycassa.QueuePool(keyspace=options.keyspace,
                              server_list=['%s:%d' % (hostname, port)],
                              credentials=credentials,
-                             framed_transport=framed)
+                             framed_transport=framed,
+                             timeout=5)
 
     print "\nAvailable ColumnFamily instances:"
     for cfname in SYSTEM_MANAGER.get_keyspace_description(options.keyspace).keys():
