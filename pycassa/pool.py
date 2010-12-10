@@ -17,6 +17,7 @@ from cassandra.ttypes import TimedOutException, UnavailableException
 from thrift import Thrift
 
 import threading
+import socket
 
 _BASE_BACKOFF = 0.001
 
@@ -402,7 +403,7 @@ class ConnectionWrapper(connection.Connection):
                 result = getattr(super(ConnectionWrapper, self), f.__name__)(*args, **kwargs)
                 self._retry_count = 0 # reset the count after a success
                 return result
-            except (TimedOutException, UnavailableException), exc:
+            except (TimedOutException, UnavailableException, Thrift.TException, socket.error, IOError), exc:
                 self._pool._notify_on_failure(exc, server=self.server,
                                               connection=self)
 
@@ -424,6 +425,7 @@ class ConnectionWrapper(connection.Connection):
                     self._pool._replace_wrapper()
                 self._replace(self._pool.get())
                 return new_f(self, *args, **kwargs)
+
         new_f.__name__ = f.__name__
         return new_f
 
@@ -464,6 +466,10 @@ class ConnectionWrapper(connection.Connection):
 
     @_retry
     def truncate(self, *args, **kwargs):
+        pass
+
+    @_retry
+    def describe_keyspace(self, *args, **kwargs):
         pass
 
 
