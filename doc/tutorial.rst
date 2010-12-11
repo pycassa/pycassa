@@ -5,6 +5,7 @@ This tutorial is intended as an introduction to working with
 Cassandra and **pycassa**.
 
 .. toctree::
+    :maxdepth: 2
 
 Prerequisites
 -------------
@@ -240,11 +241,29 @@ add an extra level to the dictionary:
 
 .. code-block:: python
 
-  >>> col_fam = pycassa.ColumnFamily(connection, 'Super1')
+  >>> col_fam = pycassa.ColumnFamily(pool, 'Super1')
   >>> col_fam.insert('row_key', {'supercol_name': {'col_name': 'col_val'}})
   1354491238721345
   >>> col_fam.get('row_key')
   {'supercol_name': {'col_name': 'col_val'}}
+
+The `supercolumn` parameter for :meth:`get()`-like methods allows
+you to be selective about what subcolumns you get from a single
+supercolumn.
+
+.. code-block:: python
+
+  >>> col_fam = pycassa.ColumnFamily(pool, 'Letters')
+  >>> col_fam.insert('row_key', {'lowercase': {'a': 1, 'b': 2, 'c': 3}})
+  1354491239132744
+  >>> col_fam.get('row_key', supercolumn='lowercase')
+  {'supercol1': {'a': 1: 'b': 2, 'c': 3}}
+  >>> col_fam.get('row_key', supercolumn='lowercase', columns=['a', 'b'])
+  {'supercol1': {'a': 1: 'b': 2}}
+  >>> col_fam.get('row_key', supercolumn='lowercase', column_start='b')
+  {'supercol1': {'b': 1: 'c': 2}}
+  >>> col_fam.get('row_key', supercolumn='lowercase', column_finish='b', column_reversed=True)
+  {'supercol1': {'c': 2, 'b': 1}}
 
 Typed Column Names and Values
 -----------------------------
@@ -285,7 +304,7 @@ write to the StandardInt column family, we can do the following:
 
 .. code-block:: python
 
-  >>> col_fam = pycassa.ColumnFamily(connection, 'StandardInt')
+  >>> col_fam = pycassa.ColumnFamily(pool, 'StandardInt')
   >>> col_fam.insert('row_key', {42: 'some_val'})
   1354491238721387
   >>> col_fam.get('row_key')
@@ -321,7 +340,7 @@ for individual columns, or both.  Here's another example ``cassandra.yaml``:
 .. code-block:: python
 
   >>> import uuid
-  >>> col_fam = pycassa.ColumnFamily(connection, 'LongsExceptUUID')
+  >>> col_fam = pycassa.ColumnFamily(pool, 'LongsExceptUUID')
   >>> col_fam.insert('row_key', {'foo': 123456789, 'uuid': uuid.uuid1()})
   1354491238782746
   >>> col_fam.get('row_key')
@@ -333,12 +352,54 @@ can turn it off when you create the
 
 .. code-block:: python
 
-  >>> col_fam = pycassa.ColumnFamily(connection, 'Standard1',
+  >>> col_fam = pycassa.ColumnFamily(pool, 'Standard1',
   ...                                autopack_names=False,
   ...                                autopack_values=False)
 
 This mainly needs to be done when working with
 :class:`~pycassa.columnfamilymap.ColumnFamilyMap`.
+
+Version 1 UUIDs (TimeUUIDType)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Version 1 UUIDs are `frequently used for timelines <http://www.riptano.com/docs/0.6/data_model/uuids>`_
+instead of timestamps.  Normally, this makes it difficult to get a slice of
+columns for some time range or to create a column name or value for some
+specific time.
+
+To make this easier, if a :class:`datetime` object or a timestamp with the
+same precision as the output of ``time.time()`` is passed where a TimeUUID
+is expected, **pycassa** will convert that into a UUID with an equivalent
+timestamp component.
+
+Suppose we have something like Twissandra's public timeline but with TimeUUIDs
+for column names. If we want to get all tweets that happened yesterday, we
+can do:
+
+.. code-block:: python
+
+  >>> import datetime
+  >>> line = pycassa.ColumnFamily(pool, 'Userline')
+  >>> today = datetime.datetime.utcnow()
+  >>> yesterday = today - datetime.timedelta(days=1)
+  >>> tweets = line.get('__PUBLIC__', column_start=yesterday, column_finish=today)
+
+Now, suppose there was a tweet that was supposed to be posted on December 11th
+at 8:02:15, but it was dropped and now we need to put it in the public timeline.
+There's no need to generate a UUID, we can just pass another datetime object instead:
+
+.. code-block:: python
+
+  >>> from datetime import datetime
+  >>> line = pycassa.ColumnFamily(pool, 'Userline')
+  >>> time = datetime(2010, 12, 11, 8, 2, 15)
+  >>> line.insert('__PUBLIC__', {time: 'some tweet stuff here'})
+
+One limitation of this is that you can't ask for one specific column with a
+TimeUUID name by passing a :class:`datetime` through something like the `columns` parameter
+for :meth:`get()`; this is because there is no way to know the non-timestamp
+components of the UUID ahead of time.  Instead, simply pass the same :class:`datetime`
+object for both `column_start` and `column_finish` and you'll get one or more
+columns for that exact moment in time.
 
 Indexes
 -------
