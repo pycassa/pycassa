@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Changes in Version 1.0.1
+------------------------
+
+- Allow pycassaShell to be run without specifying a keyspace
+- Added :meth:`pycassa.system_manager.SystemManager.describe_schema_versions()`
+
 Changes in Version 1.0.0
 ------------------------
 
