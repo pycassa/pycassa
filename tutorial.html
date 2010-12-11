@@ -251,11 +251,27 @@ of a slice or have particular names, you can do that as well:</p>
 </div>
 <p>To use a super column in <strong>pycassa</strong>, you only need to
 add an extra level to the dictionary:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="s">&#39;Super1&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;Super1&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;supercol_name&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;col_name&#39;</span><span class="p">:</span> <span class="s">&#39;col_val&#39;</span><span class="p">}})</span>
 <span class="go">1354491238721345</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">)</span>
 <span class="go">{&#39;supercol_name&#39;: {&#39;col_name&#39;: &#39;col_val&#39;}}</span>
+</pre></div>
+</div>
+<p>The <cite>supercolumn</cite> parameter for <tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt>-like methods allows
+you to be selective about what subcolumns you get from a single
+supercolumn.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;Letters&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;lowercase&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}})</span>
+<span class="go">1354491239132744</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="n">supercolumn</span><span class="o">=</span><span class="s">&#39;lowercase&#39;</span><span class="p">)</span>
+<span class="go">{&#39;supercol1&#39;: {&#39;a&#39;: 1: &#39;b&#39;: 2, &#39;c&#39;: 3}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="n">supercolumn</span><span class="o">=</span><span class="s">&#39;lowercase&#39;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">])</span>
+<span class="go">{&#39;supercol1&#39;: {&#39;a&#39;: 1: &#39;b&#39;: 2}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="n">supercolumn</span><span class="o">=</span><span class="s">&#39;lowercase&#39;</span><span class="p">,</span> <span class="n">column_start</span><span class="o">=</span><span class="s">&#39;b&#39;</span><span class="p">)</span>
+<span class="go">{&#39;supercol1&#39;: {&#39;b&#39;: 1: &#39;c&#39;: 2}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="n">supercolumn</span><span class="o">=</span><span class="s">&#39;lowercase&#39;</span><span class="p">,</span> <span class="n">column_finish</span><span class="o">=</span><span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="n">column_reversed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">{&#39;supercol1&#39;: {&#39;c&#39;: 2, &#39;b&#39;: 1}}</span>
 </pre></div>
 </div>
 </div>
@@ -291,7 +307,7 @@ understand by using something like <tt class="xref py py-meth docutils literal">
 when <strong>pycassa</strong> sees that a column family uses these types, it knows
 to pack and unpack these data types automatically for you. So, if we want to
 write to the StandardInt column family, we can do the following:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="s">&#39;StandardInt&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;StandardInt&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="mi">42</span><span class="p">:</span> <span class="s">&#39;some_val&#39;</span><span class="p">})</span>
 <span class="go">1354491238721387</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">)</span>
@@ -321,7 +337,7 @@ for individual columns, or both.  Here&#8217;s another example <tt class="docuti
 </div>
 <p><strong>pycassa</strong> knows to pack these column values automatically too:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">uuid</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="s">&#39;LongsExceptUUID&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;LongsExceptUUID&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;foo&#39;</span><span class="p">:</span> <span class="mi">123456789</span><span class="p">,</span> <span class="s">&#39;uuid&#39;</span><span class="p">:</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid1</span><span class="p">()})</span>
 <span class="go">1354491238782746</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">)</span>
@@ -331,13 +347,49 @@ for individual columns, or both.  Here&#8217;s another example <tt class="docuti
 <p>Of course, if <strong>pycassa</strong>&#8216;s automatic behavior isn&#8217;t working for you, you
 can turn it off when you create the
 <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="s">&#39;Standard1&#39;</span><span class="p">,</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;Standard1&#39;</span><span class="p">,</span>
 <span class="gp">... </span>                               <span class="n">autopack_names</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
 <span class="gp">... </span>                               <span class="n">autopack_values</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This mainly needs to be done when working with
 <a class="reference internal" href="api/pycassa/columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</p>
+<div class="section" id="version-1-uuids-timeuuidtype">
+<h3>Version 1 UUIDs (TimeUUIDType)<a class="headerlink" href="#version-1-uuids-timeuuidtype" title="Permalink to this headline">¶</a></h3>
+<p>Version 1 UUIDs are <a class="reference external" href="http://www.riptano.com/docs/0.6/data_model/uuids">frequently used for timelines</a>
+instead of timestamps.  Normally, this makes it difficult to get a slice of
+columns for some time range or to create a column name or value for some
+specific time.</p>
+<p>To make this easier, if a <tt class="xref py py-class docutils literal"><span class="pre">datetime</span></tt> object or a timestamp with the
+same precision as the output of <tt class="docutils literal"><span class="pre">time.time()</span></tt> is passed where a TimeUUID
+is expected, <strong>pycassa</strong> will convert that into a UUID with an equivalent
+timestamp component.</p>
+<p>Suppose we have something like Twissandra&#8217;s public timeline but with TimeUUIDs
+for column names. If we want to get all tweets that happened yesterday, we
+can do:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">line</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;Userline&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">today</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">yesterday</span> <span class="o">=</span> <span class="n">today</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tweets</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;__PUBLIC__&#39;</span><span class="p">,</span> <span class="n">column_start</span><span class="o">=</span><span class="n">yesterday</span><span class="p">,</span> <span class="n">column_finish</span><span class="o">=</span><span class="n">today</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now, suppose there was a tweet that was supposed to be posted on December 11th
+at 8:02:15, but it was dropped and now we need to put it in the public timeline.
+There&#8217;s no need to generate a UUID, we can just pass another datetime object instead:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">line</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;Userline&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">time</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2010</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">line</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;__PUBLIC__&#39;</span><span class="p">,</span> <span class="p">{</span><span class="n">time</span><span class="p">:</span> <span class="s">&#39;some tweet stuff here&#39;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>One limitation of this is that you can&#8217;t ask for one specific column with a
+TimeUUID name by passing a <tt class="xref py py-class docutils literal"><span class="pre">datetime</span></tt> through something like the <cite>columns</cite> parameter
+for <tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt>; this is because there is no way to know the non-timestamp
+components of the UUID ahead of time.  Instead, simply pass the same <tt class="xref py py-class docutils literal"><span class="pre">datetime</span></tt>
+object for both <cite>column_start</cite> and <cite>column_finish</cite> and you&#8217;ll get one or more
+columns for that exact moment in time.</p>
+</div>
 </div>
 <div class="section" id="indexes">
 <h2>Indexes<a class="headerlink" href="#indexes" title="Permalink to this headline">¶</a></h2>
@@ -515,7 +567,10 @@ it is recommended that they be used manually with a tool like
 <li><a class="reference internal" href="#getting-data">Getting Data</a></li>
 <li><a class="reference internal" href="#counting">Counting</a></li>
 <li><a class="reference internal" href="#super-columns">Super Columns</a></li>
-<li><a class="reference internal" href="#typed-column-names-and-values">Typed Column Names and Values</a></li>
+<li><a class="reference internal" href="#typed-column-names-and-values">Typed Column Names and Values</a><ul>
+<li><a class="reference internal" href="#version-1-uuids-timeuuidtype">Version 1 UUIDs (TimeUUIDType)</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#indexes">Indexes</a></li>
 <li><a class="reference internal" href="#connection-pooling">Connection Pooling</a></li>
 <li><a class="reference internal" href="#class-mapping-with-column-family-map">Class Mapping with Column Family Map</a></li>
