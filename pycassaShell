@@ -21,7 +21,7 @@ except NameError:
 
 import pycassa, optparse
 from pycassa.system_manager import *
-from sys import stderr, exit
+from sys import stdout, stderr, exit
 
 parser = optparse.OptionParser(usage='Usage: %prog [OPTIONS]')
 parser.add_option('-k', '--keyspace', help='Cassandra keyspace name.')
@@ -34,6 +34,7 @@ parser.add_option('-S', '--streaming', help='Using streaming transport.',
 parser.add_option('-F', '--framed', 
                   help='Use framed transport.  Default transport.',
                   action="store_true", dest='framed')
+parser.add_option('-f', '--file', help='Input script')
 
 (options, args) = parser.parse_args()
 
@@ -77,5 +78,16 @@ else:
     print "\nColumnFamily instances are only available if a keyspace is specified with -k/--keyspace"
 
 print "\nSchema definition tools and cluster information are available through SYSTEM_MANAGER."
+
+print "\nExecuting script ...",
+stdout.flush()
+if (options.file):
+    i = 0
+    f = open(options.file, 'r')
+    line = f.readline()
+    while line != '':
+        exec(line);
+        line = f.readline()
+print " done."
 
 runshell()
