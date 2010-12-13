@@ -2,7 +2,8 @@ from logging.pycassa_logger import *
 import time
 
 from connection import Connection
-from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef
+from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef,\
+                                     InvalidRequestException
 
 _TIMEOUT = 10
 _SAMPLE_PERIOD = 0.25
@@ -97,6 +98,10 @@ class SystemManager(object):
                     new_metadata[datum.name] = datum
                 cf_def.column_metadata = new_metadata
         return cf_defs
+
+    def list_keyspaces(self):
+        """ Returns a list of all keyspace names. """
+        return [ks.name for ks in self._conn.describe_keyspaces()]
 
     def describe_keyspace(self, keyspace):
         """
@@ -460,41 +465,11 @@ class SystemManager(object):
 
         if subcomparator_type is not None:
             if cfdef.column_type != 'Super':
-                ire = InvalidRequestException()
-                ire.why = 'subcomparator_type may only be used for super column families'
-                raise ire
+                self._raise_ire('subcomparator_type may only be used for super column families')
             if subcomparator_type.find('.') == -1:
                 cfdef.subcomparator_type = 'org.apache.cassandra.db.marshal.%s' % subcomparator_type
             else:
                 cfdef.subcomparator_type = subcomparator_type
-
-        if key_cache_size is not None:
-            if key_cache_size < 0:
-                ire = InvalidRequestException()
-                ire.why = 'key_cache_size must be non-negative'
-                raise ire
-            cfdef.key_cache_size = key_cache_size
-
-        if row_cache_size is not None:
-            if row_cache_size < 0:
-                ire = InvalidRequestException()
-                ire.why = 'row_cache_size must be non-negative'
-                raise ire
-            cfdef.row_cache_size = row_cache_size
-
-        if gc_grace_seconds is not None:
-            if gc_grace_seconds < 0:
-                ire = InvalidRequestException()
-                ire.why = 'gc_grace_seconds must be non-negative'
-                raise ire
-            cfdef.gc_grace_seconds = gc_grace_seconds
-
-        if read_repair_chance is not None:
-            if read_repair_chance < 0:
-                ire = InvalidRequestException()
-                ire.why = 'read_repair_chance must be non-negative'
-                raise ire
-            cfdef.read_repair_chance = read_repair_chance
 
         if default_validation_class is not None:
             if default_validation_class.find('.') == -1:
@@ -502,59 +477,34 @@ class SystemManager(object):
             else:
                 cfdef.default_validation_class = default_validation_class
 
-        if min_compaction_threshold is not None:
-            if min_compaction_threshold < 0:
-                ire = InvalidRequestException()
-                ire.why = 'min_compaction_threshold must be non-negative'
-                raise ire
-            cfdef.min_compaction_threshold = min_compaction_threshold
-
-        if max_compaction_threshold is not None:
-            if max_compaction_threshold < 0:
-                ire = InvalidRequestException()
-                ire.why = 'max_compaction_threshold must be non-negative'
-                raise ire
-            cfdef.max_compaction_threshold = max_compaction_threshold
-
-        if key_cache_save_period_in_seconds is not None:
-            if key_cache_save_period_in_seconds < 0:
-                ire = InvalidRequestException()
-                ire.why = 'key_cache_save_period_in_seconds must be non-negative'
-                raise ire
-            cfdef.key_cache_save_period_in_seconds = key_cache_save_period_in_seconds
-
-        if row_cache_save_period_in_seconds is not None:
-            if row_cache_save_period_in_seconds < 0:
-                ire = InvalidRequestException()
-                ire.why = 'row_cache_save_period_in_seconds must be non-negative'
-                raise ire
-            cfdef.row_cache_save_period_in_seconds = row_cache_save_period_in_seconds
-
-        if memtable_flush_after_mins is not None:
-            if memtable_flush_after_mins < 0:
-                ire = InvalidRequestException()
-                ire.why = 'memtable_flush_after_mins must be non-negative'
-                raise ire
-            cfdef.memtable_flush_after_mins = memtable_flush_after_mins
-
-        if memtable_throughput_in_mb is not None:
-            if memtable_throughput_in_mb < 0:
-                ire = InvalidRequestException()
-                ire.why = 'memtable_throughput_in_mb must be non-negative'
-                raise ire
-            cfdef.memtable_throughput_in_mb = memtable_throughput_in_mb
-
-        if memtable_operations_in_millions is not None:
-            if memtable_operations_in_millions < 0:
-                ire = InvalidRequestException()
-                ire.why = 'memtable_operations_in_millions must be non-negative'
-                raise ire
-            cfdef.memtable_operations_in_millions = memtable_operations_in_millions
-
         if comment is not None:
             cfdef.comment = comment
 
+        self._cfdef_assign(key_cache_size, cfdef, 'key_cache_size')
+        self._cfdef_assign(row_cache_size, cfdef, 'row_cache_size')
+        self._cfdef_assign(gc_grace_seconds, cfdef, 'gc_grace_seconds')
+        self._cfdef_assign(read_repair_chance, cfdef, 'read_repair_chance')
+        self._cfdef_assign(min_compaction_threshold, cfdef, 'min_compaction_threshold')
+        self._cfdef_assign(max_compaction_threshold, cfdef, 'max_compaction_threshold')
+        self._cfdef_assign(key_cache_save_period_in_seconds, cfdef, 'key_cache_save_period_in_seconds')
+        self._cfdef_assign(row_cache_save_period_in_seconds, cfdef, 'row_cache_save_period_in_seconds')
+        self._cfdef_assign(memtable_flush_after_mins, cfdef, 'memtable_flush_after_mins')
+        self._cfdef_assign(memtable_throughput_in_mb, cfdef, 'memtable_throughput_in_mb')
+        self._cfdef_assign(memtable_operations_in_millions, cfdef, 'memtable_operations_in_millions')
+
         self._system_add_column_family(cfdef)
+
+    def _cfdef_assign(self, attr, cfdef, attr_name):
+        if attr is not None:
+            if attr < 0:
+                self._raise_ire('%s must be non-negative' % attr_name)
+            else:
+                setattr(cfdef, attr_name, attr)
+
+    def _raise_ire(self, why):
+        ire = InvalidRequestException()
+        ire.why = why
+        raise ire
 
     def _system_update_column_family(self, cfdef):
         schema_version = self._conn.system_update_column_family(cfdef) 
@@ -588,88 +538,17 @@ class SystemManager(object):
         self._conn.set_keyspace(keyspace)
         cfdef = self.get_keyspace_description(keyspace)[column_family]
 
-        if key_cache_size is not None:
-            if key_cache_size < 0:
-                ire = InvalidRequestException()
-                ire.why = 'key_cache_size must be non-negative'
-                raise ire
-            cfdef.key_cache_size = key_cache_size
-
-        if row_cache_size is not None:
-            if row_cache_size < 0:
-                ire = InvalidRequestException()
-                ire.why = 'row_cache_size must be non-negative'
-                raise ire
-            cfdef.row_cache_size = row_cache_size
-
-        if gc_grace_seconds is not None:
-            if gc_grace_seconds < 0:
-                ire = InvalidRequestException()
-                ire.why = 'gc_grace_seconds must be non-negative'
-                raise ire
-            cfdef.gc_grace_seconds = gc_grace_seconds
-
-        if read_repair_chance is not None:
-            if read_repair_chance < 0:
-                ire = InvalidRequestException()
-                ire.why = 'read_repair_chance must be non-negative'
-                raise ire
-            cfdef.read_repair_chance = read_repair_chance
-
-        if default_validation_class is not None:
-            if default_validation_class.find('.') == -1:
-                cfdef.default_validation_class = 'org.apache.cassandra.db.marshal.%s' % default_validation_class
-            else:
-                cfdef.default_validation_class = default_validation_class
-
-        if min_compaction_threshold is not None:
-            if min_compaction_threshold < 0:
-                ire = InvalidRequestException()
-                ire.why = 'min_compaction_threshold must be non-negative'
-                raise ire
-            cfdef.min_compaction_threshold = min_compaction_threshold
-
-        if max_compaction_threshold is not None:
-            if max_compaction_threshold < 0:
-                ire = InvalidRequestException()
-                ire.why = 'max_compaction_threshold must be non-negative'
-                raise ire
-            cfdef.max_compaction_threshold = max_compaction_threshold
-
-        if key_cache_save_period_in_seconds is not None:
-            if key_cache_save_period_in_seconds < 0:
-                ire = InvalidRequestException()
-                ire.why = 'key_cache_save_period_in_seconds must be non-negative'
-                raise ire
-            cfdef.key_cache_save_period_in_seconds = key_cache_save_period_in_seconds
-
-        if row_cache_save_period_in_seconds is not None:
-            if row_cache_save_period_in_seconds < 0:
-                ire = InvalidRequestException()
-                ire.why = 'row_cache_save_period_in_seconds must be non-negative'
-                raise ire
-            cfdef.row_cache_save_period_in_seconds = row_cache_save_period_in_seconds
-
-        if memtable_flush_after_mins is not None:
-            if memtable_flush_after_mins < 0:
-                ire = InvalidRequestException()
-                ire.why = 'memtable_flush_after_mins must be non-negative'
-                raise ire
-            cfdef.memtable_flush_after_mins = memtable_flush_after_mins
-
-        if memtable_throughput_in_mb is not None:
-            if memtable_throughput_in_mb < 0:
-                ire = InvalidRequestException()
-                ire.why = 'memtable_throughput_in_mb must be non-negative'
-                raise ire
-            cfdef.memtable_throughput_in_mb = memtable_throughput_in_mb
-
-        if memtable_operations_in_millions is not None:
-            if memtable_operations_in_millions < 0:
-                ire = InvalidRequestException()
-                ire.why = 'memtable_operations_in_millions must be non-negative'
-                raise ire
-            cfdef.memtable_operations_in_millions = memtable_operations_in_millions
+        self._cfdef_assign(key_cache_size, cfdef, 'key_cache_size')
+        self._cfdef_assign(row_cache_size, cfdef, 'row_cache_size')
+        self._cfdef_assign(gc_grace_seconds, cfdef, 'gc_grace_seconds')
+        self._cfdef_assign(read_repair_chance, cfdef, 'read_repair_chance')
+        self._cfdef_assign(min_compaction_threshold, cfdef, 'min_compaction_threshold')
+        self._cfdef_assign(max_compaction_threshold, cfdef, 'max_compaction_threshold')
+        self._cfdef_assign(key_cache_save_period_in_seconds, cfdef, 'key_cache_save_period_in_seconds')
+        self._cfdef_assign(row_cache_save_period_in_seconds, cfdef, 'row_cache_save_period_in_seconds')
+        self._cfdef_assign(memtable_flush_after_mins, cfdef, 'memtable_flush_after_mins')
+        self._cfdef_assign(memtable_throughput_in_mb, cfdef, 'memtable_throughput_in_mb')
+        self._cfdef_assign(memtable_operations_in_millions, cfdef, 'memtable_operations_in_millions')
 
         if comment is not None:
             cfdef.comment = comment
