@@ -79,15 +79,14 @@ else:
 
 print "\nSchema definition tools and cluster information are available through SYSTEM_MANAGER."
 
-print "\nExecuting script ...",
-stdout.flush()
 if (options.file):
-    i = 0
+    print "\nExecuting script ...",
+    stdout.flush()
     f = open(options.file, 'r')
     line = f.readline()
     while line != '':
         exec(line);
         line = f.readline()
-print " done."
+    print " done."
 
 runshell()
