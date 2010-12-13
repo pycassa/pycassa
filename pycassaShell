@@ -50,7 +50,7 @@ parser.add_option('-S', '--streaming', help='Using streaming transport.',
 parser.add_option('-F', '--framed', 
                   help='Use framed transport.  Default transport.',
                   action="store_true", dest='framed')
-parser.add_option('-f', '--file', help='Input script')
+parser.add_option('-f', '--file', help='Run a script after startup')
 
 (options, args) = parser.parse_args()
 

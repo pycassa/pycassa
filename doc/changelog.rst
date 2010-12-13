@@ -1,6 +1,15 @@
 Changelog
 =========
 
+Changes in Version 1.0.2
+------------------------
+
+- Failover handles a greater set of potential failures
+- pycassaShell now loads/reloads :class:`pycassa.columnfamily.ColumnFamily`
+  instances when the underlying column family is created or updated
+- Added an option to pycassaShell to run a script after startup
+- Added :meth:`pycassa.system_manager.SystemManager.list_keyspaces()`
+
 Changes in Version 1.0.1
 ------------------------
 
