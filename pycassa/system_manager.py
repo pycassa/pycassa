@@ -66,8 +66,9 @@ class SystemManager(object):
 
     """
 
-    def __init__(self, server='localhost:9160', credentials=None, framed_transport=True):
+    def __init__(self, server='localhost:9160', credentials=None, framed_transport=True, cf_callback=None):
         self._conn = Connection(None, server, framed_transport, _TIMEOUT, credentials)
+        self._cf_callback = cf_callback
 
     def close(self):
         """ Closes the underlying connection """
@@ -493,6 +494,8 @@ class SystemManager(object):
         self._cfdef_assign(memtable_operations_in_millions, cfdef, 'memtable_operations_in_millions')
 
         self._system_add_column_family(cfdef)
+        if self._cf_callback:
+            self._cf_callback(name)
 
     def _cfdef_assign(self, attr, cfdef, attr_name):
         if attr is not None:
@@ -555,6 +558,9 @@ class SystemManager(object):
 
         self._system_update_column_family(cfdef)
 
+        if self._cf_callback:
+            self._cf_callback(column_family)
+
     def drop_column_family(self, keyspace, column_family):
         """
         Drops a column family from the keyspace.
@@ -563,6 +569,8 @@ class SystemManager(object):
         self._conn.set_keyspace(keyspace)
         schema_version = self._conn.system_drop_column_family(column_family)
         self._wait_for_agreement()
+        if self._cf_callback:
+            self._cf_callback(column_family, delete=True)
         return schema_version
 
     def alter_column(self, keyspace, column_family, column, value_type):
@@ -594,6 +602,8 @@ class SystemManager(object):
         if not matched:
             cfdef.column_metadata.append(ColumnDef(column, value_type, None, None))
         self._system_update_column_family(cfdef)
+        if self._cf_callback:
+            self._cf_callback(column_family)
 
     def create_index(self, keyspace, column_family, column, value_type,
                      index_type=KEYS_INDEX, index_name=None):
@@ -639,6 +649,8 @@ class SystemManager(object):
         if not matched:
             cfdef.column_metadata.append(coldef)
         self._system_update_column_family(cfdef)
+        if self._cf_callback:
+            self._cf_callback(column_family)
 
     def drop_index(self, keyspace, column_family, column):
         """

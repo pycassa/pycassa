@@ -23,6 +23,22 @@ import pycassa, optparse
 from pycassa.system_manager import *
 from sys import stdout, stderr, exit
 
+_pool = None
+
+def _update_cf(cf, delete=False):
+    if _pool is not None:
+        if not delete:
+            existed = cf.upper() in globals()
+            globals()[cf.upper()] = pycassa.ColumnFamily(_pool, cf)
+            if not existed:
+                print "\nLoaded %s as %s" % (cf, cf.upper())
+            else:
+                print "\nReloaded %s" % cf.upper()
+        else:
+            globals().pop(cf.upper())
+            print "\nDropped %s" % cf.upper()
+
+
 parser = optparse.OptionParser(usage='Usage: %prog [OPTIONS]')
 parser.add_option('-k', '--keyspace', help='Cassandra keyspace name.')
 parser.add_option('-H', '--host', help='Hostname.')
@@ -53,7 +69,7 @@ if options.user or options.passwd:
         exit(1)
     credentials = {'username': options.user, 'password': options.passwd}
 
-SYSTEM_MANAGER = pycassa.SystemManager('%s:%d' % (hostname, port), credentials, framed)
+SYSTEM_MANAGER = pycassa.SystemManager('%s:%d' % (hostname, port), credentials, framed, _update_cf)
 
 print "----------------------------------"
 print "Cassandra Interactive Python Shell"
@@ -62,15 +78,15 @@ print "Keyspace: %s" % options.keyspace
 print "Host: %s:%d" % (hostname, port)
 
 if options.keyspace:
-    pool = pycassa.QueuePool(keyspace=options.keyspace,
-                             server_list=['%s:%d' % (hostname, port)],
-                             credentials=credentials,
-                             framed_transport=framed,
-                             timeout=5)
+    _pool = pycassa.QueuePool(keyspace=options.keyspace,
+                              server_list=['%s:%d' % (hostname, port)],
+                              credentials=credentials,
+                              framed_transport=framed,
+                              timeout=5)
 
     print "\nAvailable ColumnFamily instances:"
     for cfname in SYSTEM_MANAGER.get_keyspace_description(options.keyspace).keys():
-        cfinstance = pycassa.ColumnFamily(pool, cfname)
+        cfinstance = pycassa.ColumnFamily(_pool, cfname)
         exec('%s = cfinstance' % cfname.upper())
         spaces = " " * (25 - len(cfname))
         print " *", cfname.upper(), spaces, "(", cfname, ")"
