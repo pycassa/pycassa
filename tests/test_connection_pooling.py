@@ -3,22 +3,13 @@ import unittest
 import time
 
 from nose.tools import assert_raises, assert_equal, assert_not_equal
-from pycassa import ColumnFamily, ConnectionPool,\
-                    ColumnFamily, PoolListener, InvalidRequestError,\
-                    NoConnectionAvailable, MaximumRetryException,\
-                    AllServersUnavailable, PycassaLogger
+from pycassa import ColumnFamily, ConnectionPool, PoolListener, InvalidRequestError,\
+                    NoConnectionAvailable, MaximumRetryException, AllServersUnavailable
 
 import pycassa.pool
-
 from pycassa.cassandra.ttypes import TimedOutException
-from pycassa.cassandra.Cassandra import Client
 
 _credentials = {'username':'jsmith', 'password':'havebadpass'}
-_pools = [ConnectionPool]
-_should_tlocal_fail = True
-
-logger = PycassaLogger()
-logger.set_logger_level('info')
 
 def _get_list():
     return ['foo:bar']
@@ -26,24 +17,23 @@ def _get_list():
 class PoolingCase(unittest.TestCase):
 
     def tearDown(self):
-        pool = ConnectionPool(keyspace='Keyspace1')
+        pool = ConnectionPool('PycassaTestKeyspace')
         cf = ColumnFamily(pool, 'Standard1')
         for key, cols in cf.get_range():
             cf.remove(key)
 
     def test_basic_pools(self):
-        for pool_cls in _pools:
-            pool = pool_cls(keyspace='Keyspace1', credentials=_credentials)
-            pool.dispose()
-            pool = pool.recreate()
-            cf = ColumnFamily(pool, 'Standard1')
-            cf.insert('key1', {'col':'val'})
-            pool.status()
-            pool.dispose()
+        pool = ConnectionPool('PycassaTestKeyspace', credentials=_credentials)
+        pool.dispose()
+        pool = pool.recreate()
+        cf = ColumnFamily(pool, 'Standard1')
+        cf.insert('key1', {'col':'val'})
+        pool.status()
+        pool.dispose()
 
     def test_server_list_func(self):
         listener = _TestListener()
-        pool = ConnectionPool(keyspace='Keyspace1', server_list=_get_list,
+        pool = ConnectionPool('PycassaTestKeyspace', server_list=_get_list,
                          listeners=[listener], prefill=False)
         assert_equal(listener.serv_list, ['foo:bar'])
         assert_equal(listener.list_count, 1)
@@ -52,7 +42,7 @@ class PoolingCase(unittest.TestCase):
         listener = _TestListener()
         pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
                          prefill=True, pool_timeout=0.5, timeout=1,
-                         keyspace='Keyspace1', credentials=_credentials,
+                         keyspace='PycassaTestKeyspace', credentials=_credentials,
                          listeners=[listener], use_threadlocal=False)
         conns = []
         for i in range(10):
@@ -112,7 +102,7 @@ class PoolingCase(unittest.TestCase):
         listener = _TestListener()
         pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
                          prefill=True, pool_timeout=0.5, timeout=1,
-                         keyspace='Keyspace1', credentials=_credentials,
+                         keyspace='PycassaTestKeyspace', credentials=_credentials,
                          listeners=[listener], use_threadlocal=True)
         conns = []
 
@@ -177,7 +167,7 @@ class PoolingCase(unittest.TestCase):
         listener = _TestListener()
         pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=1,
                          prefill=True, pool_timeout=0.5, timeout=1,
-                         keyspace='Keyspace1', credentials=_credentials,
+                         keyspace='PycassaTestKeyspace', credentials=_credentials,
                          listeners=[listener], use_threadlocal=False)
 
         cf = ColumnFamily(pool, 'Standard1')
@@ -193,7 +183,7 @@ class PoolingCase(unittest.TestCase):
         # Try with threadlocal=True
         pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=1,
                          prefill=False, pool_timeout=0.5, timeout=1,
-                         keyspace='Keyspace1', credentials=_credentials,
+                         keyspace='PycassaTestKeyspace', credentials=_credentials,
                          listeners=[listener], use_threadlocal=True)
 
         cf = ColumnFamily(pool, 'Standard1')
@@ -216,7 +206,7 @@ class PoolingCase(unittest.TestCase):
 
         pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
                          prefill=True,
-                         keyspace='Keyspace1', credentials=_credentials,
+                         keyspace='PycassaTestKeyspace', credentials=_credentials,
                          timeout=0.05,
                          listeners=[listener], use_threadlocal=False,
                          server_list=['localhost:9160', 'foobar:1'])
@@ -233,7 +223,7 @@ class PoolingCase(unittest.TestCase):
 
         pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
                          prefill=True,
-                         keyspace='Keyspace1', credentials=_credentials,
+                         keyspace='PycassaTestKeyspace', credentials=_credentials,
                          timeout=0.05,
                          listeners=[listener], use_threadlocal=True,
                          server_list=['localhost:9160', 'foobar:1'])
@@ -255,7 +245,7 @@ class PoolingCase(unittest.TestCase):
         listener = _TestListener()
         pool = ConnectionPool(pool_size=1, max_overflow=0, recycle=10000,
                          prefill=True, timeout=0.05,
-                         keyspace='Keyspace1', credentials=_credentials,
+                         keyspace='PycassaTestKeyspace', credentials=_credentials,
                          listeners=[listener], use_threadlocal=False,
                          server_list=['localhost:9160', 'localhost:9160'])
 
@@ -279,7 +269,7 @@ class PoolingCase(unittest.TestCase):
         listener = _TestListener()
         pool = ConnectionPool(pool_size=1, max_overflow=0, recycle=10000,
                          prefill=True, timeout=0.05,
-                         keyspace='Keyspace1', credentials=_credentials,
+                         keyspace='PycassaTestKeyspace', credentials=_credentials,
                          listeners=[listener], use_threadlocal=True,
                          server_list=['localhost:9160', 'localhost:9160'])
 
@@ -302,7 +292,7 @@ class PoolingCase(unittest.TestCase):
 
         pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
                          prefill=True, timeout=0.05,
-                         keyspace='Keyspace1', credentials=_credentials,
+                         keyspace='PycassaTestKeyspace', credentials=_credentials,
                          listeners=[listener], use_threadlocal=True,
                          server_list=['localhost:9160', 'localhost:9160'])
 
@@ -330,7 +320,7 @@ class PoolingCase(unittest.TestCase):
         listener = _TestListener()
         pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
                          prefill=True, max_retries=3, # allow 3 retries
-                         keyspace='Keyspace1', credentials=_credentials,
+                         keyspace='PycassaTestKeyspace', credentials=_credentials,
                          listeners=[listener], use_threadlocal=False,
                          server_list=['localhost:9160', 'localhost:9160'])
 
@@ -351,7 +341,7 @@ class PoolingCase(unittest.TestCase):
         listener = _TestListener()
         pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
                          prefill=True, max_retries=3, # allow 3 retries
-                         keyspace='Keyspace1', credentials=_credentials,
+                         keyspace='PycassaTestKeyspace', credentials=_credentials,
                          listeners=[listener], use_threadlocal=True,
                          server_list=['localhost:9160', 'localhost:9160'])
 

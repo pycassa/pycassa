@@ -7,6 +7,17 @@ from nose.tools import assert_raises, assert_equal, assert_true
 
 import struct
 
+def setup_module():
+    global pool, cf, scf, indexed_cf
+    credentials = {'username': 'jsmith', 'password': 'havebadpass'}
+    pool = ConnectionPool(keyspace='PycassaTestKeyspace', credentials=credentials)
+    cf = ColumnFamily(pool, 'Standard1', autopack_names=False, autopack_values=False)
+    scf = ColumnFamily(pool, 'Super1', autopack_names=False, autopack_values=False)
+    indexed_cf = ColumnFamily(pool, 'Indexed1', autopack_names=False, autopack_values=False)
+
+def teardown_module():
+    pool.dispose()
+
 class TestUTF8(object):
     strcol = String(default='default')
     intcol = Int64(default=0)
@@ -36,23 +47,15 @@ class TestEmpty(object):
 
 class TestColumnFamilyMap:
     def setUp(self):
-        credentials = {'username': 'jsmith', 'password': 'havebadpass'}
-        self.pool = ConnectionPool(keyspace='Keyspace1', credentials=credentials)
-        self.cf = ColumnFamily(self.pool, 'Standard2',
-                               autopack_names=False,
-                               autopack_values=False)
-        self.indexed_cf = ColumnFamily(self.pool, 'Indexed1',
-                                       autopack_names=False,
-                                       autopack_values=False)
-        self.map = ColumnFamilyMap(TestUTF8, self.cf)
-        self.indexed_map = ColumnFamilyMap(TestIndex, self.indexed_cf)
-        self.empty_map = ColumnFamilyMap(TestEmpty, self.cf, raw_columns=True)
+        self.map = ColumnFamilyMap(TestUTF8, cf)
+        self.indexed_map = ColumnFamilyMap(TestIndex, indexed_cf)
+        self.empty_map = ColumnFamilyMap(TestEmpty, cf, raw_columns=True)
 
     def tearDown(self):
-        for key, columns in self.cf.get_range():
-            self.cf.remove(key)
-        for key, columns in self.indexed_cf.get_range():
-            self.cf.remove(key)
+        for key, columns in cf.get_range():
+            cf.remove(key)
+        for key, columns in indexed_cf.get_range():
+            cf.remove(key)
 
     def instance(self, key):
         instance = TestUTF8()
@@ -150,7 +153,7 @@ class TestColumnFamilyMap:
 
     def test_has_defaults(self):
         key = 'TestColumnFamilyMap.test_has_defaults'
-        self.cf.insert(key, {'strcol': '1'})
+        cf.insert(key, {'strcol': '1'})
         instance = self.map.get(key)
 
         assert_equal(instance.intcol, TestUTF8.intcol.default)
@@ -162,14 +165,11 @@ class TestColumnFamilyMap:
 
 class TestSuperColumnFamilyMap:
     def setUp(self):
-        credentials = {'username': 'jsmith', 'password': 'havebadpass'}
-        self.pool = ConnectionPool(keyspace='Keyspace1', credentials=credentials)
-        self.cf = ColumnFamily(self.pool, 'Super2')
-        self.map = ColumnFamilyMap(TestUTF8, self.cf)
+        self.map = ColumnFamilyMap(TestUTF8, scf)
 
     def tearDown(self):
-        for key, columns in self.cf.get_range():
-            self.cf.remove(key)
+        for key, columns in scf.get_range():
+            scf.remove(key)
 
     def instance(self, key, super_column):
         instance = TestUTF8()
