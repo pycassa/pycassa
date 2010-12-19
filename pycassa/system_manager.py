@@ -640,14 +640,11 @@ class SystemManager(object):
 
         coldef = ColumnDef(column, value_type, index_type, index_name)
 
-        matched = False
         for c in cfdef.column_metadata:
             if c.name == column:
-                c = coldef
-                matched = True
+                cfdef.column_metadata.remove(c)
                 break
-        if not matched:
-            cfdef.column_metadata.append(coldef)
+        cfdef.column_metadata.append(coldef)
         self._system_update_column_family(cfdef)
         if self._cf_callback:
             self._cf_callback(column_family)
