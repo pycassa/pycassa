@@ -708,27 +708,28 @@ class ConnectionPool(AbstractPool):
             except AttributeError:
                 pass
         try:
-            if self._overflow_enabled and self._overflow_lock:
-                self._overflow_lock.acquire()
-            # We don't want to waste time blocking if overflow is not enabled; similarly,
-            # if we're not at the max overflow, we can fail quickly and create a new
-            # connection
-            block = self._overflow_enabled and self._overflow >= self._max_overflow
-            conn = self._q.get(block, self._pool_timeout)
-        except pool_queue.Empty:
-            if self._overflow >= self._max_overflow:
-                self._notify_on_pool_max(pool_max=self.size() + self.overflow())
-                raise NoConnectionAvailable(
-                        "ConnectionPool limit of size %d overflow %d reached, "
-                        "connection timed out, pool_timeout %d" %
-                        (self.size(), self.overflow(), self._pool_timeout))
-            else:
-                try:
-                    conn = self._create_connection()
-                    self._overflow += 1
-                except AllServersUnavailable, exc:
-                    # TODO log exception
-                    raise
+            try:
+                if self._overflow_enabled and self._overflow_lock:
+                    self._overflow_lock.acquire()
+                # We don't want to waste time blocking if overflow is not enabled; similarly,
+                # if we're not at the max overflow, we can fail quickly and create a new
+                # connection
+                block = self._overflow_enabled and self._overflow >= self._max_overflow
+                conn = self._q.get(block, self._pool_timeout)
+            except pool_queue.Empty:
+                if self._overflow >= self._max_overflow:
+                    self._notify_on_pool_max(pool_max=self.size() + self.overflow())
+                    raise NoConnectionAvailable(
+                            "ConnectionPool limit of size %d overflow %d reached, "
+                            "connection timed out, pool_timeout %d" %
+                            (self.size(), self.overflow(), self._pool_timeout))
+                else:
+                    try:
+                        conn = self._create_connection()
+                        self._overflow += 1
+                    except AllServersUnavailable, exc:
+                        # TODO log exception
+                        raise
         finally:
             if self._overflow_lock is not None:
                 self._overflow_lock.release()

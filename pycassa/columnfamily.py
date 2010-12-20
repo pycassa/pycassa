@@ -112,12 +112,13 @@ class ColumnFamily(object):
 
         col_fam = None
         try:
-            self.client = self.pool.get()
-            col_fam = self.client.get_keyspace_description(use_dict_for_col_metadata=True)[self.column_family]
-        except KeyError:
-            nfe = NotFoundException()
-            nfe.why = 'Column family %s not found.' % self.column_family
-            raise nfe
+            try:
+                self.client = self.pool.get()
+                col_fam = self.client.get_keyspace_description(use_dict_for_col_metadata=True)[self.column_family]
+            except KeyError:
+                nfe = NotFoundException()
+                nfe.why = 'Column family %s not found.' % self.column_family
+                raise nfe
         finally:
             if self.client is not None:
                 self.client.return_to_pool()
