@@ -10,7 +10,11 @@ from pycassa.cassandra.ttypes import Column, ColumnOrSuperColumn,\
     SlicePredicate, SliceRange, SuperColumn, KeyRange,\
     IndexExpression, IndexClause
 from pycassa.util import *
-from functools import wraps
+
+try:
+    from functools import wraps
+except ImportError:
+    from py25_functools import wraps
 
 import time
 import sys
