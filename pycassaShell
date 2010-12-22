@@ -97,12 +97,7 @@ print "\nSchema definition tools and cluster information are available through S
 
 if (options.file):
     print "\nExecuting script ...",
-    stdout.flush()
-    f = open(options.file, 'r')
-    line = f.readline()
-    while line != '':
-        exec(line);
-        line = f.readline()
+    execfile(options.file)
     print " done."
 
 runshell()
