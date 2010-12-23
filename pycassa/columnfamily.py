@@ -405,23 +405,18 @@ class ColumnFamily(object):
 
         """
 
-        # Use the more performant get() instead of get_slice() if possible
-        if super_column is None and (columns is not None and len(columns) == 1) or \
-           super_column is not None and (columns is None or len(columns) == 1):
+        single_column = columns is not None and len(columns) == 1
+        if (not self.super and single_column) or \
+           (self.super and super_column is not None and single_column):
             super_col_orig = super_column is not None
             column = None
-            if columns is not None and len(columns) == 1:
-                if self.super and super_column is None:
-                    super_column = columns[0]
-                else:
-                    column = columns[0]
+            if self.super and super_column is None:
+                super_column = columns[0]
+            else:
+                column = columns[0]
             cp = self._create_column_path(super_column, column)
             col_or_super = self.client.get(key, cp, self._rcl(read_consistency_level))
-            res = self._convert_ColumnOrSuperColumns_to_dict_class([col_or_super], include_timestamp)
-            if super_col_orig:
-                return res.popitem()[1]
-            else:
-                return res
+            return self._convert_ColumnOrSuperColumns_to_dict_class([col_or_super], include_timestamp)
         else:
             cp = self._create_column_parent(super_column)
             sp = self._create_slice_predicate(columns, column_start, column_finish,
