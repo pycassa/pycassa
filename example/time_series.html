@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Twissandra Example &mdash; pycassa v1.0.3 documentation</title>
+    <title>Working With Timelines &mdash; pycassa v1.0.3 documentation</title>
     <link rel="stylesheet" href="../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -22,9 +22,7 @@
     <script type="text/javascript" src="../static/jquery.js"></script>
     <script type="text/javascript" src="../static/underscore.js"></script>
     <script type="text/javascript" src="../static/doctools.js"></script>
-    <link rel="top" title="pycassa v1.0.3 documentation" href="../index.html" />
-    <link rel="next" title="API Documentation" href="../api/index.html" />
-    <link rel="prev" title="pycassaShell" href="../pycassa_shell.html" /> 
+    <link rel="top" title="pycassa v1.0.3 documentation" href="../index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -36,12 +34,6 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="../api/index.html" title="API Documentation"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="../pycassa_shell.html" title="pycassaShell"
-             accesskey="P">previous</a> |</li>
         <li><a href="../index.html">pycassa v1.0.3 documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -51,13 +43,16 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="twissandra-example">
-<h1>Twissandra Example<a class="headerlink" href="#twissandra-example" title="Permalink to this headline">¶</a></h1>
-<p>This example shows you how to work with Twissandra, a Twitter-like
-example Cassandra application.</p>
-<div class="section" id="setup">
-<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
-<p>To be completed...</p>
+  <div class="section" id="working-with-timelines">
+<h1>Working With Timelines<a class="headerlink" href="#working-with-timelines" title="Permalink to this headline">¶</a></h1>
+<p>Timelines are frequently used in Cassandra when a chronological ordering
+of events is important.  These typically use a timestamp or TimeUUID for
+column names so that columns within a row are chronologically ordered.
+When multiple clients may add items to the timeline, a TimeUUID is
+generally used instead of a timestamp to avoid collisions.</p>
+<div class="section" id="single-row-timeline">
+<h2>Single Row Timeline<a class="headerlink" href="#single-row-timeline" title="Permalink to this headline">¶</a></h2>
+<p>In a single row timeline, every</p>
 </div>
 </div>
 
@@ -69,21 +64,15 @@ example Cassandra application.</p>
         <div class="sphinxsidebarwrapper">
   <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Twissandra Example</a><ul>
-<li><a class="reference internal" href="#setup">Setup</a></li>
+<li><a class="reference internal" href="#">Working With Timelines</a><ul>
+<li><a class="reference internal" href="#single-row-timeline">Single Row Timeline</a></li>
 </ul>
 </li>
 </ul>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="../pycassa_shell.html"
-                        title="previous chapter">pycassaShell</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="../api/index.html"
-                        title="next chapter">API Documentation</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="../sources/example/index.txt"
+    <li><a href="../sources/example/time_series.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -112,12 +101,6 @@ example Cassandra application.</p>
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="../api/index.html" title="API Documentation"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="../pycassa_shell.html" title="pycassaShell"
-             >previous</a> |</li>
         <li><a href="../index.html">pycassa v1.0.3 documentation</a> &raquo;</li> 
       </ul>
     </div>

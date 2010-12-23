@@ -1,0 +1,11 @@
+Working With Timelines
+======================
+Timelines are frequently used in Cassandra when a chronological ordering
+of events is important.  These typically use a timestamp or TimeUUID for
+column names so that columns within a row are chronologically ordered.
+When multiple clients may add items to the timeline, a TimeUUID is
+generally used instead of a timestamp to avoid collisions.
+
+Single Row Timeline
+-------------------
+In a single row timeline, every
