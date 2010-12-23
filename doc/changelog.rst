@@ -1,6 +1,13 @@
 Changelog
 =========
 
+Changes in Version 1.0.3
+------------------------
+
+- Fixed supercolumn slice bug in get()
+- pycassaShell now runs scripts with execfile to allow for multiline statements
+- 2.4 compatability fixes
+
 Changes in Version 1.0.2
 ------------------------
 
