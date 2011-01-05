@@ -193,3 +193,15 @@ class TestSuperColumnFamilyMap:
         assert_equal(res, instance)
         assert_equal(self.map.multiget([instance.key])[instance.key][instance.super_column], instance)
         assert_equal(list(self.map.get_range(start=instance.key, finish=instance.key)), [{instance.super_column: instance}])
+
+    def test_super_remove(self):
+        instance1 = self.instance('TestSuperColumnFamilyMap.test_super_remove', 'super1')
+        assert_raises(NotFoundException, self.map.get, instance1.key)
+        self.map.insert(instance1)
+
+        instance2 = self.instance('TestSuperColumnFamilyMap.test_super_remove', 'super2')
+        self.map.insert(instance2)
+
+        self.map.remove(instance2)
+        assert_equal(len(self.map.get(instance1.key)), 1)
+        assert_equal(self.map.get(instance1.key)[instance1.super_column], instance1)

@@ -177,13 +177,13 @@ class Mutator(object):
         if timestamp == None:
             timestamp = column_family.timestamp()
         deletion = Deletion(timestamp=timestamp)
+        if super_column:
+            deletion.super_column = super_column
         if columns:
             _pack_name = column_family._pack_name
-            packed_cols = [_pack_name(col, column_family.super)
+            packed_cols = [_pack_name(col, column_family.super and not super_column)
                            for col in columns]
             deletion.predicate = SlicePredicate(column_names=packed_cols)
-            if super_column:
-                deletion.super_column = super_column
         mutation = Mutation(deletion=deletion)
         self._enqueue(key, column_family, (mutation,))
         return self
