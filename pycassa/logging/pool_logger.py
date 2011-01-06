@@ -16,7 +16,7 @@ class PoolLogger(object):
         if level <= logging.INFO:
             self.logger.log(level,
                     "Connection %s (%s) opened for %s (id = %s)",
-                    id(conn), conn.server[0], dic.get('pool_type'),
+                    id(conn), conn.server, dic.get('pool_type'),
                     dic.get('pool_id'))
         else:
             self.logger.log(level,
