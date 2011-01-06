@@ -66,7 +66,7 @@ class PoolLogger(object):
                 "after %d operations; it is replaced by connection %s (%s)",
                 id(old_conn), old_conn.server,
                 dic.get('pool_type'), dic.get('pool_id'),
-                old_conn.operation_count, id(new_conn))
+                old_conn.operation_count, id(new_conn), new_conn.server)
 
     def connection_failed(self, dic):
         level = pycassa_logger.levels[dic.get('level', 'info')]
