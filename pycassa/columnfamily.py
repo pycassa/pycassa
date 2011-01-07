@@ -16,10 +16,12 @@ try:
 except ImportError:
     from py25_functools import wraps
 
+import weakref
 import time
 import sys
 import uuid
 import struct
+import threading
 
 from batch import CfMutator
 
@@ -97,7 +99,8 @@ class ColumnFamily(object):
         """
 
         self.pool = pool
-        self.client = None
+        self._tlocal = threading.local()
+        self._tlocal.client = None
         self.column_family = column_family
         self.buffer_size = buffer_size
         self.read_consistency_level = read_consistency_level
@@ -117,15 +120,14 @@ class ColumnFamily(object):
         col_fam = None
         try:
             try:
-                self.client = self.pool.get()
-                col_fam = self.client.get_keyspace_description(use_dict_for_col_metadata=True)[self.column_family]
+                self._obtain_connection()
+                col_fam = self._tlocal.client().get_keyspace_description(use_dict_for_col_metadata=True)[self.column_family]
             except KeyError:
                 nfe = NotFoundException()
                 nfe.why = 'Column family %s not found.' % self.column_family
                 raise nfe
         finally:
-            if self.client is not None:
-                self.client.return_to_pool()
+            self._release_connection()
 
         if col_fam is not None:
             self.super = col_fam.column_type == 'Super'
@@ -354,18 +356,15 @@ class ColumnFamily(object):
         else: # BytesType
             return b
 
-    def _pooled(f):
-        @wraps(f)
-        def new_f(self, *args, **kwargs):
-            self.client = self.pool.get()
-            try:
-                return f(self, *args, **kwargs)
-            finally:
-                self.client.return_to_pool()
-        new_f.__name__ = f.__name__
-        return new_f
+    def _obtain_connection(self):
+        self._tlocal.client = weakref.ref(self.pool.get())
 
-    @_pooled
+    def _release_connection(self):
+        if hasattr(self._tlocal, 'client'):
+            if self._tlocal.client:
+                self._tlocal.client().return_to_pool()
+                self._tlocal.client = None
+
     def get(self, key, columns=None, column_start="", column_finish="",
             column_reversed=False, column_count=100, include_timestamp=False,
             super_column=None, read_consistency_level = None):
@@ -415,21 +414,28 @@ class ColumnFamily(object):
             else:
                 column = columns[0]
             cp = self._create_column_path(super_column, column)
-            col_or_super = self.client.get(key, cp, self._rcl(read_consistency_level))
+            try:
+                self._obtain_connection()
+                col_or_super = self._tlocal.client().get(key, cp, self._rcl(read_consistency_level))
+            finally:
+                self._release_connection()
             return self._convert_ColumnOrSuperColumns_to_dict_class([col_or_super], include_timestamp)
         else:
             cp = self._create_column_parent(super_column)
             sp = self._create_slice_predicate(columns, column_start, column_finish,
                                         column_reversed, column_count)
 
-            list_col_or_super = self.client.get_slice(key, cp, sp,
-                                                      self._rcl(read_consistency_level))
+            try:
+                self._obtain_connection()
+                list_col_or_super = self._tlocal.client().get_slice(key, cp, sp,
+                                                              self._rcl(read_consistency_level))
+            finally:
+                self._release_connection()
 
             if len(list_col_or_super) == 0:
                 raise NotFoundException()
             return self._convert_ColumnOrSuperColumns_to_dict_class(list_col_or_super, include_timestamp)
 
-    @_pooled
     def get_indexed_slices(self, index_clause, columns=None, column_start="", column_finish="",
                            column_reversed=False, column_count=100, include_timestamp=False,
                            super_column=None, read_consistency_level=None,
@@ -473,8 +479,12 @@ class ColumnFamily(object):
                 buffer_size = min(row_count - count + 1, buffer_size)
             clause.count = buffer_size
             clause.start_key = last_key
-            key_slices = self.client.get_indexed_slices(cp, clause, sp,
-                                                        self._rcl(read_consistency_level))
+            try:
+                self._obtain_connection()
+                key_slices = self._tlocal.client().get_indexed_slices(cp, clause, sp,
+                                                            self._rcl(read_consistency_level))
+            finally:
+                self._release_connection()
 
             if key_slices is None:
                 return
@@ -495,7 +505,6 @@ class ColumnFamily(object):
             last_key = key_slices[-1].key
             i += 1
 
-    @_pooled
     def multiget(self, keys, columns=None, column_start="", column_finish="",
                  column_reversed=False, column_count=100, include_timestamp=False,
                  super_column=None, read_consistency_level = None):
@@ -512,8 +521,12 @@ class ColumnFamily(object):
         sp = self._create_slice_predicate(columns, column_start, column_finish,
                                           column_reversed, column_count)
 
-        keymap = self.client.multiget_slice(keys, cp, sp,
-                                            self._rcl(read_consistency_level))
+        try:
+            self._obtain_connection()
+            keymap = self._tlocal.client().multiget_slice(keys, cp, sp,
+                                                self._rcl(read_consistency_level))
+        finally:
+            self._release_connection()
         
         ret = self.dict_class()
         
@@ -534,7 +547,6 @@ class ColumnFamily(object):
         return ret
 
     MAX_COUNT = 2**31-1
-    @_pooled
     def get_count(self, key, super_column=None, read_consistency_level=None,
                   columns=None, column_start="", column_finish=""):
         """
@@ -554,10 +566,14 @@ class ColumnFamily(object):
         sp = self._create_slice_predicate(columns, column_start, column_finish,
                                           False, self.MAX_COUNT)
 
-        return self.client.get_count(key, cp, sp,
-                                     self._rcl(read_consistency_level))
+        try:
+            self._obtain_connection()
+            ret = self._tlocal.client().get_count(key, cp, sp,
+                                         self._rcl(read_consistency_level))
+        finally:
+            self._release_connection()
+        return ret
 
-    @_pooled
     def multiget_count(self, keys, super_column=None,
                        read_consistency_level=None,
                        columns=None, column_start="",
@@ -575,10 +591,14 @@ class ColumnFamily(object):
         sp = self._create_slice_predicate(columns, column_start, column_finish,
                                           False, self.MAX_COUNT)
 
-        return self.client.multiget_count(keys, cp, sp,
-                                     self._rcl(read_consistency_level))
+        try:
+            self._obtain_connection()
+            ret = self._tlocal.client().multiget_count(keys, cp, sp,
+                                         self._rcl(read_consistency_level))
+        finally:
+            self._release_connection()
+        return ret
 
-    @_pooled
     def get_range(self, start="", finish="", columns=None, column_start="",
                   column_finish="", column_reversed=False, column_count=100,
                   row_count=None, include_timestamp=False,
@@ -624,8 +644,12 @@ class ColumnFamily(object):
             if row_count is not None:
                 buffer_size = min(row_count - count + 1, buffer_size)
             key_range = KeyRange(start_key=last_key, end_key=finish, count=buffer_size)
-            key_slices = self.client.get_range_slices(cp, sp, key_range,
-                                                     self._rcl(read_consistency_level))
+            try:
+                self._obtain_connection()
+                key_slices = self._tlocal.client().get_range_slices(cp, sp, key_range,
+                                                         self._rcl(read_consistency_level))
+            finally:
+                self._release_connection()
             # This may happen if nothing was ever inserted
             if key_slices is None:
                 return
@@ -682,11 +706,11 @@ class ColumnFamily(object):
             colval = self._pack_value(columns.values()[0], colname)
             colname = self._pack_name(colname, False)
             column = Column(colname, colval, timestamp, ttl)
-            self.client = self.pool.get()
             try:
-                res = self.client.insert(key, cp, column, self._wcl(write_consistency_level))
+                self._obtain_connection()
+                res = self._tlocal.client().insert(key, cp, column, self._wcl(write_consistency_level))
             finally:
-                self.client.return_to_pool()
+                self._release_connection()
             return res
         else:
             return self.batch_insert({key: columns}, timestamp=timestamp, ttl=ttl,
@@ -749,7 +773,6 @@ class ColumnFamily(object):
 
         return CfMutator(self, queue_size, self._wcl(write_consistency_level))
 
-    @_pooled
     def truncate(self):
         """
         Marks the entire ColumnFamily as deleted.
@@ -764,6 +787,10 @@ class ColumnFamily(object):
         down.
 
         """
-        self.client.truncate(self.column_family)
+        try:
+            self._obtain_connection()
+            self._tlocal.client().truncate(self.column_family)
+        finally:
+            self._release_connection()
 
 PooledColumnFamily = ColumnFamily

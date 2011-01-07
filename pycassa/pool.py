@@ -139,15 +139,6 @@ class AbstractPool(object):
         """ Dispose of this pool.  """
         raise NotImplementedError()
 
-    def return_conn(self, record):
-        """
-        Return a ConnectionWrapper to the pool.
-
-        :param record: The :class:`ConnectionWrapper` to retrun to the pool.
-
-        """
-        self._do_return_conn(record)
-
     def get(self):
         raise NotImplementedError()
 
@@ -342,9 +333,12 @@ class ConnectionWrapper(connection.Connection):
     def _checkin(self):
         try:
             self._lock.acquire()
-            if self._state != ConnectionWrapper._CHECKED_OUT:
+            if self._state == ConnectionWrapper._IN_QUEUE:
                 raise InvalidRequestError("A connection has been returned to "
                         "the connection pool twice.")
+            elif self._state == ConnectionWrapper._DISPOSED:
+                raise InvalidRequestError("A disposed connection has been returned "
+                        "to the connection pool.")
             self._state = ConnectionWrapper._IN_QUEUE
         finally:
             self._lock.release()
@@ -359,10 +353,11 @@ class ConnectionWrapper(connection.Connection):
         finally:
             self._lock.release()
 
-    def _in_queue(self):
+    def _is_in_queue_or_disposed(self):
         try:
             self._lock.acquire()
-            ret = self._state == ConnectionWrapper._IN_QUEUE
+            ret = self._state == ConnectionWrapper._IN_QUEUE or \
+                  self._state == ConnectionWrapper._DISPOSED
         finally:
             self._lock.release()
         return ret
@@ -371,8 +366,7 @@ class ConnectionWrapper(connection.Connection):
         try:
             self._lock.acquire()
             if self._state == ConnectionWrapper._DISPOSED:
-                raise InvalidRequestError("A connection has been disposed "
-                        "twice.")
+                raise InvalidRequestError("A connection has been disposed twice.")
             self._state = ConnectionWrapper._DISPOSED
         finally:
             self._lock.release()
@@ -390,8 +384,8 @@ class ConnectionWrapper(connection.Connection):
         self._iprot = new_conn_wrapper._iprot
         self._oprot = new_conn_wrapper._oprot
         self._lock = new_conn_wrapper._lock
-        self._info = new_conn_wrapper.info
-        self._starttime = new_conn_wrapper.starttime
+        self.info = new_conn_wrapper.info
+        self.starttime = new_conn_wrapper.starttime
         self.operation_count = new_conn_wrapper.operation_count
         self._state = ConnectionWrapper._CHECKED_OUT
         self._should_fail = new_conn_wrapper._should_fail
@@ -422,8 +416,8 @@ class ConnectionWrapper(connection.Connection):
                     self._pool._tlocal.current = None
 
                 if hasattr(self._pool, '_replace_wrapper'):
-                    self._pool._replace_wrapper()
-                self._replace(self._pool.get())
+                    self._pool._replace_wrapper() # puts a new wrapper in the queue
+                self._replace(self._pool.get()) # swaps out transport
                 return new_f(self, *args, **kwargs)
 
         new_f.__name__ = f.__name__
@@ -662,38 +656,39 @@ class ConnectionPool(AbstractPool):
                         conn = self._tlocal.current()
                         self._tlocal.current = None
                         conn._retry_count = 0
+                        if conn._is_in_queue_or_disposed():
+                            raise InvalidRequestError("Connection was already checked in or disposed")
                         conn = self._put_conn(conn)
                         self._notify_on_checkin(conn)
             else:
                 conn._retry_count = 0
+                if conn._is_in_queue_or_disposed():
+                    raise InvalidRequestError("Connection was already checked in or disposed")
                 conn = self._put_conn(conn)
                 self._notify_on_checkin(conn)
         except pool_queue.Full:
-            if conn._in_queue():
-                raise InvalidRequestError("A connection was returned to "
-                        " the connection pool pull twice.")
+            self._notify_on_checkin(conn)
             conn._dispose_wrapper(reason="pool is already full")
-            if self._overflow_lock is None:
-                self._overflow -= 1
-                self._notify_on_checkin(conn)
-            else:
+            if self._overflow_enabled and self._overflow_lock:
                 self._overflow_lock.acquire()
-                try:
-                    self._overflow -= 1
-                    self._notify_on_checkin(conn)
-                finally:
-                    self._overflow_lock.release()
+                self._overflow -= 1
+                self._overflow_lock.release()
+            else:
+                self._overflow -= 1
 
     def _put_conn(self, conn):
-        """Put a connection in the queue, recycling if needed."""
+        """
+        Put a connection in the queue, recycling first if needed.
+        This method does not handle the pool queue being full.
+        """
         if self._recycle > -1 and conn.operation_count > self._recycle:
             new_conn = self._create_connection()
             self._notify_on_recycle(conn, new_conn)
             conn._dispose_wrapper(reason="recyling connection")
-            self._q.put(new_conn, False)
+            self._q.put_nowait(new_conn)
             return new_conn
         else:
-            self._q.put(conn, False)
+            self._q.put_nowait(conn)
             return conn
 
     def get(self):
@@ -714,24 +709,29 @@ class ConnectionPool(AbstractPool):
                 # We don't want to waste time blocking if overflow is not enabled; similarly,
                 # if we're not at the max overflow, we can fail quickly and create a new
                 # connection
-                block = self._overflow_enabled and self._overflow >= self._max_overflow
+                block = self._pool_timeout > 0 and \
+                        (not self._overflow_enabled or \
+                        (self._overflow_enabled and self._overflow >= self._max_overflow))
                 conn = self._q.get(block, self._pool_timeout)
             except pool_queue.Empty:
-                if self._overflow >= self._max_overflow:
+                if self._overflow_enabled and self._overflow >= self._max_overflow:
                     self._notify_on_pool_max(pool_max=self.size() + self.overflow())
-                    raise NoConnectionAvailable(
-                            "ConnectionPool limit of size %d overflow %d reached, "
-                            "connection timed out, pool_timeout %d" %
-                            (self.size(), self.overflow(), self._pool_timeout))
-                else:
+                    message = "ConnectionPool limit of size %d overflow %d reached, unable to obtain connection after %d seconds" \
+                            % (self.size(), self.overflow(), self._pool_timeout)
+                    raise NoConnectionAvailable(message)
+                elif self._overflow_enabled and self._overflow < self._max_overflow:
                     try:
                         conn = self._create_connection()
                         self._overflow += 1
                     except AllServersUnavailable, exc:
                         # TODO log exception
                         raise
+                elif not self._overflow_enabled:
+                    message = "ConnectionPool limit of size %d overflow %d reached" % \
+                              (self.size(), self.overflow())
+                    raise NoConnectionAvailable(message)
         finally:
-            if self._overflow_lock is not None:
+            if self._overflow_enabled and self._overflow_lock:
                 self._overflow_lock.release()
 
         if self._pool_threadlocal:
@@ -767,8 +767,8 @@ class ConnectionPool(AbstractPool):
 
     def status(self):
         """ Returns the status of the pool. """
-        return "Pool size: %d  Connections in pool: %d "\
-                "Current Overflow: %d Current Checked out "\
+        return "Pool size: %d, connections in pool: %d, "\
+                "current overflow: %d, current checked out "\
                 "connections: %d" % (self.size(),
                                     self.checkedin(),
                                     self.overflow(),

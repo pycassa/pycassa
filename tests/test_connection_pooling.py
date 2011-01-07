@@ -87,8 +87,11 @@ class PoolingCase(unittest.TestCase):
         assert_equal(listener.close_count, 10)
 
         assert_raises(InvalidRequestError, conns[0].return_to_pool)
-        assert_raises(InvalidRequestError, conns[-1].return_to_pool)
+        assert_equal(listener.checkin_count, 20)
+        assert_equal(listener.close_count, 10)
 
+        print "in test:", id(conns[-1])
+        assert_raises(InvalidRequestError, conns[-1].return_to_pool)
         assert_equal(listener.checkin_count, 20)
         assert_equal(listener.close_count, 10)
 
@@ -244,7 +247,7 @@ class PoolingCase(unittest.TestCase):
     def test_queue_failover(self):
         listener = _TestListener()
         pool = ConnectionPool(pool_size=1, max_overflow=0, recycle=10000,
-                         prefill=True, timeout=0.05,
+                         prefill=True, timeout=1,
                          keyspace='PycassaTestKeyspace', credentials=_credentials,
                          listeners=[listener], use_threadlocal=False,
                          server_list=['localhost:9160', 'localhost:9160'])
