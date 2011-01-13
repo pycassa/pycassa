@@ -411,11 +411,11 @@ class SystemManager(object):
         :param str subcomparator_type: Like `comparator_type`, but if the column family
           is a super column family, this applies to the type of the subcolumn names
 
-        :param int or float key_cache_size: The size of the key cache, either in a
-          percentage of total keys (0.15, for example) or in an absolute number of
+        :param key_cache_size: The size of the key cache, either in a percentage of
+          total keys (0.15, for example) or in an absolute number of
           keys (20000, for example).
 
-        :param int or float row_cache_size: Same as `key_cache_size`, but for the row cache
+        :param float row_cache_size: Same as `key_cache_size`, but for the row cache
 
         :param int gc_grace_seconds: Number of seconds before tombstones are removed
 
@@ -432,11 +432,11 @@ class SystemManager(object):
           be present before a minor compaction is performed immediately. Setting to 0
           disables minor compactions.
 
-        :param int key_cache_save_in_seconds: How often the key cache should be saved; this
-          helps to avoid a cold cache on restart
+        :param int key_cache_save_period_in_seconds: How often the key cache should
+          be saved; this helps to avoid a cold cache on restart
 
-        :param int row_cache_save_in_seconds: How often the row cache should be saved; this
-          helps to avoid a cold cache on restart
+        :param int row_cache_save_period_in_seconds: How often the row cache should
+          be saved; this helps to avoid a cold cache on restart
 
         :param int memtable_flush_after_mins: Memtables are flushed when they reach this age
 
