@@ -78,7 +78,7 @@ class SystemManager(object):
         """
         Returns a raw description of the keyspace, which is more useful for use
         in programs than :meth:`describe_keyspace()`.
-        
+
         If `use_dict_for_col_metadata` is ``True``, the CfDef's column_metadata will
         be stored as a dictionary where the keys are column names instead of a list.
 
@@ -113,27 +113,30 @@ class SystemManager(object):
         """
         ksdef = self._conn.describe_keyspace(keyspace)
 
-        print
-        spaces = " " * (35 - len('Name:'))
-        print "Name:", spaces, ksdef.name
-        print
+        ret_string = ""
 
-        spaces = " " * (35 - len('Replication Strategy:'))
+        ret_string += self._make_line("Name", ksdef.name)
+        ret_string += "\n\n"
+
         s = ksdef.strategy_class
-        print "Replication Strategy:", spaces, s[s.rfind('.') + 1: ]
+        ret_string += self._make_line('Replication Strategy', s[s.rfind('.') + 1: ])
+        ret_string += "\n"
 
         if ksdef.strategy_options:
-            spaces = " " * (35 - len('Strategy Options:'))
-            print "Strategy Options:", spaces, ksdef.strategy_options
+            ret_string += self._make_line("Strategy Options", ksdef.strategy_options)
 
-        spaces = " " * (35 - len('Replication Factor:'))
-        print "Replication Factor:", spaces, ksdef.replication_factor
-        print
+        ret_string += self._make_line("Replication Factor", str(ksdef.replication_factor))
+        ret_string += "\n\n"
 
-        print "Column Families:"
+        ret_string += "Column Families:\n"
         for cfdef in ksdef.cf_defs:
-            print "  ", cfdef.name
-        print
+            ret_string += "\n  " + cfdef.name
+
+        return ret_string
+
+    def _make_line(self, label, value):
+        spaces = " " * (35 - len(label + ':'))
+        return "%s:%s%s\n" % (label, spaces, str(value))
 
     def describe_column_family(self, keyspace, column_family):
         """ Returns a human readable description of the Column Family """
@@ -141,127 +144,103 @@ class SystemManager(object):
         try:
             cfdef = self.get_keyspace_description(keyspace)[column_family]
         except KeyError:
-            print "Column family %s does not exist in keyspace %s" % (column_family, keyspace)
-            return
+            raise KeyError("Column family %s does not exist in keyspace %s" % (column_family, keyspace))
 
-        print
+        ret_string = ""
 
-        spaces = " " * (35 - len('Name:'))
-        print "Name:", spaces, cfdef.name
+        ret_string += self._make_line('Name', cfdef.name)
+        ret_string += self._make_line('Description', cfdef.comment)
+        ret_string += self._make_line('Column Type', cfdef.column_type)
+        ret_string += "\n"
 
-        spaces = " " * (35 - len('Description:'))
-        print "Description:", spaces, cfdef.comment
-
-        spaces = " " * (35 - len('Column Type:'))
-        print "Column Type:", spaces, cfdef.column_type
-        print
-
-        spaces = " " * (35 - len('Comparator Type:'))
         s = cfdef.comparator_type
-        print "Comparator Type:", spaces, s[s.rfind('.') + 1: ]
+        ret_string += self._make_line('Comparator Type', s[s.rfind('.') + 1:])
 
         if cfdef.column_type == 'Super':
-            spaces = " " * (35 - len('Subcomparator Type:'))
             s = cfdef.subcomparator_type
-            print "Subcomparator Type:", spaces, s[s.rfind('.') + 1: ]
+            ret_string += self._make_line('Subcomparator Type', s[s.rfind('.') + 1:])
 
-        spaces = " " * (35 - len('Default Validation Class:'))
         s = cfdef.default_validation_class
-        print "Default Validation Class:", spaces, s[s.rfind('.') + 1: ]
-        print
+        ret_string += self._make_line('Default Validation Class', s[s.rfind('.') + 1:])
+        ret_string += '\n'
 
-        print "Cache Sizes"
-        spaces = " " * (35 - len('  Row Cache:'))
+        ret_string += "Cache Sizes\n"
         if cfdef.row_cache_size == 0:
             s = 'Disabled'
         elif cfdef.row_cache_size >= 1:
             s = str(int(cfdef.row_cache_size)) + " rows"
         else:
             s = str(cfdef.key_cache_size) + "%"
-        print "  Row Cache:", spaces, s
+        ret_string += self._make_line("  Row Cache", s)
 
-        spaces = " " * (35 - len('  Key Cache:'))
         if cfdef.key_cache_size == 0:
             s = 'Disabled'
         elif cfdef.key_cache_size >= 1:
             s = str(int(cfdef.key_cache_size)) + " keys"
         else:
             s = str(cfdef.key_cache_size) + "%"
-        print "  Key Cache:", spaces, s
-        print
+        ret_string += self._make_line("  Key Cache", s)
+        ret_string += "\n"
 
-        spaces = " " * (35 - len('Read Repair Chance:'))
         if cfdef.read_repair_chance == 0:
             s = 'Disabled'
         else:
             s = str(cfdef.read_repair_chance * 100) + '%'
-        print "Read Repair Chance:", spaces, s
-        print
+        ret_string += self._make_line("Read Repair Chance", s)
+        ret_string += "\n"
 
-        spaces = " " * (35 - len('GC Grace Seconds:'))
-        print "GC Grace Seconds:", spaces, cfdef.gc_grace_seconds
-        print
+        ret_string += self._make_line("GC Grace Seconds", cfdef.gc_grace_seconds)
+        ret_string += "\n"
 
         compact_disabled = cfdef.min_compaction_threshold == 0 or cfdef.max_compaction_threshold == 0
-            
-        print "Compaction Thresholds"
-        spaces = " " * (35 - len('  Min:'))
-        if compact_disabled:
-            print "  Min:", spaces, "Minor Compactions Disabled"
-        else:
-            print "  Min:", spaces, cfdef.min_compaction_threshold
 
-        spaces = " " * (35 - len('  Max:'))
+        ret_string += "Compaction Thresholds\n"
         if compact_disabled:
-            print "  Max:", spaces, "Minor Compactions Disabled"
+            ret_string += self._make_line("  Min", "Minor Compactions Disabled")
         else:
-            print "  Max:", spaces, cfdef.max_compaction_threshold
-        print
+            ret_string += self._make_line("  Min", cfdef.min_compaction_threshold)
 
-        print 'Memtable Flush After Thresholds'
-        spaces = " " * (35 - len('  Throughput:'))
-        print "  Throughput:", spaces, str(cfdef.memtable_throughput_in_mb), "MiB"
-        spaces = " " * (35 - len('  Operations:'))
+        if compact_disabled:
+            ret_string += self._make_line("  Max", "Minor Compactions Disabled")
+        else:
+            ret_string += self._make_line("  Max", cfdef.max_compaction_threshold)
+        ret_string += "\n"
+
+        ret_string += 'Memtable Flush After Thresholds\n'
+        ret_string += self._make_line("  Throughput", str(cfdef.memtable_throughput_in_mb) + " MiB")
         s = str(int(cfdef.memtable_operations_in_millions * 1000000))
-        print "  Operations:", spaces, s, "operations"
-        spaces = " " * (35 - len('  Time:'))
-        print "  Time:", spaces, str(cfdef.memtable_flush_after_mins), "minutes"
-        print
+        ret_string += self._make_line("  Operations", s + " operations")
+        ret_string += self._make_line("  Time", str(cfdef.memtable_flush_after_mins) + " minutes")
+        ret_string += "\n"
 
-        print "Cache Save Periods"
-        spaces = " " * (35 - len('  Row Cache:'))
+        ret_string += "Cache Save Periods\n"
         if cfdef.row_cache_save_period_in_seconds == 0:
             s = 'Disabled'
         else:
             s = str(cfdef.row_cache_save_period_in_seconds) + ' seconds'
-        print "  Row Cache:", spaces, s
+        ret_string += self._make_line("  Row Cache", s)
 
-        spaces = " " * (35 - len('  Key Cache:'))
         if cfdef.key_cache_save_period_in_seconds == 0:
             s = 'Disabled'
         else:
             s = str(cfdef.key_cache_save_period_in_seconds) + ' seconds'
-        print "  Key Cache:", spaces, s
-        print
+        ret_string += self._make_line("  Key Cache", s)
 
         if cfdef.column_metadata:
-            print "Column Metadata"
+            ret_string += "\nColumn Metadata"
             for coldef in cfdef.column_metadata:
-                spaces = " " * (35 - len('  - Name:'))
-                print "  - Name:", spaces, coldef.name
+                ret_string += "\n"
+                ret_string += self._make_line("  - Name", coldef.name)
 
-                spaces = " " * (35 - len('    Value Type:'))
                 s = coldef.validation_class
-                print "    Value Type:", spaces, s[s.rfind('.') + 1: ]
+                ret_string += self._make_line("    Value Type", s[s.rfind('.') + 1: ])
 
                 if coldef.index_type is not None:
-                    spaces = " " * (35 - len('    Index Type:'))
                     s = IndexType._VALUES_TO_NAMES[coldef.index_type]
-                    print "    Index Type:", spaces, s[s.rfind('.') + 1: ]
+                    ret_string += self._make_line("    Index Type", s[s.rfind('.') + 1: ])
+                    ret_string += self._make_line("    Index Name", coldef.index_name)
 
-                    spaces = " " * (35 - len('    Index Name:'))
-                    print "    Index Name:", spaces, coldef.index_name
-                print
+        return ret_string[:-1] # cut off the final newline
 
     def describe_ring(self, keyspace):
         """ Describes the Cassandra cluster """
@@ -280,12 +259,12 @@ class SystemManager(object):
         return self._conn.describe_schema_versions()
 
     def _system_add_keyspace(self, ksdef):
-        schema_version = self._conn.system_add_keyspace(ksdef) 
+        schema_version = self._conn.system_add_keyspace(ksdef)
         self._wait_for_agreement()
         return schema_version
 
     def _system_update_keyspace(self, ksdef):
-        schema_version = self._conn.system_update_keyspace(ksdef) 
+        schema_version = self._conn.system_update_keyspace(ksdef)
         self._wait_for_agreement()
         return schema_version
 
@@ -334,7 +313,7 @@ class SystemManager(object):
                        strategy_options=None):
 
         """
-        Alters an existing keyspace. 
+        Alters an existing keyspace.
 
         .. warning:: Don't use this unless you know what you are doing.
 
@@ -368,7 +347,7 @@ class SystemManager(object):
 
     def _system_add_column_family(self, cfdef):
         self._conn.set_keyspace(cfdef.keyspace)
-        schema_version = self._conn.system_add_column_family(cfdef) 
+        schema_version = self._conn.system_add_column_family(cfdef)
         self._wait_for_agreement()
         return schema_version
 
@@ -510,7 +489,7 @@ class SystemManager(object):
         raise ire
 
     def _system_update_column_family(self, cfdef):
-        schema_version = self._conn.system_update_column_family(cfdef) 
+        schema_version = self._conn.system_update_column_family(cfdef)
         self._wait_for_agreement()
         return schema_version
 
@@ -610,7 +589,7 @@ class SystemManager(object):
         """
         Creates an index on a column.
 
-        This allows efficient for index usage via 
+        This allows efficient for index usage via
         :meth:`~pycassa.columnfamily.ColumnFamily.get_indexed_slices()`
 
         `column` specifies what column to index, and `value_type` is a string
@@ -668,7 +647,7 @@ class SystemManager(object):
         if matched:
             self._system_update_column_family(cfdef)
 
-    def _wait_for_agreement(self): 
+    def _wait_for_agreement(self):
         while True:
             versions = self._conn.describe_schema_versions()
             if len(versions) == 1:

@@ -23,6 +23,18 @@ import pycassa, optparse
 from pycassa.system_manager import *
 from sys import stdout, stderr, exit
 
+class InteractiveSystemManager(pycassa.SystemManager):
+
+    def describe_keyspace(self, keyspace):
+        ret = super(InteractiveSystemManager, self).describe_keyspace(keyspace)
+        print
+        print ret
+
+    def describe_column_family(self, keyspace, column_family):
+        ret = super(InteractiveSystemManager, self).describe_column_family(keyspace, column_family)
+        print
+        print ret
+
 _pool = None
 
 def _update_cf(cf, delete=False):
@@ -69,7 +81,7 @@ if options.user or options.passwd:
         exit(1)
     credentials = {'username': options.user, 'password': options.passwd}
 
-SYSTEM_MANAGER = pycassa.SystemManager('%s:%d' % (hostname, port), credentials, framed, _update_cf)
+SYSTEM_MANAGER = InteractiveSystemManager('%s:%d' % (hostname, port), credentials, framed, _update_cf)
 
 print "----------------------------------"
 print "Cassandra Interactive Python Shell"
