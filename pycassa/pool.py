@@ -7,7 +7,7 @@ application.
 
 """
 
-import weakref, time, threading, random
+import time, threading, random
 
 import connection
 import queue as pool_queue
@@ -653,7 +653,7 @@ class ConnectionPool(AbstractPool):
             if self._pool_threadlocal:
                 if hasattr(self._tlocal, 'current'):
                     if self._tlocal.current:
-                        conn = self._tlocal.current()
+                        conn = self._tlocal.current
                         self._tlocal.current = None
                         conn._retry_count = 0
                         if conn._is_in_queue_or_disposed():
@@ -697,7 +697,7 @@ class ConnectionPool(AbstractPool):
             try:
                 conn = None
                 if self._tlocal.current:
-                    conn = self._tlocal.current()
+                    conn = self._tlocal.current
                 if conn:
                     return conn
             except AttributeError:
@@ -735,7 +735,7 @@ class ConnectionPool(AbstractPool):
                 self._overflow_lock.release()
 
         if self._pool_threadlocal:
-            self._tlocal.current = weakref.ref(conn)
+            self._tlocal.current = conn
         self._notify_on_checkout(conn)
         return conn
 
