@@ -2,18 +2,21 @@ from datetime import datetime
 
 from pycassa import index, ColumnFamily, ConnectionPool, \
     ColumnFamilyMap, ConsistencyLevel, NotFoundException, String, Int64, \
-    Float64, DateTime, IntString, FloatString, DateTimeString
+    Float64, DateTime, IntString, FloatString, DateTimeString, \
+    SystemManager
 from nose.tools import assert_raises, assert_equal, assert_true
+from nose.plugins.skip import *
 
 import struct
 
 def setup_module():
-    global pool, cf, scf, indexed_cf
+    global pool, cf, scf, indexed_cf, sys_man
     credentials = {'username': 'jsmith', 'password': 'havebadpass'}
     pool = ConnectionPool(keyspace='PycassaTestKeyspace', credentials=credentials)
     cf = ColumnFamily(pool, 'Standard1', autopack_names=False, autopack_values=False)
     scf = ColumnFamily(pool, 'Super1', autopack_names=False, autopack_values=False)
     indexed_cf = ColumnFamily(pool, 'Indexed1', autopack_names=False, autopack_values=False)
+    sys_man = SystemManager()
 
 def teardown_module():
     pool.dispose()
@@ -118,6 +121,9 @@ class TestColumnFamilyMap:
         assert_equal(self.map.get_count(instance.key), 7)
 
     def test_insert_get_range(self):
+        if sys_man.describe_partitioner() == 'RandomPartitioner':
+            raise SkipTest('Cannot use RandomPartitioner for this test')
+
         instances = []
         for i in xrange(5):
             instance = self.instance('TestColumnFamilyMap.test_insert_get_range%s' % i)

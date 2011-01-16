@@ -1,17 +1,20 @@
-from pycassa import index, ColumnFamily, ConsistencyLevel, ConnectionPool, NotFoundException
+from pycassa import index, ColumnFamily, ConsistencyLevel, ConnectionPool,\
+                    NotFoundException, SystemManager
 
 from nose.tools import assert_raises, assert_equal, assert_true
+from nose.plugins.skip import *
 
 import struct
 import unittest
 
 def setup_module():
-    global pool, cf, scf, indexed_cf
+    global pool, cf, scf, indexed_cf, sys_man
     credentials = {'username': 'jsmith', 'password': 'havebadpass'}
     pool = ConnectionPool(keyspace='PycassaTestKeyspace', credentials=credentials)
     cf = ColumnFamily(pool, 'Standard1', dict_class=TestDict)
     scf = ColumnFamily(pool, 'Super1', dict_class=TestDict)
     indexed_cf = ColumnFamily(pool, 'Indexed1')
+    sys_man = SystemManager()
 
 def teardown_module():
     pool.dispose()
@@ -104,6 +107,9 @@ class TestColumnFamily(unittest.TestCase):
         assert_equal(result[keys[0]], 1)
 
     def test_insert_get_range(self):
+        if sys_man.describe_partitioner() == 'RandomPartitioner':
+            raise SkipTest('Cannot use RandomPartitioner for this test')
+
         keys = ['TestColumnFamily.test_insert_get_range%s' % i for i in xrange(5)]
         columns = {'1': 'val1', '2': 'val2'}
         for key in keys:
@@ -116,6 +122,9 @@ class TestColumnFamily(unittest.TestCase):
             assert_equal(c, columns)
 
     def test_get_range_batching(self):
+        if sys_man.describe_partitioner() == 'RandomPartitioner':
+            raise SkipTest('Cannot use RandomPartitioner for this test')
+
         cf.truncate()
 
         keys = []
