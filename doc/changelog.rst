@@ -1,6 +1,23 @@
 Changelog
 =========
 
+Changes in Version 1.0.4
+------------------------
+
+- Fixed threadlocal issues that broke multithreading
+- Fix bug in :meth:`pycassa.columnfamily.ColumnFamily.remove()` when a super_column
+  argument is supplied
+- Fix minor PoolLogger logging bugs
+- Added :meth:`pycassa.system_manager.SystemManager.describe_partitioner()`
+- Added :meth:`pycassa.system_manager.SystemManager.describe_snitch()`
+- Added :meth:`pycassa.system_manager.SystemManager.get_keyspace_properties()`
+- Renamed :meth:`pycassa.system_manager.SystemManager.get_keyspace_description()`
+  to :meth:`pycassa.system_manager.SystemManager.get_keyspace_column_families()`
+  and deprecated the previous name
+- Moved :meth:`pycassa.system_manager.SystemManager.describe_keyspace()`
+  and :meth:`pycassa.system_manager.SystemManager.describe_column_family()`
+  to pycassaShell describe_keyspace() and describe_column_family()
+
 Changes in Version 1.0.3
 ------------------------
 
