@@ -23,22 +23,156 @@ import pycassa, optparse
 from pycassa.system_manager import *
 from sys import stdout, stderr, exit
 
-class InteractiveSystemManager(pycassa.SystemManager):
+def _print_line(label, value):
+    spaces = " " * (35 - len(label + ':'))
+    print "%s:%s%s" % (label, spaces, str(value))
 
-    def describe_keyspace(self, keyspace):
-        ret = super(InteractiveSystemManager, self).describe_keyspace(keyspace)
-        print
-        print ret
+def _make_line(label, value):
+    spaces = " " * (35 - len(label + ':'))
+    return "%s:%s%s\n" % (label, spaces, str(value))
 
-    def describe_column_family(self, keyspace, column_family):
-        ret = super(InteractiveSystemManager, self).describe_column_family(keyspace, column_family)
-        print
-        print ret
+def describe_keyspace(keyspace):
+    try:
+        ks = SYSTEM_MANAGER.get_keyspace_properties(keyspace)
+    except pycassa.NotFoundException:
+        print "\nKeyspace %s does not exist." % keyspace
+
+    print
+    _print_line("Name", keyspace)
+    print
+
+    s = ks['replication_strategy']
+    _print_line('Replication Strategy', s[s.rfind('.') + 1: ])
+    print
+
+    if ks['strategy_options']:
+        _print_line("Strategy Options", ks['strategy_options'])
+
+    _print_line("Replication Factor", str(ks['replication_factor']))
+    print
+
+    cfs = SYSTEM_MANAGER.get_keyspace_column_families(keyspace).keys()
+    cfs.sort()
+    print "Column Families:"
+    for cf in cfs:
+        print "  " + cf
+
+def describe_column_family(arg1, arg2=None):
+    """
+    Prints a description of a column family.
+
+    A keyspace and column family name may be passed in, or a
+    :class:`~pycassa.columnfamil.ColumnFamily` object may be passed in.
+    """
+    if arg2 is None:
+        # This is a ColumnFamily object
+        column_family = arg1.column_family
+        keyspace = arg1.pool.keyspace
+    else:
+        keyspace, column_family = (arg1, arg2)
+
+    try:
+        cfdef = SYSTEM_MANAGER.get_keyspace_column_families(keyspace)[column_family]
+    except KeyError:
+        print "Column family %s does not exist in keyspace %s" % (column_family, keyspace)
+
+    print
+    _print_line('Name', cfdef.name)
+    _print_line('Description', cfdef.comment)
+    _print_line('Column Type', cfdef.column_type)
+    print
+
+    s = cfdef.comparator_type
+    _print_line('Comparator Type', s[s.rfind('.') + 1:])
+
+    if cfdef.column_type == 'Super':
+        s = cfdef.subcomparator_type
+        _print_line('Subcomparator Type', s[s.rfind('.') + 1:])
+
+    s = cfdef.default_validation_class
+    _print_line('Default Validation Class', s[s.rfind('.') + 1:])
+    print
+
+    print "Cache Sizes"
+    if cfdef.row_cache_size == 0:
+        s = 'Disabled'
+    elif cfdef.row_cache_size >= 1:
+        s = str(int(cfdef.row_cache_size)) + " rows"
+    else:
+        s = str(cfdef.key_cache_size) + "%"
+    _print_line("  Row Cache", s)
+
+    if cfdef.key_cache_size == 0:
+        s = 'Disabled'
+    elif cfdef.key_cache_size >= 1:
+        s = str(int(cfdef.key_cache_size)) + " keys"
+    else:
+        s = str(cfdef.key_cache_size) + "%"
+    _print_line("  Key Cache", s)
+    print
+
+    if cfdef.read_repair_chance == 0:
+        s = 'Disabled'
+    else:
+        s = str(cfdef.read_repair_chance * 100) + '%'
+    _print_line("Read Repair Chance", s)
+    print
+
+    _print_line("GC Grace Seconds", cfdef.gc_grace_seconds)
+    print
+
+    compact_disabled = cfdef.min_compaction_threshold == 0 or cfdef.max_compaction_threshold == 0
+
+    print "Compaction Thresholds"
+    if compact_disabled:
+        _print_line("  Min", "Minor Compactions Disabled")
+    else:
+        _print_line("  Min", cfdef.min_compaction_threshold)
+
+    if compact_disabled:
+        _print_line("  Max", "Minor Compactions Disabled")
+    else:
+        _print_line("  Max", cfdef.max_compaction_threshold)
+    print
+
+    print 'Memtable Flush After Thresholds'
+    _print_line("  Throughput", str(cfdef.memtable_throughput_in_mb) + " MiB")
+    s = str(int(cfdef.memtable_operations_in_millions * 1000000))
+    _print_line("  Operations", s + " operations")
+    _print_line("  Time", str(cfdef.memtable_flush_after_mins) + " minutes")
+    print
+
+    print "Cache Save Periods"
+    if cfdef.row_cache_save_period_in_seconds == 0:
+        s = 'Disabled'
+    else:
+        s = str(cfdef.row_cache_save_period_in_seconds) + ' seconds'
+    _print_line("  Row Cache", s)
+
+    if cfdef.key_cache_save_period_in_seconds == 0:
+        s = 'Disabled'
+    else:
+        s = str(cfdef.key_cache_save_period_in_seconds) + ' seconds'
+    _print_line("  Key Cache", s)
+
+    if cfdef.column_metadata:
+        print "\nColumn Metadata"
+        for coldef in cfdef.column_metadata:
+            print
+            _print_line("  - Name", coldef.name)
+
+            s = coldef.validation_class
+            _print_line("    Value Type", s[s.rfind('.') + 1: ])
+
+            if coldef.index_type is not None:
+                s = IndexType._VALUES_TO_NAMES[coldef.index_type]
+                _print_line("    Index Type", s[s.rfind('.') + 1: ])
+                _print_line("    Index Name", coldef.index_name)
 
 _pool = None
 
-def _update_cf(cf, delete=False):
-    if _pool is not None:
+def _update_cf(ks, cf, delete=False):
+    if ks == options.keyspace and _pool is not None:
         if not delete:
             existed = cf.upper() in globals()
             globals()[cf.upper()] = pycassa.ColumnFamily(_pool, cf)
@@ -50,6 +184,44 @@ def _update_cf(cf, delete=False):
             globals().pop(cf.upper())
             print "\nDropped %s" % cf.upper()
 
+class InteractiveSystemManager(pycassa.SystemManager):
+    """
+    Allows ColumnFamily instances to be passed directly to SystemManager
+    methods instead of specifying a keyspace and column family as strings.
+    """
+
+    def alter_column_family(self, arg1, arg2, *args, **kwargs):
+        if isinstance(arg1, pycassa.ColumnFamily):
+            keyspace = arg1.pool.keyspace
+            column_family = arg1.column_family
+            super(InteractiveSystemManager, self).alter_column_family(keyspace, column_family, arg2, *args, **kwargs)
+        else:
+            super(InteractiveSystemManager, self).alter_column_family(arg1, arg2, *args, **kwargs)
+
+    def drop_column_family(self, arg1, arg2=None):
+        if isinstance(arg1, pycassa.ColumnFamily):
+            keyspace = arg1.pool.keyspace
+            column_family = arg1.column_family
+        else:
+            keyspace = arg1
+            column_family = arg2
+        super(InteractiveSystemManager, self).drop_column_family(keyspace, column_family)
+
+    def alter_column(self, arg1, arg2, *args, **kwargs):
+        if isinstance(arg1, pycassa.ColumnFamily):
+            keyspace = arg1.pool.keyspace
+            column_family = arg1.column_family
+            super(InteractiveSystemManager, self).alter_column(keyspace, column_family, arg2, *args, **kwargs)
+        else:
+            super(InteractiveSystemManager, self).alter_column(arg1, arg2, *args, **kwargs)
+
+    def create_index(self, arg1, arg2, *args, **kwargs):
+        if isinstance(arg1, pycassa.ColumnFamily):
+            keyspace = arg1.pool.keyspace
+            column_family = arg1.column_family
+            super(InteractiveSystemManager, self).create_index(keyspace, column_family, arg2, *args, **kwargs)
+        else:
+            super(InteractiveSystemManager, self).create_index(arg1, arg2, *args, **kwargs)
 
 parser = optparse.OptionParser(usage='Usage: %prog [OPTIONS]')
 parser.add_option('-k', '--keyspace', help='Cassandra keyspace name.')
@@ -59,7 +231,7 @@ parser.add_option('-u', '--user', help='Username (for simple auth).')
 parser.add_option('-P', '--passwd', help='Password (for simple auth).')
 parser.add_option('-S', '--streaming', help='Using streaming transport.',
                   action="store_false", dest='framed')
-parser.add_option('-F', '--framed', 
+parser.add_option('-F', '--framed',
                   help='Use framed transport.  Default transport.',
                   action="store_true", dest='framed')
 parser.add_option('-f', '--file', help='Run a script after startup')
