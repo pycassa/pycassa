@@ -15,6 +15,7 @@ from pycassa.cassandra.ttypes import AuthenticationRequest
 __all__ = ['connect', 'connect_thread_local']
 
 DEFAULT_SERVER = 'localhost:9160'
+DEFAULT_PORT = 9160
 
 LOWEST_COMPATIBLE_VERSION = 17
 
@@ -23,7 +24,12 @@ class Connection(Cassandra.Client):
 
     def __init__(self, keyspace, server, framed_transport=True, timeout=None, credentials=None):
         self.server = server
-        host, port = server.split(":")
+        server = server.split(':')
+        if len(server) <= 1:
+            port = 9160
+        else:
+            port = server[1]
+        host = server[0]
         socket = TSocket.TSocket(host, int(port))
         if timeout is not None:
             socket.setTimeout(timeout*1000.0)
@@ -62,7 +68,7 @@ def connect(keyspace, servers=None, framed_transport=True, timeout=None,
     Constructs a :class:`~pycassa.pool.ConnectionPool`. This is primarily available
     for reasons of backwards-compatibility; creating a ConnectionPool directly
     provides more options.  All of the parameters here correspond directly
-    with parameters of the same name in 
+    with parameters of the same name in
     :meth:`pycassa.pool.ConnectionPool.__init__()`
 
     """
