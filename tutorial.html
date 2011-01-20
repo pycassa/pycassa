@@ -68,7 +68,7 @@ should run without raising an exception:</p>
 </pre></div>
 </div>
 <p>This tutorial also assumes that a Cassandra instance is running on the
-default host and port. Read the <a class="reference external" href="http://wiki.apache.org/cassandra/GettingStarted">instructions for getting started
+default host and port. Read the <a class="reference external" href="http://www.datastax.com/docs/0.7/getting_started/index">instructions for getting started
 with Cassandra</a> ,
 making sure that you choose a <a class="reference external" href="http://wiki.github.com/pycassa/pycassa/pycassa-cassandra-compatibility">version that is compatible with
 pycassa</a>.
@@ -96,7 +96,7 @@ also specify the host and port explicitly, as follows:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;localhost:9160&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>This creates a small connection pool for use with
+<p>This creates a small connection pool for use with a
 <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a> . See <a class="reference internal" href="#connection-pooling">Connection Pooling</a>
 for more details.</p>
 </div>

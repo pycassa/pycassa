@@ -19,7 +19,7 @@ should run without raising an exception:
 
 This tutorial also assumes that a Cassandra instance is running on the
 default host and port. Read the `instructions for getting started
-with Cassandra <http://wiki.apache.org/cassandra/GettingStarted>`_ , 
+with Cassandra <http://www.datastax.com/docs/0.7/getting_started/index>`_ , 
 making sure that you choose a `version that is compatible with
 pycassa <http://wiki.github.com/pycassa/pycassa/pycassa-cassandra-compatibility>`_.
 You can start Cassandra like so:
@@ -53,7 +53,7 @@ also specify the host and port explicitly, as follows:
 
   >>> pool = pycassa.connect('Keyspace1', ['localhost:9160'])
 
-This creates a small connection pool for use with
+This creates a small connection pool for use with a
 :class:`~pycassa.columnfamily.ColumnFamily` . See `Connection Pooling`_
 for more details.
 
