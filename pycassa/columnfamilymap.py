@@ -38,7 +38,7 @@ class ColumnFamilyMap(object):
         families or super columns in super column families.
 
         Instances of `cls` are returned from :meth:`get()`, :meth:`multiget()`,
-        :meth:`get_range()` and :meth:`get_indexed_slices()`. 
+        :meth:`get_range()` and :meth:`get_indexed_slices()`.
 
         `column_family` is a :class:`~pycassa.columnfamily.ColumnFamily` to
         tie with `cls`.  This :class:`ColumnFamily` should almost always have
@@ -50,11 +50,11 @@ class ColumnFamilyMap(object):
         """
         self.cls = cls
         self.column_family = column_family
-        
+
         self.raw_columns = raw_columns
         self.dict_class = self.column_family.dict_class
         self.columns = self.dict_class()
-        
+
         for name, column in self.cls.__dict__.iteritems():
             if not isinstance(column, Column):
                 continue
@@ -78,7 +78,7 @@ class ColumnFamilyMap(object):
     def get(self, key, *args, **kwargs):
         """
         Creates one or more instances of `cls` from the row with key `key`.
-        
+
         The fields that are retreived may be specified using `columns`, which
         should be a list of column names.
 
@@ -210,14 +210,17 @@ class ColumnFamilyMap(object):
 
         """
 
-        if 'columns' not in kwargs and not self.column_family.super and not self.raw_columns:
+        assert not self.column_family.super, "get_indexed_slices() is not " \
+                "supported by super column families"
+
+        if 'columns' not in kwargs and not self.raw_columns:
             kwargs['columns'] = self.columns.keys()
 
         # Autopack the index clause's values
         if instance is not None:
             new_exprs = []
             for expr in kwargs['index_clause'].expressions:
-                new_expr = IndexExpression(expr.column_name, expr.op, 
+                new_expr = IndexExpression(expr.column_name, expr.op,
                         value=self.columns[expr.column_name].pack(instance.__dict__[expr.column_name]))
                 new_exprs.append(new_expr)
             old_clause = kwargs['index_clause']
@@ -228,19 +231,8 @@ class ColumnFamilyMap(object):
 
         ret = self.dict_class()
         for key, columns in keyslice_map:
-            if self.column_family.super:
-                if 'super_column' not in kwargs:
-                    vals = self.dict_class()
-                    for super_column, subcols in columns.iteritems():
-                        combined = self.combine_columns(subcols)
-                        vals[super_column] = create_instance(self.cls, key=key, super_column=super_column, **combined)
-                    ret[key] = vals
-                else:
-                    combined = self.combine_columns(columns)
-                    ret[key] = create_instance(self.cls, key=key, super_column=kwargs['super_column'], **combined)
-            else:
-                combined = self.combine_columns(columns)
-                ret[key] = create_instance(self.cls, key=key, **combined)
+            combined = self.combine_columns(columns)
+            ret[key] = create_instance(self.cls, key=key, **combined)
         return ret
 
     def insert(self, instance, columns=None, write_consistency_level=None):

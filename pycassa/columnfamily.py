@@ -437,8 +437,7 @@ class ColumnFamily(object):
 
     def get_indexed_slices(self, index_clause, columns=None, column_start="", column_finish="",
                            column_reversed=False, column_count=100, include_timestamp=False,
-                           super_column=None, read_consistency_level=None,
-                           buffer_size=None):
+                           read_consistency_level=None, buffer_size=None):
         """
         Similar to :meth:`get_range()`, but an :class:`~pycassa.cassandra.ttypes.IndexClause`
         is used instead of a key range.
@@ -447,14 +446,20 @@ class ColumnFamily(object):
         that compare the value of a column to a given value.  At least one of the
         expressions in the :class:`.IndexClause` must be on an indexed column.
 
+        Note that Cassandra does not support secondary indexes or get_indexed_slices()
+        for super column families.
+
             .. seealso:: :meth:`~pycassa.index.create_index_clause()` and
                          :meth:`~pycassa.index.create_index_expression()`
 
         """
 
-        cp = self._create_column_parent(super_column)
+        assert not self.super, "get_indexed_slices() is not " \
+                "supported by super column families"
+
+        cp = self._create_column_parent()
         sp = self._create_slice_predicate(columns, column_start, column_finish,
-                                    column_reversed, column_count)
+                                          column_reversed, column_count)
 
         new_exprs = []
         # Pack the values in the index clause expressions
