@@ -187,12 +187,14 @@ To convert this to a list, use <tt class="docutils literal"><span class="pre">li
 
 <dl class="method">
 <dt id="pycassa.columnfamily.ColumnFamily.get_indexed_slices">
-<tt class="descname">get_indexed_slices</tt><big>(</big><em>index_clause[, columns][, column_start][, column_finish][, column_reversed][, column_count][, include_timestamp][, super_column][, read_consistency_level][, buffer_size]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.get_indexed_slices" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_indexed_slices</tt><big>(</big><em>index_clause[, columns][, column_start][, column_finish][, column_reversed][, column_count][, include_timestamp][, read_consistency_level][, buffer_size]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.get_indexed_slices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Similar to <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.get_range" title="pycassa.columnfamily.ColumnFamily.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a>, but an <a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexClause" title="pycassa.cassandra.ttypes.IndexClause"><tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt></a>
 is used instead of a key range.</p>
 <p><cite>index_clause</cite> limits the keys that are returned based on expressions
 that compare the value of a column to a given value.  At least one of the
 expressions in the <a class="reference internal" href="cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexClause" title="pycassa.cassandra.ttypes.IndexClause"><tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt></a> must be on an indexed column.</p>
+<p>Note that Cassandra does not support secondary indexes or get_indexed_slices()
+for super column families.</p>
 <blockquote>
 <div class="admonition-see-also admonition seealso">
 <p class="first admonition-title">See also</p>

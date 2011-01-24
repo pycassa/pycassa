@@ -17,7 +17,8 @@
 
         .. automethod:: get_range([start][, finish][, columns][, column_start][, column_finish][, column_reversed][, column_count][, row_count][, include_timestamp][, super_column][, read_consistency_level][, buffer_size])
 
-        .. automethod:: get_indexed_slices(index_clause[, columns][, column_start][, column_finish][, column_reversed][, column_count][, include_timestamp][, super_column][, read_consistency_level][, buffer_size])
+        .. automethod:: get_indexed_slices(index_clause[, columns][, column_start][, column_finish][, column_reversed][, column_count][, include_timestamp][, read_consistency_level][, buffer_size])
+
         .. automethod:: insert(key, columns[, timestamp][, ttl][, write_consistency_level])
 
         .. automethod:: batch_insert(rows[, timestamp][, ttl][, write_consistency_level])
