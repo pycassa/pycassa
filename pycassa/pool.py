@@ -19,7 +19,7 @@ from thrift import Thrift
 import threading
 import socket
 
-_BASE_BACKOFF = 0.001
+_BASE_BACKOFF = 0.01
 
 __all__ = ['QueuePool', 'ConnectionPool', 'PoolListener',
            'ConnectionWrapper', 'AllServersUnavailable',
