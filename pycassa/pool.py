@@ -317,6 +317,7 @@ class ConnectionWrapper(connection.Connection):
         super(ConnectionWrapper, self).__init__(*args, **kwargs)
         self._pool._notify_on_connect(self)
 
+        # For testing purposes only
         self._should_fail = False
         self._original_meth = self.send_batch_mutate
 
@@ -433,11 +434,23 @@ class ConnectionWrapper(connection.Connection):
     @_retry
     def get(self, *args, **kwargs):
         pass
- 
+
     @_retry
     def get_slice(self, *args, **kwargs):
         pass
-        
+
+    @_retry
+    def multiget_slice(self, *args, **kwargs):
+        pass
+
+    @_retry
+    def get_count(self, *args, **kwargs):
+        pass
+
+    @_retry
+    def multiget_count(self, *args, **kwargs):
+        pass
+
     @_retry
     def get_range_slices(self, *args, **kwargs):
         pass
@@ -470,7 +483,7 @@ class ConnectionWrapper(connection.Connection):
     def get_keyspace_description(self, keyspace=None, use_dict_for_col_metadata=False):
         """
         Describes the given keyspace.
-        
+
         If `use_dict_for_col_metadata` is ``True``, the column metadata will be stored
         as a dictionary instead of a list
 
