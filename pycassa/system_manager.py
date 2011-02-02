@@ -5,7 +5,7 @@ from connection import Connection
 from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef,\
                                      InvalidRequestException
 
-_TIMEOUT = 10
+_DEFAULT_TIMEOUT = 30
 _SAMPLE_PERIOD = 0.25
 
 SIMPLE_STRATEGY = 'SimpleStrategy'
@@ -66,8 +66,9 @@ class SystemManager(object):
 
     """
 
-    def __init__(self, server='localhost:9160', credentials=None, framed_transport=True, cf_callback=None):
-        self._conn = Connection(None, server, framed_transport, _TIMEOUT, credentials)
+    def __init__(self, server='localhost:9160', credentials=None, framed_transport=True,
+                 timeout=_DEFAULT_TIMEOUT, cf_callback=None):
+        self._conn = Connection(None, server, framed_transport, timeout, credentials)
         self._cf_callback = cf_callback
 
     def close(self):
