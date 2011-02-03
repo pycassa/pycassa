@@ -190,13 +190,19 @@ class InteractiveSystemManager(pycassa.SystemManager):
     methods instead of specifying a keyspace and column family as strings.
     """
 
+    def create_column_family(self, keyspace, name, *args, **kwargs):
+        super(InteractiveSystemManager, self).create_column_family(keyspace, name, *args, **kwargs)
+        _update_cf(keyspace, name)
+
     def alter_column_family(self, arg1, arg2, *args, **kwargs):
         if isinstance(arg1, pycassa.ColumnFamily):
             keyspace = arg1.pool.keyspace
             column_family = arg1.column_family
             super(InteractiveSystemManager, self).alter_column_family(keyspace, column_family, arg2, *args, **kwargs)
+            _update_cf(keyspace, name)
         else:
             super(InteractiveSystemManager, self).alter_column_family(arg1, arg2, *args, **kwargs)
+            _update_cf(arg1, arg2)
 
     def drop_column_family(self, arg1, arg2=None):
         if isinstance(arg1, pycassa.ColumnFamily):
@@ -206,22 +212,27 @@ class InteractiveSystemManager(pycassa.SystemManager):
             keyspace = arg1
             column_family = arg2
         super(InteractiveSystemManager, self).drop_column_family(keyspace, column_family)
+        _update_cf(keyspace, column_family, delete=True)
 
     def alter_column(self, arg1, arg2, *args, **kwargs):
         if isinstance(arg1, pycassa.ColumnFamily):
             keyspace = arg1.pool.keyspace
             column_family = arg1.column_family
             super(InteractiveSystemManager, self).alter_column(keyspace, column_family, arg2, *args, **kwargs)
+            _update_cf(keyspace, column_family)
         else:
             super(InteractiveSystemManager, self).alter_column(arg1, arg2, *args, **kwargs)
+            _update_cf(arg1, arg2)
 
     def create_index(self, arg1, arg2, *args, **kwargs):
         if isinstance(arg1, pycassa.ColumnFamily):
             keyspace = arg1.pool.keyspace
             column_family = arg1.column_family
             super(InteractiveSystemManager, self).create_index(keyspace, column_family, arg2, *args, **kwargs)
+            _update_cf(keyspace, column_family)
         else:
             super(InteractiveSystemManager, self).create_index(arg1, arg2, *args, **kwargs)
+            _update_cf(arg1, arg2)
 
 parser = optparse.OptionParser(usage='Usage: %prog [OPTIONS]')
 parser.add_option('-k', '--keyspace', help='Cassandra keyspace name.')
@@ -253,7 +264,8 @@ if options.user or options.passwd:
         exit(1)
     credentials = {'username': options.user, 'password': options.passwd}
 
-SYSTEM_MANAGER = InteractiveSystemManager('%s:%d' % (hostname, port), credentials, framed, _update_cf)
+SYSTEM_MANAGER = InteractiveSystemManager('%s:%d' % (hostname, port),
+                                          credentials, framed)
 
 print "----------------------------------"
 print "Cassandra Interactive Python Shell"
