@@ -49,6 +49,17 @@
             
   <div class="section" id="changelog">
 <h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="changes-in-version-1-0-5">
+<h2>Changes in Version 1.0.5<a class="headerlink" href="#changes-in-version-1-0-5" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Assume port 9160 if only a hostname is given</li>
+<li>Remove super_column param from <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_indexed_slices" title="pycassa.columnfamily.ColumnFamily.get_indexed_slices"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.columnfamily.ColumnFamily.get_indexed_slices()</span></tt></a></li>
+<li>Enable failover on functions that previously lacked it</li>
+<li>Increase base backoff time to 0.01 seconds</li>
+<li>Add a timeout paremeter to <tt class="xref py py-class docutils literal"><span class="pre">pycassa.system_manager.SystemManger</span></tt></li>
+<li>Return timestamp on single-column inserts</li>
+</ul>
+</div>
 <div class="section" id="changes-in-version-1-0-4">
 <h2>Changes in Version 1.0.4<a class="headerlink" href="#changes-in-version-1-0-4" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -227,6 +238,7 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Changelog</a><ul>
+<li><a class="reference internal" href="#changes-in-version-1-0-5">Changes in Version 1.0.5</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-0-4">Changes in Version 1.0.4</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-0-3">Changes in Version 1.0.3</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-0-2">Changes in Version 1.0.2</a></li>
@@ -247,7 +259,7 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="api/pycassa/cassandra/ttypes.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.cassandra.ttypes</span></tt> &#8211; Thrift Object Types</a></p>
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">pycassa.cassandra.ttypes</span></tt> &#8211; Thrift Object Types</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="sources/changelog.txt"

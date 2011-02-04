@@ -1,6 +1,16 @@
 Changelog
 =========
 
+Changes in Version 1.0.5
+------------------------
+
+- Assume port 9160 if only a hostname is given 
+- Remove super_column param from :meth:`pycassa.columnfamily.ColumnFamily.get_indexed_slices()`
+- Enable failover on functions that previously lacked it
+- Increase base backoff time to 0.01 seconds
+- Add a timeout paremeter to :class:`pycassa.system_manager.SystemManger`
+- Return timestamp on single-column inserts 
+
 Changes in Version 1.0.4
 ------------------------
 
