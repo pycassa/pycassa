@@ -712,10 +712,10 @@ class ColumnFamily(object):
             column = Column(colname, colval, timestamp, ttl)
             try:
                 self._obtain_connection()
-                res = self._tlocal.client.insert(key, cp, column, self._wcl(write_consistency_level))
+                self._tlocal.client.insert(key, cp, column, self._wcl(write_consistency_level))
             finally:
                 self._release_connection()
-            return res
+            return timestamp
         else:
             return self.batch_insert({key: columns}, timestamp=timestamp, ttl=ttl,
                                      write_consistency_level=write_consistency_level)
