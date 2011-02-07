@@ -342,7 +342,7 @@ full ring.</p>
 <p>&#64;param key. a row key
 &#64;param columns. List of data represented by the key. Typically, the list is pared down to only the columns specified by</p>
 <blockquote>
-a SlicePredicate.</blockquote>
+<div>a SlicePredicate.</div></blockquote>
 <dl class="docutils">
 <dt>Attributes:</dt>
 <dd><ul class="first last simple">
@@ -430,9 +430,9 @@ must also be a valid value to the ColumnFamily Comparator.</dd>
 <p>&#64;param reversed. Whether the results should be ordered in reversed order. Similar to ORDER BY blah DESC in SQL.
 &#64;param count. How many columns to return. Similar to LIMIT in SQL. May be arbitrarily large, but Thrift will</p>
 <blockquote>
-materialize the whole result into memory before returning it to the client, so be aware that you may
+<div>materialize the whole result into memory before returning it to the client, so be aware that you may
 be better served by iterating through slices by passing the last value of one call in as the &#8216;start&#8217;
-of the next instead of increasing &#8216;count&#8217; arbitrarily large.</blockquote>
+of the next instead of increasing &#8216;count&#8217; arbitrarily large.</div></blockquote>
 <dl class="docutils">
 <dt>Attributes:</dt>
 <dd><ul class="first last simple">
@@ -452,7 +452,7 @@ of the next instead of increasing &#8216;count&#8217; arbitrarily large.</blockq
 &#64;param name. see Column.name.
 &#64;param columns. A collection of standard Columns.  The columns within a super column are defined in an adhoc manner.</p>
 <blockquote>
-Columns within a super column do not have to have matching structures (similarly named child columns).</blockquote>
+<div>Columns within a super column do not have to have matching structures (similarly named child columns).</div></blockquote>
 <dl class="docutils">
 <dt>Attributes:</dt>
 <dd><ul class="first last simple">
@@ -545,7 +545,7 @@ Columns within a super column do not have to have matching structures (similarly
       </ul>
     </div>
     <div class="footer">
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.3.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
     </div>
   </body>
 </html>
