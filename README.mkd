@@ -1,10 +1,15 @@
 Note
 ====
 
-If you are using Cassandra 0.6, get pycassa 0.3.0 from the
-[Downloads](https://github.com/pycassa/pycassa/downloads) section and read the
-documentation contained within.  This README applies to the current state of
-pycassa, which tracks Cassandra 0.7.
+If you are using Cassandra 0.6.x, you have two options:
+ * Get pycassa 0.3.0 from the [Downloads](https://github.com/pycassa/pycassa/downloads). The
+   README contained within provides documentation.
+ * Download the pycassa-multiversion-beta1 tarball
+   from the [Downloads](https://github.com/pycassa/pycassa/Downloads) section.
+   See [Multiversion Support](https://github.com/pycassa/pycassa/wiki/Multiversion-Support)
+   for more details.
+
+This README applies to the current state of pycassa, which tracks Cassandra 0.7.
 
 See [the wiki](https://github.com/pycassa/pycassa/wiki/Pycassa-%2B-Cassandra-Compatibility)
 for more compatibility notes.
