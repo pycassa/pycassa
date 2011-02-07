@@ -74,7 +74,7 @@ Example usage:
 
 .. code-block:: python
 
-    >>> SYSTEM_MANAGER.describe_keyspace('Keyspace1')
+    >>> describe_keyspace('Keyspace1')
 
     Name:                                Keyspace1
 
@@ -87,7 +87,7 @@ Example usage:
        Standard1
        Super1
 
-    >>> SYSTEM_MANAGER.describe_column_family('Keyspace1', 'Indexed1')
+    >>> describe_column_family('Keyspace1', 'Indexed1')
 
     Name:                                Indexed1
     Description:                         
