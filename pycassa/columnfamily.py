@@ -11,11 +11,6 @@ from pycassa.cassandra.ttypes import Column, ColumnOrSuperColumn,\
     IndexExpression, IndexClause
 from pycassa.util import *
 
-try:
-    from functools import wraps
-except ImportError:
-    from py25_functools import wraps
-
 import time
 import sys
 import uuid
@@ -42,7 +37,7 @@ _SLICE_START = 1
 _SLICE_FINISH = 2
 
 def gm_timestamp():
-    """ Gets the current GMT timestamp as ``int(time.time() * 1e6``. """
+    """ Gets the current GMT timestamp in microseconds. """
     return int(time.time() * 1e6)
 
 
