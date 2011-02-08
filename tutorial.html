@@ -407,10 +407,12 @@ will be indexed.  In a <tt class="docutils literal"><span class="pre">cassandra.
 <p>In order to use <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_indexed_slices" title="pycassa.columnfamily.ColumnFamily.get_indexed_slices"><tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt></a>
 to get data from Indexed1 using the indexed column, we need to create an
 <a class="reference internal" href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexClause" title="pycassa.cassandra.ttypes.IndexClause"><tt class="xref py py-class docutils literal"><span class="pre">IndexClause</span></tt></a> which contains a list of
-<a class="reference internal" href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexExpression" title="pycassa.cassandra.ttypes.IndexExpression"><tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt></a> objects.  The module
-<a class="reference internal" href="api/pycassa/index.html#module-pycassa.index" title="pycassa.index"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.index</span></tt></a> is designed to make this easier.</p>
-<p>Suppose we are only interested in rows where &#8216;birthdate&#8217; is 1984. We might do
-the following:</p>
+<a class="reference internal" href="api/pycassa/cassandra/ttypes.html#pycassa.cassandra.ttypes.IndexExpression" title="pycassa.cassandra.ttypes.IndexExpression"><tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt></a> objects.  The IndexExpressions
+inside the clause are ANDed together, meaning every expression must match for
+a row to be returned.</p>
+<p>Suppose we have a &#8216;Users&#8217; column family with one row per user, and we
+want to get all of the users from Utah with a birthdate after 1970.
+We can make use of the <a class="reference internal" href="api/pycassa/index.html#module-pycassa.index" title="pycassa.index"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.index</span></tt></a> module to make this easier:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pycassa</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pycassa.index</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>

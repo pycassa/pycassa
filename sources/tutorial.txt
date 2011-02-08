@@ -421,11 +421,13 @@ will be indexed.  In a ``cassandra.yaml`` file, this might look like:
 In order to use :meth:`~pycassa.columnfamily.ColumnFamily.get_indexed_slices()`
 to get data from Indexed1 using the indexed column, we need to create an 
 :class:`~pycassa.cassandra.ttypes.IndexClause` which contains a list of
-:class:`~pycassa.cassandra.ttypes.IndexExpression` objects.  The module
-:mod:`pycassa.index` is designed to make this easier.
+:class:`~pycassa.cassandra.ttypes.IndexExpression` objects.  The IndexExpressions
+inside the clause are ANDed together, meaning every expression must match for
+a row to be returned.
 
-Suppose we are only interested in rows where 'birthdate' is 1984. We might do
-the following:
+Suppose we have a 'Users' column family with one row per user, and we
+want to get all of the users from Utah with a birthdate after 1970.
+We can make use of the :mod:`pycassa.index` module to make this easier:
 
 .. code-block:: python
 
