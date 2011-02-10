@@ -782,11 +782,14 @@ class ConnectionPool(AbstractPool):
 
     def status(self):
         """ Returns the status of the pool. """
+        overflow = self.overflow()
+        if overflow < 0:
+            overflow = 0
         return "Pool size: %d, connections in pool: %d, "\
-                "current overflow: %d, current checked out "\
-                "connections: %d" % (self.size(),
+               "current overflow: %d, current checked out "\
+               "connections: %d" % (self.size(),
                                     self.checkedin(),
-                                    self.overflow(),
+                                    overflow,
                                     self.checkedout())
 
     def size(self):
