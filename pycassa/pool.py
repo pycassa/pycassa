@@ -534,10 +534,10 @@ class ConnectionPool(AbstractPool):
         be supplied.  This should be a dictionary containing 'username' and
         'password' keys with appropriate string values.
 
-        `timeout` specifies in seconds how long individual connections will 
+        `timeout` specifies in seconds how long individual connections will
         block before timing out. If set to ``None``, connections will never
         timeout.
-        
+
         If `use_threadlocal` is set to ``True``, repeated calls to
         :meth:`get()` within the same application thread will
         return the same :class:`ConnectionWrapper` object if one has
@@ -582,8 +582,8 @@ class ConnectionPool(AbstractPool):
         When an operation on a connection fails due to an :exc:`TimedOutException`
         or :exc:`UnavailableException`, which tend to indicate single or
         multiple node failure, the operation will be retried on different nodes
-        up to `max_retries` times before an :exc:`Exception` is raised. Setting to
-        0 disables retries and setting to -1 allows unlimited retries.
+        up to `max_retries` times before an :exc:`MaximumRetryException` is raised.
+        Setting this to 0 disables retries and setting to -1 allows unlimited retries.
 
         Pool monitoring may be achieved by supplying `listeners`, which should
         be a list of :class:`PoolListener`-like objects or dictionaries of
@@ -619,8 +619,7 @@ class ConnectionPool(AbstractPool):
         self._recycle = recycle
         self._max_retries = max_retries
         self._prefill = prefill
-        self._overflow_lock = self._overflow_enabled and \
-                                    threading.Lock() or None
+        self._overflow_lock = self._overflow_enabled and threading.Lock() or None
         if prefill:
             for i in range(pool_size):
                 self._q.put(self._create_connection(), False)
@@ -629,7 +628,10 @@ class ConnectionPool(AbstractPool):
             self._overflow = 0 - pool_size
 
     def recreate(self):
-        """ Returns a new instance with idential creation arguments. """
+        """
+        Returns a new instance with idential creation arguments. This method
+        does *not* affect the object it is called on.
+        """
         self._notify_on_pool_recreate()
         return ConnectionPool(pool_size=self._q.maxsize,
                          max_overflow=self._max_overflow,
