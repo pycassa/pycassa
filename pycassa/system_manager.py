@@ -451,6 +451,9 @@ class SystemManager(object):
         comparator class is not in ``org.apache.cassandra.db.marshal``, the fully
         qualified class name must be given.
 
+        For super column families, this sets the subcolumn value type for
+        any subcolumn named `column`, regardless of the super column name.
+
         """
 
         self._conn.set_keyspace(keyspace)
