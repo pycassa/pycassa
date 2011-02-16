@@ -7,10 +7,19 @@ available for use by others working with pycassa.
 import random
 import uuid
 import time
+import struct
 
 __all__ = ['convert_time_to_uuid', 'convert_uuid_to_time', 'OrderedDict']
 
 _number_types = frozenset((int, long, float))
+
+if hasattr(struct, 'Struct'): # new in Python 2.5
+   _have_struct = True
+   _long_packer = struct.Struct('>q')
+   _int_packer = struct.Struct('>i')
+   _uuid_packer = struct.Struct('>16s')
+else:
+    _have_struct = False
 
 def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
     """
@@ -27,7 +36,7 @@ def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
     with slice arguments, however, as the non-timestamp portions
     can be set to their lowest or highest possible values.
 
-    :param datetime: 
+    :param datetime:
       The time to use for the timestamp portion of the UUID.
       Expected inputs to this would either be a :class:`datetime`
       object or a timestamp with the same precision produced by
@@ -103,6 +112,83 @@ def convert_uuid_to_time(uuid_arg):
     ts = uuid_arg.get_time()
     return (ts - 0x01b21dd213814000L)/1e7
 
+_TYPES = ['BytesType', 'LongType', 'IntegerType', 'UTF8Type', 'AsciiType',
+         'LexicalUUIDType', 'TimeUUIDType']
+
+def extract_type_name(string):
+    if string is None: return 'BytesType'
+
+    index = string.rfind('.')
+    if index == -1:
+        string = 'BytesType'
+    else:
+        string = string[index + 1: ]
+        if string not in _TYPES:
+            string = 'BytesType'
+    return string
+
+def pack(value, data_type):
+    """
+    Packs a value into the expected sequence of bytes that Cassandra expects.
+    """
+    if data_type == 'LongType':
+        if _have_struct:
+            return _long_packer.pack(long(value))
+        else:
+            return struct.pack('>q', long(value))  # q is 'long long'
+    elif data_type == 'IntegerType':
+        if _have_struct:
+            return _int_packer.pack(int(value))
+        else:
+            return struct.pack('>i', int(value))
+    elif data_type == 'AsciiType':
+        return struct.pack(">%ds" % len(value), value)
+    elif data_type == 'UTF8Type':
+        try:
+            st = value.encode('utf-8')
+        except UnicodeDecodeError:
+            # value is already utf-8 encoded
+            st = value
+        return struct.pack(">%ds" % len(st), st)
+    elif data_type == 'TimeUUIDType' or data_type == 'LexicalUUIDType':
+        if not hasattr(value, 'bytes'):
+            raise TypeError("%s not valid for %s" % (value, data_type))
+        if _have_struct:
+            return _uuid_packer.pack(value.bytes)
+        else:
+            return struct.pack('>16s', value.bytes)
+    else:
+        return value
+
+def unpack(byte_array, data_type):
+    """
+    Unpacks Cassandra's byte-representation of values into their Python
+    equivalents.
+    """
+
+    if data_type == 'LongType':
+        if _have_struct:
+            return _long_packer.unpack(byte_array)[0]
+        else:
+            return struct.unpack('>q', byte_array)[0]
+    elif data_type == 'IntegerType':
+        if _have_struct:
+            return _int_packer.unpack(byte_array)[0]
+        else:
+            return struct.unpack('>i', byte_array)[0]
+    elif data_type == 'AsciiType':
+        return struct.unpack('>%ds' % len(byte_array), byte_array)[0]
+    elif data_type == 'UTF8Type':
+        unic = struct.unpack('>%ds' % len(byte_array), byte_array)[0]
+        return unic.decode('utf-8')
+    elif data_type == 'LexicalUUIDType' or data_type == 'TimeUUIDType':
+        if _have_struct:
+            temp_bytes = _uuid_packer.unpack(byte_array)[0]
+        else:
+            temp_bytes = struct.unpack('>16s', byte_array)[0]
+        return uuid.UUID(bytes=temp_bytes)
+    else: # BytesType
+        return byte_array
 
 
 # Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Michael Bayer mike_mp@zzzcomputing.com

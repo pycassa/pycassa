@@ -9,28 +9,16 @@ from pycassa.cassandra.ttypes import Column, ColumnOrSuperColumn,\
     ColumnParent, ColumnPath, ConsistencyLevel, NotFoundException,\
     SlicePredicate, SliceRange, SuperColumn, KeyRange,\
     IndexExpression, IndexClause
-from pycassa.util import *
+import pycassa.util as util
 
 import time
 import sys
 import uuid
-import struct
 import threading
 
 from batch import CfMutator
 
-if hasattr(struct, 'Struct'): # new in Python 2.5
-   _have_struct = True
-   _long_packer = struct.Struct('>q')
-   _int_packer = struct.Struct('>i')
-   _uuid_packer = struct.Struct('>16s')
-else:
-    _have_struct = False
-
 __all__ = ['gm_timestamp', 'ColumnFamily', 'PooledColumnFamily']
-
-_TYPES = ['BytesType', 'LongType', 'IntegerType', 'UTF8Type', 'AsciiType',
-         'LexicalUUIDType', 'TimeUUIDType']
 
 _NON_SLICE = 0
 _SLICE_START = 1
@@ -48,7 +36,7 @@ class ColumnFamily(object):
                  read_consistency_level=ConsistencyLevel.ONE,
                  write_consistency_level=ConsistencyLevel.ONE,
                  timestamp=gm_timestamp, super=False,
-                 dict_class=OrderedDict, autopack_names=True,
+                 dict_class=util.OrderedDict, autopack_names=True,
                  autopack_values=True):
         """
         An abstraction of a Cassandra column family or super column family.
@@ -130,26 +118,13 @@ class ColumnFamily(object):
                     self.col_name_data_type = col_fam.comparator_type
                 else:
                     self.col_name_data_type = col_fam.subcomparator_type
-                    self.supercol_name_data_type = self._extract_type_name(col_fam.comparator_type)
+                    self.supercol_name_data_type = util.extract_type_name(col_fam.comparator_type)
 
-                index = self.col_name_data_type = self._extract_type_name(self.col_name_data_type)
+                index = self.col_name_data_type = util.extract_type_name(self.col_name_data_type)
             if self.autopack_values:
-                self.cf_data_type = self._extract_type_name(col_fam.default_validation_class)
+                self.cf_data_type = util.extract_type_name(col_fam.default_validation_class)
                 for name, cdef in col_fam.column_metadata.items():
-                    self.col_type_dict[name] = self._extract_type_name(cdef.validation_class)
-
-    def _extract_type_name(self, string):
-
-        if string is None: return 'BytesType'
-
-        index = string.rfind('.')
-        if index == -1:
-            string = 'BytesType'
-        else:
-            string = string[index + 1: ]
-            if string not in _TYPES:
-                string = 'BytesType'
-        return string
+                    self.col_type_dict[name] = util.extract_type_name(cdef.validation_class)
 
     def _convert_Column_to_base(self, column, include_timestamp):
         value = self._unpack_value(column.value, column.name)
@@ -239,17 +214,17 @@ class ColumnFamily(object):
 
         if d_type == 'TimeUUIDType':
             if slice_end:
-                value = convert_time_to_uuid(value,
+                value = util.convert_time_to_uuid(value,
                         lowest_val=(slice_end == _SLICE_START),
                         randomize=False)
             else:
-                value = convert_time_to_uuid(value,
+                value = util.convert_time_to_uuid(value,
                         randomize=True)
         elif d_type == 'BytesType' and not (isinstance(value, str) or isinstance(value, unicode)):
             raise TypeError("A str or unicode column name was expected, but %s was received instead (%s)"
                     % (value.__class__.__name__, str(value)))
 
-        return self._pack(value, d_type)
+        return util.pack(value, d_type)
 
     def _unpack_name(self, b, is_supercol_name=False):
         if not self.autopack_names:
@@ -261,7 +236,7 @@ class ColumnFamily(object):
         else:
             d_type = self.col_name_data_type
 
-        return self._unpack(b, d_type)
+        return util.unpack(b, d_type)
 
     def _get_data_type_for_col(self, col_name):
         if col_name not in self.col_type_dict.keys():
@@ -280,75 +255,12 @@ class ColumnFamily(object):
             raise TypeError("A str or unicode column value was expected for column '%s', but %s was received instead (%s)"
                     % (str(col_name), value.__class__.__name__, str(value)))
 
-        return self._pack(value, d_type)
+        return util.pack(value, d_type)
 
     def _unpack_value(self, value, col_name):
         if not self.autopack_values:
             return value
-        return self._unpack(value, self._get_data_type_for_col(col_name))
-
-    def _pack(self, value, data_type):
-        """
-        Packs a value into the expected sequence of bytes that Cassandra expects.
-        """
-        if data_type == 'LongType':
-            if _have_struct:
-                return _long_packer.pack(long(value))
-            else:
-                return struct.pack('>q', long(value))  # q is 'long long'
-        elif data_type == 'IntegerType':
-            if _have_struct:
-                return _int_packer.pack(int(value))
-            else:
-                return struct.pack('>i', int(value))
-        elif data_type == 'AsciiType':
-            return struct.pack(">%ds" % len(value), value)
-        elif data_type == 'UTF8Type':
-            try:
-                st = value.encode('utf-8')
-            except UnicodeDecodeError:
-                # value is already utf-8 encoded
-                st = value
-            return struct.pack(">%ds" % len(st), st)
-        elif data_type == 'TimeUUIDType' or data_type == 'LexicalUUIDType':
-            if not hasattr(value, 'bytes'):
-                raise TypeError("%s not valid for %s" % (value, data_type))
-            if _have_struct:
-                return _uuid_packer.pack(value.bytes)
-            else:
-                return struct.pack('>16s', value.bytes)
-        else:
-            return value
-
-    def _unpack(self, b, data_type):
-        """
-        Unpacks Cassandra's byte-representation of values into their Python
-        equivalents.
-        """
-
-        if data_type == 'LongType':
-            if _have_struct:
-                return _long_packer.unpack(b)[0]
-            else:
-                return struct.unpack('>q', b)[0]
-        elif data_type == 'IntegerType':
-            if _have_struct:
-                return _int_packer.unpack(b)[0]
-            else:
-                return struct.unpack('>i', b)[0]
-        elif data_type == 'AsciiType':
-            return struct.unpack('>%ds' % len(b), b)[0]
-        elif data_type == 'UTF8Type':
-            unic = struct.unpack('>%ds' % len(b), b)[0]
-            return unic.decode('utf-8')
-        elif data_type == 'LexicalUUIDType' or data_type == 'TimeUUIDType':
-            if _have_struct:
-                temp_bytes = _uuid_packer.unpack(b)[0]
-            else:
-                temp_bytes = struct.unpack('>16s', b)[0]
-            return uuid.UUID(bytes=temp_bytes)
-        else: # BytesType
-            return b
+        return util.unpack(value, self._get_data_type_for_col(col_name))
 
     def _obtain_connection(self):
         self._tlocal.client = self.pool.get()
@@ -459,9 +371,9 @@ class ColumnFamily(object):
         new_exprs = []
         # Pack the values in the index clause expressions
         for expr in index_clause.expressions:
-            new_exprs.append(IndexExpression(self._pack_name(expr.column_name),
-                                             expr.op,
-                                             self._pack_value(expr.value, expr.column_name)))
+            name = self._pack_name(expr.column_name)
+            value = self._pack_value(expr.value, name)
+            new_exprs.append(IndexExpression(name, expr.op, value))
 
         clause = IndexClause(new_exprs, index_clause.start_key, index_clause.count)
 
@@ -701,9 +613,8 @@ class ColumnFamily(object):
             else:
                 cp = self._create_column_path()
 
-            colname = columns.keys()[0]
+            colname = self._pack_name(columns.keys()[0], False)
             colval = self._pack_value(columns.values()[0], colname)
-            colname = self._pack_name(colname, False)
             column = Column(colname, colval, timestamp, ttl)
             try:
                 self._obtain_connection()

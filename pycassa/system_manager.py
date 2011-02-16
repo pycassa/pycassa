@@ -4,6 +4,7 @@ import time
 from connection import Connection
 from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef,\
                                      InvalidRequestException
+import pycassa.util as util
 
 _DEFAULT_TIMEOUT = 30
 _SAMPLE_PERIOD = 0.25
@@ -459,17 +460,20 @@ class SystemManager(object):
         self._conn.set_keyspace(keyspace)
         cfdef = self.get_keyspace_description(keyspace)[column_family]
 
+        col_name_data_type = util.extract_type_name(cfdef.comparator_type)
+        packed_column = util.pack(column, col_name_data_type)
+
         if value_type.find('.') == -1:
             value_type = 'org.apache.cassandra.db.marshal.%s' % value_type
 
         matched = False
         for c in cfdef.column_metadata:
-            if c.name == column:
+            if c.name == packed_column:
                 c.validation_class = value_type
                 matched = True
                 break
         if not matched:
-            cfdef.column_metadata.append(ColumnDef(column, value_type, None, None))
+            cfdef.column_metadata.append(ColumnDef(packed_column, value_type, None, None))
         self._system_update_column_family(cfdef)
 
     def create_index(self, keyspace, column_family, column, value_type,
@@ -502,13 +506,16 @@ class SystemManager(object):
         self._conn.set_keyspace(keyspace)
         cfdef = self.get_keyspace_description(keyspace)[column_family]
 
+        col_name_data_type = util.extract_type_name(cfdef.comparator_type)
+        packed_column = util.pack(column, col_name_data_type)
+
         if value_type.find('.') == -1:
             value_type = 'org.apache.cassandra.db.marshal.%s' % value_type
 
-        coldef = ColumnDef(column, value_type, index_type, index_name)
+        coldef = ColumnDef(packed_column, value_type, index_type, index_name)
 
         for c in cfdef.column_metadata:
-            if c.name == column:
+            if c.name == packed_column:
                 cfdef.column_metadata.remove(c)
                 break
         cfdef.column_metadata.append(coldef)
