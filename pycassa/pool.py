@@ -404,7 +404,7 @@ class ConnectionWrapper(connection.Connection):
 
                 self._retry_count += 1
                 if self._max_retries != -1 and self._retry_count > self._max_retries:
-                    raise MaximumRetryException('Retried %d times' % self._retry_count)
+                    raise MaximumRetryException('Retried %d times. Last failure was %s' % (self._retry_count, exc))
 
                 # Exponential backoff
                 time.sleep(_BASE_BACKOFF * (2 ** self._retry_count))
