@@ -64,7 +64,9 @@ def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
 
     nanoseconds = 0
     if hasattr(time_arg, 'timetuple'):
-        nanoseconds = int(time.mktime(time_arg.timetuple()) * 1e9)
+        seconds = int(time.mktime(time_arg.timetuple()))
+        microseconds = (seconds * 1e6) + time_arg.time().microsecond
+        nanoseconds = microseconds * 1e3
     elif type(time_arg) in _number_types:
         nanoseconds = int(time_arg * 1e9)
     else:
