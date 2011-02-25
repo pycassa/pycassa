@@ -1,6 +1,22 @@
 Changelog
 =========
 
+Changes in Version 1.0.6
+------------------------
+
+- Add :exc:`EOFError` to the list of exceptions that cause a connection swap and retry
+- Improved autopacking efficiency for AsciiType, UTF8Type, and BytesType
+- Preserve sub-second timestamp precision in datetime arguments for insertion
+  or slice bounds where a TimeUUID is expected. Previously, precision below a
+  second was lost.
+- In a :exc:`MaximumRetryException`'s message, include details about the last
+  :exc:`Exception` that caused the :exc:`MaximumRetryException` to be raised
+- :meth:`pycassa.pool.ConnectionPool.status()` now always reports a non-negative
+  overflow; 0 is now used when there is not currently any overflow
+- Created :class:`pycassa.types.Long` as a replacement for :class:`pycassa.types.Int64`.
+  :class:`Long` uses big-endian encoding, which is compatible with Cassandra's LongType,
+  while :class:`Int64` used little-endian encoding.
+
 Changes in Version 1.0.5
 ------------------------
 
