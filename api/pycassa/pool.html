@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.pool – Connection Pooling &mdash; pycassa v1.0.5 documentation</title>
+    <title>pycassa.pool – Connection Pooling &mdash; pycassa v1.0.6 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.0.5',
+        VERSION:     '1.0.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,7 +22,7 @@
     <script type="text/javascript" src="../../static/jquery.js"></script>
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
-    <link rel="top" title="pycassa v1.0.5 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v1.0.6 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.columnfamily – Column Family" href="columnfamily.html" />
     <link rel="prev" title="API Documentation" href="../index.html" /> 
@@ -43,7 +43,7 @@
         <li class="right" >
           <a href="../index.html" title="API Documentation"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.0.5 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.0.6 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -77,7 +77,7 @@ that returns the sequence of servers.</p>
 <p>If authentication or autorization is required, <cite>credentials</cite> must
 be supplied.  This should be a dictionary containing &#8216;username&#8217; and
 &#8216;password&#8217; keys with appropriate string values.</p>
-<p><cite>timeout</cite> specifies in seconds how long individual connections will 
+<p><cite>timeout</cite> specifies in seconds how long individual connections will
 block before timing out. If set to <tt class="xref docutils literal"><span class="pre">None</span></tt>, connections will never
 timeout.</p>
 <p>If <cite>use_threadlocal</cite> is set to <tt class="xref docutils literal"><span class="pre">True</span></tt>, repeated calls to
@@ -118,8 +118,8 @@ be replaced when checked back in to the pool.  This may be set to
 <p>When an operation on a connection fails due to an <tt class="xref py py-exc docutils literal"><span class="pre">TimedOutException</span></tt>
 or <tt class="xref py py-exc docutils literal"><span class="pre">UnavailableException</span></tt>, which tend to indicate single or
 multiple node failure, the operation will be retried on different nodes
-up to <cite>max_retries</cite> times before an <tt class="xref py py-exc docutils literal"><span class="pre">Exception</span></tt> is raised. Setting to
-0 disables retries and setting to -1 allows unlimited retries.</p>
+up to <cite>max_retries</cite> times before an <a class="reference internal" href="#pycassa.pool.MaximumRetryException" title="pycassa.pool.MaximumRetryException"><tt class="xref py py-exc docutils literal"><span class="pre">MaximumRetryException</span></tt></a> is raised.
+Setting this to 0 disables retries and setting to -1 allows unlimited retries.</p>
 <p>Pool monitoring may be achieved by supplying <cite>listeners</cite>, which should
 be a list of <a class="reference internal" href="#pycassa.pool.PoolListener" title="pycassa.pool.PoolListener"><tt class="xref py py-class docutils literal"><span class="pre">PoolListener</span></tt></a>-like objects or dictionaries of
 callables that receive events when pool or connection events occur.</p>
@@ -160,7 +160,8 @@ of some or all of the named methods in <a class="reference internal" href="#pyca
 <dl class="method">
 <dt id="pycassa.pool.ConnectionPool.recreate">
 <tt class="descname">recreate</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool.recreate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a new instance with idential creation arguments.</p>
+<dd><p>Returns a new instance with idential creation arguments. This method
+does <em>not</em> affect the object it is called on.</p>
 </dd></dl>
 
 <dl class="method">
@@ -488,7 +489,7 @@ the retries do not have to be on the same operation.</p>
         <li class="right" >
           <a href="../index.html" title="API Documentation"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.0.5 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.0.6 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

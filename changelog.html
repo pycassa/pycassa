@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Changelog &mdash; pycassa v1.0.5 documentation</title>
+    <title>Changelog &mdash; pycassa v1.0.6 documentation</title>
     <link rel="stylesheet" href="static/default.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.0.5',
+        VERSION:     '1.0.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,7 +22,7 @@
     <script type="text/javascript" src="static/jquery.js"></script>
     <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="pycassa v1.0.5 documentation" href="index.html" />
+    <link rel="top" title="pycassa v1.0.6 documentation" href="index.html" />
     <link rel="prev" title="pycassa.cassandra.ttypes – Thrift Object Types" href="api/pycassa/cassandra/ttypes.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="api/pycassa/cassandra/ttypes.html" title="pycassa.cassandra.ttypes – Thrift Object Types"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">pycassa v1.0.5 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v1.0.6 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -49,6 +49,23 @@
             
   <div class="section" id="changelog">
 <h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="changes-in-version-1-0-6">
+<h2>Changes in Version 1.0.6<a class="headerlink" href="#changes-in-version-1-0-6" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Add <tt class="xref py py-exc docutils literal"><span class="pre">EOFError</span></tt> to the list of exceptions that cause a connection swap and retry</li>
+<li>Improved autopacking efficiency for AsciiType, UTF8Type, and BytesType</li>
+<li>Preserve sub-second timestamp precision in datetime arguments for insertion
+or slice bounds where a TimeUUID is expected. Previously, precision below a
+second was lost.</li>
+<li>In a <tt class="xref py py-exc docutils literal"><span class="pre">MaximumRetryException</span></tt>&#8216;s message, include details about the last
+<tt class="xref py py-exc docutils literal"><span class="pre">Exception</span></tt> that caused the <tt class="xref py py-exc docutils literal"><span class="pre">MaximumRetryException</span></tt> to be raised</li>
+<li><a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.ConnectionPool.status" title="pycassa.pool.ConnectionPool.status"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.pool.ConnectionPool.status()</span></tt></a> now always reports a non-negative
+overflow; 0 is now used when there is not currently any overflow</li>
+<li>Created <a class="reference internal" href="api/pycassa/types.html#pycassa.types.Long" title="pycassa.types.Long"><tt class="xref py py-class docutils literal"><span class="pre">pycassa.types.Long</span></tt></a> as a replacement for <a class="reference internal" href="api/pycassa/types.html#pycassa.types.Int64" title="pycassa.types.Int64"><tt class="xref py py-class docutils literal"><span class="pre">pycassa.types.Int64</span></tt></a>.
+<tt class="xref py py-class docutils literal"><span class="pre">Long</span></tt> uses big-endian encoding, which is compatible with Cassandra&#8217;s LongType,
+while <tt class="xref py py-class docutils literal"><span class="pre">Int64</span></tt> used little-endian encoding.</li>
+</ul>
+</div>
 <div class="section" id="changes-in-version-1-0-5">
 <h2>Changes in Version 1.0.5<a class="headerlink" href="#changes-in-version-1-0-5" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -238,6 +255,7 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Changelog</a><ul>
+<li><a class="reference internal" href="#changes-in-version-1-0-6">Changes in Version 1.0.6</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-0-5">Changes in Version 1.0.5</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-0-4">Changes in Version 1.0.4</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-0-3">Changes in Version 1.0.3</a></li>
@@ -259,7 +277,7 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="api/pycassa/cassandra/ttypes.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.cassandra.ttypes</span></tt> &#8211; Thrift Object Types</a></p>
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">pycassa.cassandra.ttypes</span></tt> &#8211; Thrift Object Types</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="sources/changelog.txt"
@@ -294,7 +312,7 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
         <li class="right" >
           <a href="api/pycassa/cassandra/ttypes.html" title="pycassa.cassandra.ttypes – Thrift Object Types"
              >previous</a> |</li>
-        <li><a href="index.html">pycassa v1.0.5 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v1.0.6 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
