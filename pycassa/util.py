@@ -133,7 +133,9 @@ def pack(value, data_type):
     """
     Packs a value into the expected sequence of bytes that Cassandra expects.
     """
-    if data_type == 'LongType':
+    if data_type == 'BytesType':
+        return value
+    elif data_type == 'LongType':
         if _have_struct:
             return _long_packer.pack(long(value))
         else:
@@ -143,15 +145,13 @@ def pack(value, data_type):
             return _int_packer.pack(int(value))
         else:
             return struct.pack('>i', int(value))
-    elif data_type == 'AsciiType':
-        return struct.pack(">%ds" % len(value), value)
     elif data_type == 'UTF8Type':
         try:
             st = value.encode('utf-8')
         except UnicodeDecodeError:
             # value is already utf-8 encoded
             st = value
-        return struct.pack(">%ds" % len(st), st)
+        return st
     elif data_type == 'TimeUUIDType' or data_type == 'LexicalUUIDType':
         if not hasattr(value, 'bytes'):
             raise TypeError("%s not valid for %s" % (value, data_type))
@@ -167,8 +167,9 @@ def unpack(byte_array, data_type):
     Unpacks Cassandra's byte-representation of values into their Python
     equivalents.
     """
-
-    if data_type == 'LongType':
+    if data_type == 'BytesType':
+        return byte_array
+    elif data_type == 'LongType':
         if _have_struct:
             return _long_packer.unpack(byte_array)[0]
         else:
@@ -179,17 +180,16 @@ def unpack(byte_array, data_type):
         else:
             return struct.unpack('>i', byte_array)[0]
     elif data_type == 'AsciiType':
-        return struct.unpack('>%ds' % len(byte_array), byte_array)[0]
+        return byte_array
     elif data_type == 'UTF8Type':
-        unic = struct.unpack('>%ds' % len(byte_array), byte_array)[0]
-        return unic.decode('utf-8')
+        return byte_array.decode('utf-8')
     elif data_type == 'LexicalUUIDType' or data_type == 'TimeUUIDType':
         if _have_struct:
             temp_bytes = _uuid_packer.unpack(byte_array)[0]
         else:
             temp_bytes = struct.unpack('>16s', byte_array)[0]
         return uuid.UUID(bytes=temp_bytes)
-    else: # BytesType
+    else:
         return byte_array
 
 

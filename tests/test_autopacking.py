@@ -492,31 +492,31 @@ class TestValidators(unittest.TestCase):
 
         col = {'long':1L}
         cf.insert(key, col)
-        assert cf.get(key)['long'] == 1L
+        assert_equal(cf.get(key)['long'], 1L)
 
         col = {'int':1}
         cf.insert(key, col)
-        assert cf.get(key)['int'] == 1
+        assert_equal(cf.get(key)['int'], 1)
 
         col = {'time':TIME1}
         cf.insert(key, col)
-        assert cf.get(key)['time'] == TIME1
+        assert_equal(cf.get(key)['time'], TIME1)
 
         col = {'lex':uuid.UUID(bytes='aaa aaa aaa aaaa')}
         cf.insert(key, col)
-        assert cf.get(key)['lex'] == uuid.UUID(bytes='aaa aaa aaa aaaa')
+        assert_equal(cf.get(key)['lex'], uuid.UUID(bytes='aaa aaa aaa aaaa'))
 
         col = {'ascii':'aaa'}
         cf.insert(key, col)
-        assert cf.get(key)['ascii'] == 'aaa'
+        assert_equal(cf.get(key)['ascii'], 'aaa')
 
         col = {'utf8':u'a\u0020'}
         cf.insert(key, col)
-        assert cf.get(key)['utf8'] == u'a\u0020'
+        assert_equal(cf.get(key)['utf8'], u'a\u0020')
 
         col = {'bytes':'aaa'}
         cf.insert(key, col)
-        assert cf.get(key)['bytes'] == 'aaa'
+        assert_equal(cf.get(key)['bytes'], 'aaa')
 
         cf.remove(key)
 
@@ -541,8 +541,8 @@ class TestDefaultValidators(unittest.TestCase):
         #  longs and cm for 'subcol' allows TIMEUUIDs.
         cf.insert(key, col_cf)
         cf.insert(key, col_cm)
-        assert cf.get(key) == {'aaaaaa': 1L, 'subcol': TIME1}
-          
+        assert_equal(cf.get(key), {'aaaaaa': 1L, 'subcol': TIME1})
+
         assert_raises(TypeError, cf.insert, key, col_ncf)
         assert_raises(TypeError, cf.insert, key, col_ncm)
 
