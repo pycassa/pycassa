@@ -651,7 +651,7 @@ class ColumnFamily(object):
         Remove a specified row or a set of columns within the row with key `key`.
 
         A set of columns or super columns to delete may be specified using
-        `columns`. If `columns` is ``None``, the entire row is removed.
+        `columns`.
 
         A single super column may be deleted by setting `super_column`. If
         `super_column` is specified, `columns` will apply to the subcolumns
