@@ -631,8 +631,9 @@ class ColumnFamily(object):
         Like :meth:`insert()`, but multiple rows may be inserted at once.
 
         The `rows` parameter should be of the form ``{key: {column_name: column_value}}``
-        if this is a standard column family or ``{key: {column_name: column_value}}`` if
-        this is a super column family.
+        if this is a standard column family or
+        ``{key: {super_column_name: {column_name: column_value}}}`` if this is a super
+        column family.
 
         """
 
