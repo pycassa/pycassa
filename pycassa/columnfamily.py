@@ -453,7 +453,10 @@ class ColumnFamily(object):
 
         for key in keys:
             if key not in non_empty_keys:
-                del ret[key]
+                try:
+                    del ret[key]
+                except KeyError:
+                    pass
 
         return ret
 

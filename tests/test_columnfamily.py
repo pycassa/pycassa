@@ -56,6 +56,10 @@ class TestColumnFamily(unittest.TestCase):
         assert_equal(rows[key2], columns2)
         assert_true(missing_key not in rows)
 
+    def test_multiget_multiple_bad_key(self):
+        key = 'efefefef'
+        cf.multiget([key, key, key])
+
     def test_insert_get_count(self):
         key = 'TestColumnFamily.test_insert_get_count'
         columns = {'1': 'val1', '2': 'val2'}
