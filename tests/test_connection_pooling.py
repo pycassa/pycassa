@@ -340,6 +340,33 @@ class PoolingCase(unittest.TestCase):
 
         pool.dispose()
 
+    def test_queue_failure_on_retry(self):
+        listener = _TestListener()
+        pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
+                         prefill=True, max_retries=3, # allow 3 retries
+                         keyspace='PycassaTestKeyspace', credentials=_credentials,
+                         listeners=[listener], use_threadlocal=False,
+                         server_list=['localhost:9160', 'localhost:9160'])
+        def raiser():
+            raise IOError
+        # Replace wrapper will open a connection to get the version, so if it
+        # fails we need to retry as with any other connection failure
+        pool._replace_wrapper = raiser
+
+        # Corrupt all of the connections
+        for i in range(5):
+            conn = pool.get()
+            setattr(conn, 'send_batch_mutate', conn._fail_once)
+            conn._should_fail = True
+            conn.return_to_pool()
+
+        cf = ColumnFamily(pool, 'Standard1')
+        assert_raises(MaximumRetryException, cf.insert, 'key', {'col':'val', 'col2': 'val'})
+        assert_equal(listener.failure_count, 4) # On the 4th failure, didn't retry
+
+        pool.dispose()
+
+
     def test_queue_threadlocal_retry_limit(self):
         listener = _TestListener()
         pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
