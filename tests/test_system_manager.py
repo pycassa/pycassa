@@ -52,3 +52,8 @@ class SystemManagerTest(unittest.TestCase):
         cf = ColumnFamily(pool, 'LongCF')
         cf.insert('key', {2: 2})
         assert_equal(cf.get('key')[2], 2)
+
+    def test_alter_column_super_cf(self):
+        sys.create_column_family(TEST_KS, 'SuperCF', super=True, comparator_type=TIME_UUID_TYPE,
+                                 subcomparator_type=UTF8_TYPE)
+        sys.alter_column(TEST_KS, 'SuperCF', 'foobar_col', UTF8_TYPE)

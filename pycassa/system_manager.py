@@ -460,7 +460,11 @@ class SystemManager(object):
         self._conn.set_keyspace(keyspace)
         cfdef = self.get_keyspace_description(keyspace)[column_family]
 
-        col_name_data_type = util.extract_type_name(cfdef.comparator_type)
+        if cfdef.column_type == 'Super':
+            col_name_data_type = util.extract_type_name(cfdef.subcomparator_type)
+        else:
+            col_name_data_type = util.extract_type_name(cfdef.comparator_type)
+
         packed_column = util.pack(column, col_name_data_type)
 
         if value_type.find('.') == -1:
