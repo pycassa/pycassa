@@ -121,7 +121,7 @@ class AbstractPool(object):
                 server = self._get_next_server()
                 wrapper = self._get_new_wrapper(server)
                 return wrapper
-            except Thrift.TException, exc:
+            except (Thrift.TException, socket.error, IOError, EOFError), exc:
                 self._notify_on_failure(exc, server)
                 failure_count += 1
         raise AllServersUnavailable('An attempt was made to connect to each of the servers '
@@ -395,6 +395,10 @@ class ConnectionWrapper(connection.Connection):
         def new_f(self, *args, **kwargs):
             self.operation_count += 1
             try:
+                if kwargs.pop('reset', False):
+                    if hasattr(self._pool, '_replace_wrapper'):
+                        self._pool._replace_wrapper() # puts a new wrapper in the queue
+                    self._replace(self._pool.get()) # swaps out transport
                 result = getattr(super(ConnectionWrapper, self), f.__name__)(*args, **kwargs)
                 self._retry_count = 0 # reset the count after a success
                 return result
@@ -416,10 +420,7 @@ class ConnectionWrapper(connection.Connection):
                 if self._pool._pool_threadlocal:
                     self._pool._tlocal.current = None
 
-                if hasattr(self._pool, '_replace_wrapper'):
-                    self._pool._replace_wrapper() # puts a new wrapper in the queue
-                self._replace(self._pool.get()) # swaps out transport
-                return new_f(self, *args, **kwargs)
+                return new_f(self, *args, reset=True, **kwargs)
 
         new_f.__name__ = f.__name__
         return new_f
