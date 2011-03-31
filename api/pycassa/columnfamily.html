@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.columnfamily – Column Family &mdash; pycassa v1.0.6 documentation</title>
+    <title>pycassa.columnfamily – Column Family &mdash; pycassa v1.0.7 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.0.6',
+        VERSION:     '1.0.7',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,7 +22,7 @@
     <script type="text/javascript" src="../../static/jquery.js"></script>
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
-    <link rel="top" title="pycassa v1.0.6 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v1.0.7 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.columnfamilymap – Maps Classes to Column Families" href="columnfamilymap.html" />
     <link rel="prev" title="pycassa.pool – Connection Pooling" href="pool.html" /> 
@@ -43,7 +43,7 @@
         <li class="right" >
           <a href="pool.html" title="pycassa.pool – Connection Pooling"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.0.6 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.0.7 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -225,8 +225,9 @@ deleted.</p>
 <tt class="descname">batch_insert</tt><big>(</big><em>rows[, timestamp][, ttl][, write_consistency_level]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.batch_insert" title="Permalink to this definition">¶</a></dt>
 <dd><p>Like <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.insert" title="pycassa.columnfamily.ColumnFamily.insert"><tt class="xref py py-meth docutils literal"><span class="pre">insert()</span></tt></a>, but multiple rows may be inserted at once.</p>
 <p>The <cite>rows</cite> parameter should be of the form <tt class="docutils literal"><span class="pre">{key:</span> <span class="pre">{column_name:</span> <span class="pre">column_value}}</span></tt>
-if this is a standard column family or <tt class="docutils literal"><span class="pre">{key:</span> <span class="pre">{column_name:</span> <span class="pre">column_value}}</span></tt> if
-this is a super column family.</p>
+if this is a standard column family or
+<tt class="docutils literal"><span class="pre">{key:</span> <span class="pre">{super_column_name:</span> <span class="pre">{column_name:</span> <span class="pre">column_value}}}</span></tt> if this is a super
+column family.</p>
 </dd></dl>
 
 <dl class="method">
@@ -234,7 +235,7 @@ this is a super column family.</p>
 <tt class="descname">remove</tt><big>(</big><em>key[, columns][, super_column][, write_consistency_level]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.remove" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove a specified row or a set of columns within the row with key <cite>key</cite>.</p>
 <p>A set of columns or super columns to delete may be specified using
-<cite>columns</cite>. If <cite>columns</cite> is <tt class="xref docutils literal"><span class="pre">None</span></tt>, the entire row is removed.</p>
+<cite>columns</cite>.</p>
 <p>A single super column may be deleted by setting <cite>super_column</cite>. If
 <cite>super_column</cite> is specified, <cite>columns</cite> will apply to the subcolumns
 of <cite>super_column</cite>.</p>
@@ -318,7 +319,7 @@ operations using as few roundtrips as possible.</p>
         <li class="right" >
           <a href="pool.html" title="pycassa.pool – Connection Pooling"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.0.6 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.0.7 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

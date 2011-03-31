@@ -1,6 +1,20 @@
 Changelog
 =========
 
+Changes in Version 1.0.7
+------------------------
+- Catch KeyError in :meth:`pycassa.columnfamily.ColumnFamily.multiget()` empty
+  row removal. If the same non-existent key was passed multiple times, a
+  :exc:`KeyError` was raised when trying to remove it from the OrderedDictionary
+  after the first removal. The :exc:`KeyError` is caught and ignored now.
+- Handle connection failures during retries. When a connection fails, it tries to
+  create a new connection to replace itself. Exceptions during this process were
+  not properly handled; they are now handled and count towards the retry count for
+  the current operation.
+- Close connection when a :exc:`MaximumRetryException` is raised. Normally a connection
+  is closed when an operation it is performing fails, but this was not happening
+  for the final failure that triggers the :exc:`MaximumRetryException`. 
+
 Changes in Version 1.0.6
 ------------------------
 

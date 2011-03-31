@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Changelog &mdash; pycassa v1.0.6 documentation</title>
+    <title>Changelog &mdash; pycassa v1.0.7 documentation</title>
     <link rel="stylesheet" href="static/default.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.0.6',
+        VERSION:     '1.0.7',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,7 +22,7 @@
     <script type="text/javascript" src="static/jquery.js"></script>
     <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="pycassa v1.0.6 documentation" href="index.html" />
+    <link rel="top" title="pycassa v1.0.7 documentation" href="index.html" />
     <link rel="prev" title="pycassa.cassandra.ttypes – Thrift Object Types" href="api/pycassa/cassandra/ttypes.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="api/pycassa/cassandra/ttypes.html" title="pycassa.cassandra.ttypes – Thrift Object Types"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">pycassa v1.0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v1.0.7 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -49,6 +49,22 @@
             
   <div class="section" id="changelog">
 <h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="changes-in-version-1-0-7">
+<h2>Changes in Version 1.0.7<a class="headerlink" href="#changes-in-version-1-0-7" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Catch KeyError in <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.multiget" title="pycassa.columnfamily.ColumnFamily.multiget"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.columnfamily.ColumnFamily.multiget()</span></tt></a> empty
+row removal. If the same non-existent key was passed multiple times, a
+<tt class="xref py py-exc docutils literal"><span class="pre">KeyError</span></tt> was raised when trying to remove it from the OrderedDictionary
+after the first removal. The <tt class="xref py py-exc docutils literal"><span class="pre">KeyError</span></tt> is caught and ignored now.</li>
+<li>Handle connection failures during retries. When a connection fails, it tries to
+create a new connection to replace itself. Exceptions during this process were
+not properly handled; they are now handled and count towards the retry count for
+the current operation.</li>
+<li>Close connection when a <tt class="xref py py-exc docutils literal"><span class="pre">MaximumRetryException</span></tt> is raised. Normally a connection
+is closed when an operation it is performing fails, but this was not happening
+for the final failure that triggers the <tt class="xref py py-exc docutils literal"><span class="pre">MaximumRetryException</span></tt>.</li>
+</ul>
+</div>
 <div class="section" id="changes-in-version-1-0-6">
 <h2>Changes in Version 1.0.6<a class="headerlink" href="#changes-in-version-1-0-6" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -255,6 +271,7 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Changelog</a><ul>
+<li><a class="reference internal" href="#changes-in-version-1-0-7">Changes in Version 1.0.7</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-0-6">Changes in Version 1.0.6</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-0-5">Changes in Version 1.0.5</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-0-4">Changes in Version 1.0.4</a></li>
@@ -277,7 +294,7 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="api/pycassa/cassandra/ttypes.html"
-                        title="previous chapter"><tt class="docutils literal"><span class="pre">pycassa.cassandra.ttypes</span></tt> &#8211; Thrift Object Types</a></p>
+                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.cassandra.ttypes</span></tt> &#8211; Thrift Object Types</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="sources/changelog.txt"
@@ -312,7 +329,7 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
         <li class="right" >
           <a href="api/pycassa/cassandra/ttypes.html" title="pycassa.cassandra.ttypes – Thrift Object Types"
              >previous</a> |</li>
-        <li><a href="index.html">pycassa v1.0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v1.0.7 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
