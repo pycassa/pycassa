@@ -2,4 +2,13 @@
 =========================================
 
 .. automodule:: pycassa.pool
-    :members:
+
+    .. autoclass:: pycassa.pool.ConnectionPool
+       :members:
+       :inherited-members:
+
+    .. autoclass:: pycassa.pool.ConnectionWrapper
+       :members:
+
+    .. autoclass:: pycassa.pool.PoolListener
+       :members:
