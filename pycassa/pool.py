@@ -1,10 +1,6 @@
 """
 Connection pooling for Cassandra connections.
 
-Provides a number of connection pool implementations for a variety of
-usage scenarios and thread behavior requirements imposed by the
-application.
-
 """
 
 import time, threading, random
@@ -76,10 +72,10 @@ class AbstractPool(object):
         """
         Sets the server list that the pool will make connections to.
 
-        :param server_list: A sequence of servers in the form 'host:port' that
-          the pool will connect to.  The list will be randomly permuted before
-          being used. `server_list` may also be a function that returns the
-          sequence of servers.
+        `server_list` should be sequence of servers in the form 'host:port' that
+        the pool will connect to.  The list will be randomly permuted before
+        being used. `server_list` may also be a function that returns the
+        sequence of servers.
 
         """
 
