@@ -402,23 +402,22 @@ class ConnectionWrapper(connection.Connection):
                 result = getattr(super(ConnectionWrapper, self), f.__name__)(*args, **kwargs)
                 self._retry_count = 0 # reset the count after a success
                 return result
-            except (TimedOutException, UnavailableException, Thrift.TException, socket.error, IOError, EOFError), exc:
-                self._pool._notify_on_failure(exc, server=self.server,
-                                              connection=self)
+            except (TimedOutException, UnavailableException, Thrift.TException,
+                    socket.error, IOError, EOFError), exc:
+                self._pool._notify_on_failure(exc, server=self.server, connection=self)
 
                 self._retry_count += 1
                 if self._max_retries != -1 and self._retry_count > self._max_retries:
-                    raise MaximumRetryException('Retried %d times. Last failure was %s' % (self._retry_count, exc))
+                    self.close()
+                    self._pool._clear_current()
+                    raise MaximumRetryException('Retried %d times. Last failure was %s' %
+                                                (self._retry_count, exc))
 
                 # Exponential backoff
                 time.sleep(_BASE_BACKOFF * (2 ** self._retry_count))
 
                 self.close()
-
-                # If using threadlocal, we have to wipe out 'current' so that
-                # the pool's get() won't return self
-                if self._pool._pool_threadlocal:
-                    self._pool._tlocal.current = None
+                self._pool._clear_current()
 
                 return new_f(self, *args, reset=True, **kwargs)
 
@@ -662,6 +661,11 @@ class ConnectionPool(AbstractPool):
                 self._q.put(self._create_connection(), False)
             except pool_queue.Full:
                 pass
+
+    def _clear_current(self):
+        """ If using threadlocal, clear our threadlocal current conn. """
+        if self._pool_threadlocal:
+            self._tlocal.current = None
 
     def return_conn(self, conn):
         """ Returns a connection to the pool. """
