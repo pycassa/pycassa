@@ -129,11 +129,6 @@ class TestColumnFamilyMap:
         assert_true(missing_key not in rows)
         assert_equal(self.empty_map.multiget([instance1.key])[instance1.key].raw_columns['intstrcol'], str(instance1.intstrcol))
 
-    def test_insert_get_count(self):
-        instance = self.instance('TestColumnFamilyMap.test_insert_get_count')
-        self.map.insert(instance)
-        assert_equal(self.map.get_count(instance.key), 7)
-
     def test_insert_get_range(self):
         if sys_man.describe_partitioner() == 'RandomPartitioner':
             raise SkipTest('Cannot use RandomPartitioner for this test')
