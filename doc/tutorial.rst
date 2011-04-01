@@ -138,15 +138,15 @@ If you think of the columns as being sorted from left to right, when
 `column_reversed` is ``True``, `column_start` will determine the right
 end of the range while `column_finish` will determine the left.
 
-Here's an example of getting the last three columns in a row assuming default_validation_class=LONG_TYPE for this column family:
+Here's an example of getting the last three columns in a row:
 
 .. code-block:: python
 
   >>> for i in range(20):
-  ...     col_fam.insert('key', {i: 'val'}
+  ...     col_fam.insert('key', {str(i): 'val'}
   ...
   >>> col_fam.get('key', column_reversed=True, column_count=3)
-  {20: 'val', 19: 'val', 18: 'val'}
+  {'20': 'val', '19': 'val', '18': 'val'}
 
 There are a few ways to get multiple rows at the same time.
 The first is to specify them by name using
