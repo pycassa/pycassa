@@ -1,10 +1,11 @@
-from logging.pycassa_logger import *
 import time
+import warnings
 
 from connection import Connection
 from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef,\
                                      InvalidRequestException
 import pycassa.util as util
+from logging.pycassa_logger import *
 
 _DEFAULT_TIMEOUT = 30
 _SAMPLE_PERIOD = 0.25
@@ -101,13 +102,16 @@ class SystemManager(object):
                 cf_def.column_metadata = new_metadata
         return cf_defs
 
-    get_keyspace_description = get_keyspace_column_families
-    """
-    Alias for :meth:`get_keyspace_column_families()`
+    def get_keyspace_description(self, *args, **kwargs):
+        """
+        Alias for :meth:`get_keyspace_column_families()`
 
-    .. deprecated:: 1.0.4
-        Use :meth:`get_keyspace_column_families()`
-    """
+        .. deprecated:: 1.0.4
+            Use :meth:`get_keyspace_column_families()`
+        """
+        warnings.warn("SystemManager.get_keyspace_description() is deprecated; " +
+                      "use get_keyspace_column_families instead.", DeprecationWarning)
+        return self.get_keyspace_column_families(*args, **kwargs)
 
     def get_keyspace_properties(self, keyspace):
         """
@@ -412,7 +416,7 @@ class SystemManager(object):
         """
 
         self._conn.set_keyspace(keyspace)
-        cfdef = self.get_keyspace_description(keyspace)[column_family]
+        cfdef = self.get_keyspace_column_families(keyspace)[column_family]
 
         self._cfdef_assign(key_cache_size, cfdef, 'key_cache_size')
         self._cfdef_assign(row_cache_size, cfdef, 'row_cache_size')
@@ -458,7 +462,7 @@ class SystemManager(object):
         """
 
         self._conn.set_keyspace(keyspace)
-        cfdef = self.get_keyspace_description(keyspace)[column_family]
+        cfdef = self.get_keyspace_column_families(keyspace)[column_family]
 
         if cfdef.column_type == 'Super':
             col_name_data_type = util.extract_type_name(cfdef.subcomparator_type)
@@ -508,7 +512,7 @@ class SystemManager(object):
         """
 
         self._conn.set_keyspace(keyspace)
-        cfdef = self.get_keyspace_description(keyspace)[column_family]
+        cfdef = self.get_keyspace_column_families(keyspace)[column_family]
 
         col_name_data_type = util.extract_type_name(cfdef.comparator_type)
         packed_column = util.pack(column, col_name_data_type)
@@ -531,7 +535,7 @@ class SystemManager(object):
 
         """
         self._conn.set_keyspace(keyspace)
-        cfdef = self.get_keyspace_description(keyspace)[column_family]
+        cfdef = self.get_keyspace_column_families(keyspace)[column_family]
 
         matched = False
         for c in cfdef.column_metadata:

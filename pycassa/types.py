@@ -1,6 +1,7 @@
 from datetime import datetime
 import struct
 import time
+import warnings
 
 __all__ = ['Column', 'DateTime', 'DateTimeString', 'Float64', 'FloatString',
            'Long', 'Int64', 'IntString', 'String']
@@ -96,6 +97,8 @@ class Int64(Column):
 
     """
     def __init__(self, *args, **kwargs):
+        warnings.warn("Int64 is not compatible with Cassandra's LongType and is deprecated; " +
+                      "use Long instead.", DeprecationWarning)
         Column.__init__(self, *args, **kwargs)
         self.struct = struct.Struct('q')
 

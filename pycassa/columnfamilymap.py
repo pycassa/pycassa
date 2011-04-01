@@ -150,9 +150,11 @@ class ColumnFamilyMap(object):
         Count the number of columns for a key.
 
         .. deprecated:: 0.6.0
-            Use :meth:`pycassa.columnfamily.ColumnFamily.get()` instead.
+            Use :meth:`.ColumnFamily.get_count()` instead.
 
         """
+        warnings.warn("ColumnFamilyMap.get_count() is deprecated; use ColumnFamily.get_count() instead",
+                      DeprecationWarning)
         return self.column_family.get_count(*args, **kwargs)
 
     def get_range(self, *args, **kwargs):
