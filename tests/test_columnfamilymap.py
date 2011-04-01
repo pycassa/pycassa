@@ -86,20 +86,34 @@ class TestColumnFamilyMap:
         assert_equal(self.empty_map.get(instance.key).raw_columns['intstrcol'], str(instance.intstrcol))
 
     def test_insert_get_indexed_slices(self):
-        instance = TestIndex()
-        instance.key = 'key'
-        instance.birthdate = 1L
-        self.indexed_map.insert(instance)
-        instance.key = 'key2'
-        self.indexed_map.insert(instance)
-        instance.key = 'key3'
-        self.indexed_map.insert(instance)
+        instance1 = TestIndex()
+        instance1.key = 'key1'
+        instance1.birthdate = 1L
+        self.indexed_map.insert(instance1)
 
-        expr = index.create_index_expression(column_name='birthdate', value=1L)
+        instance2 = TestIndex()
+        instance2.key = 'key2'
+        instance2.birthdate = 1L
+        self.indexed_map.insert(instance2)
+
+        instance3 = TestIndex()
+        instance3.key = 'key3'
+        instance3.birthdate = 2L
+        self.indexed_map.insert(instance3)
+
+        expr = index.create_index_expression(column_name='birthdate', value=2L)
         clause = index.create_index_clause([expr])
-        result = self.indexed_map.get_indexed_slices(instance, index_clause=clause)
-        assert_equal(len(result), 3)
-        assert_equal(result.get('key3'), instance)
+
+        # test with passing an instance
+        result = self.indexed_map.get_indexed_slices(instance1, index_clause=clause)
+        assert_equal(len(result), 2)
+        assert_equal(result.get('key1'), instance1)
+        assert_equal(result.get('key2'), instance2)
+
+        # test without passing an instance
+        result = self.indexed_map.get_indexed_slices(index_clause=clause)
+        assert_equal(len(result), 1)
+        assert_equal(result.get('key3'), instance3)
 
     def test_insert_multiget(self):
         instance1 = self.instance('TestColumnFamilyMap.test_insert_multiget1')

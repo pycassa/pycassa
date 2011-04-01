@@ -217,15 +217,18 @@ class ColumnFamilyMap(object):
             kwargs['columns'] = self.columns.keys()
 
         # Autopack the index clause's values
-        if instance is not None:
-            new_exprs = []
-            for expr in kwargs['index_clause'].expressions:
-                new_expr = IndexExpression(expr.column_name, expr.op,
-                        value=self.columns[expr.column_name].pack(instance.__dict__[expr.column_name]))
-                new_exprs.append(new_expr)
-            old_clause = kwargs['index_clause']
-            new_clause = IndexClause(new_exprs, old_clause.start_key, old_clause.count)
-            kwargs['index_clause'] = new_clause
+        new_exprs = []
+        for expr in kwargs['index_clause'].expressions:
+            if instance is not None:
+                val = instance.__dict__[expr.column_name]
+            else:
+                val = expr.value
+            packed_val = self.columns[expr.column_name].pack(val)
+            new_expr = IndexExpression(expr.column_name, expr.op, value=packed_val)
+            new_exprs.append(new_expr)
+        old_clause = kwargs['index_clause']
+        new_clause = IndexClause(new_exprs, old_clause.start_key, old_clause.count)
+        kwargs['index_clause'] = new_clause
 
         keyslice_map = self.column_family.get_indexed_slices(*args, **kwargs)
 
