@@ -247,22 +247,22 @@ add an extra level to the dictionary:
   >>> col_fam.get('row_key')
   {'supercol_name': {'col_name': 'col_val'}}
 
-The `supercolumn` parameter for :meth:`get()`-like methods allows
+The `super_column` parameter for :meth:`get()`-like methods allows
 you to be selective about what subcolumns you get from a single
-supercolumn.
+super column.
 
 .. code-block:: python
 
   >>> col_fam = pycassa.ColumnFamily(pool, 'Letters')
   >>> col_fam.insert('row_key', {'lowercase': {'a': 1, 'b': 2, 'c': 3}})
   1354491239132744
-  >>> col_fam.get('row_key', supercolumn='lowercase')
+  >>> col_fam.get('row_key', super_column='lowercase')
   {'supercol1': {'a': 1: 'b': 2, 'c': 3}}
-  >>> col_fam.get('row_key', supercolumn='lowercase', columns=['a', 'b'])
+  >>> col_fam.get('row_key', super_column='lowercase', columns=['a', 'b'])
   {'supercol1': {'a': 1: 'b': 2}}
-  >>> col_fam.get('row_key', supercolumn='lowercase', column_start='b')
+  >>> col_fam.get('row_key', super_column='lowercase', column_start='b')
   {'supercol1': {'b': 1: 'c': 2}}
-  >>> col_fam.get('row_key', supercolumn='lowercase', column_finish='b', column_reversed=True)
+  >>> col_fam.get('row_key', super_column='lowercase', column_finish='b', column_reversed=True)
   {'supercol1': {'c': 2, 'b': 1}}
 
 Typed Column Names and Values
