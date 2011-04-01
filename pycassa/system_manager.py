@@ -276,7 +276,7 @@ class SystemManager(object):
         :param bool super: Whether or not this column family is a super column family
 
         :param str comparator_type: What type the column names will be, which affects
-          their sort order.  By default, :const:`LONG_TYPE`, :const:`INTEGER_TYPE`,
+          their sort order.  By default, :const:`LONG_TYPE`, :const:`INT_TYPE`,
           :const:`ASCII_TYPE`, :const:`UTF8_TYPE`, :const:`TIME_UUID_TYPE`,
           :const:`LEXICAL_UUID_TYPE` and :const:`BYTES_TYPE` are provided.  Custom
           types may be used as well by providing the class name; if the custom
@@ -445,7 +445,7 @@ class SystemManager(object):
         Sets a data type for the value of a specific column.
 
         `value_type` is a string that determines what type the column value will be.
-        By default, :const:`LONG_TYPE`, :const:`INTEGER_TYPE`,
+        By default, :const:`LONG_TYPE`, :const:`INT_TYPE`,
         :const:`ASCII_TYPE`, :const:`UTF8_TYPE`, :const:`TIME_UUID_TYPE`,
         :const:`LEXICAL_UUID_TYPE` and :const:`BYTES_TYPE` are provided.  Custom
         types may be used as well by providing the class name; if the custom
