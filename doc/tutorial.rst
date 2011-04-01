@@ -94,7 +94,7 @@ And we can insert more than one row at a time:
 .. code-block:: python
 
   >>> col_fam.batch_insert({'row1': {'name1':'val1', 'name2':'val2'},
-  ...                       'row2': {'foo':'bar'})
+  ...                       'row2': {'foo':'bar'}})
   1354491238721387
 
 Getting Data
@@ -138,7 +138,7 @@ If you think of the columns as being sorted from left to right, when
 `column_reversed` is ``True``, `column_start` will determine the right
 end of the range while `column_finish` will determine the left.
 
-Here's an example of getting the last three columns in a row:
+Here's an example of getting the last three columns in a row assuming default_validation_class=LONG_TYPE for this column family:
 
 .. code-block:: python
 
@@ -463,7 +463,7 @@ pool.  After creating the pool, it may be used to create multiple
   >>> standard_cf.insert('key', {'col': 'val'})
   1354491238782746
   >>> super_cf = pycassa.ColumnFamily(pool, 'Super1')
-  >>> super_cf.insert('key2', {'col': 'val'})
+  >>> super_cf.insert('key2', {'column' : {'col': 'val'}})
   1354491239779182
   >>> standard_cf.get('key')
   {'col': 'val'}
@@ -540,7 +540,7 @@ instances of the supplied class when possible.
   >>> list(Test.objects.get_range())
   [<__main__.Test object at 0x7f8ddde0b710>]
   >>> Test.objects.get_count(t.key)
-  7
+  5
 
 .. code-block:: python
 
