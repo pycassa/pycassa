@@ -128,7 +128,7 @@ existing, make sure you imported the schema with <tt class="file docutils litera
 </div>
 <p>And we can insert more than one row at a time:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">batch_insert</span><span class="p">({</span><span class="s">&#39;row1&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;name1&#39;</span><span class="p">:</span><span class="s">&#39;val1&#39;</span><span class="p">,</span> <span class="s">&#39;name2&#39;</span><span class="p">:</span><span class="s">&#39;val2&#39;</span><span class="p">},</span>
-<span class="gp">... </span>                      <span class="s">&#39;row2&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;foo&#39;</span><span class="p">:</span><span class="s">&#39;bar&#39;</span><span class="p">})</span>
+<span class="gp">... </span>                      <span class="s">&#39;row2&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;foo&#39;</span><span class="p">:</span><span class="s">&#39;bar&#39;</span><span class="p">}})</span>
 <span class="go">1354491238721387</span>
 </pre></div>
 </div>
@@ -168,10 +168,10 @@ If you think of the columns as being sorted from left to right, when
 end of the range while <cite>column_finish</cite> will determine the left.</p>
 <p>Here&#8217;s an example of getting the last three columns in a row:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="s">&#39;val&#39;</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">):</span> <span class="s">&#39;val&#39;</span><span class="p">}</span>
 <span class="gp">...</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="n">column_reversed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">column_count</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="go">{20: &#39;val&#39;, 19: &#39;val&#39;, 18: &#39;val&#39;}</span>
+<span class="go">{&#39;20&#39;: &#39;val&#39;, &#39;19&#39;: &#39;val&#39;, &#39;18&#39;: &#39;val&#39;}</span>
 </pre></div>
 </div>
 <p>There are a few ways to get multiple rows at the same time.
@@ -443,7 +443,7 @@ pool.  After creating the pool, it may be used to create multiple
 <span class="gp">&gt;&gt;&gt; </span><span class="n">standard_cf</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;col&#39;</span><span class="p">:</span> <span class="s">&#39;val&#39;</span><span class="p">})</span>
 <span class="go">1354491238782746</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">super_cf</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;Super1&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">super_cf</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key2&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;col&#39;</span><span class="p">:</span> <span class="s">&#39;val&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">super_cf</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key2&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;column&#39;</span> <span class="p">:</span> <span class="p">{</span><span class="s">&#39;col&#39;</span><span class="p">:</span> <span class="s">&#39;val&#39;</span><span class="p">}})</span>
 <span class="go">1354491239779182</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">standard_cf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">)</span>
 <span class="go">{&#39;col&#39;: &#39;val&#39;}</span>
@@ -513,7 +513,7 @@ instances of the supplied class when possible.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_range</span><span class="p">())</span>
 <span class="go">[&lt;__main__.Test object at 0x7f8ddde0b710&gt;]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_count</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
-<span class="go">7</span>
+<span class="go">5</span>
 </pre></div>
 </div>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>

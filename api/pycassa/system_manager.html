@@ -136,7 +136,7 @@ the modification.</p>
 <tt class="descname">alter_column</tt><big>(</big><em>keyspace</em>, <em>column_family</em>, <em>column</em>, <em>value_type</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.alter_column" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets a data type for the value of a specific column.</p>
 <p><cite>value_type</cite> is a string that determines what type the column value will be.
-By default, <a class="reference internal" href="#pycassa.system_manager.LONG_TYPE" title="pycassa.system_manager.LONG_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">LONG_TYPE</span></tt></a>, <tt class="xref py py-const docutils literal"><span class="pre">INTEGER_TYPE</span></tt>,
+By default, <a class="reference internal" href="#pycassa.system_manager.LONG_TYPE" title="pycassa.system_manager.LONG_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">LONG_TYPE</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.INT_TYPE" title="pycassa.system_manager.INT_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">INT_TYPE</span></tt></a>,
 <a class="reference internal" href="#pycassa.system_manager.ASCII_TYPE" title="pycassa.system_manager.ASCII_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">ASCII_TYPE</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.UTF8_TYPE" title="pycassa.system_manager.UTF8_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">UTF8_TYPE</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.TIME_UUID_TYPE" title="pycassa.system_manager.TIME_UUID_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">TIME_UUID_TYPE</span></tt></a>,
 <a class="reference internal" href="#pycassa.system_manager.LEXICAL_UUID_TYPE" title="pycassa.system_manager.LEXICAL_UUID_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">LEXICAL_UUID_TYPE</span></tt></a> and <a class="reference internal" href="#pycassa.system_manager.BYTES_TYPE" title="pycassa.system_manager.BYTES_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">BYTES_TYPE</span></tt></a> are provided.  Custom
 types may be used as well by providing the class name; if the custom
@@ -187,7 +187,7 @@ default value.</p>
 <li><strong>name</strong> (<em>str</em>) &#8211; the name of the column family</li>
 <li><strong>super</strong> (<em>bool</em>) &#8211; Whether or not this column family is a super column family</li>
 <li><strong>comparator_type</strong> (<em>str</em>) &#8211; What type the column names will be, which affects
-their sort order.  By default, <a class="reference internal" href="#pycassa.system_manager.LONG_TYPE" title="pycassa.system_manager.LONG_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">LONG_TYPE</span></tt></a>, <tt class="xref py py-const docutils literal"><span class="pre">INTEGER_TYPE</span></tt>,
+their sort order.  By default, <a class="reference internal" href="#pycassa.system_manager.LONG_TYPE" title="pycassa.system_manager.LONG_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">LONG_TYPE</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.INT_TYPE" title="pycassa.system_manager.INT_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">INT_TYPE</span></tt></a>,
 <a class="reference internal" href="#pycassa.system_manager.ASCII_TYPE" title="pycassa.system_manager.ASCII_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">ASCII_TYPE</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.UTF8_TYPE" title="pycassa.system_manager.UTF8_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">UTF8_TYPE</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.TIME_UUID_TYPE" title="pycassa.system_manager.TIME_UUID_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">TIME_UUID_TYPE</span></tt></a>,
 <a class="reference internal" href="#pycassa.system_manager.LEXICAL_UUID_TYPE" title="pycassa.system_manager.LEXICAL_UUID_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">LEXICAL_UUID_TYPE</span></tt></a> and <a class="reference internal" href="#pycassa.system_manager.BYTES_TYPE" title="pycassa.system_manager.BYTES_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">BYTES_TYPE</span></tt></a> are provided.  Custom
 types may be used as well by providing the class name; if the custom
@@ -383,10 +383,10 @@ and &#8216;strategy_options&#8217; as keys.</p>
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="columnfamilymap.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.columnfamilymap</span></tt> &#8211; Maps Classes to Column Families</a></p>
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">pycassa.columnfamilymap</span></tt> &#8211; Maps Classes to Column Families</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="index.html"
-                        title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.index</span></tt> &#8211; Secondary Index Tools</a></p>
+                        title="next chapter"><tt class="docutils literal"><span class="pre">pycassa.index</span></tt> &#8211; Secondary Index Tools</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../sources/api/pycassa/system_manager.txt"
