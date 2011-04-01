@@ -18,6 +18,8 @@ IntString may be defined as:
 
 """
 
+import warnings
+
 from pycassa.types import Column
 from pycassa.cassandra.ttypes import IndexExpression, IndexClause
 
@@ -205,7 +207,11 @@ class ColumnFamilyMap(object):
         attribute names. This makes packing the values in the :class:`IndexExpresssion`
         simpler when possible.
 
-        See :meth:`pycassa.columnfamily.ColumnFamily.get_indexed_slices()` for
+        .. deprecated:: 1.0.7
+            The instance parameter is deprecated. IndexExpression values should only
+            be passed through `index_clause`.
+
+        See :meth:`.ColumnFamily.get_indexed_slices()` for
         an explanation of the parameters.
 
         """
@@ -215,6 +221,10 @@ class ColumnFamilyMap(object):
 
         if 'columns' not in kwargs and not self.raw_columns:
             kwargs['columns'] = self.columns.keys()
+
+        if instance is not None:
+            warnings.warn("ColumnFamilyMap.get_indexed_slice()'s 'instance' parameter is deprecated.",
+                          DeprecationWarning)
 
         # Autopack the index clause's values
         new_exprs = []
