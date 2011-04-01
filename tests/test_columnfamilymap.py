@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from pycassa import index, ColumnFamily, ConnectionPool, \
-    ColumnFamilyMap, ConsistencyLevel, NotFoundException, String, Int64, \
+    ColumnFamilyMap, ConsistencyLevel, NotFoundException, String, Long, \
     Float64, DateTime, IntString, FloatString, DateTimeString, \
     SystemManager
 from nose.tools import assert_raises, assert_equal, assert_true
@@ -23,7 +23,7 @@ def teardown_module():
 
 class TestUTF8(object):
     strcol = String(default='default')
-    intcol = Int64(default=0)
+    intcol = Long(default=0)
     floatcol = Float64(default=0.0)
     datetimecol = DateTime(default=None)
     intstrcol = IntString()
@@ -37,7 +37,7 @@ class TestUTF8(object):
         return self.__dict__ != other.__dict__
 
 class TestIndex(object):
-    birthdate = Int64(default=0)
+    birthdate = Long(default=0)
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
