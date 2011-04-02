@@ -414,8 +414,8 @@ class ConnectionWrapper(connection.Connection):
 
                 self.close()
                 self._pool._clear_current()
-
-                return new_f(self, *args, reset=True, **kwargs)
+		kwargs['reset'] = True
+                return new_f(self, *args, **kwargs)
 
         new_f.__name__ = f.__name__
         return new_f
