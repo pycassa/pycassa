@@ -175,10 +175,7 @@ def unpack(byte_array, data_type):
         else:
             return struct.unpack('>q', byte_array)[0]
     elif data_type == 'IntegerType':
-        if _have_struct:
-            return _int_packer.unpack(byte_array)[0]
-        else:
-            return struct.unpack('>i', byte_array)[0]
+        return decode_int(byte_array)
     elif data_type == 'AsciiType':
         return byte_array
     elif data_type == 'UTF8Type':
@@ -192,6 +189,11 @@ def unpack(byte_array, data_type):
     else:
         return byte_array
 
+def decode_int(term):
+    val = int(term.encode('hex'), 16)
+    if (ord(term[0]) & 128) != 0:
+        val = val - (1 << (len(term) * 8))
+    return val
 
 # Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Michael Bayer mike_mp@zzzcomputing.com
 #

@@ -548,6 +548,34 @@ class TestDefaultValidators(unittest.TestCase):
 
         cf.remove(key)
 
+class TestBigInt(unittest.TestCase):
+
+    @classmethod
+    def setup_class(cls):
+        sys = SystemManager()
+        sys.create_column_family(TEST_KS, 'StdInteger', comparator_type=INT_TYPE)
+
+    @classmethod
+    def teardown_class(cls):
+        sys = SystemManager()
+        sys.drop_column_family(TEST_KS, 'StdInteger')
+
+    def setUp(self):
+        self.key = 'TestBigInt'
+        self.cf = ColumnFamily(pool, 'StdInteger')
+
+    def tearDown(self):
+        self.cf.remove(self.key)
+
+    def test_negative_integers(self):
+        self.cf.insert(self.key, {-1: '-1'})
+        self.cf.insert(self.key, {-12342390: '-12342390'})
+        self.cf.insert(self.key, {-255: '-255'})
+        self.cf.insert(self.key, {-256: '-256'})
+        self.cf.insert(self.key, {-257: '-257'})
+        for key, cols in self.cf.get_range():
+            self.assertEquals(str(cols.keys()[0]), cols.values()[0])
+
 class TestTimeUUIDs(unittest.TestCase):
 
     def setUp(self):
