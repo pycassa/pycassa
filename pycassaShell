@@ -281,7 +281,7 @@ if options.keyspace:
                               timeout=5)
 
     print "\nAvailable ColumnFamily instances:"
-    for cfname in SYSTEM_MANAGER.get_keyspace_description(options.keyspace).keys():
+    for cfname in SYSTEM_MANAGER.get_keyspace_column_families(options.keyspace).keys():
         cfinstance = pycassa.ColumnFamily(_pool, cfname)
         exec('%s = cfinstance' % cfname.upper())
         spaces = " " * (25 - len(cfname))
