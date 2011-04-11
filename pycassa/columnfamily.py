@@ -179,27 +179,28 @@ class ColumnFamily(object):
                             super_column=self._pack_name(super_column, is_supercol_name=True))
 
     def _create_slice_predicate(self, columns, column_start, column_finish,
-                                      column_reversed, column_count):
+                                      column_reversed, column_count, super_column=None):
+        is_supercol_name = self.super and super_column is None
         if columns is not None:
             packed_cols = []
             for col in columns:
-                packed_cols.append(self._pack_name(col, is_supercol_name=self.super))
+                packed_cols.append(self._pack_name(col, is_supercol_name=is_supercol_name))
             return SlicePredicate(column_names=packed_cols)
         else:
             if column_start != '':
                 column_start = self._pack_name(column_start,
-                                               is_supercol_name=self.super,
+                                               is_supercol_name=is_supercol_name,
                                                slice_end=_SLICE_START)
             if column_finish != '':
                 column_finish = self._pack_name(column_finish,
-                                                is_supercol_name=self.super,
+                                                is_supercol_name=is_supercol_name,
                                                 slice_end=_SLICE_FINISH)
+
             sr = SliceRange(start=column_start, finish=column_finish,
                             reversed=column_reversed, count=column_count)
             return SlicePredicate(slice_range=sr)
 
-    def _pack_name(self, value, is_supercol_name=False,
-            slice_end=_NON_SLICE):
+    def _pack_name(self, value, is_supercol_name=False, slice_end=_NON_SLICE):
         if not self.autopack_names:
             if value is not None and not (isinstance(value, str) or isinstance(value, unicode)):
                 raise TypeError("A str or unicode column name was expected, but %s was received instead (%s)"
@@ -329,7 +330,7 @@ class ColumnFamily(object):
         else:
             cp = self._create_column_parent(super_column)
             sp = self._create_slice_predicate(columns, column_start, column_finish,
-                                        column_reversed, column_count)
+                                              column_reversed, column_count, super_column)
 
             try:
                 self._obtain_connection()
@@ -430,7 +431,7 @@ class ColumnFamily(object):
 
         cp = self._create_column_parent(super_column)
         sp = self._create_slice_predicate(columns, column_start, column_finish,
-                                          column_reversed, column_count)
+                                          column_reversed, column_count, super_column)
 
         try:
             self._obtain_connection()
@@ -478,7 +479,7 @@ class ColumnFamily(object):
 
         cp = self._create_column_parent(super_column)
         sp = self._create_slice_predicate(columns, column_start, column_finish,
-                                          False, self.MAX_COUNT)
+                                          False, self.MAX_COUNT, super_column)
 
         try:
             self._obtain_connection()
@@ -503,7 +504,7 @@ class ColumnFamily(object):
 
         cp = self._create_column_parent(super_column)
         sp = self._create_slice_predicate(columns, column_start, column_finish,
-                                          False, self.MAX_COUNT)
+                                          False, self.MAX_COUNT, super_column)
 
         try:
             self._obtain_connection()
@@ -546,7 +547,7 @@ class ColumnFamily(object):
 
         cp = self._create_column_parent(super_column)
         sp = self._create_slice_predicate(columns, column_start, column_finish,
-                                          column_reversed, column_count)
+                                          column_reversed, column_count, super_column)
 
         count = 0
         i = 0

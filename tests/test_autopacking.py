@@ -421,6 +421,12 @@ class TestSuperSubCFs(unittest.TestCase):
             # A start and end that are the same
             assert_equal(cf.get(KEYS[0], column_start=123L, column_finish=123L), gdict)
 
+            res = cf.get(KEYS[0], super_column=123L, column_start=group.get('cols')[0])
+            assert_equal(res, gdict.get(123L))
+
+            res = cf.get(KEYS[0], super_column=123L, column_finish=group.get('cols')[-1])
+            assert_equal(res, gdict.get(123L))
+
             assert_equal(cf.get_count(KEYS[0]), 1)
 
             # Test removing rows
@@ -450,6 +456,10 @@ class TestSuperSubCFs(unittest.TestCase):
             for i in range(3):
                 assert_equal(res.get(KEYS[i]), gdict.get(123L))
 
+            res = cf.multiget(KEYS[:], super_column=123L, column_start=group.get('cols')[0])
+            for i in range(3):
+                assert_equal(res.get(KEYS[i]), gdict.get(123L))
+
             res = cf.multiget(KEYS[:], column_start=123L, column_finish=123L)
             for j in range(3):
                 assert_equal(res.get(KEYS[j]), gdict)
@@ -472,6 +482,13 @@ class TestSuperSubCFs(unittest.TestCase):
             for sub_res in res:
                 assert_equal(sub_res[1], gdict.get(123L))
 
+            res = cf.get_range(start=KEYS[0], super_column=123L, column_start=group.get('cols')[0])
+            for sub_res in res:
+                assert_equal(sub_res[1], gdict.get(123L))
+
+            res = cf.get_range(start=KEYS[0], super_column=123L, column_finish=group.get('cols')[-1])
+            for sub_res in res:
+                assert_equal(sub_res[1], gdict.get(123L))
 
 class TestValidators(unittest.TestCase):
 
