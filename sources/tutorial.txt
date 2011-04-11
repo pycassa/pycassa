@@ -30,11 +30,70 @@ You can start Cassandra like so:
   ~/cassandra
   $ bin/cassandra -f
 
-and import the included schema to start out:
+Creating a Keyspace and Column Families
+---------------------------------------
+We need to create a keyspace and some column families to work with.  There
+are two good ways to do this: using cassandra-cli, or using pycassaShell. Both
+are documented below.
+
+Using cassandra-cli
+^^^^^^^^^^^^^^^^^^^
+The cassandra-cli utility is included with Cassandra. It allows you to create
+and modify the schema, explore or modify data, and examine a few things about
+your cluster.  Here's how to create the keyspace and column family we need
+for this tutorial:
+
+.. code-block:: none
+
+    user@~ $ cassandra-cli 
+    Welcome to cassandra CLI.
+
+    Type 'help;' or '?' for help. Type 'quit;' or 'exit;' to quit.
+    [default@unknown] connect localhost/9160;
+    Connected to: "Test Cluster" on localhost/9160
+    [default@unknown] create keyspace Keyspace1;
+    4f9e42c4-645e-11e0-ad9e-e700f669bcfc
+    Waiting for schema agreement...
+    ... schemas agree across the cluster
+    [default@unknown] use Keyspace1;
+    Authenticated to keyspace: Keyspace1
+    [default@Keyspace1] create column family ColumnFamily1;
+    632cf985-645e-11e0-ad9e-e700f669bcfc
+    Waiting for schema agreement...
+    ... schemas agree across the cluster
+    [default@Keyspace1] quit;
+    user@~ $
+
+This connects to a local instance of Cassandra and creates a keyspace
+named 'Keyspace1' with a column family named 'ColumnFamily1'.
+
+Using pycassaShell
+^^^^^^^^^^^^^^^^^^
+:ref:`pycassa-shell` is an interactive Python shell that is included
+with **pycassa**.  Upon starting, it sets up many of the objects that
+you typically work with when using **pycassa**.  It provides most of the
+functionality that cassandra-cli does, but also gives you a full Python
+environment to work with.
+
+Here's how to create the keyspace and column family:
 
 .. code-block:: bash
 
-  $ bin/schematool localhost 8080 import
+    user@~ $ pycassaShell 
+    ----------------------------------
+    Cassandra Interactive Python Shell
+    ----------------------------------
+    Keyspace: None
+    Host: localhost:9160
+
+    ColumnFamily instances are only available if a keyspace is specified with -k/--keyspace
+
+    Schema definition tools and cluster information are available through SYSTEM_MANAGER.
+
+.. code-block:: python
+
+    >>> SYSTEM_MANAGER.create_keyspace('Keyspace1', replication_factor=1)
+    >>> SYSTEM_MANAGER.create_column_family('Keyspace1', 'ColumnFamily1')
 
 Connecting to Cassandra
 -----------------------
@@ -46,7 +105,7 @@ running cassandra instance:
   >>> import pycassa
   >>> pool = pycassa.connect('Keyspace1')
 
-The above code will connect by default to 'localhost:9160'. We can
+The above code will connect by default to ``localhost:9160``. We can
 also specify the host and port explicitly, as follows:
 
 .. code-block:: python
@@ -67,10 +126,11 @@ are included in the default schema file:
 .. code-block:: python
 
   >>> pool = pycassa.connect('Keyspace1')
-  >>> col_fam = pycassa.ColumnFamily(pool, 'Standard1')
+  >>> col_fam = pycassa.ColumnFamily(pool, 'ColumnFamily1')
 
 If you get an error about the keyspace or column family not
-existing, make sure you imported the schema with :file:`bin/schematool`.
+existing, make sure you created the keyspace and column family as
+shown above.
 
 Inserting Data
 --------------
@@ -86,15 +146,15 @@ We can also insert more than one column at a time:
 
 .. code-block:: python
 
-  >>> col_fam.insert('row_key', {'name1':'val1', 'name2':'val2'})
+  >>> col_fam.insert('row_key', {'col_name':'col_val', 'col_name2':'col_val2'})
   1354459123410932
 
 And we can insert more than one row at a time:
 
 .. code-block:: python
 
-  >>> col_fam.batch_insert({'row1': {'name1':'val1', 'name2':'val2'},
-  ...                       'row2': {'foo':'bar'}})
+  >>> col_fam.batch_insert({'row1': {'name1': 'val1', 'name2': 'val2'},
+  ...                       'row2': {'foo': 'bar'}})
   1354491238721387
 
 Getting Data
@@ -108,7 +168,7 @@ The simplest way to get data is to use
 .. code-block:: python
 
   >>> col_fam.get('row_key')
-  {'colname': 'col_val'}
+  {'col_name': 'col_val', 'col_name2': 'col_val2'}
 
 Without any other arguments, :meth:`~pycassa.columnfamily.ColumnFamily.get()`
 returns every column in the row (up to `column_count`, which defaults to 100).
@@ -117,19 +177,30 @@ specify them using a `columns` argument:
 
 .. code-block:: python
 
-  >>> col_fam.get('row_key', columns=['name1', 'name2'])
-  {'name1': 'foo', 'name2': 'bar'}
+  >>> col_fam.get('row_key', columns=['col_name', 'col_name2'])
+  {'col_name': 'col_val', 'col_name2': 'col_val2'}
 
 We may also get a slice (or subrange) of the columns in a row. To do this,
 use the `column_start` and `column_finish` parameters.  One or both of these may
 be left empty to allow the slice to extend to one or both ends.
-Note that `column_finish` is inclusive. Assuming we've inserted several
-columns with names '1' through '9', we can do the following:
+Note that `column_finish` is inclusive.
 
 .. code-block:: python
 
-  >>> col_fam.get('row_key', column_start='5', column_finish='7')
-  {'5':'foo', '6':'bar', '7':'baz'}
+    >>> for i in range(1, 10):
+    ...     col_fam.insert('row_key', {str(i): 'val'})
+    ... 
+    1302542571215334
+    1302542571218485
+    1302542571220599
+    1302542571221991
+    1302542571223388
+    1302542571224629
+    1302542571225859
+    1302542571227029
+    1302542571228472
+    >>> col_fam.get('row_key', column_start='5', column_finish='7')
+    {'5': 'val', '6': 'val', '7': 'val'}
 
 Sometimes you want to get columns in reverse sorted order.  A common
 example of this is getting the last N columns from a row that
@@ -142,11 +213,8 @@ Here's an example of getting the last three columns in a row:
 
 .. code-block:: python
 
-  >>> for i in range(20):
-  ...     col_fam.insert('key', {str(i): 'val'}
-  ...
-  >>> col_fam.get('key', column_reversed=True, column_count=3)
-  {'20': 'val', '19': 'val', '18': 'val'}
+  >>> col_fam.get('row_key', column_reversed=True, column_count=3)
+  {'9': 'val', '8': 'val', '7': 'val'}
 
 There are a few ways to get multiple rows at the same time.
 The first is to specify them by name using
@@ -154,8 +222,8 @@ The first is to specify them by name using
 
 .. code-block:: python
 
-  >>> col_fam.multiget(['row_key1', 'row_key2'])
-  {'row_key1': {'name':'val'}, 'row_key2': {'name':'val'}}
+  >>> col_fam.multiget(['row1', 'row2'])
+  {'row1': {'name1': 'val1', 'name2': 'val2'}, 'row_key2': {'foo': 'bar'}}
 
 Another way is to get a range of keys at once by using
 :meth:`~pycassa.columnfamily.ColumnFamily.get_range()`. The parameter
@@ -175,7 +243,7 @@ with keys 'row_key1' through 'row_key9', we can do this:
 .. note:: Cassandra must be using an OrderPreservingPartitioner for you to be
           able to get a meaningful range of rows; the default, RandomPartitioner,
           stores rows in the order of the MD5 hash of their keys. See
-          http://www.riptano.com/docs/0.6/operations/clustering#partitioners.
+          http://www.riptano.com/docs/0.7/operations/clustering#partitioners.
 
 The last way to get multiple rows at a time is to take advantage of
 secondary indexes by using :meth:`~pycassa.columnfamily.ColumnFamily.get_indexed_slices()`,
@@ -254,16 +322,16 @@ super column.
 .. code-block:: python
 
   >>> col_fam = pycassa.ColumnFamily(pool, 'Letters')
-  >>> col_fam.insert('row_key', {'lowercase': {'a': 1, 'b': 2, 'c': 3}})
+  >>> col_fam.insert('row_key', {'lowercase': {'a': '1', 'b': '2', 'c': '3'}})
   1354491239132744
   >>> col_fam.get('row_key', super_column='lowercase')
-  {'supercol1': {'a': 1: 'b': 2, 'c': 3}}
+  {'supercol1': {'a': '1': 'b': '2', 'c': '3'}}
   >>> col_fam.get('row_key', super_column='lowercase', columns=['a', 'b'])
-  {'supercol1': {'a': 1: 'b': 2}}
+  {'supercol1': {'a': '1': 'b': '2'}}
   >>> col_fam.get('row_key', super_column='lowercase', column_start='b')
-  {'supercol1': {'b': 1: 'c': 2}}
+  {'supercol1': {'b': '1': 'c': '2'}}
   >>> col_fam.get('row_key', super_column='lowercase', column_finish='b', column_reversed=True)
-  {'supercol1': {'c': 2, 'b': 1}}
+  {'supercol1': {'c': '2', 'b': '1'}}
 
 Typed Column Names and Values
 -----------------------------
@@ -368,7 +436,7 @@ specific time.
 
 To make this easier, if a :class:`datetime` object or a timestamp with the
 same precision as the output of ``time.time()`` is passed where a TimeUUID
-is expected, **pycassa** will convert that into a UUID with an equivalent
+is expected, **pycassa** will convert that into a :class:`uuid.UUID` with an equivalent
 timestamp component.
 
 Suppose we have something like Twissandra's public timeline but with TimeUUIDs
@@ -568,14 +636,3 @@ You may also use a ColumnFamilyMap with super columns:
   {'super1': <__main__.Test object at 0x20ab350>}
   >>> Test.objects.multiget([t.key])
   {'key1': {'super1': <__main__.Test object at 0x20ab550>}}
-
-Keyspace and Column Family Creation and Alteration
---------------------------------------------------
-Keyspaces and column families may be created, altered,
-and dropped using :class:`pycassa.system_manager.SystemManager`. Additionally,
-indexes may be created and dropped using this class as well.
-
-Although most of SystemManager's methods may be used in a program,
-it is recommended that they be used manually with a tool like
-:ref:`pycassa-shell`. There is a
-:ref:`provided example <pycassa-shell-sys-man>` of this usage.

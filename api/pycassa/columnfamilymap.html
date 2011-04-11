@@ -114,7 +114,7 @@ if <a class="reference internal" href="#pycassa.columnfamilymap.ColumnFamilyMap.
 <tt class="descname">get_count</tt><big>(</big><em>key[, columns][, super_column][, read_consistency_level]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap.get_count" title="Permalink to this definition">¶</a></dt>
 <dd><p>Count the number of columns for a key.</p>
 <p class="deprecated">
-<span class="versionmodified">Deprecated since version 0.6.0: </span>Use <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily.get" title="pycassa.columnfamily.ColumnFamily.get"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.columnfamily.ColumnFamily.get()</span></tt></a> instead.</p>
+<span class="versionmodified">Deprecated since version 0.6.0: </span>Use <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily.get_count" title="pycassa.columnfamily.ColumnFamily.get_count"><tt class="xref py py-meth docutils literal"><span class="pre">ColumnFamily.get_count()</span></tt></a> instead.</p>
 </dd></dl>
 
 <dl class="method">
@@ -148,7 +148,10 @@ to <a class="reference internal" href="#pycassa.columnfamilymap.ColumnFamilyMap.
 <tt class="xref py py-class docutils literal"><span class="pre">IndexExpression</span></tt> where the name matches one of the instance&#8217;s
 attribute names. This makes packing the values in the <tt class="xref py py-class docutils literal"><span class="pre">IndexExpresssion</span></tt>
 simpler when possible.</p>
-<p>See <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily.get_indexed_slices" title="pycassa.columnfamily.ColumnFamily.get_indexed_slices"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.columnfamily.ColumnFamily.get_indexed_slices()</span></tt></a> for
+<p class="deprecated">
+<span class="versionmodified">Deprecated since version 1.0.7: </span>The instance parameter is deprecated. IndexExpression values should only
+be passed through <cite>index_clause</cite>.</p>
+<p>See <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily.get_indexed_slices" title="pycassa.columnfamily.ColumnFamily.get_indexed_slices"><tt class="xref py py-meth docutils literal"><span class="pre">ColumnFamily.get_indexed_slices()</span></tt></a> for
 an explanation of the parameters.</p>
 </dd></dl>
 

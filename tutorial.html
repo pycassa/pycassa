@@ -78,9 +78,65 @@ You can start Cassandra like so:</p>
 <span class="nv">$ </span>bin/cassandra -f
 </pre></div>
 </div>
-<p>and import the included schema to start out:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>bin/schematool localhost 8080 import
+</div>
+<div class="section" id="creating-a-keyspace-and-column-families">
+<h2>Creating a Keyspace and Column Families<a class="headerlink" href="#creating-a-keyspace-and-column-families" title="Permalink to this headline">¶</a></h2>
+<p>We need to create a keyspace and some column families to work with.  There
+are two good ways to do this: using cassandra-cli, or using pycassaShell. Both
+are documented below.</p>
+<div class="section" id="using-cassandra-cli">
+<h3>Using cassandra-cli<a class="headerlink" href="#using-cassandra-cli" title="Permalink to this headline">¶</a></h3>
+<p>The cassandra-cli utility is included with Cassandra. It allows you to create
+and modify the schema, explore or modify data, and examine a few things about
+your cluster.  Here&#8217;s how to create the keyspace and column family we need
+for this tutorial:</p>
+<div class="highlight-none"><div class="highlight"><pre>user@~ $ cassandra-cli
+Welcome to cassandra CLI.
+
+Type &#39;help;&#39; or &#39;?&#39; for help. Type &#39;quit;&#39; or &#39;exit;&#39; to quit.
+[default@unknown] connect localhost/9160;
+Connected to: &quot;Test Cluster&quot; on localhost/9160
+[default@unknown] create keyspace Keyspace1;
+4f9e42c4-645e-11e0-ad9e-e700f669bcfc
+Waiting for schema agreement...
+... schemas agree across the cluster
+[default@unknown] use Keyspace1;
+Authenticated to keyspace: Keyspace1
+[default@Keyspace1] create column family ColumnFamily1;
+632cf985-645e-11e0-ad9e-e700f669bcfc
+Waiting for schema agreement...
+... schemas agree across the cluster
+[default@Keyspace1] quit;
+user@~ $
 </pre></div>
+</div>
+<p>This connects to a local instance of Cassandra and creates a keyspace
+named &#8216;Keyspace1&#8217; with a column family named &#8216;ColumnFamily1&#8217;.</p>
+</div>
+<div class="section" id="using-pycassashell">
+<h3>Using pycassaShell<a class="headerlink" href="#using-pycassashell" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="pycassa_shell.html#pycassa-shell"><em>pycassaShell</em></a> is an interactive Python shell that is included
+with <strong>pycassa</strong>.  Upon starting, it sets up many of the objects that
+you typically work with when using <strong>pycassa</strong>.  It provides most of the
+functionality that cassandra-cli does, but also gives you a full Python
+environment to work with.</p>
+<p>Here&#8217;s how to create the keyspace and column family:</p>
+<div class="highlight-bash"><div class="highlight"><pre>user@~ <span class="nv">$ </span>pycassaShell
+----------------------------------
+Cassandra Interactive Python Shell
+----------------------------------
+Keyspace: None
+Host: localhost:9160
+
+ColumnFamily instances are only available <span class="k">if </span>a keyspace is specified with -k/--keyspace
+
+Schema definition tools and cluster information are available through SYSTEM_MANAGER.
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">SYSTEM_MANAGER</span><span class="o">.</span><span class="n">create_keyspace</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="n">replication_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SYSTEM_MANAGER</span><span class="o">.</span><span class="n">create_column_family</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="s">&#39;ColumnFamily1&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="connecting-to-cassandra">
@@ -91,7 +147,7 @@ running cassandra instance:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The above code will connect by default to &#8216;localhost:9160&#8217;. We can
+<p>The above code will connect by default to <tt class="docutils literal"><span class="pre">localhost:9160</span></tt>. We can
 also specify the host and port explicitly, as follows:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;localhost:9160&#39;</span><span class="p">])</span>
 </pre></div>
@@ -107,11 +163,12 @@ and can be thought of as roughly the equivalent of a table in a
 relational database. We&#8217;ll use one of the column families that
 are included in the default schema file:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;Standard1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;ColumnFamily1&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>If you get an error about the keyspace or column family not
-existing, make sure you imported the schema with <tt class="file docutils literal"><span class="pre">bin/schematool</span></tt>.</p>
+existing, make sure you created the keyspace and column family as
+shown above.</p>
 </div>
 <div class="section" id="inserting-data">
 <h2>Inserting Data<a class="headerlink" href="#inserting-data" title="Permalink to this headline">¶</a></h2>
@@ -122,13 +179,13 @@ existing, make sure you imported the schema with <tt class="file docutils litera
 </pre></div>
 </div>
 <p>We can also insert more than one column at a time:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;name1&#39;</span><span class="p">:</span><span class="s">&#39;val1&#39;</span><span class="p">,</span> <span class="s">&#39;name2&#39;</span><span class="p">:</span><span class="s">&#39;val2&#39;</span><span class="p">})</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;col_name&#39;</span><span class="p">:</span><span class="s">&#39;col_val&#39;</span><span class="p">,</span> <span class="s">&#39;col_name2&#39;</span><span class="p">:</span><span class="s">&#39;col_val2&#39;</span><span class="p">})</span>
 <span class="go">1354459123410932</span>
 </pre></div>
 </div>
 <p>And we can insert more than one row at a time:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">batch_insert</span><span class="p">({</span><span class="s">&#39;row1&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;name1&#39;</span><span class="p">:</span><span class="s">&#39;val1&#39;</span><span class="p">,</span> <span class="s">&#39;name2&#39;</span><span class="p">:</span><span class="s">&#39;val2&#39;</span><span class="p">},</span>
-<span class="gp">... </span>                      <span class="s">&#39;row2&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;foo&#39;</span><span class="p">:</span><span class="s">&#39;bar&#39;</span><span class="p">}})</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">batch_insert</span><span class="p">({</span><span class="s">&#39;row1&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;name1&#39;</span><span class="p">:</span> <span class="s">&#39;val1&#39;</span><span class="p">,</span> <span class="s">&#39;name2&#39;</span><span class="p">:</span> <span class="s">&#39;val2&#39;</span><span class="p">},</span>
+<span class="gp">... </span>                      <span class="s">&#39;row2&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;foo&#39;</span><span class="p">:</span> <span class="s">&#39;bar&#39;</span><span class="p">}})</span>
 <span class="go">1354491238721387</span>
 </pre></div>
 </div>
@@ -140,24 +197,35 @@ to insert data.</p>
 <p>The simplest way to get data is to use
 <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get" title="pycassa.columnfamily.ColumnFamily.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">)</span>
-<span class="go">{&#39;colname&#39;: &#39;col_val&#39;}</span>
+<span class="go">{&#39;col_name&#39;: &#39;col_val&#39;, &#39;col_name2&#39;: &#39;col_val2&#39;}</span>
 </pre></div>
 </div>
 <p>Without any other arguments, <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get" title="pycassa.columnfamily.ColumnFamily.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a>
 returns every column in the row (up to <cite>column_count</cite>, which defaults to 100).
 If you only want a few of the columns and you know them by name, you can
 specify them using a <cite>columns</cite> argument:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;name1&#39;</span><span class="p">,</span> <span class="s">&#39;name2&#39;</span><span class="p">])</span>
-<span class="go">{&#39;name1&#39;: &#39;foo&#39;, &#39;name2&#39;: &#39;bar&#39;}</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;col_name&#39;</span><span class="p">,</span> <span class="s">&#39;col_name2&#39;</span><span class="p">])</span>
+<span class="go">{&#39;col_name&#39;: &#39;col_val&#39;, &#39;col_name2&#39;: &#39;col_val2&#39;}</span>
 </pre></div>
 </div>
 <p>We may also get a slice (or subrange) of the columns in a row. To do this,
 use the <cite>column_start</cite> and <cite>column_finish</cite> parameters.  One or both of these may
 be left empty to allow the slice to extend to one or both ends.
-Note that <cite>column_finish</cite> is inclusive. Assuming we&#8217;ve inserted several
-columns with names &#8216;1&#8217; through &#8216;9&#8217;, we can do the following:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="n">column_start</span><span class="o">=</span><span class="s">&#39;5&#39;</span><span class="p">,</span> <span class="n">column_finish</span><span class="o">=</span><span class="s">&#39;7&#39;</span><span class="p">)</span>
-<span class="go">{&#39;5&#39;:&#39;foo&#39;, &#39;6&#39;:&#39;bar&#39;, &#39;7&#39;:&#39;baz&#39;}</span>
+Note that <cite>column_finish</cite> is inclusive.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">):</span> <span class="s">&#39;val&#39;</span><span class="p">})</span>
+<span class="gp">...</span>
+<span class="go">1302542571215334</span>
+<span class="go">1302542571218485</span>
+<span class="go">1302542571220599</span>
+<span class="go">1302542571221991</span>
+<span class="go">1302542571223388</span>
+<span class="go">1302542571224629</span>
+<span class="go">1302542571225859</span>
+<span class="go">1302542571227029</span>
+<span class="go">1302542571228472</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="n">column_start</span><span class="o">=</span><span class="s">&#39;5&#39;</span><span class="p">,</span> <span class="n">column_finish</span><span class="o">=</span><span class="s">&#39;7&#39;</span><span class="p">)</span>
+<span class="go">{&#39;5&#39;: &#39;val&#39;, &#39;6&#39;: &#39;val&#39;, &#39;7&#39;: &#39;val&#39;}</span>
 </pre></div>
 </div>
 <p>Sometimes you want to get columns in reverse sorted order.  A common
@@ -167,18 +235,15 @@ If you think of the columns as being sorted from left to right, when
 <cite>column_reversed</cite> is <tt class="xref docutils literal"><span class="pre">True</span></tt>, <cite>column_start</cite> will determine the right
 end of the range while <cite>column_finish</cite> will determine the left.</p>
 <p>Here&#8217;s an example of getting the last three columns in a row:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">):</span> <span class="s">&#39;val&#39;</span><span class="p">}</span>
-<span class="gp">...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="n">column_reversed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">column_count</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="go">{&#39;20&#39;: &#39;val&#39;, &#39;19&#39;: &#39;val&#39;, &#39;18&#39;: &#39;val&#39;}</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="n">column_reversed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">column_count</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">{&#39;9&#39;: &#39;val&#39;, &#39;8&#39;: &#39;val&#39;, &#39;7&#39;: &#39;val&#39;}</span>
 </pre></div>
 </div>
 <p>There are a few ways to get multiple rows at the same time.
 The first is to specify them by name using
 <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.multiget" title="pycassa.columnfamily.ColumnFamily.multiget"><tt class="xref py py-meth docutils literal"><span class="pre">multiget()</span></tt></a>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">multiget</span><span class="p">([</span><span class="s">&#39;row_key1&#39;</span><span class="p">,</span> <span class="s">&#39;row_key2&#39;</span><span class="p">])</span>
-<span class="go">{&#39;row_key1&#39;: {&#39;name&#39;:&#39;val&#39;}, &#39;row_key2&#39;: {&#39;name&#39;:&#39;val&#39;}}</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">multiget</span><span class="p">([</span><span class="s">&#39;row1&#39;</span><span class="p">,</span> <span class="s">&#39;row2&#39;</span><span class="p">])</span>
+<span class="go">{&#39;row1&#39;: {&#39;name1&#39;: &#39;val1&#39;, &#39;name2&#39;: &#39;val2&#39;}, &#39;row_key2&#39;: {&#39;foo&#39;: &#39;bar&#39;}}</span>
 </pre></div>
 </div>
 <p>Another way is to get a range of keys at once by using
@@ -199,7 +264,7 @@ with keys &#8216;row_key1&#8217; through &#8216;row_key9&#8217;, we can do this:
 <p class="last">Cassandra must be using an OrderPreservingPartitioner for you to be
 able to get a meaningful range of rows; the default, RandomPartitioner,
 stores rows in the order of the MD5 hash of their keys. See
-<a class="reference external" href="http://www.riptano.com/docs/0.6/operations/clustering#partitioners">http://www.riptano.com/docs/0.6/operations/clustering#partitioners</a>.</p>
+<a class="reference external" href="http://www.riptano.com/docs/0.7/operations/clustering#partitioners">http://www.riptano.com/docs/0.7/operations/clustering#partitioners</a>.</p>
 </div>
 <p>The last way to get multiple rows at a time is to take advantage of
 secondary indexes by using <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_indexed_slices" title="pycassa.columnfamily.ColumnFamily.get_indexed_slices"><tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt></a>,
@@ -262,16 +327,16 @@ add an extra level to the dictionary:</p>
 you to be selective about what subcolumns you get from a single
 super column.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;Letters&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;lowercase&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;lowercase&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">:</span> <span class="s">&#39;2&#39;</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">:</span> <span class="s">&#39;3&#39;</span><span class="p">}})</span>
 <span class="go">1354491239132744</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="n">super_column</span><span class="o">=</span><span class="s">&#39;lowercase&#39;</span><span class="p">)</span>
-<span class="go">{&#39;supercol1&#39;: {&#39;a&#39;: 1: &#39;b&#39;: 2, &#39;c&#39;: 3}}</span>
+<span class="go">{&#39;supercol1&#39;: {&#39;a&#39;: &#39;1&#39;: &#39;b&#39;: &#39;2&#39;, &#39;c&#39;: &#39;3&#39;}}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="n">super_column</span><span class="o">=</span><span class="s">&#39;lowercase&#39;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">])</span>
-<span class="go">{&#39;supercol1&#39;: {&#39;a&#39;: 1: &#39;b&#39;: 2}}</span>
+<span class="go">{&#39;supercol1&#39;: {&#39;a&#39;: &#39;1&#39;: &#39;b&#39;: &#39;2&#39;}}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="n">super_column</span><span class="o">=</span><span class="s">&#39;lowercase&#39;</span><span class="p">,</span> <span class="n">column_start</span><span class="o">=</span><span class="s">&#39;b&#39;</span><span class="p">)</span>
-<span class="go">{&#39;supercol1&#39;: {&#39;b&#39;: 1: &#39;c&#39;: 2}}</span>
+<span class="go">{&#39;supercol1&#39;: {&#39;b&#39;: &#39;1&#39;: &#39;c&#39;: &#39;2&#39;}}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="n">super_column</span><span class="o">=</span><span class="s">&#39;lowercase&#39;</span><span class="p">,</span> <span class="n">column_finish</span><span class="o">=</span><span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="n">column_reversed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-<span class="go">{&#39;supercol1&#39;: {&#39;c&#39;: 2, &#39;b&#39;: 1}}</span>
+<span class="go">{&#39;supercol1&#39;: {&#39;c&#39;: &#39;2&#39;, &#39;b&#39;: &#39;1&#39;}}</span>
 </pre></div>
 </div>
 </div>
@@ -362,7 +427,7 @@ columns for some time range or to create a column name or value for some
 specific time.</p>
 <p>To make this easier, if a <tt class="xref py py-class docutils literal"><span class="pre">datetime</span></tt> object or a timestamp with the
 same precision as the output of <tt class="docutils literal"><span class="pre">time.time()</span></tt> is passed where a TimeUUID
-is expected, <strong>pycassa</strong> will convert that into a UUID with an equivalent
+is expected, <strong>pycassa</strong> will convert that into a <tt class="xref py py-class docutils literal"><span class="pre">uuid.UUID</span></tt> with an equivalent
 timestamp component.</p>
 <p>Suppose we have something like Twissandra&#8217;s public timeline but with TimeUUIDs
 for column names. If we want to get all tweets that happened yesterday, we
@@ -541,16 +606,6 @@ instances of the supplied class when possible.</p>
 </pre></div>
 </div>
 </div>
-<div class="section" id="keyspace-and-column-family-creation-and-alteration">
-<h2>Keyspace and Column Family Creation and Alteration<a class="headerlink" href="#keyspace-and-column-family-creation-and-alteration" title="Permalink to this headline">¶</a></h2>
-<p>Keyspaces and column families may be created, altered,
-and dropped using <a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager" title="pycassa.system_manager.SystemManager"><tt class="xref py py-class docutils literal"><span class="pre">pycassa.system_manager.SystemManager</span></tt></a>. Additionally,
-indexes may be created and dropped using this class as well.</p>
-<p>Although most of SystemManager&#8217;s methods may be used in a program,
-it is recommended that they be used manually with a tool like
-<a class="reference internal" href="pycassa_shell.html#pycassa-shell"><em>pycassaShell</em></a>. There is a
-<a class="reference internal" href="pycassa_shell.html#pycassa-shell-sys-man"><em>provided example</em></a> of this usage.</p>
-</div>
 </div>
 
 
@@ -563,6 +618,11 @@ it is recommended that they be used manually with a tool like
   <ul>
 <li><a class="reference internal" href="#">Tutorial</a><ul>
 <li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#creating-a-keyspace-and-column-families">Creating a Keyspace and Column Families</a><ul>
+<li><a class="reference internal" href="#using-cassandra-cli">Using cassandra-cli</a></li>
+<li><a class="reference internal" href="#using-pycassashell">Using pycassaShell</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#connecting-to-cassandra">Connecting to Cassandra</a></li>
 <li><a class="reference internal" href="#getting-a-columnfamily">Getting a ColumnFamily</a></li>
 <li><a class="reference internal" href="#inserting-data">Inserting Data</a></li>
@@ -576,7 +636,6 @@ it is recommended that they be used manually with a tool like
 <li><a class="reference internal" href="#indexes">Indexes</a></li>
 <li><a class="reference internal" href="#connection-pooling">Connection Pooling</a></li>
 <li><a class="reference internal" href="#class-mapping-with-column-family-map">Class Mapping with Column Family Map</a></li>
-<li><a class="reference internal" href="#keyspace-and-column-family-creation-and-alteration">Keyspace and Column Family Creation and Alteration</a></li>
 </ul>
 </li>
 </ul>
