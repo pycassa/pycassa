@@ -86,7 +86,7 @@ tie with <cite>cls</cite>.  This <tt class="xref py py-class docutils literal"><
 <cite>raw_columns</cite> field in requests.</p>
 <dl class="method">
 <dt id="pycassa.columnfamilymap.ColumnFamilyMap.get">
-<tt class="descname">get</tt><big>(</big><em>key[, columns][, super_column][, read_consistency_level]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap.get" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get</tt><big>(</big><em>key[, columns][, column_start][, column_finish][, column_count][, column_reversed][, super_column][, read_consistency_level]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates one or more instances of <cite>cls</cite> from the row with key <cite>key</cite>.</p>
 <p>The fields that are retreived may be specified using <cite>columns</cite>, which
 should be a list of column names.</p>
@@ -97,11 +97,12 @@ specifies which super columns will be used to create instances
 of <cite>cls</cite>.  If the <cite>super_column</cite> parameter <em>is</em> supplied, only
 one instance of <cite>cls</cite> will be returned; if <cite>columns</cite> is specified
 in this case, only those attributes listed in <cite>columns</cite> will be fetched.</p>
+<p>All other parameters behave the same as in <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily.get" title="pycassa.columnfamily.ColumnFamily.get"><tt class="xref py py-meth docutils literal"><span class="pre">ColumnFamily.get()</span></tt></a>.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pycassa.columnfamilymap.ColumnFamilyMap.multiget">
-<tt class="descname">multiget</tt><big>(</big><em>keys[, columns][, super_column][, read_consistency_level]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap.multiget" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">multiget</tt><big>(</big><em>keys[, columns][, column_start][, column_finish][, column_count][, column_reversed][, super_column][, read_consistency_level]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap.multiget" title="Permalink to this definition">¶</a></dt>
 <dd><p>Like <a class="reference internal" href="#pycassa.columnfamilymap.ColumnFamilyMap.get" title="pycassa.columnfamilymap.ColumnFamilyMap.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a>, but a list of keys may be specified.</p>
 <p>The result of multiget will be a dictionary where the keys
 are the keys from the <cite>keys</cite> argument, minus any missing rows.
@@ -119,13 +120,13 @@ if <a class="reference internal" href="#pycassa.columnfamilymap.ColumnFamilyMap.
 
 <dl class="method">
 <dt id="pycassa.columnfamilymap.ColumnFamilyMap.get_range">
-<tt class="descname">get_range</tt><big>(</big><em>[start][, finish][, row_count][, columns][, super_column][, read_consistency_level][, buffer_size]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap.get_range" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_range</tt><big>(</big><em>[start][, finish][, columns][, column_start][, column_finish][, column_reversed][, column_count][, row_count][, super_column][, read_consistency_level][, buffer_size]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap.get_range" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get an iterator over instances in a specified key range.</p>
 <p>Like <a class="reference internal" href="#pycassa.columnfamilymap.ColumnFamilyMap.multiget" title="pycassa.columnfamilymap.ColumnFamilyMap.multiget"><tt class="xref py py-meth docutils literal"><span class="pre">multiget()</span></tt></a>, whether a single instance or multiple
 instances are returned per-row when the column family is a super
 column family depends on what parameters are passed.</p>
 <p>For an explanation of how <a class="reference internal" href="#pycassa.columnfamilymap.ColumnFamilyMap.get_range" title="pycassa.columnfamilymap.ColumnFamilyMap.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a> works and a description
-of the parameters, see <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily.get_range" title="pycassa.columnfamily.ColumnFamily.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.columnfamily.ColumnFamily.get_range()</span></tt></a>.</p>
+of the parameters, see <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily.get_range" title="pycassa.columnfamily.ColumnFamily.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">ColumnFamily.get_range()</span></tt></a>.</p>
 <p>Example usage with a standard column family:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ConnectionPool</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">usercf</span> <span class="o">=</span>  <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;Users&#39;</span><span class="p">)</span>
@@ -141,7 +142,7 @@ of the parameters, see <a class="reference internal" href="columnfamily.html#pyc
 
 <dl class="method">
 <dt id="pycassa.columnfamilymap.ColumnFamilyMap.get_indexed_slices">
-<tt class="descname">get_indexed_slices</tt><big>(</big><em>index_clause[,instance][, columns][, super_column][, read_consistency_level][, buffer_size]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap.get_indexed_slices" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_indexed_slices</tt><big>(</big><em>index_clause[, columns][, column_start][, column_finish][, column_reversed][, column_count][, include_timestamp][, read_consistency_level][, buffer_size]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap.get_indexed_slices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fetches a list of instances that satisfy an index clause. Similar
 to <a class="reference internal" href="#pycassa.columnfamilymap.ColumnFamilyMap.get_range" title="pycassa.columnfamilymap.ColumnFamilyMap.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a>, but uses an index clause instead of a key range.</p>
 <p>If <cite>instance</cite> is supplied, its values will be used for each
