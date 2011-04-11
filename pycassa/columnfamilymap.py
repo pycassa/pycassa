@@ -42,7 +42,7 @@ class ColumnFamilyMap(object):
         Instances of `cls` are returned from :meth:`get()`, :meth:`multiget()`,
         :meth:`get_range()` and :meth:`get_indexed_slices()`.
 
-        `column_family` is a :class:`~pycassa.columnfamily.ColumnFamily` to
+        `column_family` is a :class:`~.ColumnFamily` to
         tie with `cls`.  This :class:`ColumnFamily` should almost always have
         `autopack_names` and `autopack_values` set to ``False``.
 
@@ -91,6 +91,8 @@ class ColumnFamilyMap(object):
         of `cls`.  If the `super_column` parameter *is* supplied, only
         one instance of `cls` will be returned; if `columns` is specified
         in this case, only those attributes listed in `columns` will be fetched.
+
+        All other parameters behave the same as in :meth:`.ColumnFamily.get()`.
 
         """
         if 'columns' not in kwargs and not self.column_family.super and not self.raw_columns:
@@ -166,7 +168,7 @@ class ColumnFamilyMap(object):
         column family depends on what parameters are passed.
 
         For an explanation of how :meth:`get_range` works and a description
-        of the parameters, see :meth:`pycassa.columnfamily.ColumnFamily.get_range()`.
+        of the parameters, see :meth:`.ColumnFamily.get_range()`.
 
         Example usage with a standard column family:
 
