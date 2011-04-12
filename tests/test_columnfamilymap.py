@@ -19,6 +19,8 @@ def setup_module():
     sys_man = SystemManager()
 
 def teardown_module():
+    cf.truncate()
+    indexed_cf.truncate()
     pool.dispose()
 
 class TestUTF8(object):

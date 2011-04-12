@@ -16,6 +16,8 @@ def setup_module():
     sys_man = SystemManager()
 
 def teardown_module():
+    cf.truncate()
+    indexed_cf.truncate()
     pool.dispose()
 
 class TestDict(dict):
@@ -25,6 +27,8 @@ class TestColumnFamily(unittest.TestCase):
 
     def tearDown(self):
         for key, columns in cf.get_range():
+            cf.remove(key)
+        for key, columns in indexed_cf.get_range():
             cf.remove(key)
 
     def test_empty(self):
