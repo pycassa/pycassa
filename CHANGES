@@ -1,3 +1,25 @@
+Changes in Version 1.0.8
+
+     * Pack IndexExpression values in get_indexed_slices() that are supplied
+       through the IndexClause instead of just the instance parameter.
+     * Column names and values which use Cassandra’s IntegerType are unpacked
+       as though they are in a BigInteger-like format. This is (backwards)
+       compatible with the format that pycassa uses to pack IntegerType data.
+       This fixes an incompatibility with the format that cassandra-cli and
+       other clients use to pack IntegerType data.
+     * Restore Python 2.5 compatibility that was broken through out of order
+       keyword arguments in ConnectionWrapper.
+     * Pack column_start and column_finish arguments in ColumnFamily *get*()
+       methods when the super_column parameter is used.
+     * Issue a DeprecationWarning when a method, parameter, or class that has
+       been deprecated is used. Most of these have been deprecated for several
+       releases, but no warnings were issued until now.
+     * Deprecations are now split into separate sections for each release in the changelog.
+
+   Deprecated in Version 1.0.8
+
+     * The instance parameter of ColumnFamilyMap.get_indexed_slices()
+
 Changes in Version 1.0.7
 
      * Catch KeyError in pycassa.columnfamily.ColumnFamily.multiget() empty row
@@ -29,6 +51,10 @@ Changes in Version 1.0.6
       Long uses big-endian encoding, which is compatible with Cassandra’s LongType,
       while Int64 used little-endian encoding.
 
+  Deprecated in Version 1.0.6
+
+    * pycassa.types.Int64 has been deprecated in favor of pycassa.types.Long
+
 Changes in Version 1.0.5
 
     * Assume port 9160 if only a hostname is given
@@ -47,12 +73,15 @@ Changes in Version 1.0.4
     * Added pycassa.system_manager.SystemManager.describe_partitioner()
     * Added pycassa.system_manager.SystemManager.describe_snitch()
     * Added pycassa.system_manager.SystemManager.get_keyspace_properties()
-    * Renamed pycassa.system_manager.SystemManager.get_keyspace_description()
-      to pycassa.system_manager.SystemManager.get_keyspace_column_families()
-      and deprecated the previous name
     * Moved pycassa.system_manager.SystemManager.describe_keyspace() and
       pycassa.system_manager.SystemManager.describe_column_family() to
       pycassaShell describe_keyspace() and describe_column_family()
+
+  Deprecated in Version 1.0.4
+
+    * Renamed pycassa.system_manager.SystemManager.get_keyspace_description()
+      to pycassa.system_manager.SystemManager.get_keyspace_column_families()
+      and deprecated the previous name
 
 Changes in Version 1.0.3
 
@@ -87,6 +116,11 @@ Changes in Version 1.0.0
     * Bundled OrderedDict and set it as the default dictionary class for column families
     * Provide better TypeError feedback when columns are the wrong type
     * Use Thrift API 19.4.0
+
+  Deprecated in Version 1.0.0
+
+    * ColumnFamilyMap.get_count() has been deprecated. Use
+      ColumnFamily.get_count() instead.
 
 Changes in Version 0.5.4
 
