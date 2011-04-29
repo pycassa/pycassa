@@ -55,8 +55,9 @@ class Connection(Cassandra.Client):
             self.login(request)
 
     def set_keyspace(self, keyspace):
+        if not self.keyspace or keyspace != self.keyspace:
+            super(Connection, self).set_keyspace(keyspace)
         self.keyspace = keyspace
-        super(Connection, self).set_keyspace(keyspace)
 
     def close(self):
         self.transport.close()
