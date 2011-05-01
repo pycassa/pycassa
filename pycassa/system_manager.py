@@ -1,9 +1,10 @@
 import time
 import warnings
 
-from connection import Connection
+from pycassa.connection import Connection
 from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef,\
                                      InvalidRequestException
+from pycassa.cassandra.constants import *
 import pycassa.util as util
 from logging.pycassa_logger import *
 
