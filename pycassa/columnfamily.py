@@ -149,20 +149,6 @@ class ColumnFamily(object):
                 ret[self._unpack_name(col.name)] = self._col_to_dict(col, include_timestamp)
         return ret
 
-    def _rcl(self, alternative):
-        """Helper function that returns self.read_consistency_level if
-        alternative is None, otherwise returns alternative"""
-        if alternative is None:
-            return self.read_consistency_level
-        return alternative
-
-    def _wcl(self, alternative):
-        """Helper function that returns self.write_consistency_level
-        if alternative is None, otherwise returns alternative"""
-        if alternative is None:
-            return self.write_consistency_level
-        return alternative
-
     def _create_column_path(self, super_column=None, column=None):
         return ColumnPath(self.column_family,
                           self._pack_name(super_column, is_supercol_name=True),
@@ -317,7 +303,8 @@ class ColumnFamily(object):
             cp = self._create_column_path(super_column, column)
             try:
                 self._obtain_connection()
-                col_or_super = self._tlocal.client.get(key, cp, self._rcl(read_consistency_level))
+                col_or_super = self._tlocal.client.get(
+                    key, cp, read_consistency_level or self.read_consistency_level)
             finally:
                 self._release_connection()
             return self._cosc_to_dict([col_or_super], include_timestamp)
@@ -328,8 +315,8 @@ class ColumnFamily(object):
 
             try:
                 self._obtain_connection()
-                list_col_or_super = self._tlocal.client.get_slice(key, cp, sp,
-                                                              self._rcl(read_consistency_level))
+                list_col_or_super = self._tlocal.client.get_slice(
+                    key, cp, sp, read_consistency_level or self.read_consistency_level)
             finally:
                 self._release_connection()
 
@@ -387,8 +374,8 @@ class ColumnFamily(object):
             clause.start_key = last_key
             try:
                 self._obtain_connection()
-                key_slices = self._tlocal.client.get_indexed_slices(cp, clause, sp,
-                                                            self._rcl(read_consistency_level))
+                key_slices = self._tlocal.client.get_indexed_slices(
+                    cp, clause, sp, read_consistency_level or self.read_consistency_level)
             finally:
                 self._release_connection()
 
@@ -429,8 +416,8 @@ class ColumnFamily(object):
 
         try:
             self._obtain_connection()
-            keymap = self._tlocal.client.multiget_slice(keys, cp, sp,
-                                                self._rcl(read_consistency_level))
+            keymap = self._tlocal.client.multiget_slice(
+                keys, cp, sp, read_consistency_level or self.read_consistency_level)
         finally:
             self._release_connection()
 
@@ -477,8 +464,8 @@ class ColumnFamily(object):
 
         try:
             self._obtain_connection()
-            ret = self._tlocal.client.get_count(key, cp, sp,
-                                         self._rcl(read_consistency_level))
+            ret = self._tlocal.client.get_count(
+                key, cp, sp, read_consistency_level or self.read_consistency_level)
         finally:
             self._release_connection()
         return ret
@@ -502,8 +489,8 @@ class ColumnFamily(object):
 
         try:
             self._obtain_connection()
-            ret = self._tlocal.client.multiget_count(keys, cp, sp,
-                                         self._rcl(read_consistency_level))
+            ret = self._tlocal.client.multiget_count(
+                keys, cp, sp, read_consistency_level or self.read_consistency_level)
         finally:
             self._release_connection()
         return ret
@@ -555,8 +542,8 @@ class ColumnFamily(object):
             key_range = KeyRange(start_key=last_key, end_key=finish, count=buffer_size)
             try:
                 self._obtain_connection()
-                key_slices = self._tlocal.client.get_range_slices(cp, sp, key_range,
-                                                         self._rcl(read_consistency_level))
+                key_slices = self._tlocal.client.get_range_slices(
+                    cp, sp, key_range, read_consistency_level or self.read_consistency_level)
             finally:
                 self._release_connection()
             # This may happen if nothing was ever inserted
@@ -616,7 +603,8 @@ class ColumnFamily(object):
             column = Column(colname, colval, timestamp, ttl)
             try:
                 self._obtain_connection()
-                self._tlocal.client.insert(key, cp, column, self._wcl(write_consistency_level))
+                self._tlocal.client.insert(key, cp, column,
+                    write_consistency_level or self.write_consistency_level)
             finally:
                 self._release_connection()
             return timestamp
@@ -649,7 +637,7 @@ class ColumnFamily(object):
         try:
             self._obtain_connection()
             self._tlocal.client.add(key, cp, CounterColumn(column, value),
-                                    self._wcl(write_consistency_level))
+                                    write_consistency_level or self.write_consistency_level)
         finally:
             self._release_connection()
 
@@ -691,7 +679,8 @@ class ColumnFamily(object):
 
         """
 
-        return CfMutator(self, queue_size, self._wcl(write_consistency_level))
+        return CfMutator(self, queue_size,
+                         write_consistency_level or self.write_consistency_level)
 
     def truncate(self):
         """
