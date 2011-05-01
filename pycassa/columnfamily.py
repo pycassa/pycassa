@@ -8,7 +8,7 @@ manipulation of data inside Cassandra.
 from pycassa.cassandra.ttypes import Column, ColumnOrSuperColumn,\
     ColumnParent, ColumnPath, ConsistencyLevel, NotFoundException,\
     SlicePredicate, SliceRange, SuperColumn, KeyRange,\
-    IndexExpression, IndexClause
+    IndexExpression, IndexClause, CounterColumn
 import pycassa.util as util
 
 import time
@@ -648,6 +648,17 @@ class ColumnFamily(object):
             batch.insert(key, columns, timestamp=timestamp, ttl=ttl)
         batch.send()
         return timestamp
+
+    def add(self, key, column, value=1, super_column=None, write_consistency_level=None):
+        cp = self._create_column_parent(super_column)
+        column = self._pack_name(column)
+        try:
+            self._obtain_connection()
+            self._tlocal.client.add(key, cp, CounterColumn(column, value),
+                                    self._wcl(write_consistency_level))
+        finally:
+            self._release_connection()
+
 
     def remove(self, key, columns=None, super_column=None,
                write_consistency_level=None, timestamp=None):
