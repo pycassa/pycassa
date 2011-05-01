@@ -126,33 +126,27 @@ class ColumnFamily(object):
                 for name, cdef in col_fam.column_metadata.items():
                     self.col_type_dict[name] = util.extract_type_name(cdef.validation_class)
 
-    def _convert_Column_to_base(self, column, include_timestamp):
+    def _col_to_dict(self, column, include_timestamp):
         value = self._unpack_value(column.value, column.name)
         if include_timestamp:
             return (value, column.timestamp)
         return value
 
-    def _convert_SuperColumn_to_base(self, super_column, include_timestamp):
+    def _scol_to_dict(self, super_column, include_timestamp):
         ret = self.dict_class()
         for column in super_column.columns:
-            ret[self._unpack_name(column.name)] = self._convert_Column_to_base(column, include_timestamp)
+            ret[self._unpack_name(column.name)] = self._col_to_dict(column, include_timestamp)
         return ret
 
-    def _convert_ColumnOrSuperColumns_to_dict_class(self, list_col_or_super, include_timestamp):
+    def _cosc_to_dict(self, list_col_or_super, include_timestamp):
         ret = self.dict_class()
         for col_or_super in list_col_or_super:
             if col_or_super.super_column is not None:
                 col = col_or_super.super_column
-                ret[self._unpack_name(col.name, is_supercol_name=True)] = self._convert_SuperColumn_to_base(col, include_timestamp)
+                ret[self._unpack_name(col.name, is_supercol_name=True)] = self._scol_to_dict(col, include_timestamp)
             else:
                 col = col_or_super.column
-                ret[self._unpack_name(col.name)] = self._convert_Column_to_base(col, include_timestamp)
-        return ret
-
-    def _convert_KeySlice_list_to_dict_class(self, keyslice_list, include_timestamp):
-        ret = self.dict_class()
-        for keyslice in keyslice_list:
-            ret[keyslice.key] = self._convert_ColumnOrSuperColumns_to_dict_class(keyslice.columns, include_timestamp)
+                ret[self._unpack_name(col.name)] = self._col_to_dict(col, include_timestamp)
         return ret
 
     def _rcl(self, alternative):
@@ -326,7 +320,7 @@ class ColumnFamily(object):
                 col_or_super = self._tlocal.client.get(key, cp, self._rcl(read_consistency_level))
             finally:
                 self._release_connection()
-            return self._convert_ColumnOrSuperColumns_to_dict_class([col_or_super], include_timestamp)
+            return self._cosc_to_dict([col_or_super], include_timestamp)
         else:
             cp = self._create_column_parent(super_column)
             sp = self._create_slice_predicate(columns, column_start, column_finish,
@@ -341,7 +335,7 @@ class ColumnFamily(object):
 
             if len(list_col_or_super) == 0:
                 raise NotFoundException()
-            return self._convert_ColumnOrSuperColumns_to_dict_class(list_col_or_super, include_timestamp)
+            return self._cosc_to_dict(list_col_or_super, include_timestamp)
 
     def get_indexed_slices(self, index_clause, columns=None, column_start="", column_finish="",
                            column_reversed=False, column_count=100, include_timestamp=False,
@@ -405,7 +399,7 @@ class ColumnFamily(object):
                 # because it will be a duplicate.
                 if j == 0 and i != 0:
                     continue
-                yield (key_slice.key, self._convert_ColumnOrSuperColumns_to_dict_class(
+                yield (key_slice.key, self._cosc_to_dict(
                         key_slice.columns, include_timestamp))
 
                 count += 1
@@ -450,7 +444,7 @@ class ColumnFamily(object):
         for key, columns in keymap.iteritems():
             if len(columns) > 0:
                 non_empty_keys.append(key)
-                ret[key] = self._convert_ColumnOrSuperColumns_to_dict_class(columns, include_timestamp)
+                ret[key] = self._cosc_to_dict(columns, include_timestamp)
 
         for key in keys:
             if key not in non_empty_keys:
@@ -574,7 +568,7 @@ class ColumnFamily(object):
                 if j == 0 and i != 0:
                     continue
                 yield (key_slice.key,
-                       self._convert_ColumnOrSuperColumns_to_dict_class(key_slice.columns, include_timestamp))
+                       self._cosc_to_dict(key_slice.columns, include_timestamp))
                 count += 1
                 if row_count is not None and count >= row_count:
                     return
