@@ -12,9 +12,12 @@ def setup_package():
         sys.create_column_family(TEST_KS, 'Super1', super=True)
         sys.create_column_family(TEST_KS, 'Indexed1')
         sys.create_index(TEST_KS, 'Indexed1', 'birthdate', LONG_TYPE)
-    except:
-        sys.drop_keyspace(TEST_KS)
-        raise
+    except Exception, e:
+        try:
+            sys.drop_keyspace(TEST_KS)
+        except:
+            pass
+        raise e
     sys.close()
 
 def teardown_package():
