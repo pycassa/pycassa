@@ -138,15 +138,27 @@ class ColumnFamily(object):
             ret[self._unpack_name(column.name)] = self._col_to_dict(column, include_timestamp)
         return ret
 
+    def _scounter_to_dict(self, counter_super_column):
+        ret = self.dict_class()
+        for counter in counter_super_column.columns:
+            ret[self._unpack_name(counter.name)] = counter.value
+        return ret
+
     def _cosc_to_dict(self, list_col_or_super, include_timestamp):
         ret = self.dict_class()
-        for col_or_super in list_col_or_super:
-            if col_or_super.super_column is not None:
-                col = col_or_super.super_column
-                ret[self._unpack_name(col.name, is_supercol_name=True)] = self._scol_to_dict(col, include_timestamp)
-            else:
-                col = col_or_super.column
+        for cosc in list_col_or_super:
+            if cosc.column:
+                col = cosc.column
                 ret[self._unpack_name(col.name)] = self._col_to_dict(col, include_timestamp)
+            elif cosc.counter_column:
+                counter = csoc.counter_column
+                ret[self._unpack_name(counter.name)] = counter.value
+            elif cosc.super_column:
+                scol = cosc.super_column
+                ret[self._unpack_name(scol.name, True)] = self._scol_to_dict(scol, include_timestamp)
+            else:
+                scounter = cosc.counter_super_column
+                ret[self._unpack_name(scounter.name, True)] = self._scounter_to_dict(scol, False)
         return ret
 
     def _column_path(self, super_column=None, column=None):
