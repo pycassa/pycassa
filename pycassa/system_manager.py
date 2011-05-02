@@ -37,6 +37,8 @@ TIME_UUID_TYPE = 'TimeUUIDType'
 """ Stores data as a version 1 UUID """
 LEXICAL_UUID_TYPE = 'LexicalUUIDType'
 """ Stores data as a non-version 1 UUID """
+COUNTER_COLUMN_TYPE = 'CounterColumnType'
+""" A 64bit counter column """
 
 KEYS_INDEX = IndexType.KEYS
 """ A secondary index type where each indexed value receives its own row """
