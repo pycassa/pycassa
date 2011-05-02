@@ -105,17 +105,6 @@ class SystemManager(object):
                 cf_def.column_metadata = new_metadata
         return cf_defs
 
-    def get_keyspace_description(self, *args, **kwargs):
-        """
-        Alias for :meth:`get_keyspace_column_families()`
-
-        .. deprecated:: 1.0.4
-            Use :meth:`get_keyspace_column_families()`
-        """
-        warnings.warn("SystemManager.get_keyspace_description() is deprecated; " +
-                      "use get_keyspace_column_families instead.", DeprecationWarning)
-        return self.get_keyspace_column_families(*args, **kwargs)
-
     def get_keyspace_properties(self, keyspace):
         """
         Gets a keyspace's properties.
