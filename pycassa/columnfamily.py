@@ -655,7 +655,7 @@ class ColumnFamily(object):
 
 
     def remove(self, key, columns=None, super_column=None,
-               write_consistency_level=None, timestamp=None):
+               write_consistency_level=None, timestamp=None, counter=None):
         """
         Remove a specified row or a set of columns within the row with key `key`.
 
@@ -679,6 +679,15 @@ class ColumnFamily(object):
         batch.remove(key, columns, super_column, timestamp)
         batch.send()
         return timestamp
+
+    def remove_counter(self, key, column, super_column=None, write_consistency_level=None):
+        cp = self._column_path(super_column, column)
+        consistency = write_consistency_level or self.write_consistency_level
+        try:
+            self._obtain_connection()
+            self._tlocal.client.remove_counter(key, cp, consistency)
+        finally:
+            self._release_connection()
 
     def batch(self, queue_size=100, write_consistency_level=None):
         """

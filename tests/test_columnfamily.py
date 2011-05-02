@@ -319,6 +319,18 @@ class TestColumnFamily(unittest.TestCase):
         cf.remove(key)
         assert_raises(NotFoundException, cf.get, key)
 
+    def test_remove_counter(self):
+        if not have_counters:
+            raise SkipTest('Cassandra 0.7 does not support counters')
+
+        key = 'test_remove_counter'
+        counter_cf.add(key, 'col')
+        result = counter_cf.get(key)
+        assert_equal(result['col'], 1)
+
+        counter_cf.remove_counter(key, 'col')
+        assert_raises(NotFoundException, cf.get, key)
+
     def test_dict_class(self):
         key = 'TestColumnFamily.test_dict_class'
         cf.insert(key, {'1': 'val1'})
@@ -534,3 +546,16 @@ class TestSuperColumnFamily(unittest.TestCase):
         assert_equal(scf.get_count(key, super_column='2'), 2)
         scf.remove(key, super_column='2', columns=['sub2'])
         assert_equal(scf.get_count(key, super_column='2'), 1)
+
+    def test_remove_counter(self):
+        if not have_counters:
+            raise SkipTest('Cassandra 0.7 does not support counters')
+
+        key = 'test_remove_counter'
+        counter_scf.add(key, 'col', super_column='scol')
+        result = counter_scf.get(key, super_column='scol')
+        assert_equal(result['col'], 1)
+
+        counter_scf.remove_counter(key, 'col', super_column='scol')
+        assert_raises(NotFoundException, scf.get, key)
+
