@@ -189,19 +189,10 @@ class ColumnFamilyMap(object):
                 combined = self.combine_columns(columns)
                 yield create_instance(self.cls, key=key, **combined)
 
-    def get_indexed_slices(self, instance=None, *args, **kwargs):
+    def get_indexed_slices(self, *args, **kwargs):
         """
         Fetches a list of instances that satisfy an index clause. Similar
         to :meth:`get_range()`, but uses an index clause instead of a key range.
-
-        If `instance` is supplied, its values will be used for each
-        :class:`IndexExpression` where the name matches one of the instance's
-        attribute names. This makes packing the values in the :class:`IndexExpresssion`
-        simpler when possible.
-
-        .. deprecated:: 1.0.7
-            The instance parameter is deprecated. IndexExpression values should only
-            be passed through `index_clause`.
 
         See :meth:`.ColumnFamily.get_indexed_slices()` for
         an explanation of the parameters.
@@ -214,18 +205,10 @@ class ColumnFamilyMap(object):
         if 'columns' not in kwargs and not self.raw_columns:
             kwargs['columns'] = self.columns.keys()
 
-        if instance is not None:
-            warnings.warn("ColumnFamilyMap.get_indexed_slice()'s 'instance' parameter is deprecated.",
-                          DeprecationWarning)
-
         # Autopack the index clause's values
         new_exprs = []
         for expr in kwargs['index_clause'].expressions:
-            if instance is not None:
-                val = instance.__dict__[expr.column_name]
-            else:
-                val = expr.value
-            packed_val = self.columns[expr.column_name].pack(val)
+            packed_val = self.columns[expr.column_name].pack(expr.value)
             new_expr = IndexExpression(expr.column_name, expr.op, value=packed_val)
             new_exprs.append(new_expr)
         old_clause = kwargs['index_clause']
