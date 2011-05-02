@@ -240,9 +240,13 @@ class SystemManager(object):
 
         """
 
-        ksdef = self._conn.describe_keyspace(keyspace)
+        old_ksdef = self._conn.describe_keyspace(keyspace)
+        ksdef = KsDef(name=old_ksdef.name,
+                      strategy_class=old_ksdef.strategy_class,
+                      strategy_options=old_ksdef.strategy_options,
+                      replication_factor=old_ksdef.replication_factor,
+                      cf_defs=[])
 
-        ksdef.cf_defs = []
         if replication_strategy is not None:
             if replication_strategy.find('.') == -1:
                 ksdef.strategy_class = 'org.apache.cassandra.locator.%s' % replication_strategy
