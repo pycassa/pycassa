@@ -149,17 +149,17 @@ class ColumnFamily(object):
                 ret[self._unpack_name(col.name)] = self._col_to_dict(col, include_timestamp)
         return ret
 
-    def _create_column_path(self, super_column=None, column=None):
+    def _column_path(self, super_column=None, column=None):
         return ColumnPath(self.column_family,
                           self._pack_name(super_column, is_supercol_name=True),
                           self._pack_name(column, False))
 
-    def _create_column_parent(self, super_column=None):
+    def _column_parent(self, super_column=None):
         return ColumnParent(column_family=self.column_family,
                             super_column=self._pack_name(super_column, is_supercol_name=True))
 
-    def _create_slice_predicate(self, columns, column_start, column_finish,
-                                      column_reversed, column_count, super_column=None):
+    def _slice_predicate(self, columns, column_start, column_finish,
+                         column_reversed, column_count, super_column=None):
         is_supercol_name = self.super and super_column is None
         if columns is not None:
             packed_cols = []
@@ -300,7 +300,7 @@ class ColumnFamily(object):
                 super_column = columns[0]
             else:
                 column = columns[0]
-            cp = self._create_column_path(super_column, column)
+            cp = self._column_path(super_column, column)
             try:
                 self._obtain_connection()
                 col_or_super = self._tlocal.client.get(
@@ -309,9 +309,9 @@ class ColumnFamily(object):
                 self._release_connection()
             return self._cosc_to_dict([col_or_super], include_timestamp)
         else:
-            cp = self._create_column_parent(super_column)
-            sp = self._create_slice_predicate(columns, column_start, column_finish,
-                                              column_reversed, column_count, super_column)
+            cp = self._column_parent(super_column)
+            sp = self._slice_predicate(columns, column_start, column_finish,
+                                       column_reversed, column_count, super_column)
 
             try:
                 self._obtain_connection()
@@ -346,9 +346,9 @@ class ColumnFamily(object):
         assert not self.super, "get_indexed_slices() is not " \
                 "supported by super column families"
 
-        cp = self._create_column_parent()
-        sp = self._create_slice_predicate(columns, column_start, column_finish,
-                                          column_reversed, column_count)
+        cp = self._column_parent()
+        sp = self._slice_predicate(columns, column_start, column_finish,
+                                   column_reversed, column_count)
 
         new_exprs = []
         # Pack the values in the index clause expressions
@@ -410,9 +410,9 @@ class ColumnFamily(object):
 
         """
 
-        cp = self._create_column_parent(super_column)
-        sp = self._create_slice_predicate(columns, column_start, column_finish,
-                                          column_reversed, column_count, super_column)
+        cp = self._column_parent(super_column)
+        sp = self._slice_predicate(columns, column_start, column_finish,
+                                   column_reversed, column_count, super_column)
 
         try:
             self._obtain_connection()
@@ -458,9 +458,9 @@ class ColumnFamily(object):
 
         """
 
-        cp = self._create_column_parent(super_column)
-        sp = self._create_slice_predicate(columns, column_start, column_finish,
-                                          False, self.MAX_COUNT, super_column)
+        cp = self._column_parent(super_column)
+        sp = self._slice_predicate(columns, column_start, column_finish,
+                                   False, self.MAX_COUNT, super_column)
 
         try:
             self._obtain_connection()
@@ -483,9 +483,9 @@ class ColumnFamily(object):
 
         """
 
-        cp = self._create_column_parent(super_column)
-        sp = self._create_slice_predicate(columns, column_start, column_finish,
-                                          False, self.MAX_COUNT, super_column)
+        cp = self._column_parent(super_column)
+        sp = self._slice_predicate(columns, column_start, column_finish,
+                                   False, self.MAX_COUNT, super_column)
 
         try:
             self._obtain_connection()
@@ -526,9 +526,9 @@ class ColumnFamily(object):
 
         """
 
-        cp = self._create_column_parent(super_column)
-        sp = self._create_slice_predicate(columns, column_start, column_finish,
-                                          column_reversed, column_count, super_column)
+        cp = self._column_parent(super_column)
+        sp = self._slice_predicate(columns, column_start, column_finish,
+                                   column_reversed, column_count, super_column)
 
         count = 0
         i = 0
@@ -593,10 +593,10 @@ class ColumnFamily(object):
 
             if self.super:
                 super_col = columns.keys()[0]
-                cp = self._create_column_path(super_col)
+                cp = self._column_path(super_col)
                 columns = columns.values()[0]
             else:
-                cp = self._create_column_path()
+                cp = self._column_path()
 
             colname = self._pack_name(columns.keys()[0], False)
             colval = self._pack_value(columns.values()[0], colname)
@@ -632,7 +632,7 @@ class ColumnFamily(object):
         return timestamp
 
     def add(self, key, column, value=1, super_column=None, write_consistency_level=None):
-        cp = self._create_column_parent(super_column)
+        cp = self._column_parent(super_column)
         column = self._pack_name(column)
         try:
             self._obtain_connection()
