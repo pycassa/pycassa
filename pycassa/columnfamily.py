@@ -8,7 +8,7 @@ manipulation of data inside Cassandra.
 from pycassa.cassandra.ttypes import Column, ColumnOrSuperColumn,\
     ColumnParent, ColumnPath, ConsistencyLevel, NotFoundException,\
     SlicePredicate, SliceRange, SuperColumn, KeyRange,\
-    IndexExpression, IndexClause
+    IndexExpression, IndexClause, CounterColumn
 import pycassa.util as util
 
 import time
@@ -126,60 +126,52 @@ class ColumnFamily(object):
                 for name, cdef in col_fam.column_metadata.items():
                     self.col_type_dict[name] = util.extract_type_name(cdef.validation_class)
 
-    def _convert_Column_to_base(self, column, include_timestamp):
+    def _col_to_dict(self, column, include_timestamp):
         value = self._unpack_value(column.value, column.name)
         if include_timestamp:
             return (value, column.timestamp)
         return value
 
-    def _convert_SuperColumn_to_base(self, super_column, include_timestamp):
+    def _scol_to_dict(self, super_column, include_timestamp):
         ret = self.dict_class()
         for column in super_column.columns:
-            ret[self._unpack_name(column.name)] = self._convert_Column_to_base(column, include_timestamp)
+            ret[self._unpack_name(column.name)] = self._col_to_dict(column, include_timestamp)
         return ret
 
-    def _convert_ColumnOrSuperColumns_to_dict_class(self, list_col_or_super, include_timestamp):
+    def _scounter_to_dict(self, counter_super_column):
         ret = self.dict_class()
-        for col_or_super in list_col_or_super:
-            if col_or_super.super_column is not None:
-                col = col_or_super.super_column
-                ret[self._unpack_name(col.name, is_supercol_name=True)] = self._convert_SuperColumn_to_base(col, include_timestamp)
+        for counter in counter_super_column.columns:
+            ret[self._unpack_name(counter.name)] = counter.value
+        return ret
+
+    def _cosc_to_dict(self, list_col_or_super, include_timestamp):
+        ret = self.dict_class()
+        for cosc in list_col_or_super:
+            if cosc.column:
+                col = cosc.column
+                ret[self._unpack_name(col.name)] = self._col_to_dict(col, include_timestamp)
+            elif cosc.counter_column:
+                counter = cosc.counter_column
+                ret[self._unpack_name(counter.name)] = counter.value
+            elif cosc.super_column:
+                scol = cosc.super_column
+                ret[self._unpack_name(scol.name, True)] = self._scol_to_dict(scol, include_timestamp)
             else:
-                col = col_or_super.column
-                ret[self._unpack_name(col.name)] = self._convert_Column_to_base(col, include_timestamp)
+                scounter = cosc.counter_super_column
+                ret[self._unpack_name(scounter.name, True)] = self._scounter_to_dict(scol, False)
         return ret
 
-    def _convert_KeySlice_list_to_dict_class(self, keyslice_list, include_timestamp):
-        ret = self.dict_class()
-        for keyslice in keyslice_list:
-            ret[keyslice.key] = self._convert_ColumnOrSuperColumns_to_dict_class(keyslice.columns, include_timestamp)
-        return ret
-
-    def _rcl(self, alternative):
-        """Helper function that returns self.read_consistency_level if
-        alternative is None, otherwise returns alternative"""
-        if alternative is None:
-            return self.read_consistency_level
-        return alternative
-
-    def _wcl(self, alternative):
-        """Helper function that returns self.write_consistency_level
-        if alternative is None, otherwise returns alternative"""
-        if alternative is None:
-            return self.write_consistency_level
-        return alternative
-
-    def _create_column_path(self, super_column=None, column=None):
+    def _column_path(self, super_column=None, column=None):
         return ColumnPath(self.column_family,
                           self._pack_name(super_column, is_supercol_name=True),
                           self._pack_name(column, False))
 
-    def _create_column_parent(self, super_column=None):
+    def _column_parent(self, super_column=None):
         return ColumnParent(column_family=self.column_family,
                             super_column=self._pack_name(super_column, is_supercol_name=True))
 
-    def _create_slice_predicate(self, columns, column_start, column_finish,
-                                      column_reversed, column_count, super_column=None):
+    def _slice_predicate(self, columns, column_start, column_finish,
+                         column_reversed, column_count, super_column=None):
         is_supercol_name = self.super and super_column is None
         if columns is not None:
             packed_cols = []
@@ -320,28 +312,29 @@ class ColumnFamily(object):
                 super_column = columns[0]
             else:
                 column = columns[0]
-            cp = self._create_column_path(super_column, column)
+            cp = self._column_path(super_column, column)
             try:
                 self._obtain_connection()
-                col_or_super = self._tlocal.client.get(key, cp, self._rcl(read_consistency_level))
+                col_or_super = self._tlocal.client.get(
+                    key, cp, read_consistency_level or self.read_consistency_level)
             finally:
                 self._release_connection()
-            return self._convert_ColumnOrSuperColumns_to_dict_class([col_or_super], include_timestamp)
+            return self._cosc_to_dict([col_or_super], include_timestamp)
         else:
-            cp = self._create_column_parent(super_column)
-            sp = self._create_slice_predicate(columns, column_start, column_finish,
-                                              column_reversed, column_count, super_column)
+            cp = self._column_parent(super_column)
+            sp = self._slice_predicate(columns, column_start, column_finish,
+                                       column_reversed, column_count, super_column)
 
             try:
                 self._obtain_connection()
-                list_col_or_super = self._tlocal.client.get_slice(key, cp, sp,
-                                                              self._rcl(read_consistency_level))
+                list_col_or_super = self._tlocal.client.get_slice(
+                    key, cp, sp, read_consistency_level or self.read_consistency_level)
             finally:
                 self._release_connection()
 
             if len(list_col_or_super) == 0:
                 raise NotFoundException()
-            return self._convert_ColumnOrSuperColumns_to_dict_class(list_col_or_super, include_timestamp)
+            return self._cosc_to_dict(list_col_or_super, include_timestamp)
 
     def get_indexed_slices(self, index_clause, columns=None, column_start="", column_finish="",
                            column_reversed=False, column_count=100, include_timestamp=False,
@@ -365,9 +358,9 @@ class ColumnFamily(object):
         assert not self.super, "get_indexed_slices() is not " \
                 "supported by super column families"
 
-        cp = self._create_column_parent()
-        sp = self._create_slice_predicate(columns, column_start, column_finish,
-                                          column_reversed, column_count)
+        cp = self._column_parent()
+        sp = self._slice_predicate(columns, column_start, column_finish,
+                                   column_reversed, column_count)
 
         new_exprs = []
         # Pack the values in the index clause expressions
@@ -393,8 +386,8 @@ class ColumnFamily(object):
             clause.start_key = last_key
             try:
                 self._obtain_connection()
-                key_slices = self._tlocal.client.get_indexed_slices(cp, clause, sp,
-                                                            self._rcl(read_consistency_level))
+                key_slices = self._tlocal.client.get_indexed_slices(
+                    cp, clause, sp, read_consistency_level or self.read_consistency_level)
             finally:
                 self._release_connection()
 
@@ -405,7 +398,7 @@ class ColumnFamily(object):
                 # because it will be a duplicate.
                 if j == 0 and i != 0:
                     continue
-                yield (key_slice.key, self._convert_ColumnOrSuperColumns_to_dict_class(
+                yield (key_slice.key, self._cosc_to_dict(
                         key_slice.columns, include_timestamp))
 
                 count += 1
@@ -429,14 +422,14 @@ class ColumnFamily(object):
 
         """
 
-        cp = self._create_column_parent(super_column)
-        sp = self._create_slice_predicate(columns, column_start, column_finish,
-                                          column_reversed, column_count, super_column)
+        cp = self._column_parent(super_column)
+        sp = self._slice_predicate(columns, column_start, column_finish,
+                                   column_reversed, column_count, super_column)
 
         try:
             self._obtain_connection()
-            keymap = self._tlocal.client.multiget_slice(keys, cp, sp,
-                                                self._rcl(read_consistency_level))
+            keymap = self._tlocal.client.multiget_slice(
+                keys, cp, sp, read_consistency_level or self.read_consistency_level)
         finally:
             self._release_connection()
 
@@ -450,7 +443,7 @@ class ColumnFamily(object):
         for key, columns in keymap.iteritems():
             if len(columns) > 0:
                 non_empty_keys.append(key)
-                ret[key] = self._convert_ColumnOrSuperColumns_to_dict_class(columns, include_timestamp)
+                ret[key] = self._cosc_to_dict(columns, include_timestamp)
 
         for key in keys:
             if key not in non_empty_keys:
@@ -477,14 +470,14 @@ class ColumnFamily(object):
 
         """
 
-        cp = self._create_column_parent(super_column)
-        sp = self._create_slice_predicate(columns, column_start, column_finish,
-                                          False, self.MAX_COUNT, super_column)
+        cp = self._column_parent(super_column)
+        sp = self._slice_predicate(columns, column_start, column_finish,
+                                   False, self.MAX_COUNT, super_column)
 
         try:
             self._obtain_connection()
-            ret = self._tlocal.client.get_count(key, cp, sp,
-                                         self._rcl(read_consistency_level))
+            ret = self._tlocal.client.get_count(
+                key, cp, sp, read_consistency_level or self.read_consistency_level)
         finally:
             self._release_connection()
         return ret
@@ -502,14 +495,14 @@ class ColumnFamily(object):
 
         """
 
-        cp = self._create_column_parent(super_column)
-        sp = self._create_slice_predicate(columns, column_start, column_finish,
-                                          False, self.MAX_COUNT, super_column)
+        cp = self._column_parent(super_column)
+        sp = self._slice_predicate(columns, column_start, column_finish,
+                                   False, self.MAX_COUNT, super_column)
 
         try:
             self._obtain_connection()
-            ret = self._tlocal.client.multiget_count(keys, cp, sp,
-                                         self._rcl(read_consistency_level))
+            ret = self._tlocal.client.multiget_count(
+                keys, cp, sp, read_consistency_level or self.read_consistency_level)
         finally:
             self._release_connection()
         return ret
@@ -545,9 +538,9 @@ class ColumnFamily(object):
 
         """
 
-        cp = self._create_column_parent(super_column)
-        sp = self._create_slice_predicate(columns, column_start, column_finish,
-                                          column_reversed, column_count, super_column)
+        cp = self._column_parent(super_column)
+        sp = self._slice_predicate(columns, column_start, column_finish,
+                                   column_reversed, column_count, super_column)
 
         count = 0
         i = 0
@@ -561,8 +554,8 @@ class ColumnFamily(object):
             key_range = KeyRange(start_key=last_key, end_key=finish, count=buffer_size)
             try:
                 self._obtain_connection()
-                key_slices = self._tlocal.client.get_range_slices(cp, sp, key_range,
-                                                         self._rcl(read_consistency_level))
+                key_slices = self._tlocal.client.get_range_slices(
+                    cp, sp, key_range, read_consistency_level or self.read_consistency_level)
             finally:
                 self._release_connection()
             # This may happen if nothing was ever inserted
@@ -574,7 +567,7 @@ class ColumnFamily(object):
                 if j == 0 and i != 0:
                     continue
                 yield (key_slice.key,
-                       self._convert_ColumnOrSuperColumns_to_dict_class(key_slice.columns, include_timestamp))
+                       self._cosc_to_dict(key_slice.columns, include_timestamp))
                 count += 1
                 if row_count is not None and count >= row_count:
                     return
@@ -612,17 +605,18 @@ class ColumnFamily(object):
 
             if self.super:
                 super_col = columns.keys()[0]
-                cp = self._create_column_path(super_col)
+                cp = self._column_path(super_col)
                 columns = columns.values()[0]
             else:
-                cp = self._create_column_path()
+                cp = self._column_path()
 
             colname = self._pack_name(columns.keys()[0], False)
             colval = self._pack_value(columns.values()[0], colname)
             column = Column(colname, colval, timestamp, ttl)
             try:
                 self._obtain_connection()
-                self._tlocal.client.insert(key, cp, column, self._wcl(write_consistency_level))
+                self._tlocal.client.insert(key, cp, column,
+                    write_consistency_level or self.write_consistency_level)
             finally:
                 self._release_connection()
             return timestamp
@@ -649,8 +643,19 @@ class ColumnFamily(object):
         batch.send()
         return timestamp
 
+    def add(self, key, column, value=1, super_column=None, write_consistency_level=None):
+        cp = self._column_parent(super_column)
+        column = self._pack_name(column)
+        try:
+            self._obtain_connection()
+            self._tlocal.client.add(key, cp, CounterColumn(column, value),
+                                    write_consistency_level or self.write_consistency_level)
+        finally:
+            self._release_connection()
+
+
     def remove(self, key, columns=None, super_column=None,
-               write_consistency_level=None, timestamp=None):
+               write_consistency_level=None, timestamp=None, counter=None):
         """
         Remove a specified row or a set of columns within the row with key `key`.
 
@@ -675,6 +680,15 @@ class ColumnFamily(object):
         batch.send()
         return timestamp
 
+    def remove_counter(self, key, column, super_column=None, write_consistency_level=None):
+        cp = self._column_path(super_column, column)
+        consistency = write_consistency_level or self.write_consistency_level
+        try:
+            self._obtain_connection()
+            self._tlocal.client.remove_counter(key, cp, consistency)
+        finally:
+            self._release_connection()
+
     def batch(self, queue_size=100, write_consistency_level=None):
         """
         Create batch mutator for doing multiple insert, update, and remove
@@ -686,7 +700,8 @@ class ColumnFamily(object):
 
         """
 
-        return CfMutator(self, queue_size, self._wcl(write_consistency_level))
+        return CfMutator(self, queue_size,
+                         write_consistency_level or self.write_consistency_level)
 
     def truncate(self):
         """

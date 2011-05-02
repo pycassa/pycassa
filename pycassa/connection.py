@@ -2,15 +2,16 @@ from exceptions import Exception
 import socket
 import time
 
-import pool
-
 from thrift import Thrift
 from thrift.transport import TTransport
 from thrift.transport import TSocket
 from thrift.protocol import TBinaryProtocol
-from pycassa.cassandra import Cassandra
-from pycassa.cassandra.constants import VERSION
+
+from pycassa.cassandra.c08 import Cassandra
+from pycassa.cassandra.constants import (CASSANDRA_07, CASSANDRA_08)
 from pycassa.cassandra.ttypes import AuthenticationRequest
+from pycassa.util import compatible
+import pool
 
 __all__ = ['connect', 'connect_thread_local']
 
@@ -19,10 +20,13 @@ DEFAULT_PORT = 9160
 
 LOWEST_COMPATIBLE_VERSION = 17
 
+class ApiMismatch(Exception): pass
+
 class Connection(Cassandra.Client):
     """Encapsulation of a client session."""
 
-    def __init__(self, keyspace, server, framed_transport=True, timeout=None, credentials=None):
+    def __init__(self, keyspace, server, framed_transport=True, timeout=None,
+                 credentials=None, api_version=None):
         self.keyspace = None
         self.server = server
         server = server.split(':')
@@ -42,10 +46,18 @@ class Connection(Cassandra.Client):
         super(Connection, self).__init__(protocol)
         self.transport.open()
 
-        server_api_version = int(self.describe_version().split('.', 1)[0])
-        assert (server_api_version >= LOWEST_COMPATIBLE_VERSION), \
-                "Thrift API version incompatibility. " \
-                 "(Server: %s, Lowest compatible version: %d)" % (server_api_version, LOWEST_COMPATIBLE_VERSION)
+        if api_version is None:
+            server_api_version = self.describe_version()
+            if compatible(CASSANDRA_08, server_api_version):
+                self.version = CASSANDRA_08
+            elif compatible(CASSANDRA_07, server_api_version):
+                self.version = CASSANDRA_07
+            else:
+                raise ApiMismatch("Thrift API version incompatibility: " \
+                                  "server version %s is not either Cassandra 0.7 (%s) or 0.8 (%s)." %
+                                  (server_api_version, CASSANDRA_07, CASSANDRA_08))
+        else:
+            self.version = api_version
 
         self.set_keyspace(keyspace)
 

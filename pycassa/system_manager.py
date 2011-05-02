@@ -1,9 +1,10 @@
 import time
 import warnings
 
-from connection import Connection
+from pycassa.connection import Connection
 from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef,\
                                      InvalidRequestException
+from pycassa.cassandra.constants import *
 import pycassa.util as util
 from logging.pycassa_logger import *
 
@@ -36,6 +37,8 @@ TIME_UUID_TYPE = 'TimeUUIDType'
 """ Stores data as a version 1 UUID """
 LEXICAL_UUID_TYPE = 'LexicalUUIDType'
 """ Stores data as a non-version 1 UUID """
+COUNTER_COLUMN_TYPE = 'CounterColumnType'
+""" A 64bit counter column """
 
 KEYS_INDEX = IndexType.KEYS
 """ A secondary index type where each indexed value receives its own row """
@@ -169,13 +172,24 @@ class SystemManager(object):
         self._wait_for_agreement()
         return schema_version
 
-    def create_keyspace(self, name, replication_factor,
+    def create_keyspace(self, name, replication_factor=None,
                         replication_strategy=SIMPLE_STRATEGY,
                         strategy_options=None):
 
         """
         Creates a new keyspace.  Column families may be added to this keyspace
         after it is created using :meth:`create_column_family()`.
+
+        `replication_factor` determines how many nodes hold a copy of a given
+        row. Note that for Cassandra 0.8, `replication_factor` should be an entry
+        in the strategy_options :class:`dict`. For example:
+
+        .. code-block:: python
+
+            >>> sys.create_keyspace('KS', None, SIMPLE_STRATEGY, {'replication_factor': '1'})
+
+        However, pycassa will copy the value from `replication_factor` or `strategy_options`
+        to the other as needed, depending on the version of Cassandra.
 
         `replication_strategy` determines how replicas are chosen for this keyspace.
         The strategies that Cassandra provides by default
@@ -207,6 +221,10 @@ class SystemManager(object):
         else:
             strategy_class = replication_strategy
         ksdef = KsDef(name, strategy_class, strategy_options, replication_factor, [])
+        if self._conn.version == CASSANDRA_08:
+            ksdef = ksdef.to08()
+        else:
+            ksdef = ksdef.to07()
         self._system_add_keyspace(ksdef)
 
     def alter_keyspace(self, keyspace, replication_factor=None,
@@ -222,9 +240,13 @@ class SystemManager(object):
 
         """
 
-        ksdef = self._conn.describe_keyspace(keyspace)
+        old_ksdef = self._conn.describe_keyspace(keyspace)
+        ksdef = KsDef(name=old_ksdef.name,
+                      strategy_class=old_ksdef.strategy_class,
+                      strategy_options=old_ksdef.strategy_options,
+                      replication_factor=old_ksdef.replication_factor,
+                      cf_defs=[])
 
-        ksdef.cf_defs = []
         if replication_strategy is not None:
             if replication_strategy.find('.') == -1:
                 ksdef.strategy_class = 'org.apache.cassandra.locator.%s' % replication_strategy
@@ -234,6 +256,10 @@ class SystemManager(object):
             ksdef.strategy_options = strategy_options
         if replication_factor is not None:
             ksdef.replication_factor = replication_factor
+        if self._conn.version == CASSANDRA_08:
+            ksdef = ksdef.to08()
+        else:
+            ksdef = ksdef.to07()
 
         self._system_update_keyspace(ksdef)
 
