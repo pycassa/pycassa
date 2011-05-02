@@ -147,18 +147,6 @@ class ColumnFamilyMap(object):
                 ret[key] = create_instance(self.cls, key=key, **combined)
         return ret
 
-    def get_count(self, *args, **kwargs):
-        """
-        Count the number of columns for a key.
-
-        .. deprecated:: 0.6.0
-            Use :meth:`.ColumnFamily.get_count()` instead.
-
-        """
-        warnings.warn("ColumnFamilyMap.get_count() is deprecated; use ColumnFamily.get_count() instead",
-                      DeprecationWarning)
-        return self.column_family.get_count(*args, **kwargs)
-
     def get_range(self, *args, **kwargs):
         """
         Get an iterator over instances in a specified key range.
