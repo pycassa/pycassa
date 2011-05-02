@@ -1,5 +1,6 @@
 from pycassa import index, ColumnFamily, ConsistencyLevel, ConnectionPool,\
                     NotFoundException, SystemManager
+from pycassa.cassandra.constants import *
 
 from nose.tools import assert_raises, assert_equal, assert_true
 from nose.plugins.skip import *
@@ -7,17 +8,24 @@ from nose.plugins.skip import *
 import unittest
 
 def setup_module():
-    global pool, cf, scf, indexed_cf, sys_man
+    global pool, cf, scf, indexed_cf, counter_cf, counter_scf, sys_man, have_counters
     credentials = {'username': 'jsmith', 'password': 'havebadpass'}
     pool = ConnectionPool(keyspace='PycassaTestKeyspace', credentials=credentials)
     cf = ColumnFamily(pool, 'Standard1', dict_class=TestDict)
     scf = ColumnFamily(pool, 'Super1', dict_class=dict)
     indexed_cf = ColumnFamily(pool, 'Indexed1')
     sys_man = SystemManager()
+    have_counters = sys_man._conn.version != CASSANDRA_07
+    if have_counters:
+        counter_cf = ColumnFamily(pool, 'Counter1')
+        counter_scf = ColumnFamily(pool, 'SuperCounter1')
 
 def teardown_module():
     cf.truncate()
     indexed_cf.truncate()
+    if have_counters:
+        counter_cf.truncate()
+        counter_scf.truncate()
     pool.dispose()
 
 class TestDict(dict):
@@ -283,6 +291,22 @@ class TestColumnFamily(unittest.TestCase):
         result = list(indexed_cf.get_indexed_slices(clause, buffer_size=1000))
         assert_equal(len(result), 200)
 
+    def test_add(self):
+        if not have_counters:
+            raise SkipTest('Cassandra 0.7 does not support counters')
+
+        counter_cf.add('key', 'col')
+        result = counter_cf.get('key')
+        assert_equal(result['col'], 1)
+
+        counter_cf.add('key', 'col')
+        result = counter_cf.get('key')
+        assert_equal(result['col'], 2)
+
+        counter_cf.add('key', 'col2')
+        result = counter_cf.get('key')
+        assert_equal(result, {'col': 2, 'col2': 1})
+
     def test_remove(self):
         key = 'TestColumnFamily.test_remove'
         columns = {'1': 'val1', '2': 'val2'}
@@ -480,6 +504,22 @@ class TestSuperColumnFamily(unittest.TestCase):
         scf.batch_insert({key1: columns, key2: columns})
         assert_equal(scf.get(key1), columns)
         assert_equal(scf.get(key2), columns)
+
+    def test_add(self):
+        if not have_counters:
+            raise SkipTest('Cassandra 0.7 does not support counters')
+
+        counter_scf.add('key', 'col', super_column='scol')
+        result = counter_scf.get('key', super_column='scol')
+        assert_equal(result['col'], 1)
+
+        counter_scf.add('key', 'col', super_column='scol')
+        result = counter_scf.get('key', super_column='scol')
+        assert_equal(result['col'], 2)
+
+        counter_scf.add('key', 'col2', super_column='scol')
+        result = counter_scf.get('key', super_column='scol')
+        assert_equal(result, {'col': 2, 'col2': 1})
 
     def test_remove(self):
         key = 'TestSuperColumnFamily.test_remove'
