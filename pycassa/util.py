@@ -14,10 +14,9 @@ __all__ = ['convert_time_to_uuid', 'convert_uuid_to_time', 'OrderedDict']
 _number_types = frozenset((int, long, float))
 
 if hasattr(struct, 'Struct'): # new in Python 2.5
-   _have_struct = True
-   _long_packer = struct.Struct('>q')
-   _int_packer = struct.Struct('>i')
-   _uuid_packer = struct.Struct('>16s')
+    _have_struct = True
+    _long_packer = struct.Struct('>q')
+    _int_packer = struct.Struct('>i')
 else:
     _have_struct = False
 
@@ -155,10 +154,7 @@ def pack(value, data_type):
     elif data_type == 'TimeUUIDType' or data_type == 'LexicalUUIDType':
         if not hasattr(value, 'bytes'):
             raise TypeError("%s not valid for %s" % (value, data_type))
-        if _have_struct:
-            return _uuid_packer.pack(value.bytes)
-        else:
-            return struct.pack('>16s', value.bytes)
+        return value.bytes
     else:
         return value
 
@@ -176,16 +172,10 @@ def unpack(byte_array, data_type):
             return struct.unpack('>q', byte_array)[0]
     elif data_type == 'IntegerType':
         return decode_int(byte_array)
-    elif data_type == 'AsciiType':
-        return byte_array
     elif data_type == 'UTF8Type':
         return byte_array.decode('utf-8')
     elif data_type == 'LexicalUUIDType' or data_type == 'TimeUUIDType':
-        if _have_struct:
-            temp_bytes = _uuid_packer.unpack(byte_array)[0]
-        else:
-            temp_bytes = struct.unpack('>16s', byte_array)[0]
-        return uuid.UUID(bytes=temp_bytes)
+        return uuid.UUID(bytes=byte_array)
     else:
         return byte_array
 
