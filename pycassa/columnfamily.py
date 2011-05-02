@@ -644,6 +644,21 @@ class ColumnFamily(object):
         return timestamp
 
     def add(self, key, column, value=1, super_column=None, write_consistency_level=None):
+        """
+        Increment or decrement a counter.
+
+        `value` should be an integer, either positive or negative, to be added
+        to a counter column. By default, `value` is 1.
+
+        .. note:: This method is not idempotent. Retrying a failed add may result
+                  in a double count. You should consider using a separate
+                  ConnectionPool with retries disabled for column families
+                  with counters.
+
+        .. versionadded:: 1.1.0
+            Available in Cassandra 0.8.0 and later.
+
+        """
         cp = self._column_parent(super_column)
         column = self._pack_name(column)
         try:
@@ -681,6 +696,17 @@ class ColumnFamily(object):
         return timestamp
 
     def remove_counter(self, key, column, super_column=None, write_consistency_level=None):
+        """
+        Remove a counter at the specified location.
+
+        Note that counters have limited support for deletes: if you remove a
+        counter, you must wait to issue any following update until the delete
+        has reached all the nodes and all of them have been fully compacted.
+
+        .. versionadded:: 1.1.0
+            Available in Cassandra 0.8.0 and later.
+
+        """
         cp = self._column_path(super_column, column)
         consistency = write_consistency_level or self.write_consistency_level
         try:

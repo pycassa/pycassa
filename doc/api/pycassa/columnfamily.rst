@@ -23,7 +23,11 @@
 
         .. automethod:: batch_insert(rows[, timestamp][, ttl][, write_consistency_level])
 
+        .. automethod:: add(key, column[, value][, super_column][, write_consistency_level])
+
         .. automethod:: remove(key[, columns][, super_column][, write_consistency_level])
+
+        .. automethod:: remove_counter(key, column[, super_column][, write_consistency_level])
 
         .. automethod:: truncate()
 
