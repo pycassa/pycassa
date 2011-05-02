@@ -27,6 +27,7 @@ class Connection(Cassandra.Client):
 
     def __init__(self, keyspace, server, framed_transport=True, timeout=None,
                  credentials=None, api_version=None):
+        self.keyspace = None
         self.server = server
         server = server.split(':')
         if len(server) <= 1:
@@ -58,18 +59,16 @@ class Connection(Cassandra.Client):
         else:
             self.version = api_version
 
-        if keyspace is not None:
-            self.set_keyspace(keyspace)
-        self.keyspace = keyspace
+        self.set_keyspace(keyspace)
 
         if credentials is not None:
             request = AuthenticationRequest(credentials=credentials)
             self.login(request)
 
     def set_keyspace(self, keyspace):
-        if not self.keyspace or keyspace != self.keyspace:
+        if keyspace != self.keyspace:
             super(Connection, self).set_keyspace(keyspace)
-        self.keyspace = keyspace
+            self.keyspace = keyspace
 
     def close(self):
         self.transport.close()
