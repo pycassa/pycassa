@@ -4,7 +4,7 @@ import time
 import warnings
 
 __all__ = ['Column', 'DateTime', 'DateTimeString', 'Float64', 'FloatString',
-           'Long', 'Int64', 'IntString', 'String']
+           'Long', 'IntString', 'String']
 
 class Column(object):
     """Base class for typed columns."""
@@ -74,33 +74,6 @@ class Long(Column):
     def __init__(self, *args, **kwargs):
         Column.__init__(self, *args, **kwargs)
         self.struct = struct.Struct('>q')
-
-    def pack(self, val):
-        if not isinstance(val, (int, long)):
-            raise TypeError('expected int or long, %s found' % type(val).__name__)
-        return self.struct.pack(val)
-
-    def unpack(self, val):
-        return self.struct.unpack(val)[0]
-
-
-class Int64(Column):
-    """
-    Column for 64bit ints.
-
-    This uses native-endian encoding, which is little-endian on x86 and
-    x86-64 architectures.  This means it is not compatible with Cassandra's
-    LongType, and some clients may not decode the values properly.
-
-    .. deprecated:: 1.0.6
-       Use :class:`Long` instead
-
-    """
-    def __init__(self, *args, **kwargs):
-        warnings.warn("Int64 is not compatible with Cassandra's LongType and is deprecated; " +
-                      "use Long instead.", DeprecationWarning)
-        Column.__init__(self, *args, **kwargs)
-        self.struct = struct.Struct('q')
 
     def pack(self, val):
         if not isinstance(val, (int, long)):
