@@ -106,13 +106,6 @@ class TestColumnFamilyMap:
         expr = index.create_index_expression(column_name='birthdate', value=2L)
         clause = index.create_index_clause([expr])
 
-        # test with passing an instance
-        result = self.indexed_map.get_indexed_slices(instance1, index_clause=clause)
-        assert_equal(len(result), 2)
-        assert_equal(result.get('key1'), instance1)
-        assert_equal(result.get('key2'), instance2)
-
-        # test without passing an instance
         result = self.indexed_map.get_indexed_slices(index_clause=clause)
         assert_equal(len(result), 1)
         assert_equal(result.get('key3'), instance3)
