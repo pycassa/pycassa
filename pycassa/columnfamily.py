@@ -151,7 +151,7 @@ class ColumnFamily(object):
                 col = cosc.column
                 ret[self._unpack_name(col.name)] = self._col_to_dict(col, include_timestamp)
             elif cosc.counter_column:
-                counter = csoc.counter_column
+                counter = cosc.counter_column
                 ret[self._unpack_name(counter.name)] = counter.value
             elif cosc.super_column:
                 scol = cosc.super_column
