@@ -412,7 +412,7 @@ class ColumnFamily(object):
 
     def multiget(self, keys, columns=None, column_start="", column_finish="",
                  column_reversed=False, column_count=100, include_timestamp=False,
-                 super_column=None, read_consistency_level = None):
+                 super_column=None, read_consistency_level = None, batch_size=None):
         """
         Fetch multiple rows from a Cassandra server.
 
@@ -425,11 +425,17 @@ class ColumnFamily(object):
         cp = self._column_parent(super_column)
         sp = self._slice_predicate(columns, column_start, column_finish,
                                    column_reversed, column_count, super_column)
+        keymap = {}
 
         try:
             self._obtain_connection()
-            keymap = self._tlocal.client.multiget_slice(
-                keys, cp, sp, read_consistency_level or self.read_consistency_level)
+            if batch_size:
+                offset = 0
+                while offset < len(keys):
+                    keymap.update(self._tlocal.client.multiget_slice(keys[offset:offset+batch_size], cp, sp, read_consistency_level or self.read_consistency_level))
+                    offset += batch_size
+            else:
+                keymap = self._tlocal.client.multiget_slice(keys, cp, sp, read_consistency_level or self.read_consistency_level)
         finally:
             self._release_connection()
 
