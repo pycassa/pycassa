@@ -1,6 +1,7 @@
 from pycassa import index, ColumnFamily, ConsistencyLevel, ConnectionPool,\
                     NotFoundException, SystemManager
 from pycassa.cassandra.constants import *
+from pycassa.util import OrderedDict
 
 from nose.tools import assert_raises, assert_equal, assert_true
 from nose.plugins.skip import *
@@ -290,6 +291,24 @@ class TestColumnFamily(unittest.TestCase):
         assert_equal(len(result), 200)
         result = list(indexed_cf.get_indexed_slices(clause, buffer_size=1000))
         assert_equal(len(result), 200)
+
+    def test_multiget_batching(self):
+        key_prefix = "TestColumnFamily.test_multiget_batching"
+        keys = []
+        expected = OrderedDict()
+        for i in range(10):
+            key = key_prefix + str(i)
+            keys.append(key)
+            expected[key] = {'col': 'val'}
+            cf.insert(key, {'col': 'val'})
+
+        assert_equal(cf.multiget(keys, buffer_size=1), expected)
+        assert_equal(cf.multiget(keys, buffer_size=2), expected)
+        assert_equal(cf.multiget(keys, buffer_size=3), expected)
+        assert_equal(cf.multiget(keys, buffer_size=9), expected)
+        assert_equal(cf.multiget(keys, buffer_size=10), expected)
+        assert_equal(cf.multiget(keys, buffer_size=11), expected)
+        assert_equal(cf.multiget(keys, buffer_size=100), expected)
 
     def test_add(self):
         if not have_counters:
