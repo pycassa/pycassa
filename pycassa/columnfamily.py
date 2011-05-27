@@ -416,9 +416,16 @@ class ColumnFamily(object):
         """
         Fetch multiple rows from a Cassandra server.
 
-        All parameters are the same as :meth:`get()`, except that a list of keys may
-        be passed in. Results will be returned in the form:
-        ``{key: {column_name: column_value}}``
+        `keys` should be a list of keys to fetch.
+
+        `buffer_size` is the number of rows from the total list to fetch at a time.
+        If left as ``None``, the ColumnFamily's `buffer_size` will be used.
+
+        All other parameters are the same as :meth:`get()`, except that a list of keys may
+        be passed in.
+
+        Results will be returned in the form: ``{key: {column_name: column_value}}``. If
+        an OrderedDict is used, the rows will have the same order as `keys`.
 
         """
 
