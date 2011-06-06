@@ -441,11 +441,19 @@ class ConnectionWrapper(connection.Connection):
         pass
 
     @_retry
+    def add(self, *args, **kwargs):
+        pass
+
+    @_retry
     def insert(self, *args, **kwargs):
         pass
 
     @_retry
     def remove(self, *args, **kwargs):
+        pass
+
+    @_retry
+    def remove_counter(self, *args, **kwargs):
         pass
 
     @_retry
