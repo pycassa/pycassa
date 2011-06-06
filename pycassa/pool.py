@@ -508,7 +508,9 @@ class ConnectionPool(AbstractPool):
                  credentials=None,
                  timeout=0.5,
                  use_threadlocal=True,
-                 pool_size=5, max_overflow=10, prefill=True,
+                 pool_size=5,
+                 max_overflow=0,
+                 prefill=True,
                  pool_timeout=30,
                  recycle=10000,
                  max_retries=5,
@@ -559,7 +561,8 @@ class ConnectionPool(AbstractPool):
         the last ``(len(server_list) - pool_size)`` servers may not be used until
         either overflow occurs, a connection is recycled, or a connection
         fails. Similarly, if a multiple of ``len(server_list)`` is not chosen,
-        those same servers would have a decreased load.
+        those same servers would have a decreased load. By default, overflow
+        is disabled.
 
         If `prefill` is set to ``True``, `pool_size` connections will be opened
         when the pool is created.
