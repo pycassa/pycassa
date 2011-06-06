@@ -274,6 +274,7 @@ class SystemManager(object):
                              gc_grace_seconds=None,
                              read_repair_chance=None,
                              default_validation_class=None,
+                             key_validation_class=None,
                              min_compaction_threshold=None,
                              max_compaction_threshold=None,
                              key_cache_save_period_in_seconds=None,
@@ -281,6 +282,10 @@ class SystemManager(object):
                              memtable_flush_after_mins=None,
                              memtable_throughput_in_mb=None,
                              memtable_operations_in_millions=None,
+                             replicate_on_write=None,
+                             merge_shards_chance=None,
+                             row_cache_provider=None,
+                             key_alias=None,
                              comment=None):
 
         """
@@ -316,7 +321,10 @@ class SystemManager(object):
         :param float read_repair_chance: probability of a read repair occuring
 
         :param str default_validation_class: the data type for all column values in the CF.
-          the choices for this are the same as for `comparator_type`.
+          The choices for this are the same as for `comparator_type`.
+
+        :param str key_validation_class: the data type for row keys in the CF. The choices
+          for this are the same as for `comparator_type`.
 
         :param int min_compaction_threshold: Number of similarly sized SSTables that must
           be present before a minor compaction is scheduled. Setting to 0 disables minor
@@ -340,6 +348,17 @@ class SystemManager(object):
         :param int memtable_operations_in_millions: Memtables are flushed when this many million
           operations have been performed on them
 
+        :param bool replicate_on_write: Whether counter operations are replicated at write-time.
+          This should almost always be True.
+
+        :param float merge_shards_chance: The probability that counter shards will be merged.
+
+        :param str row_cache_provider: The class that will be used to store the row cache.
+          Defaults to ``org.apache.cassandra.cache.ConcurrentLinkedHashCacheProvider``.
+
+        :param key_alias: A "column name" to be used for the row key. This currently only
+          matters for CQL. The default is "KEY".
+
         :param str comment: A human readable description
 
         """
@@ -360,9 +379,13 @@ class SystemManager(object):
         cfdef.comparator_type = qualify_class(comparator_type)
         cfdef.subcomparator_type = qualify_class(subcomparator_type)
         cfdef.default_validation_class = qualify_class(default_validation_class)
+        cfdef.key_validation_class = qualify_class(key_validation_class)
 
-        if comment is not None:
-            cfdef.comment = comment
+        cfdef.replicate_on_write = replicate_on_write
+        cfdef.comment = comment
+        cfdef.key_alias = key_alias
+        if row_cache_provider:
+            cfdef.row_cache_provider = row_cache_provider
 
         self._cfdef_assign(key_cache_size, cfdef, 'key_cache_size')
         self._cfdef_assign(row_cache_size, cfdef, 'row_cache_size')
@@ -375,6 +398,7 @@ class SystemManager(object):
         self._cfdef_assign(memtable_flush_after_mins, cfdef, 'memtable_flush_after_mins')
         self._cfdef_assign(memtable_throughput_in_mb, cfdef, 'memtable_throughput_in_mb')
         self._cfdef_assign(memtable_operations_in_millions, cfdef, 'memtable_operations_in_millions')
+        self._cfdef_assign(merge_shards_chance, cfdef, 'merge_shards_chance')
 
         self._system_add_column_family(cfdef)
 
@@ -408,6 +432,10 @@ class SystemManager(object):
                             memtable_flush_after_mins=None,
                             memtable_throughput_in_mb=None,
                             memtable_operations_in_millions=None,
+                            replicate_on_write=None,
+                            merge_shards_chance=None,
+                            row_cache_provider=None,
+                            key_alias=None,
                             comment=None):
 
         """
@@ -433,9 +461,13 @@ class SystemManager(object):
         self._cfdef_assign(memtable_flush_after_mins, cfdef, 'memtable_flush_after_mins')
         self._cfdef_assign(memtable_throughput_in_mb, cfdef, 'memtable_throughput_in_mb')
         self._cfdef_assign(memtable_operations_in_millions, cfdef, 'memtable_operations_in_millions')
+        self._cfdef_assign(merge_shards_chance, cfdef, 'merge_shards_chance')
 
-        if comment is not None:
-            cfdef.comment = comment
+        cfdef.replicate_on_write = replicate_on_write
+        cfdef.comment = comment
+        cfdef.key_alias = key_alias
+        if row_cache_provider:
+            cfdef.row_cache_provider = row_cache_provider
 
         self._system_update_column_family(cfdef)
 
