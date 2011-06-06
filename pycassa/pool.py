@@ -305,7 +305,6 @@ class ConnectionWrapper(connection.Connection):
         self._pool = pool
         self._retry_count = 0
         self._max_retries = max_retries
-        self._lock = threading.Lock()
         self.info = {}
         self.starttime = time.time()
         self.operation_count = 0
@@ -328,45 +327,29 @@ class ConnectionWrapper(connection.Connection):
         self._pool.return_conn(self)
 
     def _checkin(self):
-        try:
-            self._lock.acquire()
-            if self._state == ConnectionWrapper._IN_QUEUE:
-                raise InvalidRequestError("A connection has been returned to "
-                        "the connection pool twice.")
-            elif self._state == ConnectionWrapper._DISPOSED:
-                raise InvalidRequestError("A disposed connection has been returned "
-                        "to the connection pool.")
-            self._state = ConnectionWrapper._IN_QUEUE
-        finally:
-            self._lock.release()
+        if self._state == ConnectionWrapper._IN_QUEUE:
+            raise InvalidRequestError("A connection has been returned to "
+                    "the connection pool twice.")
+        elif self._state == ConnectionWrapper._DISPOSED:
+            raise InvalidRequestError("A disposed connection has been returned "
+                    "to the connection pool.")
+        self._state = ConnectionWrapper._IN_QUEUE
 
     def _checkout(self):
-        try:
-            self._lock.acquire()
-            if self._state != ConnectionWrapper._IN_QUEUE:
-                raise InvalidRequestError("A connection has been checked "
-                        "out twice.")
-            self._state = ConnectionWrapper._CHECKED_OUT
-        finally:
-            self._lock.release()
+        if self._state != ConnectionWrapper._IN_QUEUE:
+            raise InvalidRequestError("A connection has been checked "
+                    "out twice.")
+        self._state = ConnectionWrapper._CHECKED_OUT
 
     def _is_in_queue_or_disposed(self):
-        try:
-            self._lock.acquire()
-            ret = self._state == ConnectionWrapper._IN_QUEUE or \
-                  self._state == ConnectionWrapper._DISPOSED
-        finally:
-            self._lock.release()
+        ret = self._state == ConnectionWrapper._IN_QUEUE or \
+              self._state == ConnectionWrapper._DISPOSED
         return ret
 
     def _dispose_wrapper(self, reason=None):
-        try:
-            self._lock.acquire()
-            if self._state == ConnectionWrapper._DISPOSED:
-                raise InvalidRequestError("A connection has been disposed twice.")
-            self._state = ConnectionWrapper._DISPOSED
-        finally:
-            self._lock.release()
+        if self._state == ConnectionWrapper._DISPOSED:
+            raise InvalidRequestError("A connection has been disposed twice.")
+        self._state = ConnectionWrapper._DISPOSED
 
         self.close()
         self._pool._notify_on_dispose(self, msg=reason)
@@ -380,7 +363,6 @@ class ConnectionWrapper(connection.Connection):
         self.transport = new_conn_wrapper.transport
         self._iprot = new_conn_wrapper._iprot
         self._oprot = new_conn_wrapper._oprot
-        self._lock = new_conn_wrapper._lock
         self.info = new_conn_wrapper.info
         self.starttime = new_conn_wrapper.starttime
         self.operation_count = new_conn_wrapper.operation_count
