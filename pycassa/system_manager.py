@@ -352,25 +352,14 @@ class SystemManager(object):
         if super:
             cfdef.column_type = 'Super'
 
-        if comparator_type is not None:
-            if comparator_type.find('.') == -1:
-                cfdef.comparator_type = 'org.apache.cassandra.db.marshal.%s' % comparator_type
-            else:
-                cfdef.comparator_type = comparator_type
+        def qualify_class(classname):
+            if classname and classname.find('.') == -1:
+                classname = 'org.apache.cassandra.db.marshal.%s' % classname
+            return classname
 
-        if subcomparator_type is not None:
-            if cfdef.column_type != 'Super':
-                self._raise_ire('subcomparator_type may only be used for super column families')
-            if subcomparator_type.find('.') == -1:
-                cfdef.subcomparator_type = 'org.apache.cassandra.db.marshal.%s' % subcomparator_type
-            else:
-                cfdef.subcomparator_type = subcomparator_type
-
-        if default_validation_class is not None:
-            if default_validation_class.find('.') == -1:
-                cfdef.default_validation_class = 'org.apache.cassandra.db.marshal.%s' % default_validation_class
-            else:
-                cfdef.default_validation_class = default_validation_class
+        cfdef.comparator_type = qualify_class(comparator_type)
+        cfdef.subcomparator_type = qualify_class(subcomparator_type)
+        cfdef.default_validation_class = qualify_class(default_validation_class)
 
         if comment is not None:
             cfdef.comment = comment
