@@ -403,17 +403,15 @@ class ConnectionWrapper(connection.Connection):
                 self._pool._notify_on_failure(exc, server=self.server, connection=self)
 
                 self._retry_count += 1
+                self.close()
+                self._pool._decrement_overflow()
+                self._pool._clear_current()
+
                 if self._max_retries != -1 and self._retry_count > self._max_retries:
-                    self.close()
-                    self._pool._clear_current()
                     raise MaximumRetryException('Retried %d times. Last failure was %s' %
                                                 (self._retry_count, exc))
-
                 # Exponential backoff
                 time.sleep(_BASE_BACKOFF * (2 ** self._retry_count))
-
-                self.close()
-                self._pool._clear_current()
 
                 kwargs['reset'] = True
                 return new_f(self, *args, **kwargs)
@@ -611,18 +609,22 @@ class ConnectionPool(AbstractPool):
         self._pool_size = pool_size
         self._q = pool_queue.Queue(pool_size)
         self._max_overflow = max_overflow
-        self._overflow_enabled = max_overflow > 0
+        self._overflow_enabled = max_overflow > 0 or max_overflow == -1
         self._pool_timeout = pool_timeout
         self._recycle = recycle
         self._max_retries = max_retries
         self._prefill = prefill
-        self._overflow_lock = self._overflow_enabled and threading.Lock() or None
+        if max_overflow == -1:
+            self._max_conns = (2 ** 31) - 1
+        else:
+            self._max_conns = pool_size + max_overflow
+        self._pool_lock = threading.Lock()
         if prefill:
             for i in range(pool_size):
                 self._q.put(self._create_connection(), False)
-            self._overflow = 0
+            self._current_conns = pool_size
         else:
-            self._overflow = 0 - pool_size
+            self._current_conns = 0
 
     def recreate(self):
         """
@@ -666,32 +668,28 @@ class ConnectionPool(AbstractPool):
 
     def return_conn(self, conn):
         """ Returns a connection to the pool. """
-        try:
-            if self._pool_threadlocal:
-                if hasattr(self._tlocal, 'current'):
-                    if self._tlocal.current:
-                        conn = self._tlocal.current
-                        self._tlocal.current = None
-                        conn._retry_count = 0
-                        if conn._is_in_queue_or_disposed():
-                            raise InvalidRequestError("Connection was already checked in or disposed")
-                        conn = self._put_conn(conn)
-                        self._notify_on_checkin(conn)
+        if self._pool_threadlocal:
+            if hasattr(self._tlocal, 'current') and self._tlocal.current:
+                conn = self._tlocal.current
+                self._tlocal.current = None
             else:
+                conn = None
+        if conn:
+            try:
                 conn._retry_count = 0
                 if conn._is_in_queue_or_disposed():
                     raise InvalidRequestError("Connection was already checked in or disposed")
                 conn = self._put_conn(conn)
                 self._notify_on_checkin(conn)
-        except pool_queue.Full:
-            self._notify_on_checkin(conn)
-            conn._dispose_wrapper(reason="pool is already full")
-            if self._overflow_enabled and self._overflow_lock:
-                self._overflow_lock.acquire()
-                self._overflow -= 1
-                self._overflow_lock.release()
-            else:
-                self._overflow -= 1
+            except pool_queue.Full:
+                self._notify_on_checkin(conn)
+                conn._dispose_wrapper(reason="pool is already full")
+                self._decrement_overflow()
+
+    def _decrement_overflow(self):
+        self._pool_lock.acquire()
+        self._current_conns -= 1
+        self._pool_lock.release()
 
     def _put_conn(self, conn):
         """
@@ -721,35 +719,26 @@ class ConnectionPool(AbstractPool):
                 pass
         try:
             try:
-                if self._overflow_enabled and self._overflow_lock:
-                    self._overflow_lock.acquire()
+                self._pool_lock.acquire()
                 # We don't want to waste time blocking if overflow is not enabled; similarly,
                 # if we're not at the max overflow, we can fail quickly and create a new
                 # connection
-                block = self._pool_timeout > 0 and \
-                        (not self._overflow_enabled or \
-                        (self._overflow_enabled and self._overflow >= self._max_overflow))
+                block = self._pool_timeout > 0 and self._current_conns >= self._max_conns
                 conn = self._q.get(block, self._pool_timeout)
             except pool_queue.Empty:
-                if self._overflow_enabled and self._overflow >= self._max_overflow:
-                    self._notify_on_pool_max(pool_max=self.size() + self.overflow())
-                    message = "ConnectionPool limit of size %d overflow %d reached, unable to obtain connection after %d seconds" \
-                            % (self.size(), self.overflow(), self._pool_timeout)
-                    raise NoConnectionAvailable(message)
-                elif self._overflow_enabled and self._overflow < self._max_overflow:
-                    try:
-                        conn = self._create_connection()
-                        self._overflow += 1
-                    except AllServersUnavailable, exc:
-                        # TODO log exception
-                        raise
-                elif not self._overflow_enabled:
-                    message = "ConnectionPool limit of size %d overflow %d reached" % \
-                              (self.size(), self.overflow())
+                if self._current_conns < self._max_conns:
+                    conn = self._create_connection()
+                    self._current_conns += 1
+                else:
+                    self._notify_on_pool_max(pool_max=self._max_conns)
+                    size_msg = "size %d" % (self._pool_size, )
+                    if self._overflow_enabled:
+                        size_msg += "overflow %d" % (self._max_overflow)
+                    message = "ConnectionPool limit of %s reached, unable to obtain connection after %d seconds" \
+                              % (size_msg, self._pool_timeout)
                     raise NoConnectionAvailable(message)
         finally:
-            if self._overflow_enabled and self._overflow_lock:
-                self._overflow_lock.release()
+            self._pool_lock.release()
 
         if self._pool_threadlocal:
             self._tlocal.current = conn
@@ -784,14 +773,11 @@ class ConnectionPool(AbstractPool):
 
     def status(self):
         """ Returns the status of the pool. """
-        overflow = self.overflow()
-        if overflow < 0:
-            overflow = 0
         return "Pool size: %d, connections in pool: %d, "\
                "current overflow: %d, current checked out "\
                "connections: %d" % (self.size(),
                                     self.checkedin(),
-                                    overflow,
+                                    self.overflow(),
                                     self.checkedout())
 
     def size(self):
@@ -801,10 +787,10 @@ class ConnectionPool(AbstractPool):
         return self._q.qsize()
 
     def overflow(self):
-        return self._overflow
+        return max(self._current_conns - self._pool_size, 0)
 
     def checkedout(self):
-        return self._pool_size - self._q.qsize() + self._overflow
+        return self._current_conns - self.checkedin()
 
 QueuePool = ConnectionPool
 
