@@ -503,19 +503,19 @@ class ColumnFamily(object):
         for key in keys:
             ret[key] = None
 
-        non_empty_keys = []
+        empty_keys = []
         for packed_key, columns in keymap.iteritems():
+            unpacked_key = self._unpack_key(packed_key)
             if len(columns) > 0:
-                unpacked_key = self._unpack_key(packed_key)
-                non_empty_keys.append(unpacked_key)
                 ret[unpacked_key] = self._cosc_to_dict(columns, include_timestamp)
+            else:
+                empty_keys.append(unpacked_key)
 
-        for key in keys:
-            if key not in non_empty_keys:
-                try:
-                    del ret[key]
-                except KeyError:
-                    pass
+        for key in empty_keys:
+            try:
+                del ret[key]
+            except KeyError:
+                pass
 
         return ret
 
