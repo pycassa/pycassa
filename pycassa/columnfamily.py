@@ -404,6 +404,7 @@ class ColumnFamily(object):
         assert not self.super, "get_indexed_slices() is not " \
                 "supported by super column families"
 
+        cl = read_consistency_level or self.read_consistency_level
         cp = self._column_parent()
         sp = self._slice_predicate(columns, column_start, column_finish,
                                    column_reversed, column_count)
@@ -434,7 +435,7 @@ class ColumnFamily(object):
             try:
                 self._obtain_connection()
                 key_slices = self._tlocal.client.get_indexed_slices(
-                    cp, clause, sp, read_consistency_level or self.read_consistency_level)
+                    cp, clause, sp, cl)
             finally:
                 self._release_connection()
 
@@ -606,6 +607,7 @@ class ColumnFamily(object):
 
         """
 
+        cl = read_consistency_level or self.read_consistency_level
         cp = self._column_parent(super_column)
         sp = self._slice_predicate(columns, column_start, column_finish,
                                    column_reversed, column_count, super_column)
@@ -624,7 +626,7 @@ class ColumnFamily(object):
             try:
                 self._obtain_connection()
                 key_slices = self._tlocal.client.get_range_slices(
-                    cp, sp, key_range, read_consistency_level or self.read_consistency_level)
+                    cp, sp, key_range, cl)
             finally:
                 self._release_connection()
             # This may happen if nothing was ever inserted
