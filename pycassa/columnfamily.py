@@ -89,21 +89,21 @@ class ColumnFamily(object):
         self.write_consistency_level = write_consistency_level
         self.timestamp = timestamp
         self.dict_class = dict_class
-        self.autopack_names = autopack_names
-        self.autopack_values = autopack_values
 
         # Determine the ColumnFamily type to allow for auto conversion
         # so that packing/unpacking doesn't need to be done manually
         self.cf_data_type = None
         self.col_name_data_type = None
         self.supercol_name_data_type = None
+        self.key_type = None
         self.col_type_dict = dict()
 
-        col_fam = None
+        self.cfdef = None
         try:
             try:
                 self._obtain_connection()
-                col_fam = self._tlocal.client.get_keyspace_description(use_dict_for_col_metadata=True)[self.column_family]
+                ksdef = self._tlocal.client.get_keyspace_description(use_dict_for_col_metadata=True)
+                self.cfdef = ksdef[self.column_family]
             except KeyError:
                 nfe = NotFoundException()
                 nfe.why = 'Column family %s not found.' % self.column_family
@@ -111,20 +111,53 @@ class ColumnFamily(object):
         finally:
             self._release_connection()
 
-        if col_fam is not None:
-            self.super = col_fam.column_type == 'Super'
-            if self.autopack_names:
-                if not self.super:
-                    self.col_name_data_type = col_fam.comparator_type
-                else:
-                    self.col_name_data_type = col_fam.subcomparator_type
-                    self.supercol_name_data_type = util.extract_type_name(col_fam.comparator_type)
+        self.super = self.cfdef.column_type == 'Super'
+        self._set_autopack_names(autopack_names)
+        self._set_autopack_values(autopack_values)
+        self._set_autopack_keys(True)
 
-                index = self.col_name_data_type = util.extract_type_name(self.col_name_data_type)
-            if self.autopack_values:
-                self.cf_data_type = util.extract_type_name(col_fam.default_validation_class)
-                for name, cdef in col_fam.column_metadata.items():
-                    self.col_type_dict[name] = util.extract_type_name(cdef.validation_class)
+    def _set_autopack_names(self, autopack):
+        if autopack:
+            self._autopack_names = True
+            if not self.super:
+                self.col_name_data_type = util.extract_type_name(self.cfdef.comparator_type)
+            else:
+                self.col_name_data_type = util.extract_type_name(self.cfdef.subcomparator_type)
+                self.supercol_name_data_type = util.extract_type_name(self.cfdef.comparator_type)
+        else:
+            self._autopack_names = False
+
+    def _get_autopack_names(self):
+        return self._autopack_names
+
+    autopack_names = property(_get_autopack_names, _set_autopack_names)
+
+    def _set_autopack_values(self, autopack):
+        if autopack:
+            self._autopack_values = True
+            self.cf_data_type = util.extract_type_name(self.cfdef.default_validation_class)
+            for name, coldef in self.cfdef.column_metadata.items():
+                self.col_type_dict[name] = util.extract_type_name(coldef.validation_class)
+        else:
+            self._autopack_values = False
+
+    def _get_autopack_values(self):
+        return self._autopack_values
+
+    autopack_values = property(_get_autopack_values, _set_autopack_values)
+
+    def _set_autopack_keys(self, autopack):
+        if autopack:
+            self._autopack_keys = True
+            if hasattr(self.cfdef, "key_validation_class"):
+                self.key_type = util.extract_type_name(self.cfdef.key_validation_class)
+        else:
+            self._autopack_keys = False
+
+    def _get_autopack_keys(self):
+        return self._autopack_keys
+
+    autopack_keys = property(_get_autopack_keys, _set_autopack_keys)
 
     def _col_to_dict(self, column, include_timestamp):
         value = self._unpack_value(column.value, column.name)
@@ -255,6 +288,16 @@ class ColumnFamily(object):
             return value
         return util.unpack(value, self._get_data_type_for_col(col_name))
 
+    def _pack_key(self, key):
+        if not self._autopack_keys or not key:
+            return key
+        return util.pack(key, self.key_type)
+
+    def _unpack_key(self, b):
+        if not self._autopack_keys:
+            return b
+        return util.unpack(b, self.key_type)
+
     def _obtain_connection(self):
         self._tlocal.client = self.pool.get()
 
@@ -303,6 +346,7 @@ class ColumnFamily(object):
 
         """
 
+        packed_key = self._pack_key(key)
         single_column = columns is not None and len(columns) == 1
         if (not self.super and single_column) or \
            (self.super and super_column is not None and single_column):
@@ -316,7 +360,8 @@ class ColumnFamily(object):
             try:
                 self._obtain_connection()
                 col_or_super = self._tlocal.client.get(
-                    key, cp, read_consistency_level or self.read_consistency_level)
+                    packed_key, cp,
+                    read_consistency_level or self.read_consistency_level)
             finally:
                 self._release_connection()
             return self._cosc_to_dict([col_or_super], include_timestamp)
@@ -328,7 +373,8 @@ class ColumnFamily(object):
             try:
                 self._obtain_connection()
                 list_col_or_super = self._tlocal.client.get_slice(
-                    key, cp, sp, read_consistency_level or self.read_consistency_level)
+                    packed_key, cp, sp,
+                    read_consistency_level or self.read_consistency_level)
             finally:
                 self._release_connection()
 
@@ -369,7 +415,8 @@ class ColumnFamily(object):
             value = self._pack_value(expr.value, name)
             new_exprs.append(IndexExpression(name, expr.op, value))
 
-        clause = IndexClause(new_exprs, index_clause.start_key, index_clause.count)
+        packed_start_key = self._pack_key(index_clause.start_key)
+        clause = IndexClause(new_exprs, packed_start_key, index_clause.count)
 
         # Figure out how we will chunk the request
         if buffer_size is None:
@@ -398,8 +445,9 @@ class ColumnFamily(object):
                 # because it will be a duplicate.
                 if j == 0 and i != 0:
                     continue
-                yield (key_slice.key, self._cosc_to_dict(
-                        key_slice.columns, include_timestamp))
+                unpacked_key = self._unpack_key(key_slice.key)
+                yield (unpacked_key,
+                       self._cosc_to_dict(key_slice.columns, include_timestamp))
 
                 count += 1
                 if row_count is not None and count >= row_count:
@@ -429,6 +477,7 @@ class ColumnFamily(object):
 
         """
 
+        packed_keys = map(self._pack_key, keys)
         cp = self._column_parent(super_column)
         sp = self._slice_predicate(columns, column_start, column_finish,
                                    column_reversed, column_count, super_column)
@@ -437,10 +486,11 @@ class ColumnFamily(object):
         buffer_size = buffer_size or self.buffer_size
         offset = 0
         keymap = {}
-        while offset < len(keys):
+        while offset < len(packed_keys):
             try:
                 self._obtain_connection()
-                new_keymap = self._tlocal.client.multiget_slice(keys[offset:offset+buffer_size], cp, sp, consistency)
+                new_keymap = self._tlocal.client.multiget_slice(
+                    packed_keys[offset:offset+buffer_size], cp, sp, consistency)
             finally:
                 self._release_connection()
             keymap.update(new_keymap)
@@ -453,10 +503,11 @@ class ColumnFamily(object):
             ret[key] = None
 
         non_empty_keys = []
-        for key, columns in keymap.iteritems():
+        for packed_key, columns in keymap.iteritems():
             if len(columns) > 0:
-                non_empty_keys.append(key)
-                ret[key] = self._cosc_to_dict(columns, include_timestamp)
+                unpacked_key = self._unpack_key(packed_key)
+                non_empty_keys.append(unpacked_key)
+                ret[unpacked_key] = self._cosc_to_dict(columns, include_timestamp)
 
         for key in keys:
             if key not in non_empty_keys:
@@ -483,6 +534,7 @@ class ColumnFamily(object):
 
         """
 
+        packed_key = self._pack_key(key)
         cp = self._column_parent(super_column)
         sp = self._slice_predicate(columns, column_start, column_finish,
                                    False, self.MAX_COUNT, super_column)
@@ -490,7 +542,8 @@ class ColumnFamily(object):
         try:
             self._obtain_connection()
             ret = self._tlocal.client.get_count(
-                key, cp, sp, read_consistency_level or self.read_consistency_level)
+                packed_key, cp, sp,
+                read_consistency_level or self.read_consistency_level)
         finally:
             self._release_connection()
         return ret
@@ -508,6 +561,7 @@ class ColumnFamily(object):
 
         """
 
+        packed_keys = map(self._pack_key, keys)
         cp = self._column_parent(super_column)
         sp = self._slice_predicate(columns, column_start, column_finish,
                                    False, self.MAX_COUNT, super_column)
@@ -515,7 +569,8 @@ class ColumnFamily(object):
         try:
             self._obtain_connection()
             ret = self._tlocal.client.multiget_count(
-                keys, cp, sp, read_consistency_level or self.read_consistency_level)
+                packed_keys, cp, sp,
+                read_consistency_level or self.read_consistency_level)
         finally:
             self._release_connection()
         return ret
@@ -557,7 +612,8 @@ class ColumnFamily(object):
 
         count = 0
         i = 0
-        last_key = start
+        last_key = self._pack_key(start)
+        finish = self._pack_key(finish)
 
         if buffer_size is None:
             buffer_size = self.buffer_size
@@ -579,7 +635,7 @@ class ColumnFamily(object):
                 # because it will be a duplicate.
                 if j == 0 and i != 0:
                     continue
-                yield (key_slice.key,
+                yield (self._unpack_key(key_slice.key),
                        self._cosc_to_dict(key_slice.columns, include_timestamp))
                 count += 1
                 if row_count is not None and count >= row_count:
@@ -610,6 +666,7 @@ class ColumnFamily(object):
         The timestamp Cassandra reports as being used for insert is returned.
 
         """
+        packed_key = self._pack_key(key)
         if ((not self.super) and len(columns) == 1) or \
            (self.super and len(columns) == 1 and len(columns.values()[0]) == 1):
 
@@ -628,13 +685,13 @@ class ColumnFamily(object):
             column = Column(colname, colval, timestamp, ttl)
             try:
                 self._obtain_connection()
-                self._tlocal.client.insert(key, cp, column,
+                self._tlocal.client.insert(packed_key, cp, column,
                     write_consistency_level or self.write_consistency_level)
             finally:
                 self._release_connection()
             return timestamp
         else:
-            return self.batch_insert({key: columns}, timestamp=timestamp, ttl=ttl,
+            return self.batch_insert({packed_key: columns}, timestamp=timestamp, ttl=ttl,
                                      write_consistency_level=write_consistency_level)
 
     def batch_insert(self, rows, timestamp=None, ttl=None, write_consistency_level = None):
@@ -672,11 +729,12 @@ class ColumnFamily(object):
             Available in Cassandra 0.8.0 and later.
 
         """
+        packed_key = self._pack_key(key)
         cp = self._column_parent(super_column)
         column = self._pack_name(column)
         try:
             self._obtain_connection()
-            self._tlocal.client.add(key, cp, CounterColumn(column, value),
+            self._tlocal.client.add(packed_key, cp, CounterColumn(column, value),
                                     write_consistency_level or self.write_consistency_level)
         finally:
             self._release_connection()
@@ -720,11 +778,12 @@ class ColumnFamily(object):
             Available in Cassandra 0.8.0 and later.
 
         """
+        packed_key = self._pack_key(key)
         cp = self._column_path(super_column, column)
         consistency = write_consistency_level or self.write_consistency_level
         try:
             self._obtain_connection()
-            self._tlocal.client.remove_counter(key, cp, consistency)
+            self._tlocal.client.remove_counter(packed_key, cp, consistency)
         finally:
             self._release_connection()
 

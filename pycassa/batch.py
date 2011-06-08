@@ -161,9 +161,10 @@ class Mutator(object):
         if columns:
             if timestamp == None:
                 timestamp = column_family.timestamp()
+            packed_key = column_family._pack_key(key)
             mutations = self._make_mutations_insert(column_family, columns,
                                                     timestamp, ttl)
-            self._enqueue(key, column_family, mutations)
+            self._enqueue(packed_key, column_family, mutations)
         return self
 
     def remove(self, column_family, key, columns=None, super_column=None, timestamp=None):
@@ -185,7 +186,8 @@ class Mutator(object):
                            for col in columns]
             deletion.predicate = SlicePredicate(column_names=packed_cols)
         mutation = Mutation(deletion=deletion)
-        self._enqueue(key, column_family, (mutation,))
+        packed_key = column_family._pack_key(key)
+        self._enqueue(packed_key, column_family, (mutation,))
         return self
 
 
