@@ -134,6 +134,7 @@ class ColumnFamily(object):
         self._tlocal = threading.local()
         self._tlocal.client = None
         self.column_family = column_family
+        self.timestamp = gm_timestamp
         self.load_schema()
 
         recognized_kwargs = ["buffer_size", "read_consitency_level",
