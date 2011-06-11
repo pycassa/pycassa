@@ -552,7 +552,7 @@ class ColumnFamily(object):
     def multiget_count(self, keys, super_column=None,
                        read_consistency_level=None,
                        columns=None, column_start="",
-                       column_finish="", ):
+                       column_finish="", buffer_size=None):
         """
         Perform a column count in parallel on a set of rows.
 
@@ -566,14 +566,30 @@ class ColumnFamily(object):
         cp = self._column_parent(super_column)
         sp = self._slice_predicate(columns, column_start, column_finish,
                                    False, self.MAX_COUNT, super_column)
+        consistency = read_consistency_level or self.read_consistency_level
 
-        try:
-            self._obtain_connection()
-            ret = self._tlocal.client.multiget_count(
-                packed_keys, cp, sp,
-                read_consistency_level or self.read_consistency_level)
-        finally:
-            self._release_connection()
+        buffer_size = buffer_size or self.buffer_size
+        offset = 0
+        keymap = {}
+        while offset < len(packed_keys):
+            try:
+                self._obtain_connection()
+                new_keymap = self._tlocal.client.multiget_count(
+                    packed_keys[offset:offset+buffer_size], cp, sp, consistency)
+            finally:
+                self._release_connection()
+            keymap.update(new_keymap)
+            offset += buffer_size
+
+        ret = self.dict_class()
+
+        # Keep the order of keys
+        for key in keys:
+            ret[key] = None
+
+        for packed_key, count in keymap.iteritems():
+            ret[self._unpack_key(packed_key)] = count
+
         return ret
 
     def get_range(self, start="", finish="", columns=None, column_start="",
