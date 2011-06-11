@@ -42,9 +42,7 @@ class ColumnFamilyMap(object):
         Instances of `cls` are returned from :meth:`get()`, :meth:`multiget()`,
         :meth:`get_range()` and :meth:`get_indexed_slices()`.
 
-        `column_family` is a :class:`~.ColumnFamily` to
-        tie with `cls`.  This :class:`ColumnFamily` should almost always have
-        `autopack_names` and `autopack_values` set to ``False``.
+        `column_family` is a :class:`~.ColumnFamily` to tie to `cls`.
 
         If `raw_columns` is ``True``, all columns will be fetched into the
         `raw_columns` field in requests.
@@ -52,6 +50,8 @@ class ColumnFamilyMap(object):
         """
         self.cls = cls
         self.column_family = column_family
+        self.column_family.autopack_names = False
+        self.column_family.autopack_values = False
 
         self.raw_columns = raw_columns
         self.dict_class = self.column_family.dict_class
