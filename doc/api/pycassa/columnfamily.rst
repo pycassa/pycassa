@@ -5,7 +5,31 @@
 
     .. automethod:: pycassa.columnfamily.gm_timestamp
 
-    .. autoclass:: pycassa.columnfamily.ColumnFamily(pool, column_family[, buffer_size][, read_consistency_level][, write_consistency_level][, timestamp][, dict_class][, autopack_names][, autopack_values])
+    .. autoclass:: pycassa.columnfamily.ColumnFamily(pool, column_family)
+
+        .. autoattribute:: read_consistency_level
+
+        .. autoattribute:: write_consistency_level
+
+        .. autoattribute:: autopack_names
+
+        .. autoattribute:: autopack_values
+
+        .. autoattribute:: autopack_keys
+
+        .. autoattribute:: column_name_class     
+
+        .. autoattribute:: super_column_name_class     
+
+        .. autoattribute:: default_validation_class     
+
+        .. autoattribute:: column_validators     
+
+        .. autoattribute:: key_validation_class     
+
+        .. autoattribute:: buffer_size
+
+        .. autoattribute:: timestamp
 
         .. automethod:: get(key[, columns][, column_start][, column_finish][, column_count][, column_reversed][, include_timestamp][, super_column][, read_consistency_level])
 
