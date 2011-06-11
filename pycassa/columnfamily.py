@@ -693,7 +693,7 @@ class ColumnFamily(object):
                 self._release_connection()
             return timestamp
         else:
-            return self.batch_insert({packed_key: columns}, timestamp=timestamp, ttl=ttl,
+            return self.batch_insert({key: columns}, timestamp=timestamp, ttl=ttl,
                                      write_consistency_level=write_consistency_level)
 
     def batch_insert(self, rows, timestamp=None, ttl=None, write_consistency_level = None):
