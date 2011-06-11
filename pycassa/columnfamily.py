@@ -496,7 +496,7 @@ class ColumnFamily(object):
         `keys` should be a list of keys to fetch.
 
         `buffer_size` is the number of rows from the total list to fetch at a time.
-        If left as ``None``, the ColumnFamily's `buffer_size` will be used.
+        If left as ``None``, the ColumnFamily's :attr:`buffer_size` will be used.
 
         All other parameters are the same as :meth:`get()`, except that a list of keys may
         be passed in.
@@ -640,9 +640,9 @@ class ColumnFamily(object):
 
         When calling `get_range()`, the intermediate results need to be
         buffered if we are fetching many rows, otherwise the Cassandra
-        server will overallocate memory and fail.  `buffer_size` is the size of
-        that buffer in number of rows. If left as ``None``, the
-        ColumnFamily's `buffer_size` attribute will be used.
+        server will overallocate memory and fail. `buffer_size` is the
+        size of that buffer in number of rows. If left as ``None``, the
+        ColumnFamily's :attr:`buffer_size` attribute will be used.
 
         All other parameters are the same as those of :meth:`get()`.
 
