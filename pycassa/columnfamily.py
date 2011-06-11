@@ -32,12 +32,7 @@ def gm_timestamp():
 class ColumnFamily(object):
     """ An abstraction of a Cassandra column family or super column family. """
 
-    def __init__(self, pool, column_family, buffer_size=1024,
-                 read_consistency_level=ConsistencyLevel.ONE,
-                 write_consistency_level=ConsistencyLevel.ONE,
-                 timestamp=gm_timestamp, super=False,
-                 dict_class=util.OrderedDict, autopack_names=True,
-                 autopack_values=True):
+    def __init__(self, pool, column_family, **kwargs):
         """
         An abstraction of a Cassandra column family or super column family.
         Operations on this, such as :meth:`get` or :meth:`insert` will get data from or
@@ -48,47 +43,46 @@ class ColumnFamily(object):
         family will use for all operations.  A connection is drawn from the
         pool before each operations and is returned afterwards.  Note that
         the keyspace to be used is determined by the pool.
-
-        When calling :meth:`get_range()` or :meth:`get_indexed_slices()`,
-        the intermediate results need to be buffered if we are fetching many
-        rows, otherwise the Cassandra server will overallocate memory and fail.
-        `buffer_size` is the size of that buffer in number of rows.  The default
-        is 1024.
-
-        `read_consistency_level` and `write_consistency_level` set the default
-        consistency levels for every operation; these may be overridden
-        per-operation. These should be instances of
-        :class:`~pycassa.cassandra.ttypes.ConsistencyLevel`.  These default
-        to level ``ONE``.
-
-        Each :meth:`insert()` or :meth:`remove` sends a timestamp with every
-        column. The `timestamp` parameter is a function that is used to get
-        this timestamp when needed.  The default function is :meth:`gm_timestamp()`.
-
-        Results are returned as dictionaries. :class:`~pycassa.util.OrderedDict` is
-        used by default so that order is maintained. A different class, such as
-        :class:`dict` may be used instead by passing `dict_class`.
-
-        By default, column family definitions will be examined to determine
-        what data type Cassandra expects for column names and values. When
-        columns are retrieved or inserted, their names and values will be
-        packed or unpacked if necessary to convert them to or from their
-        binary representation. Automatic packing of names and values can
-        be individually enabled or disabled with `autopack_names` and
-        `autopack_values`.  When using :class:`~pycassa.columnfamilymap.ColumnFamilyMap`,
-        these should both be set to ``False``.
-
         """
 
         self.pool = pool
         self._tlocal = threading.local()
         self._tlocal.client = None
         self.column_family = column_family
-        self.buffer_size = buffer_size
-        self.read_consistency_level = read_consistency_level
-        self.write_consistency_level = write_consistency_level
-        self.timestamp = timestamp
-        self.dict_class = dict_class
+
+        """
+        When calling :meth:`get_range()` or :meth:`get_indexed_slices()`,
+        the intermediate results need to be buffered if we are fetching many
+        rows, otherwise the Cassandra server will overallocate memory and fail.
+        `buffer_size` is the size of that buffer in number of rows.  The default
+        is 1024. """
+        self.buffer_size= kwargs.get("buffer_size", 1024)
+
+        """
+        The default consistency level for every read operation, such as 
+        :meth:`get` or `get_range`. This may be overridden per-operation. This should be
+        an instance of :class:`~pycassa.cassandra.ttypes.ConsistencyLevel`.
+        The default level is ``ONE``. """
+        self.read_consistency_level = kwargs.get("read_consistency_level", ConsistencyLevel.ONE)
+
+        """
+        The default consistency level for every write operation, such as 
+        :meth:`insert` or `remove`. This may be overridden per-operation. This should be
+        an instance of :class:`~pycassa.cassandra.ttypes.ConsistencyLevel`.
+        The default level is ``ONE``. """
+        self.write_consistency_level = kwargs.get("write_consistency_level", ConsistencyLevel.ONE)
+
+        """
+        Each :meth:`insert()` or :meth:`remove` sends a timestamp with every
+        column. This attribute is a function that is used to get
+        this timestamp when needed.  The default function is :meth:`gm_timestamp()`."""
+        self.timestamp = kwargs.get("timestamp", gm_timestamp)
+
+        """
+        Results are returned as dictionaries. :class:`~pycassa.util.OrderedDict` is
+        used by default so that order is maintained. A different class, such as
+        :class:`dict` may be used setting this. """
+        self.dict_class = kwargs.get("dict_class", util.OrderedDict)
 
         # Determine the ColumnFamily type to allow for auto conversion
         # so that packing/unpacking doesn't need to be done manually
@@ -96,7 +90,7 @@ class ColumnFamily(object):
         self.col_name_data_type = None
         self.supercol_name_data_type = None
         self.key_type = None
-        self.col_type_dict = dict()
+        self.col_type_dict = {}
 
         self.cfdef = None
         try:
@@ -112,8 +106,8 @@ class ColumnFamily(object):
             self._release_connection()
 
         self.super = self.cfdef.column_type == 'Super'
-        self._set_autopack_names(autopack_names)
-        self._set_autopack_values(autopack_values)
+        self._set_autopack_names(kwargs.get("autopack_names", True))
+        self._set_autopack_values(kwargs.get("autopack_values", True))
         self._set_autopack_keys(True)
 
     def _set_autopack_names(self, autopack):
@@ -130,6 +124,13 @@ class ColumnFamily(object):
     def _get_autopack_names(self):
         return self._autopack_names
 
+    """
+    Controls whether column names are automatically converted to or from
+    their natural type to the binary string format that Cassandra uses.
+    The data type that pycassa will expect is determined by the column family's
+    ``comparator_type`` and ``subcomparator_type`` attributes. By default, this
+    is enabled.
+    """
     autopack_names = property(_get_autopack_names, _set_autopack_names)
 
     def _set_autopack_values(self, autopack):
@@ -144,6 +145,12 @@ class ColumnFamily(object):
     def _get_autopack_values(self):
         return self._autopack_values
 
+    """
+    Controls whether column values are automatically converted to or from
+    their natural type to the binary string format that Cassandra uses.
+    The data type that pycassa will expect is determined by the column family's
+    ``default_validation_class`` and individual column validators, which override
+    the ``default_validation_class``. By default, this is enabled. """
     autopack_values = property(_get_autopack_values, _set_autopack_values)
 
     def _set_autopack_keys(self, autopack):
@@ -157,6 +164,11 @@ class ColumnFamily(object):
     def _get_autopack_keys(self):
         return self._autopack_keys
 
+    """
+    Controls whether row keys are automatically converted to or from
+    their natural type to the binary string format that Cassandra uses.
+    The data type that pycassa will expect is determined by the column family's
+    ``key_validation_class``. By default, this is enabled. """
     autopack_keys = property(_get_autopack_keys, _set_autopack_keys)
 
     def _col_to_dict(self, column, include_timestamp):
