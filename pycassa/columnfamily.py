@@ -32,6 +32,91 @@ def gm_timestamp():
 class ColumnFamily(object):
     """ An abstraction of a Cassandra column family or super column family. """
 
+    buffer_size = 1024
+    """ When calling :meth:`get_range()` or :meth:`get_indexed_slices()`,
+    the intermediate results need to be buffered if we are fetching many
+    rows, otherwise the Cassandra server will overallocate memory and fail.
+    This is the size of that buffer in number of rows. The default is 1024. """
+
+    read_consistency_level = ConsistencyLevel.ONE
+    """ The default consistency level for every read operation, such as 
+    :meth:`get` or :meth:`get_range`. This may be overridden per-operation. This should be
+    an instance of :class:`~pycassa.cassandra.ttypes.ConsistencyLevel`.
+    The default level is ``ONE``. """
+
+    write_consistency_level = ConsistencyLevel.ONE
+    """ The default consistency level for every write operation, such as 
+    :meth:`insert` or :meth:`remove`. This may be overridden per-operation. This should be
+    an instance of :class:`.~pycassa.cassandra.ttypes.ConsistencyLevel`.
+    The default level is ``ONE``. """
+
+    timestamp = gm_timestamp
+    """ Each :meth:`insert()` or :meth:`remove` sends a timestamp with every
+    column. This attribute is a function that is used to get
+    this timestamp when needed.  The default function is :meth:`gm_timestamp()`."""
+
+    dict_class = util.OrderedDict
+    """ Results are returned as dictionaries. :class:`~pycassa.util.OrderedDict` is
+    used by default so that order is maintained. A different class, such as
+    :class:`dict` may be used setting this. """
+
+    autopack_names = True
+    """ Controls whether column names are automatically converted to or from
+    their natural type to the binary string format that Cassandra uses.
+    The data type used is controlled by :attr:`column_name_class` for
+    column names and :attr:`super_column_name_class` for super column names.  
+    By default, this is :const:`True`. """
+
+    autopack_values = True
+    """ Whether column values are automatically converted to or from
+    their natural type to the binary string format that Cassandra uses.
+    The data type used is controlled by :attr:`default_validation_class`
+    and :attr:`column_validators`.  
+    By default, this is :const:`True`. """
+
+    autopack_keys = True
+    """ Whether row keys are automatically converted to or from
+    their natural type to the binary string format that Cassandra uses.
+    The data type used is controlled by :attr:`key_validation_class`.  
+    By default, this is :const:`True`.
+    """
+
+    column_name_class = None
+    """ The data type of column names, which pycassa will use to determine
+    how to pack and unpack them.
+    
+    This is set automatically by inspecting the column family's
+    ``comparator_type``, but it may also be set manually if you want
+    autopacking behavior without setting a ``comparator_type``. Options
+    include anything in :mod:`~pycassa.system_manager`, such as "LongType". """
+
+    super_column_name_class = None
+    """ Like :attr:`column_name_class`, but for super column names. """
+
+    default_validation_class = None
+    """ The default data type of column values, which pycassa will use
+    to determine how to pack and unpack them.
+    
+    This is set automatically by inspecting the column family's
+    ``default_validation_class``, but it may also be set manually if you want
+    autopacking behavior without setting a ``default_validation_class``. Options
+    include anything in :mod:`~pycassa.system_manager`, such as "LongType". """
+
+    column_validators = {}
+    """ Like :attr:`default_validation_class`, but is a :class:`dict` mapping
+    individual columns to types. """
+
+    key_validation_class = None
+    """ The data type of row keys, which pycassa will use to determine how
+    to pack and unpack them.
+    
+    This is set automatically by inspecting the column family's
+    ``key_validation_class`` (which only exists in Cassandra 0.8 or greater),
+    but may be set manually if you want the autopacking behavior without
+    setting a ``key_validation_class`` or if you are using Cassandra 0.7. 
+    Options include anything in :mod:`~pycassa.system_manager`, such as
+    "LongType"."""
+
     def __init__(self, pool, column_family, **kwargs):
         """
         An abstraction of a Cassandra column family or super column family.
@@ -49,55 +134,27 @@ class ColumnFamily(object):
         self._tlocal = threading.local()
         self._tlocal.client = None
         self.column_family = column_family
+        self.load_schema()
 
+        recognized_kwargs = ["buffer_size", "read_consitency_level",
+                             "write_consistency_level", "timestamp",
+                             "dict_class", "buffer_size", "autopack_names",
+                             "autopack_values", "autopack_keys"]
+        for kw in recognized_kwargs:
+            if kw in kwargs:
+                setattr(self, kw, kwargs[kw])
+
+    def load_schema(self):
         """
-        When calling :meth:`get_range()` or :meth:`get_indexed_slices()`,
-        the intermediate results need to be buffered if we are fetching many
-        rows, otherwise the Cassandra server will overallocate memory and fail.
-        `buffer_size` is the size of that buffer in number of rows.  The default
-        is 1024. """
-        self.buffer_size= kwargs.get("buffer_size", 1024)
-
+        Loads the schema definition for this column family from
+        Cassandra and updates comparator and validation classes if
+        neccessary.
         """
-        The default consistency level for every read operation, such as 
-        :meth:`get` or `get_range`. This may be overridden per-operation. This should be
-        an instance of :class:`~pycassa.cassandra.ttypes.ConsistencyLevel`.
-        The default level is ``ONE``. """
-        self.read_consistency_level = kwargs.get("read_consistency_level", ConsistencyLevel.ONE)
-
-        """
-        The default consistency level for every write operation, such as 
-        :meth:`insert` or `remove`. This may be overridden per-operation. This should be
-        an instance of :class:`~pycassa.cassandra.ttypes.ConsistencyLevel`.
-        The default level is ``ONE``. """
-        self.write_consistency_level = kwargs.get("write_consistency_level", ConsistencyLevel.ONE)
-
-        """
-        Each :meth:`insert()` or :meth:`remove` sends a timestamp with every
-        column. This attribute is a function that is used to get
-        this timestamp when needed.  The default function is :meth:`gm_timestamp()`."""
-        self.timestamp = kwargs.get("timestamp", gm_timestamp)
-
-        """
-        Results are returned as dictionaries. :class:`~pycassa.util.OrderedDict` is
-        used by default so that order is maintained. A different class, such as
-        :class:`dict` may be used setting this. """
-        self.dict_class = kwargs.get("dict_class", util.OrderedDict)
-
-        # Determine the ColumnFamily type to allow for auto conversion
-        # so that packing/unpacking doesn't need to be done manually
-        self.cf_data_type = None
-        self.col_name_data_type = None
-        self.supercol_name_data_type = None
-        self.key_type = None
-        self.col_type_dict = {}
-
-        self.cfdef = None
         try:
             try:
                 self._obtain_connection()
                 ksdef = self._tlocal.client.get_keyspace_description(use_dict_for_col_metadata=True)
-                self.cfdef = ksdef[self.column_family]
+                self._cfdef = ksdef[self.column_family]
             except KeyError:
                 nfe = NotFoundException()
                 nfe.why = 'Column family %s not found.' % self.column_family
@@ -105,71 +162,30 @@ class ColumnFamily(object):
         finally:
             self._release_connection()
 
-        self.super = self.cfdef.column_type == 'Super'
-        self._set_autopack_names(kwargs.get("autopack_names", True))
-        self._set_autopack_values(kwargs.get("autopack_values", True))
-        self._set_autopack_keys(True)
+        self.super = self._cfdef.column_type == 'Super'
+        self._load_comparator_classes()
+        self._load_validation_classes()
+        self._load_key_class()
 
-    def _set_autopack_names(self, autopack):
-        if autopack:
-            self._autopack_names = True
-            if not self.super:
-                self.col_name_data_type = util.extract_type_name(self.cfdef.comparator_type)
-            else:
-                self.col_name_data_type = util.extract_type_name(self.cfdef.subcomparator_type)
-                self.supercol_name_data_type = util.extract_type_name(self.cfdef.comparator_type)
+    def _load_comparator_classes(self):
+        if not self.super:
+            self.column_name_class = util.extract_type_name(self._cfdef.comparator_type)
+            self.super_column_name_class = None
         else:
-            self._autopack_names = False
+            self.column_name_class = util.extract_type_name(self._cfdef.subcomparator_type)
+            self.super_column_name_class = util.extract_type_name(self._cfdef.comparator_type)
 
-    def _get_autopack_names(self):
-        return self._autopack_names
+    def _load_validation_classes(self):
+        self.default_validation_class = util.extract_type_name(self._cfdef.default_validation_class)
+        self.column_validators = {}
+        for name, coldef in self._cfdef.column_metadata.items():
+            self.column_validators[name] = util.extract_type_name(coldef.validation_class)
 
-    """
-    Controls whether column names are automatically converted to or from
-    their natural type to the binary string format that Cassandra uses.
-    The data type that pycassa will expect is determined by the column family's
-    ``comparator_type`` and ``subcomparator_type`` attributes. By default, this
-    is enabled.
-    """
-    autopack_names = property(_get_autopack_names, _set_autopack_names)
-
-    def _set_autopack_values(self, autopack):
-        if autopack:
-            self._autopack_values = True
-            self.cf_data_type = util.extract_type_name(self.cfdef.default_validation_class)
-            for name, coldef in self.cfdef.column_metadata.items():
-                self.col_type_dict[name] = util.extract_type_name(coldef.validation_class)
+    def _load_key_class(self):
+        if hasattr(self._cfdef, "key_validation_class"):
+            self.key_validation_class = util.extract_type_name(self._cfdef.key_validation_class)
         else:
-            self._autopack_values = False
-
-    def _get_autopack_values(self):
-        return self._autopack_values
-
-    """
-    Controls whether column values are automatically converted to or from
-    their natural type to the binary string format that Cassandra uses.
-    The data type that pycassa will expect is determined by the column family's
-    ``default_validation_class`` and individual column validators, which override
-    the ``default_validation_class``. By default, this is enabled. """
-    autopack_values = property(_get_autopack_values, _set_autopack_values)
-
-    def _set_autopack_keys(self, autopack):
-        if autopack:
-            self._autopack_keys = True
-            if hasattr(self.cfdef, "key_validation_class"):
-                self.key_type = util.extract_type_name(self.cfdef.key_validation_class)
-        else:
-            self._autopack_keys = False
-
-    def _get_autopack_keys(self):
-        return self._autopack_keys
-
-    """
-    Controls whether row keys are automatically converted to or from
-    their natural type to the binary string format that Cassandra uses.
-    The data type that pycassa will expect is determined by the column family's
-    ``key_validation_class``. By default, this is enabled. """
-    autopack_keys = property(_get_autopack_keys, _set_autopack_keys)
+            self.key_validation_class = 'BytesType'
 
     def _col_to_dict(self, column, include_timestamp):
         value = self._unpack_value(column.value, column.name)
@@ -246,9 +262,9 @@ class ColumnFamily(object):
         if value is None: return
 
         if is_supercol_name:
-            d_type = self.supercol_name_data_type
+            d_type = self.super_column_name_class
         else:
-            d_type = self.col_name_data_type
+            d_type = self.column_name_class
 
         if d_type == 'TimeUUIDType':
             if slice_end:
@@ -270,16 +286,16 @@ class ColumnFamily(object):
         if b is None: return
 
         if is_supercol_name:
-            d_type = self.supercol_name_data_type
+            d_type = self.super_column_name_class
         else:
-            d_type = self.col_name_data_type
+            d_type = self.column_name_class
 
         return util.unpack(b, d_type)
 
     def _get_data_type_for_col(self, col_name):
-        if col_name not in self.col_type_dict.keys():
-            return self.cf_data_type
-        return self.col_type_dict[col_name]
+        if col_name not in self.column_validators.keys():
+            return self.default_validation_class
+        return self.column_validators[col_name]
 
     def _pack_value(self, value, col_name):
         if not self.autopack_values:
@@ -301,14 +317,14 @@ class ColumnFamily(object):
         return util.unpack(value, self._get_data_type_for_col(col_name))
 
     def _pack_key(self, key):
-        if not self._autopack_keys or not key:
+        if not self.autopack_keys or not key:
             return key
-        return util.pack(key, self.key_type)
+        return util.pack(key, self.key_validation_class)
 
     def _unpack_key(self, b):
-        if not self._autopack_keys:
+        if not self.autopack_keys:
             return b
-        return util.unpack(b, self.key_type)
+        return util.unpack(b, self.key_validation_class)
 
     def _obtain_connection(self):
         self._tlocal.client = self.pool.get()
