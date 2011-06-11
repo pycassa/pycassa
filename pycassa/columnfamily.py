@@ -585,12 +585,14 @@ class ColumnFamily(object):
         """
         Perform a column count in parallel on a set of rows.
 
-        The parameters are the same as for :meth:`get()`, except that a list
+        The parameters are the same as for :meth:`multiget()`, except that a list
         of keys may be used. A dictionary of the form ``{key: int}`` is
         returned.
 
+        `buffer_size` is the number of rows from the total list to count at a time.
+        If left as ``None``, the ColumnFamily's :attr:`buffer_size` will be used.
+        
         """
-
         packed_keys = map(self._pack_key, keys)
         cp = self._column_parent(super_column)
         sp = self._slice_predicate(columns, column_start, column_finish,
