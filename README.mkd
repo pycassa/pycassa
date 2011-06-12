@@ -1,12 +1,16 @@
 pycassa
 =======
 
-pycassa is a python client library for Apache Cassandra with the following features:
+pycassa is a python client library for [Apache Cassandra](http://cassandra.apache.org)
+with the following features:
 
-1. Auto-failover for normal or thread-local connections
-2. Connection pooling
-3. A batch interface
-4. A method to map an existing class to a Cassandra column family
+* Automatic failover and operation retries
+* Connection pooling
+* Multithreading support
+* A batch interface
+* A class for mapping classes to Cassandra column families
+
+The latest release is compatible with Cassandra 0.7 and 0.8.
 
 Documentation
 -------------
@@ -44,7 +48,7 @@ The simplest way to install manually is to copy the pycassa directories to
 your program.  If you want to install, make sure you have thrift installed,
 and run setup.py as a superuser.
 
-    easy_install thrift05
+    easy_install thrift
     python setup.py install
 
 Connecting
@@ -58,8 +62,8 @@ you can use help:
 
 To get a connection pool, pass a Keyspace and an optional list of servers:
 
-    >>> pool = pycassa.connect('Keyspace1') # Defaults to connecting to the server at 'localhost:9160'
-    >>> pool = pycassa.connect('Keyspace1', ['192.168.2.10:9160'])
+    >>> pool = pycassa.ConnectionPool('Keyspace1') # Defaults to connecting to the server at 'localhost:9160'
+    >>> pool = pycassa.ConnectionPool('Keyspace1', server_list=['192.168.2.10'])
 
 See the [tutorial](http://pycassa.github.com/pycassa/tutorial.html#connecting-to-cassandra) for more details.
 
@@ -68,7 +72,7 @@ Basic Usage
 
 To use the standard interface, create a ColumnFamily instance.
 
-    >>> pool = pycassa.connect('Keyspace1')
+    >>> pool = pycassa.ConnectionPool('Keyspace1')
     >>> cf = pycassa.ColumnFamily(pool, 'Standard1')
     >>> cf.insert('foo', {'column1': 'val1'})
     1261349837816957
