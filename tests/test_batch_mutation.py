@@ -5,20 +5,26 @@ import unittest
 import uuid
 
 from nose import SkipTest
-from nose.tools import assert_raises
+from nose.tools import assert_raises, assert_equal
 from pycassa import ConnectionPool, ColumnFamily, ConsistencyLevel, NotFoundException
 import pycassa.batch as batch_mod
+from pycassa.system_manager import *
+from pycassa.cassandra.constants import *
 
 ROWS = {'1': {'a': '123', 'b':'123'},
         '2': {'a': '234', 'b':'234'},
         '3': {'a': '345', 'b':'345'}}
 
 def setup_module():
-    global pool, cf, scf
+    global pool, cf, scf, counter_cf, super_counter_cf, sysman
     credentials = {'username': 'jsmith', 'password': 'havebadpass'}
     pool = ConnectionPool(keyspace='PycassaTestKeyspace', credentials=credentials)
     cf = ColumnFamily(pool, 'Standard1')
     scf = ColumnFamily(pool, 'Super1')
+    sysman = SystemManager()
+    if sysman._conn.version != CASSANDRA_07:
+        counter_cf = ColumnFamily(pool, 'Counter1')
+        super_counter_cf = ColumnFamily(pool, 'SuperCounter1')
 
 def teardown_module():
     pool.dispose()
@@ -46,6 +52,25 @@ class TestMutator(unittest.TestCase):
         assert scf.get('one') == ROWS
         assert scf.get('two') == ROWS
         assert scf.get('three') == ROWS
+
+    def test_insert_counters(self):
+        if sysman._conn.version == CASSANDRA_07:
+            raise SkipTest("Cassandra 0.7 does not have counters.")
+        batch = counter_cf.batch()
+        batch.insert('one', {'col': 1})
+        batch.insert('two', {'col': 2})
+        batch.insert('three', {'col': 3})
+        batch.send()
+        assert_equal(counter_cf.get('one'), {'col': 1})
+        assert_equal(counter_cf.get('two'), {'col': 2})
+        assert_equal(counter_cf.get('three'), {'col': 3})
+
+        batch = super_counter_cf.batch()
+        batch.insert('one', {'scol': {'col1': 1, 'col2': 2}})
+        batch.insert('two', {'scol': {'col1': 3, 'col2': 4}})
+        batch.send()
+        assert_equal(super_counter_cf.get('one'), {'scol': {'col1': 1, 'col2': 2}})
+        assert_equal(super_counter_cf.get('two'), {'scol': {'col1': 3, 'col2': 4}})
 
     def test_queue_size(self):
         batch = cf.batch(queue_size=2)

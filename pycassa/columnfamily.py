@@ -220,7 +220,7 @@ class ColumnFamily(object):
                 ret[self._unpack_name(scol.name, True)] = self._scol_to_dict(scol, include_timestamp)
             else:
                 scounter = cosc.counter_super_column
-                ret[self._unpack_name(scounter.name, True)] = self._scounter_to_dict(scol, False)
+                ret[self._unpack_name(scounter.name, True)] = self._scounter_to_dict(scounter)
         return ret
 
     def _column_path(self, super_column=None, column=None):
@@ -294,9 +294,7 @@ class ColumnFamily(object):
         return util.unpack(b, d_type)
 
     def _get_data_type_for_col(self, col_name):
-        if col_name not in self.column_validators.keys():
-            return self.default_validation_class
-        return self.column_validators[col_name]
+        return self.column_validators.get(col_name, self.default_validation_class)
 
     def _pack_value(self, value, col_name):
         if not self.autopack_values:

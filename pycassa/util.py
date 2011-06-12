@@ -114,7 +114,7 @@ def convert_uuid_to_time(uuid_arg):
     return (ts - 0x01b21dd213814000L)/1e7
 
 _TYPES = ['BytesType', 'LongType', 'IntegerType', 'UTF8Type', 'AsciiType',
-         'LexicalUUIDType', 'TimeUUIDType']
+         'LexicalUUIDType', 'TimeUUIDType', 'CounterColumnType']
 
 def extract_type_name(string):
     if string is None: return 'BytesType'
