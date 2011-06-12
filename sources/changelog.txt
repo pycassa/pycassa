@@ -1,6 +1,108 @@
 Changelog
 =========
 
+Changes in Version 1.1.0
+------------------------
+This release adds compatibility with Cassandra 0.8, including support
+for counters and key_validation_class. This release is
+backwards-compatible with Cassandra 0.7, and can support running against
+a mixed cluster of both Cassandra 0.7 and 0.8.
+
+
+Changes related to Cassandra 0.8
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Addition of :data:`~.system_manager.COUNTER_COLUMN_TYPE` to
+  :mod:`~.system_manager`.
+
+- Several new column family attributes, including ``key_validation_class``,
+  ``replicate_on_write``, ``merge_shards_chance``, ``row_cache_provider``,
+  and ``key_alias``.
+
+- The new :meth:`.ColumnFamily.add()` and :meth:`.ColumnFamily.remove_counter()`
+  methods.
+
+- Support for counters in :mod:`pycassa.batch` and 
+  :meth:`.ColumnFamily.batch_insert()`.
+
+- Autopacking of keys based on ``key_validation_class``.
+
+Other Features
+~~~~~~~~~~~~~~
+- :meth:`.ColumnFamily.multiget()` now has a `buffer_size` parameter
+
+- :meth:`.ColumnFamily.multiget_count()` now returns rows
+  in the order that the keys were passed in, similar to how
+  :meth:`~.ColumnFamily.multiget()` behaves. It also uses
+  the :attr:`~.ColumnFamily.dict_class` attribute for the containing
+  class instead of always using a :class:`dict`.
+
+- Autpacking behavior is now more transparent and configurable,
+  allowing the user to get functionality similar to the CLI's
+  ``assume`` command, whereby items are packed and unpacked as
+  though they were a certain data type, even if Cassandra does
+  not use a matching comparator type or validation class. This
+  behavior can be controlled through the following attributes:
+
+  - :attr:`.ColumnFamily.column_name_class`
+
+  - :attr:`.ColumnFamily.super_column_name_class` 
+
+  - :attr:`.ColumnFamily.key_validation_class` 
+
+  - :attr:`.ColumnFamily.default_validation_class`
+
+  - :attr:`.ColumnFamily.column_validators`
+
+- A :class:`.ColumnFamily` may reload its schema to handle
+  changes in validation classes with :meth:`.ColumnFamily.load_schema()`.
+
+Bug Fixes
+~~~~~~~~~
+There were several related issues with overlow in :class:`.ConnectionPool`:
+
+- Connection failures when a :class:`.ConnectionPool` was in a state
+  of overflow would not result in adjustment of the overflow counter,
+  eventually leading the :class:`.ConnectionPool` to refuse to create
+  new connections.
+
+- Settings of -1 for :attr:`.ConnectionPool.overflow` erroneously caused
+  overflow to be disabled.
+
+- If overflow was enabled in conjunction with `prefill` being disabled,
+  the effective overflow limit was raised to ``max_overflow + pool_size``.
+
+Other
+~~~~~
+- Overflow is now disabled by default in :class:`.ConnectionPool`.
+
+- :class:`.ColumnFamilyMap` now sets the underlying :class:`.ColumnFamily`'s
+  :attr:`~.ColumnFamily.autopack_names` and
+  :attr:`~.ColumnFamily.autopack_values` attributes to ``False`` upon
+  construction.
+
+- Documentation and tests will no longer be included in the
+  packaged tarballs.
+
+Removed Deprecated Items
+~~~~~~~~~~~~~~~~~~~~~~~~
+The following deprecated items have been removed:
+
+- :meth:`.ColumnFamilyMap.get_count()`
+
+- The `instance` parameter from :meth:`.ColumnFamilyMap.get_indexed_slices()`
+
+- The :class:`~.types.Int64` Column type.
+
+- :meth:`.SystemManager.get_keyspace_description()`
+
+Deprecated
+~~~~~~~~~~
+Athough not technically deprecated, most :class:`.ColumnFamily`
+constructor arguments should instead be set by setting the
+corresponding attribute on the :class:`.ColumnFamily` after
+construction. However, all previous constructor arguments
+will continue to be supported if passed as keyword arguments.
+
 Changes in Version 1.0.8
 ------------------------
 - Pack :class:`.IndexExpression` values in :meth:`~.ColumnFamilyMap.get_indexed_slices()`
