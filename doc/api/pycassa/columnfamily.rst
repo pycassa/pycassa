@@ -27,9 +27,13 @@
 
         .. autoattribute:: key_validation_class     
 
+        .. autoattribute:: dict_class
+
         .. autoattribute:: buffer_size
 
         .. autoattribute:: timestamp
+
+        .. automethod:: load_schema()
 
         .. automethod:: get(key[, columns][, column_start][, column_finish][, column_count][, column_reversed][, include_timestamp][, super_column][, read_consistency_level])
 
