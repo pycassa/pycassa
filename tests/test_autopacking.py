@@ -713,81 +713,23 @@ class TestKeyValidators(unittest.TestCase):
                 cf.remove(key)
                 assert_raises(NotFoundException, cf.get, key)
 
-class TestKeyValidatorsWithCounters(unittest.TestCase):
-
-    @classmethod
-    def setup_class(cls):
+    def test_add_remove_counter(self):
         sys = SystemManager()
-        have_key_validators = sys._conn.version != CASSANDRA_07
-        if not have_key_validators:
+        if sys._conn.version == CASSANDRA_07:
             raise SkipTest("Cassandra 0.7 does not have key validators")
 
         sys.create_column_family(TEST_KS, 'KeyLongCounter', key_validation_class=LONG_TYPE,
                                  default_validation_class=COUNTER_COLUMN_TYPE)
-        sys.create_column_family(TEST_KS, 'KeyIntegerCounter', key_validation_class=INT_TYPE,
-                                 default_validation_class=COUNTER_COLUMN_TYPE)
-        sys.create_column_family(TEST_KS, 'KeyTimeUUIDCounter', key_validation_class=TIME_UUID_TYPE,
-                                 default_validation_class=COUNTER_COLUMN_TYPE)
-        sys.create_column_family(TEST_KS, 'KeyLexicalUUIDCounter', key_validation_class=LEXICAL_UUID_TYPE,
-                                 default_validation_class=COUNTER_COLUMN_TYPE)
-        sys.create_column_family(TEST_KS, 'KeyAsciiCounter', key_validation_class=ASCII_TYPE,
-                                 default_validation_class=COUNTER_COLUMN_TYPE)
-        sys.create_column_family(TEST_KS, 'KeyUTF8Counter', key_validation_class=UTF8_TYPE,
-                                 default_validation_class=COUNTER_COLUMN_TYPE)
-        sys.create_column_family(TEST_KS, 'KeyBytesCounter', key_validation_class=BYTES_TYPE,
-                                 default_validation_class=COUNTER_COLUMN_TYPE)
         sys.close()
+        cf_long  = ColumnFamily(pool, 'KeyLongCounter')
 
-        cls.cf_long  = ColumnFamily(pool, 'KeyLongCounter')
-        cls.cf_int   = ColumnFamily(pool, 'KeyIntegerCounter')
-        cls.cf_time  = ColumnFamily(pool, 'KeyTimeUUIDCounter')
-        cls.cf_lex   = ColumnFamily(pool, 'KeyLexicalUUIDCounter')
-        cls.cf_ascii = ColumnFamily(pool, 'KeyAsciiCounter')
-        cls.cf_utf8  = ColumnFamily(pool, 'KeyUTF8Counter')
-        cls.cf_bytes = ColumnFamily(pool, 'KeyBytesCounter')
+        key = 1111111111111111L
 
-        cls.cfs = [cls.cf_long, cls.cf_int, cls.cf_time, cls.cf_lex,
-                    cls.cf_ascii, cls.cf_utf8, cls.cf_bytes]
-
-    def tearDown(self):
-        for cf in TestKeyValidatorsWithCounters.cfs:
-            cf.truncate()
-
-    def setUp(self):
-        self.type_groups = []
-
-        long_keys = [1111111111111111L,
-                     2222222222222222L,
-                     3333333333333333L]
-        self.type_groups.append((TestKeyValidatorsWithCounters.cf_long, long_keys))
-
-        int_keys = [1,2,3]
-        self.type_groups.append((TestKeyValidatorsWithCounters.cf_int, int_keys))
-
-        time_keys = [TIME1, TIME2, TIME3]
-        self.type_groups.append((TestKeyValidatorsWithCounters.cf_time, time_keys))
-
-        lex_keys = [uuid.UUID(bytes='aaa aaa aaa aaaa'),
-                    uuid.UUID(bytes='bbb bbb bbb bbbb'),
-                    uuid.UUID(bytes='ccc ccc ccc cccc')]
-        self.type_groups.append((TestKeyValidatorsWithCounters.cf_lex, lex_keys))
-
-        ascii_keys = ['aaaa', 'bbbb', 'cccc']
-        self.type_groups.append((TestKeyValidatorsWithCounters.cf_ascii, ascii_keys))
-
-        utf8_keys = [u'a\u0020', u'b\u0020', u'c\u0020']
-        self.type_groups.append((TestKeyValidatorsWithCounters.cf_utf8, utf8_keys))
-
-        bytes_keys = ['aaaa', 'bbbb', 'cccc']
-        self.type_groups.append((TestKeyValidatorsWithCounters.cf_bytes, bytes_keys))
-
-    def test_add(self):
-        for cf, keys in self.type_groups:
-            for key in keys:
-                cf.add(key, 'col')
-                assert_equal(cf.get(key), {'col': 1})
-                cf.remove_counter(key, 'col')
-                assert_raises(NotFoundException, cf.get, key)
+        cf_long.add(key, 'col')
+        assert_equal(cf_long.get(key), {'col': 1})
+        cf_long.remove_counter(key, 'col')
+        time.sleep(0.1)
+        assert_raises(NotFoundException, cf_long.get, key)
 
 class TestBigInt(unittest.TestCase):
 
