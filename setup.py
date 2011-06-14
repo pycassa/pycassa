@@ -90,7 +90,6 @@ setup(
                   'pycassa.cassandra.c07',
                   'pycassa.cassandra.c08',
                   'pycassa.logging'],
-      py_modules = ['ez_setup'],
       requires = ['thrift05'],
       scripts=['pycassaShell'],
       cmdclass={"doc": doc},
