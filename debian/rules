@@ -10,6 +10,9 @@ build:
 override_dh_auto_install:
 	dh_auto_install -ppython-pycassa --destdir=debian/python-pycassa
 
+override_dh_installchangelogs:
+	dh_installchangelogs CHANGES
+
 clean:
 	dh clean
 	$(RM) -r doc/_build
