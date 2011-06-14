@@ -3,8 +3,8 @@
 %:
 	dh $@
 
-build:
-	dh build
+override_dh_auto_build:
+	dh_auto_build
 	python setup.py doc
 
 override_dh_install:
@@ -21,6 +21,6 @@ override_dh_installchangelogs:
 override_dh_compress:
 	dh_compress -X pycassa-doc/manual
 
-clean:
-	dh clean
+override_dh_clean:
+	dh_clean
 	$(RM) -r doc/_build
