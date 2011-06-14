@@ -6,3 +6,10 @@ DEB_PYTHON_SYSTEM = pysupport
 include /usr/share/cdbs/1/class/python-distutils.mk
 
 DEB_INSTALL_CHANGELOGS_python-pycassa := CHANGES
+
+common-post-build-indep::
+	python setup.py doc
+
+clean::
+	$(RM) -r doc/_build
+	$(RM) debian/pycompat

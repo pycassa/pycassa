@@ -2,7 +2,7 @@ Source: pycassa
 Section: python
 Priority: optional
 Maintainer: paul cannon <paul@datastax.com>
-Build-Depends: debhelper (>= 5), python-all, cdbs, python-support
+Build-Depends: debhelper (>= 5), python-all, cdbs, python-support, python-sphinx
 Standards-Version: 3.9.1
 
 Package: python-pycassa
@@ -20,3 +20,20 @@ Description: Client library for Apache Cassandra
   * A class for mapping classes to Cassandra column families
  .
  This version is compatible with Cassandra 0.7 and 0.8.
+
+Package: pycassa-doc
+Architecture: all
+Suggests: python-pycassa
+Description: Documentation for the Pycassa library
+ Pycassa is a client library for Apache Cassandra with the following
+ features:
+ .
+  * Automatic failover and operation retries
+  * Connection pooling
+  * Multithreading support
+  * A batch interface
+  * A class for mapping classes to Cassandra column families
+ .
+ This package contains the documentation for Pycassa, including a
+ tutorial, an API reference, a HOWTO for the pycassaShell tool, and
+ some usage examples.
