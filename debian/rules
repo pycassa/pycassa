@@ -1,15 +1,15 @@
 #!/usr/bin/make -f
 
-include /usr/share/cdbs/1/rules/debhelper.mk
+%:
+	dh $@
 
-DEB_PYTHON_SYSTEM = pysupport
-include /usr/share/cdbs/1/class/python-distutils.mk
-
-DEB_INSTALL_CHANGELOGS_python-pycassa := CHANGES
-
-common-post-build-indep::
+build:
+	dh build
 	python setup.py doc
 
-clean::
+override_dh_auto_install:
+	dh_auto_install -ppython-pycassa --destdir=debian/python-pycassa
+
+clean:
+	dh clean
 	$(RM) -r doc/_build
-	$(RM) debian/pycompat
