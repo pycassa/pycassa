@@ -13,6 +13,9 @@ override_dh_auto_install:
 override_dh_installchangelogs:
 	dh_installchangelogs CHANGES
 
+override_dh_compress:
+	dh_compress -X pycassa-doc/manual
+
 clean:
 	dh clean
 	$(RM) -r doc/_build
