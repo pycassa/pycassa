@@ -1,0 +1,60 @@
+.TH pycassaShell 1 "June 2011"
+.SH NAME
+.B pycassaShell
+\- interactive Cassandra python shell
+.SH SYNOPSIS
+.B pycassaShell
+[\fIOPTIONS\fR]
+.SH DESCRIPTION
+pycassaShell is an interactive Cassandra python shell. It is useful for
+exploring Cassandra, especially for those who are just beginning.
+
+It is recommended that you have \fBIPython\fR, an enhanced interactive python
+shell, installed. \fBpycassaShell\fR will invoke ipython underneath to provide
+extra functionality if it is installed. However, it will still work without it.
+
+When \fBpycassaShell\fR starts, it creates a \fIColumnFamily\fR object for every
+existing column family in your Cassandra cluster and prints the names of the
+objects. You can use these to insert and retrieve data easily from Cassandra.
+
+\fBpycassaShell\fR acts similarly to the standard Python (or IPython) REPL. To
+use, enter Python expressions at the prompt and hit Enter to see the results.
+
+.SH OPTIONS
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Show a help message and exit
+.TP
+\fB\-k\fR KEYSPACE, \fB\-\-keyspace\fR=\fIKEYSPACE\fR
+Name of the Cassandra keyspace to which pycassaShell should attach
+.TP
+\fB\-H\fR HOST, \fB\-\-host\fR=\fIHOST\fR
+Hostname of a Cassandra node
+.TP
+\fB\-p\fR PORT, \fB\-\-port\fR=\fIPORT\fR
+Thrift port number for that Cassandra node
+.TP
+\fB\-u\fR USER, \fB\-\-user\fR=\fIUSER\fR
+Username (for simple auth)
+.TP
+\fB\-P\fR PASSWD, \fB\-\-passwd\fR=\fIPASSWD\fR
+Password (for simple auth)
+.TP
+\fB\-S\fR, \fB\-\-streaming\fR
+Use streaming transport (for Cassandra 0.6.x and below)
+.TP
+\fB\-F\fR, \fB\-\-framed\fR
+Use framed transport (for Cassandra 0.7.x and above). This is the default transport.
+.TP
+\fB\-f\fR FILE, \fB\-\-file\fR=\fIFILE\fR
+Run a script after startup
+.SH SEE ALSO
+For more information on the interactive Python/IPython prompt, see
+\fBpython\fP(1) or \fBipython\fP(1).
+.P
+For more information on the extra Pycassa
+objects made available in the \fBpycassaShell\fR environment, see
+\fC/usr/share/doc/pycassa-doc/manual/pycassa_shell.html\fR
+in the \fBpycassa-doc\fR package.
+.SH AUTHOR
+Tyler Hobbs <pycassa.maintainer@gmail.com>
