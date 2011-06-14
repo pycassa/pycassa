@@ -14,7 +14,7 @@ Contents
   A short overview of **pycassa** usage.
 
 :doc:`example/index`
-  An example of how to use **pycassa** with `Twissandra <http://github.com/ericflo/twissandra>`_, an example project that uses Cassandra to provide functionality similar to Twitter.
+  An example of how to use **pycassa** with `Twissandra <http://github.com/twissandra/twissandra>`_, an example project that uses Cassandra to provide functionality similar to Twitter.
 
 :doc:`pycassa_shell`
   How to use the included pycassaShell.
