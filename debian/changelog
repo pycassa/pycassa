@@ -1,0 +1,5 @@
+pycassa (1.1.0) unstable; urgency=low
+
+  * initial packaging
+
+ -- paul cannon <paul@datastax.com>  Tue, 14 Jun 2011 14:00:12 -0500

@@ -1,0 +1,7 @@
+python-pycassa for Debian
+-------------------------
+
+The Pycassa manual (including the tutorial, howtos, and API reference
+documentation) can be found in the pycassa-doc package.
+
+ -- paul cannon <paul@datastax.com>  Tue, 14 Jun 2011 15:44:54 -0500

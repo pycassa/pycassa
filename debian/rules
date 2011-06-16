@@ -1,0 +1,26 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	dh_auto_build
+	python setup.py doc
+
+override_dh_install:
+	dh_install
+	rm debian/pycassa-doc/usr/share/doc/pycassa-doc/manual/static/jquery.js
+	ln -s /usr/share/javascript/jquery/jquery.js debian/pycassa-doc/usr/share/doc/pycassa-doc/manual/static/
+
+override_dh_auto_install:
+	dh_auto_install -ppython-pycassa --destdir=debian/python-pycassa
+
+override_dh_installchangelogs:
+	dh_installchangelogs CHANGES
+
+override_dh_compress:
+	dh_compress -X pycassa-doc/manual
+
+override_dh_clean:
+	dh_clean
+	$(RM) -r doc/_build

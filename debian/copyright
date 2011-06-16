@@ -1,0 +1,17 @@
+Format: http://anonscm.debian.org/viewvc/dep/web/deps/dep5.mdwn?revision=174&view=co
+Upstream-Name: pycassa
+Upstream-Contact: Tyler Hobbs <pycassa.maintainer@gmail.com>
+Source: https://github.com/pycassa/pycassa
+
+Files: *
+Copyright: 2009 Jonathan Hseu
+License: Expat
+
+Files: pycassa/util.py
+Copyright: 2005-2010 Michael Bayer mike_mp@zzzcomputing.com
+           2009 Raymond Hettinger
+License: Expat
+
+Files: pycassa/cassandra/*
+Copyright: 2009-2010 The Apache Software Foundation
+License: Apache-2
