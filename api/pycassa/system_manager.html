@@ -56,45 +56,9 @@
   <div class="section" id="module-pycassa.system_manager">
 <span id="pycassa-system-manager-manage-schema-definitions"></span><h1><a class="reference internal" href="#module-pycassa.system_manager" title="pycassa.system_manager"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.system_manager</span></tt></a> &#8211; Manage Schema Definitions<a class="headerlink" href="#module-pycassa.system_manager" title="Permalink to this headline">¶</a></h1>
 <dl class="data">
-<dt id="pycassa.system_manager.ASCII_TYPE">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">ASCII_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.ASCII_TYPE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores data as ASCII text</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="pycassa.system_manager.BYTES_TYPE">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">BYTES_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.BYTES_TYPE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores data as a byte array</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="pycassa.system_manager.COUNTER_COLUMN_TYPE">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">COUNTER_COLUMN_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.COUNTER_COLUMN_TYPE" title="Permalink to this definition">¶</a></dt>
-<dd><p>A 64bit counter column</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="pycassa.system_manager.INT_TYPE">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">INT_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.INT_TYPE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores data as an 4 byte integer</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="pycassa.system_manager.KEYS_INDEX">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">KEYS_INDEX</tt><a class="headerlink" href="#pycassa.system_manager.KEYS_INDEX" title="Permalink to this definition">¶</a></dt>
-<dd><p>A secondary index type where each indexed value receives its own row</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="pycassa.system_manager.LEXICAL_UUID_TYPE">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">LEXICAL_UUID_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.LEXICAL_UUID_TYPE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores data as a non-version 1 UUID</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="pycassa.system_manager.LONG_TYPE">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">LONG_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.LONG_TYPE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores data as an 8 byte integer</p>
+<dt id="pycassa.system_manager.SIMPLE_STRATEGY">
+<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">SIMPLE_STRATEGY</tt><a class="headerlink" href="#pycassa.system_manager.SIMPLE_STRATEGY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replication strategy that simply chooses consecutive nodes in the ring for replicas</p>
 </dd></dl>
 
 <dl class="data">
@@ -111,9 +75,57 @@ This was originally called &#8216;RackAwareStrategy&#8217;.</p>
 </dd></dl>
 
 <dl class="data">
-<dt id="pycassa.system_manager.SIMPLE_STRATEGY">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">SIMPLE_STRATEGY</tt><a class="headerlink" href="#pycassa.system_manager.SIMPLE_STRATEGY" title="Permalink to this definition">¶</a></dt>
-<dd><p>Replication strategy that simply chooses consecutive nodes in the ring for replicas</p>
+<dt id="pycassa.system_manager.BYTES_TYPE">
+<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">BYTES_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.BYTES_TYPE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores data as a byte array</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pycassa.system_manager.LONG_TYPE">
+<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">LONG_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.LONG_TYPE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores data as an 8 byte integer</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pycassa.system_manager.INT_TYPE">
+<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">INT_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.INT_TYPE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores data as an 4 byte integer</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pycassa.system_manager.ASCII_TYPE">
+<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">ASCII_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.ASCII_TYPE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores data as ASCII text</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pycassa.system_manager.UTF8_TYPE">
+<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">UTF8_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.UTF8_TYPE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores data as UTF8 encoded text</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pycassa.system_manager.TIME_UUID_TYPE">
+<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">TIME_UUID_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.TIME_UUID_TYPE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores data as a version 1 UUID</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pycassa.system_manager.LEXICAL_UUID_TYPE">
+<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">LEXICAL_UUID_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.LEXICAL_UUID_TYPE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores data as a non-version 1 UUID</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pycassa.system_manager.COUNTER_COLUMN_TYPE">
+<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">COUNTER_COLUMN_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.COUNTER_COLUMN_TYPE" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 64bit counter column</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pycassa.system_manager.KEYS_INDEX">
+<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">KEYS_INDEX</tt><a class="headerlink" href="#pycassa.system_manager.KEYS_INDEX" title="Permalink to this definition">¶</a></dt>
+<dd><p>A secondary index type where each indexed value receives its own row</p>
 </dd></dl>
 
 <dl class="class">
@@ -138,27 +150,103 @@ the modification.</p>
 </pre></div>
 </div>
 <dl class="method">
-<dt id="pycassa.system_manager.SystemManager.alter_column">
-<tt class="descname">alter_column</tt><big>(</big><em>keyspace</em>, <em>column_family</em>, <em>column</em>, <em>value_type</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.alter_column" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets a data type for the value of a specific column.</p>
-<p><cite>value_type</cite> is a string that determines what type the column value will be.
-By default, <a class="reference internal" href="#pycassa.system_manager.LONG_TYPE" title="pycassa.system_manager.LONG_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">LONG_TYPE</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.INT_TYPE" title="pycassa.system_manager.INT_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">INT_TYPE</span></tt></a>,
-<a class="reference internal" href="#pycassa.system_manager.ASCII_TYPE" title="pycassa.system_manager.ASCII_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">ASCII_TYPE</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.UTF8_TYPE" title="pycassa.system_manager.UTF8_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">UTF8_TYPE</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.TIME_UUID_TYPE" title="pycassa.system_manager.TIME_UUID_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">TIME_UUID_TYPE</span></tt></a>,
-<a class="reference internal" href="#pycassa.system_manager.LEXICAL_UUID_TYPE" title="pycassa.system_manager.LEXICAL_UUID_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">LEXICAL_UUID_TYPE</span></tt></a> and <a class="reference internal" href="#pycassa.system_manager.BYTES_TYPE" title="pycassa.system_manager.BYTES_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">BYTES_TYPE</span></tt></a> are provided.  Custom
-types may be used as well by providing the class name; if the custom
-comparator class is not in <tt class="docutils literal"><span class="pre">org.apache.cassandra.db.marshal</span></tt>, the fully
-qualified class name must be given.</p>
-<p>For super column families, this sets the subcolumn value type for
-any subcolumn named <cite>column</cite>, regardless of the super column name.</p>
+<dt id="pycassa.system_manager.SystemManager.close">
+<tt class="descname">close</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Closes the underlying connection</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pycassa.system_manager.SystemManager.alter_column_family">
-<tt class="descname">alter_column_family</tt><big>(</big><em>keyspace</em>, <em>column_family</em>, <em>key_cache_size=None</em>, <em>row_cache_size=None</em>, <em>gc_grace_seconds=None</em>, <em>read_repair_chance=None</em>, <em>default_validation_class=None</em>, <em>min_compaction_threshold=None</em>, <em>max_compaction_threshold=None</em>, <em>key_cache_save_period_in_seconds=None</em>, <em>row_cache_save_period_in_seconds=None</em>, <em>memtable_flush_after_mins=None</em>, <em>memtable_throughput_in_mb=None</em>, <em>memtable_operations_in_millions=None</em>, <em>replicate_on_write=None</em>, <em>merge_shards_chance=None</em>, <em>row_cache_provider=None</em>, <em>key_alias=None</em>, <em>comment=None</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.alter_column_family" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alters an existing column family.</p>
-<p>Parameter meanings are the same as for <a class="reference internal" href="#pycassa.system_manager.SystemManager.create_column_family" title="pycassa.system_manager.SystemManager.create_column_family"><tt class="xref py py-meth docutils literal"><span class="pre">create_column_family()</span></tt></a>,
-but column family attributes which may not be modified are not
-included here.</p>
+<dt id="pycassa.system_manager.SystemManager.get_keyspace_column_families">
+<tt class="descname">get_keyspace_column_families</tt><big>(</big><em>keyspace</em>, <em>use_dict_for_col_metadata=False</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.get_keyspace_column_families" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a raw description of the keyspace, which is more useful for use
+in programs than <tt class="xref py py-meth docutils literal"><span class="pre">describe_keyspace()</span></tt>.</p>
+<p>If <cite>use_dict_for_col_metadata</cite> is <tt class="xref docutils literal"><span class="pre">True</span></tt>, the CfDef&#8217;s column_metadata will
+be stored as a dictionary where the keys are column names instead of a list.</p>
+<p>Returns a dictionary of the form <tt class="docutils literal"><span class="pre">{column_family_name:</span> <span class="pre">CfDef}</span></tt></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.system_manager.SystemManager.get_keyspace_properties">
+<tt class="descname">get_keyspace_properties</tt><big>(</big><em>keyspace</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.get_keyspace_properties" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets a keyspace&#8217;s properties.</p>
+<p>Returns a <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> with &#8216;replication_factor&#8217;, &#8216;strategy_class&#8217;,
+and &#8216;strategy_options&#8217; as keys.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.system_manager.SystemManager.list_keyspaces">
+<tt class="descname">list_keyspaces</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.list_keyspaces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of all keyspace names.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.system_manager.SystemManager.describe_ring">
+<tt class="descname">describe_ring</tt><big>(</big><em>keyspace</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.describe_ring" title="Permalink to this definition">¶</a></dt>
+<dd><p>Describes the Cassandra cluster</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.system_manager.SystemManager.describe_cluster_name">
+<tt class="descname">describe_cluster_name</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.describe_cluster_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives the cluster name</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.system_manager.SystemManager.describe_version">
+<tt class="descname">describe_version</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.describe_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives the server&#8217;s API version</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.system_manager.SystemManager.describe_schema_versions">
+<tt class="descname">describe_schema_versions</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.describe_schema_versions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lists what schema version each node has</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.system_manager.SystemManager.describe_partitioner">
+<tt class="descname">describe_partitioner</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.describe_partitioner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives the partitioner that the cluster is using</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.system_manager.SystemManager.describe_snitch">
+<tt class="descname">describe_snitch</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.describe_snitch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives the snitch that the cluster is using</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.system_manager.SystemManager.create_keyspace">
+<tt class="descname">create_keyspace</tt><big>(</big><em>name</em>, <em>replication_factor=None</em>, <em>replication_strategy='SimpleStrategy'</em>, <em>strategy_options=None</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.create_keyspace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new keyspace.  Column families may be added to this keyspace
+after it is created using <a class="reference internal" href="#pycassa.system_manager.SystemManager.create_column_family" title="pycassa.system_manager.SystemManager.create_column_family"><tt class="xref py py-meth docutils literal"><span class="pre">create_column_family()</span></tt></a>.</p>
+<p><cite>replication_factor</cite> determines how many nodes hold a copy of a given
+row. Note that for Cassandra 0.8, <cite>replication_factor</cite> should be an entry
+in the strategy_options <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt>. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">create_keyspace</span><span class="p">(</span><span class="s">&#39;KS&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">SIMPLE_STRATEGY</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;replication_factor&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>However, pycassa will copy the value from <cite>replication_factor</cite> or <cite>strategy_options</cite>
+to the other as needed, depending on the version of Cassandra.</p>
+<p><cite>replication_strategy</cite> determines how replicas are chosen for this keyspace.
+The strategies that Cassandra provides by default
+are available as <a class="reference internal" href="#pycassa.system_manager.SIMPLE_STRATEGY" title="pycassa.system_manager.SIMPLE_STRATEGY"><tt class="xref py py-const docutils literal"><span class="pre">SIMPLE_STRATEGY</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.NETWORK_TOPOLOGY_STRATEGY" title="pycassa.system_manager.NETWORK_TOPOLOGY_STRATEGY"><tt class="xref py py-const docutils literal"><span class="pre">NETWORK_TOPOLOGY_STRATEGY</span></tt></a>,
+and <a class="reference internal" href="#pycassa.system_manager.OLD_NETWORK_TOPOLOGY_STRATEGY" title="pycassa.system_manager.OLD_NETWORK_TOPOLOGY_STRATEGY"><tt class="xref py py-const docutils literal"><span class="pre">OLD_NETWORK_TOPOLOGY_STRATEGY</span></tt></a>.  <cite>NETWORK_TOPOLOGY_STRATEGY</cite> requires
+<cite>strategy_options</cite> to be present.</p>
+<p><cite>strategy_options</cite> is an optional dictionary of strategy options. By default, these
+are only used by NetworkTopologyStrategy; in this case, the dictionary should
+look like: <tt class="docutils literal"><span class="pre">{'Datacenter1':</span> <span class="pre">'2',</span> <span class="pre">'Datacenter2':</span> <span class="pre">'1'}</span></tt>.  This maps each
+datacenter (as defined in a Cassandra property file) to a replica count.</p>
+<p>Example Usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pycassa.system_manager</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span> <span class="o">=</span> <span class="n">SystemManager</span><span class="p">(</span><span class="s">&#39;192.168.10.2:9160&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># Create a SimpleStrategy keyspace</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">create_keyspace</span><span class="p">(</span><span class="s">&#39;SimpleKS&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># Create a NetworkTopologyStrategy keyspace</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">create_keyspace</span><span class="p">(</span><span class="s">&#39;NTS_KS&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">NETWORK_TOPOLOGY_STRATEGY</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;DC1&#39;</span><span class="p">:</span> <span class="s">&#39;2&#39;</span><span class="p">,</span> <span class="s">&#39;DC2&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -173,9 +261,9 @@ included here.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pycassa.system_manager.SystemManager.close">
-<tt class="descname">close</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.close" title="Permalink to this definition">¶</a></dt>
-<dd><p>Closes the underlying connection</p>
+<dt id="pycassa.system_manager.SystemManager.drop_keyspace">
+<tt class="descname">drop_keyspace</tt><big>(</big><em>keyspace</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.drop_keyspace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drops a keyspace from the cluster.</p>
 </dd></dl>
 
 <dl class="method">
@@ -242,6 +330,36 @@ matters for CQL. The default is &#8220;KEY&#8221;.</li>
 </dd></dl>
 
 <dl class="method">
+<dt id="pycassa.system_manager.SystemManager.alter_column_family">
+<tt class="descname">alter_column_family</tt><big>(</big><em>keyspace</em>, <em>column_family</em>, <em>key_cache_size=None</em>, <em>row_cache_size=None</em>, <em>gc_grace_seconds=None</em>, <em>read_repair_chance=None</em>, <em>default_validation_class=None</em>, <em>min_compaction_threshold=None</em>, <em>max_compaction_threshold=None</em>, <em>key_cache_save_period_in_seconds=None</em>, <em>row_cache_save_period_in_seconds=None</em>, <em>memtable_flush_after_mins=None</em>, <em>memtable_throughput_in_mb=None</em>, <em>memtable_operations_in_millions=None</em>, <em>replicate_on_write=None</em>, <em>merge_shards_chance=None</em>, <em>row_cache_provider=None</em>, <em>key_alias=None</em>, <em>comment=None</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.alter_column_family" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alters an existing column family.</p>
+<p>Parameter meanings are the same as for <a class="reference internal" href="#pycassa.system_manager.SystemManager.create_column_family" title="pycassa.system_manager.SystemManager.create_column_family"><tt class="xref py py-meth docutils literal"><span class="pre">create_column_family()</span></tt></a>,
+but column family attributes which may not be modified are not
+included here.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.system_manager.SystemManager.drop_column_family">
+<tt class="descname">drop_column_family</tt><big>(</big><em>keyspace</em>, <em>column_family</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.drop_column_family" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drops a column family from the keyspace.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.system_manager.SystemManager.alter_column">
+<tt class="descname">alter_column</tt><big>(</big><em>keyspace</em>, <em>column_family</em>, <em>column</em>, <em>value_type</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.alter_column" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets a data type for the value of a specific column.</p>
+<p><cite>value_type</cite> is a string that determines what type the column value will be.
+By default, <a class="reference internal" href="#pycassa.system_manager.LONG_TYPE" title="pycassa.system_manager.LONG_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">LONG_TYPE</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.INT_TYPE" title="pycassa.system_manager.INT_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">INT_TYPE</span></tt></a>,
+<a class="reference internal" href="#pycassa.system_manager.ASCII_TYPE" title="pycassa.system_manager.ASCII_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">ASCII_TYPE</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.UTF8_TYPE" title="pycassa.system_manager.UTF8_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">UTF8_TYPE</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.TIME_UUID_TYPE" title="pycassa.system_manager.TIME_UUID_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">TIME_UUID_TYPE</span></tt></a>,
+<a class="reference internal" href="#pycassa.system_manager.LEXICAL_UUID_TYPE" title="pycassa.system_manager.LEXICAL_UUID_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">LEXICAL_UUID_TYPE</span></tt></a> and <a class="reference internal" href="#pycassa.system_manager.BYTES_TYPE" title="pycassa.system_manager.BYTES_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">BYTES_TYPE</span></tt></a> are provided.  Custom
+types may be used as well by providing the class name; if the custom
+comparator class is not in <tt class="docutils literal"><span class="pre">org.apache.cassandra.db.marshal</span></tt>, the fully
+qualified class name must be given.</p>
+<p>For super column families, this sets the subcolumn value type for
+any subcolumn named <cite>column</cite>, regardless of the super column name.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="pycassa.system_manager.SystemManager.create_index">
 <tt class="descname">create_index</tt><big>(</big><em>keyspace</em>, <em>column_family</em>, <em>column</em>, <em>value_type</em>, <em>index_type=0</em>, <em>index_name=None</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.create_index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates an index on a column.</p>
@@ -263,129 +381,11 @@ for the index.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pycassa.system_manager.SystemManager.create_keyspace">
-<tt class="descname">create_keyspace</tt><big>(</big><em>name</em>, <em>replication_factor=None</em>, <em>replication_strategy='SimpleStrategy'</em>, <em>strategy_options=None</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.create_keyspace" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a new keyspace.  Column families may be added to this keyspace
-after it is created using <a class="reference internal" href="#pycassa.system_manager.SystemManager.create_column_family" title="pycassa.system_manager.SystemManager.create_column_family"><tt class="xref py py-meth docutils literal"><span class="pre">create_column_family()</span></tt></a>.</p>
-<p><cite>replication_factor</cite> determines how many nodes hold a copy of a given
-row. Note that for Cassandra 0.8, <cite>replication_factor</cite> should be an entry
-in the strategy_options <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt>. For example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">create_keyspace</span><span class="p">(</span><span class="s">&#39;KS&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">SIMPLE_STRATEGY</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;replication_factor&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">})</span>
-</pre></div>
-</div>
-<p>However, pycassa will copy the value from <cite>replication_factor</cite> or <cite>strategy_options</cite>
-to the other as needed, depending on the version of Cassandra.</p>
-<p><cite>replication_strategy</cite> determines how replicas are chosen for this keyspace.
-The strategies that Cassandra provides by default
-are available as <a class="reference internal" href="#pycassa.system_manager.SIMPLE_STRATEGY" title="pycassa.system_manager.SIMPLE_STRATEGY"><tt class="xref py py-const docutils literal"><span class="pre">SIMPLE_STRATEGY</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.NETWORK_TOPOLOGY_STRATEGY" title="pycassa.system_manager.NETWORK_TOPOLOGY_STRATEGY"><tt class="xref py py-const docutils literal"><span class="pre">NETWORK_TOPOLOGY_STRATEGY</span></tt></a>,
-and <a class="reference internal" href="#pycassa.system_manager.OLD_NETWORK_TOPOLOGY_STRATEGY" title="pycassa.system_manager.OLD_NETWORK_TOPOLOGY_STRATEGY"><tt class="xref py py-const docutils literal"><span class="pre">OLD_NETWORK_TOPOLOGY_STRATEGY</span></tt></a>.  <cite>NETWORK_TOPOLOGY_STRATEGY</cite> requires
-<cite>strategy_options</cite> to be present.</p>
-<p><cite>strategy_options</cite> is an optional dictionary of strategy options. By default, these
-are only used by NetworkTopologyStrategy; in this case, the dictionary should
-look like: <tt class="docutils literal"><span class="pre">{'Datacenter1':</span> <span class="pre">'2',</span> <span class="pre">'Datacenter2':</span> <span class="pre">'1'}</span></tt>.  This maps each
-datacenter (as defined in a Cassandra property file) to a replica count.</p>
-<p>Example Usage:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pycassa.system_manager</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span> <span class="o">=</span> <span class="n">SystemManager</span><span class="p">(</span><span class="s">&#39;192.168.10.2:9160&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># Create a SimpleStrategy keyspace</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">create_keyspace</span><span class="p">(</span><span class="s">&#39;SimpleKS&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># Create a NetworkTopologyStrategy keyspace</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">create_keyspace</span><span class="p">(</span><span class="s">&#39;NTS_KS&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">NETWORK_TOPOLOGY_STRATEGY</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;DC1&#39;</span><span class="p">:</span> <span class="s">&#39;2&#39;</span><span class="p">,</span> <span class="s">&#39;DC2&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">})</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="pycassa.system_manager.SystemManager.describe_cluster_name">
-<tt class="descname">describe_cluster_name</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.describe_cluster_name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gives the cluster name</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pycassa.system_manager.SystemManager.describe_partitioner">
-<tt class="descname">describe_partitioner</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.describe_partitioner" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gives the partitioner that the cluster is using</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pycassa.system_manager.SystemManager.describe_ring">
-<tt class="descname">describe_ring</tt><big>(</big><em>keyspace</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.describe_ring" title="Permalink to this definition">¶</a></dt>
-<dd><p>Describes the Cassandra cluster</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pycassa.system_manager.SystemManager.describe_schema_versions">
-<tt class="descname">describe_schema_versions</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.describe_schema_versions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Lists what schema version each node has</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pycassa.system_manager.SystemManager.describe_snitch">
-<tt class="descname">describe_snitch</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.describe_snitch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gives the snitch that the cluster is using</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pycassa.system_manager.SystemManager.describe_version">
-<tt class="descname">describe_version</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.describe_version" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gives the server&#8217;s API version</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pycassa.system_manager.SystemManager.drop_column_family">
-<tt class="descname">drop_column_family</tt><big>(</big><em>keyspace</em>, <em>column_family</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.drop_column_family" title="Permalink to this definition">¶</a></dt>
-<dd><p>Drops a column family from the keyspace.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="pycassa.system_manager.SystemManager.drop_index">
 <tt class="descname">drop_index</tt><big>(</big><em>keyspace</em>, <em>column_family</em>, <em>column</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.drop_index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Drops an index on a column.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="pycassa.system_manager.SystemManager.drop_keyspace">
-<tt class="descname">drop_keyspace</tt><big>(</big><em>keyspace</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.drop_keyspace" title="Permalink to this definition">¶</a></dt>
-<dd><p>Drops a keyspace from the cluster.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pycassa.system_manager.SystemManager.get_keyspace_column_families">
-<tt class="descname">get_keyspace_column_families</tt><big>(</big><em>keyspace</em>, <em>use_dict_for_col_metadata=False</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.get_keyspace_column_families" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a raw description of the keyspace, which is more useful for use
-in programs than <tt class="xref py py-meth docutils literal"><span class="pre">describe_keyspace()</span></tt>.</p>
-<p>If <cite>use_dict_for_col_metadata</cite> is <tt class="xref docutils literal"><span class="pre">True</span></tt>, the CfDef&#8217;s column_metadata will
-be stored as a dictionary where the keys are column names instead of a list.</p>
-<p>Returns a dictionary of the form <tt class="docutils literal"><span class="pre">{column_family_name:</span> <span class="pre">CfDef}</span></tt></p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pycassa.system_manager.SystemManager.get_keyspace_properties">
-<tt class="descname">get_keyspace_properties</tt><big>(</big><em>keyspace</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.get_keyspace_properties" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets a keyspace&#8217;s properties.</p>
-<p>Returns a <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> with &#8216;replication_factor&#8217;, &#8216;strategy_class&#8217;,
-and &#8216;strategy_options&#8217; as keys.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pycassa.system_manager.SystemManager.list_keyspaces">
-<tt class="descname">list_keyspaces</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.list_keyspaces" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a list of all keyspace names.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="data">
-<dt id="pycassa.system_manager.TIME_UUID_TYPE">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">TIME_UUID_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.TIME_UUID_TYPE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores data as a version 1 UUID</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="pycassa.system_manager.UTF8_TYPE">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">UTF8_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.UTF8_TYPE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores data as UTF8 encoded text</p>
 </dd></dl>
 
 </div>
@@ -398,10 +398,10 @@ and &#8216;strategy_options&#8217; as keys.</p>
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="columnfamilymap.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.columnfamilymap</span></tt> &#8211; Maps Classes to Column Families</a></p>
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">pycassa.columnfamilymap</span></tt> &#8211; Maps Classes to Column Families</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="index.html"
-                        title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.index</span></tt> &#8211; Secondary Index Tools</a></p>
+                        title="next chapter"><tt class="docutils literal"><span class="pre">pycassa.index</span></tt> &#8211; Secondary Index Tools</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../sources/api/pycassa/system_manager.txt"

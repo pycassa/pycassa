@@ -3,3 +3,4 @@
 
 .. automodule:: pycassa.system_manager
     :members:
+    :member-order: bysource

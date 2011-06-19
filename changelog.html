@@ -58,8 +58,8 @@ a mixed cluster of both Cassandra 0.7 and 0.8.</p>
 <div class="section" id="changes-related-to-cassandra-0-8">
 <h3>Changes related to Cassandra 0.8<a class="headerlink" href="#changes-related-to-cassandra-0-8" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li>Addition of <a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.COUNTER_COLUMN_TYPE" title="pycassa.system_manager.COUNTER_COLUMN_TYPE"><tt class="xref py py-data docutils literal"><span class="pre">COUNTER_COLUMN_TYPE</span></tt></a> to
-<a class="reference internal" href="api/pycassa/system_manager.html#module-pycassa.system_manager" title="pycassa.system_manager"><tt class="xref py py-mod docutils literal"><span class="pre">system_manager</span></tt></a>.</li>
+<li>Addition of <tt class="xref py py-data docutils literal"><span class="pre">COUNTER_COLUMN_TYPE</span></tt> to
+<tt class="xref py py-mod docutils literal"><span class="pre">system_manager</span></tt>.</li>
 <li>Several new column family attributes, including <tt class="docutils literal"><span class="pre">key_validation_class</span></tt>,
 <tt class="docutils literal"><span class="pre">replicate_on_write</span></tt>, <tt class="docutils literal"><span class="pre">merge_shards_chance</span></tt>, <tt class="docutils literal"><span class="pre">row_cache_provider</span></tt>,
 and <tt class="docutils literal"><span class="pre">key_alias</span></tt>.</li>
@@ -225,9 +225,9 @@ while <tt class="xref py py-class docutils literal"><span class="pre">Int64</spa
 <li>Fix bug in <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.remove" title="pycassa.columnfamily.ColumnFamily.remove"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.columnfamily.ColumnFamily.remove()</span></tt></a> when a super_column
 argument is supplied</li>
 <li>Fix minor PoolLogger logging bugs</li>
-<li>Added <a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.describe_partitioner" title="pycassa.system_manager.SystemManager.describe_partitioner"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.describe_partitioner()</span></tt></a></li>
-<li>Added <a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.describe_snitch" title="pycassa.system_manager.SystemManager.describe_snitch"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.describe_snitch()</span></tt></a></li>
-<li>Added <a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.get_keyspace_properties" title="pycassa.system_manager.SystemManager.get_keyspace_properties"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.get_keyspace_properties()</span></tt></a></li>
+<li>Added <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.describe_partitioner()</span></tt></li>
+<li>Added <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.describe_snitch()</span></tt></li>
+<li>Added <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.get_keyspace_properties()</span></tt></li>
 <li>Moved <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.describe_keyspace()</span></tt>
 and <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.describe_column_family()</span></tt>
 to pycassaShell describe_keyspace() and describe_column_family()</li>
@@ -236,7 +236,7 @@ to pycassaShell describe_keyspace() and describe_column_family()</li>
 <h3>Deprecated<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Renamed <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.get_keyspace_description()</span></tt>
-to <a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.get_keyspace_column_families" title="pycassa.system_manager.SystemManager.get_keyspace_column_families"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.get_keyspace_column_families()</span></tt></a>
+to <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.get_keyspace_column_families()</span></tt>
 and deprecated the previous name</li>
 </ul>
 </div>
@@ -256,20 +256,20 @@ and deprecated the previous name</li>
 <li>pycassaShell now loads/reloads <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">pycassa.columnfamily.ColumnFamily</span></tt></a>
 instances when the underlying column family is created or updated</li>
 <li>Added an option to pycassaShell to run a script after startup</li>
-<li>Added <a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.list_keyspaces" title="pycassa.system_manager.SystemManager.list_keyspaces"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.list_keyspaces()</span></tt></a></li>
+<li>Added <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.list_keyspaces()</span></tt></li>
 </ul>
 </div>
 <div class="section" id="changes-in-version-1-0-1">
 <h2>Changes in Version 1.0.1<a class="headerlink" href="#changes-in-version-1-0-1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Allow pycassaShell to be run without specifying a keyspace</li>
-<li>Added <a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.describe_schema_versions" title="pycassa.system_manager.SystemManager.describe_schema_versions"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.describe_schema_versions()</span></tt></a></li>
+<li>Added <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.describe_schema_versions()</span></tt></li>
 </ul>
 </div>
 <div class="section" id="changes-in-version-1-0-0">
 <h2>Changes in Version 1.0.0<a class="headerlink" href="#changes-in-version-1-0-0" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>Created the <a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager" title="pycassa.system_manager.SystemManager"><tt class="xref py py-class docutils literal"><span class="pre">SystemManager</span></tt></a> class to
+<li>Created the <tt class="xref py py-class docutils literal"><span class="pre">SystemManager</span></tt> class to
 allow for keyspace, column family, and index creation, modification,
 and deletion. These operations are no longer provided by a Connection
 class.</li>
