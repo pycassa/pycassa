@@ -2,7 +2,7 @@ Source: pycassa
 Section: python
 Priority: optional
 Maintainer: paul cannon <paul@datastax.com>
-Build-Depends: debhelper (>= 7.0.50~), python-all, cdbs, python-support, python-sphinx
+Build-Depends: debhelper (>= 7.0.50~), python-all, cdbs, python-support, python-sphinx, python-thrift (>= 0.5.0)
 Standards-Version: 3.9.1
 
 Package: python-pycassa
