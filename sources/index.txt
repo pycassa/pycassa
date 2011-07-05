@@ -6,11 +6,11 @@ Contents
 **pycassa** is a Python client for
 `Apache Cassandra <http://cassandra.apache.org>`_.
 
-The latest release of *pycassa* is compatible with Cassandra 0.7 and 0.8.
+The latest release of **pycassa** is compatible with Cassandra 0.7 and 0.8.
 
-*pycassa* is open source under the [MIT license](http://www.opensource.org/licenses/mit-license.php).
+**pycassa** is open source under the `MIT license <http://www.opensource.org/licenses/mit-license.php>`.
 
-The source code repository for *pycassa* can be found on [Github](http://github.com/pycassa/pycassa).
+The source code repository for **pycassa** can be found on `Github <http://github.com/pycassa/pycassa>`.
 
 :doc:`installation`
   How to install **pycassa**.
