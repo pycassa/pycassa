@@ -8,9 +8,9 @@ Contents
 
 The latest release of **pycassa** is compatible with Cassandra 0.7 and 0.8.
 
-**pycassa** is open source under the `MIT license <http://www.opensource.org/licenses/mit-license.php>`.
+**pycassa** is open source under the `MIT license <http://www.opensource.org/licenses/mit-license.php>`_.
 
-The source code repository for **pycassa** can be found on `Github <http://github.com/pycassa/pycassa>`.
+The source code repository for **pycassa** can be found on `Github <http://github.com/pycassa/pycassa>`_.
 
 :doc:`installation`
   How to install **pycassa**.
