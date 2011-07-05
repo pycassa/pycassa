@@ -1,7 +1,7 @@
 pycassa
 =======
 
-pycassa is a python client library for [Apache Cassandra](http://cassandra.apache.org)
+*pycassa* is a python client library for [Apache Cassandra](http://cassandra.apache.org)
 with the following features:
 
 * Automatic failover and operation retries
@@ -11,6 +11,8 @@ with the following features:
 * A class for mapping classes to Cassandra column families
 
 The latest release is compatible with Cassandra 0.7 and 0.8.
+
+*pycassa* is open source under the [MIT license](http://www.opensource.org/licenses/mit-license.php).
 
 Documentation
 -------------
