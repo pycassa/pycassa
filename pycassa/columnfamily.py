@@ -561,6 +561,9 @@ class ColumnFamily(object):
         using `super_column`.  If this is set, `columns`, `column_start`, and
         `column_finish` only apply to the subcolumns of `super_column`.
 
+        To put an upper bound on the number of columns that are counted,
+        set `max_count`.
+
         """
 
         if max_count is None:
