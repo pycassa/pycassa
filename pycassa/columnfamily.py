@@ -548,7 +548,8 @@ class ColumnFamily(object):
 
     MAX_COUNT = 2**31-1
     def get_count(self, key, super_column=None, read_consistency_level=None,
-                  columns=None, column_start="", column_finish=""):
+                  columns=None, column_start="", column_finish="",
+                  column_reversed=False, max_count=None):
         """
         Count the number of columns in the row with key `key`.
 
@@ -562,10 +563,13 @@ class ColumnFamily(object):
 
         """
 
+        if max_count is None:
+            max_count=self.MAX_COUNT
+
         packed_key = self._pack_key(key)
         cp = self._column_parent(super_column)
         sp = self._slice_predicate(columns, column_start, column_finish,
-                                   False, self.MAX_COUNT, super_column)
+                                   column_reversed, max_count, super_column)
 
         try:
             self._obtain_connection()

@@ -85,6 +85,10 @@ class TestColumnFamily(unittest.TestCase):
         assert_equal(cf.get_count(key, column_start='1', column_finish='1'), 1)
         assert_equal(cf.get_count(key, columns=['1','2']), 2)
         assert_equal(cf.get_count(key, columns=['1']), 1)
+        assert_equal(cf.get_count(key, max_count=1), 1)
+        assert_equal(cf.get_count(key, max_count=1, column_reversed=True), 1)
+        assert_equal(cf.get_count(key, column_reversed=True), 2)
+        assert_equal(cf.get_count(key, column_start='1', column_reversed=True), 1)
 
     def test_insert_multiget_count(self):
         keys = ['TestColumnFamily.test_insert_multiget_count1',
