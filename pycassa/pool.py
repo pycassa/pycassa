@@ -380,6 +380,8 @@ class ConnectionWrapper(connection.Connection):
                 result = getattr(super(ConnectionWrapper, self), f.__name__)(*args, **kwargs)
                 self._retry_count = 0 # reset the count after a success
                 return result
+            except Thrift.TApplicationException, app_exc:
+                raise app_exc
             except (TimedOutException, UnavailableException, Thrift.TException,
                     socket.error, IOError, EOFError), exc:
                 self._pool._notify_on_failure(exc, server=self.server, connection=self)
