@@ -92,39 +92,37 @@ class TestColumnFamily(unittest.TestCase):
 
     def test_insert_multiget_count(self):
         keys = ['TestColumnFamily.test_insert_multiget_count1',
-               'TestColumnFamily.test_insert_multiget_count2',
-               'TestColumnFamily.test_insert_multiget_count3']
-        columns = {'1': 'val1', '2': 'val2'}
+                'TestColumnFamily.test_insert_multiget_count2',
+                'TestColumnFamily.test_insert_multiget_count3']
         for key in keys:
-            cf.insert(key, columns)
+            cf.insert(key, {'1': 'val1', '2': 'val2'})
+
         result = cf.multiget_count(keys)
-        assert_equal(result[keys[0]], 2)
-        assert_equal(result[keys[1]], 2)
-        assert_equal(result[keys[2]], 2)
+        assert_equal([result[k] for k in keys], [2 for key in keys])
 
         result = cf.multiget_count(keys, column_start='1')
-        assert_equal(len(result), 3)
-        assert_equal(result[keys[0]], 2)
+        assert_equal([result[k] for k in keys], [2 for key in keys])
 
         result = cf.multiget_count(keys, column_finish='2')
-        assert_equal(len(result), 3)
-        assert_equal(result[keys[0]], 2)
+        assert_equal([result[k] for k in keys], [2 for key in keys])
 
         result = cf.multiget_count(keys, column_start='1', column_finish='2')
-        assert_equal(len(result), 3)
-        assert_equal(result[keys[0]], 2)
+        assert_equal([result[k] for k in keys], [2 for key in keys])
 
         result = cf.multiget_count(keys, column_start='1', column_finish='1')
-        assert_equal(len(result), 3)
-        assert_equal(result[keys[0]], 1)
+        assert_equal([result[k] for k in keys], [1 for key in keys])
 
         result = cf.multiget_count(keys, columns=['1','2'])
-        assert_equal(len(result), 3)
-        assert_equal(result[keys[0]], 2)
+        assert_equal([result[k] for k in keys], [2 for key in keys])
 
         result = cf.multiget_count(keys, columns=['1'])
-        assert_equal(len(result), 3)
-        assert_equal(result[keys[0]], 1)
+        assert_equal([result[k] for k in keys], [1 for key in keys])
+
+        result = cf.multiget_count(keys, max_count=1)
+        assert_equal([result[k] for k in keys], [1 for key in keys])
+
+        result = cf.multiget_count(keys, column_start='1', column_reversed=True)
+        assert_equal([result[k] for k in keys], [1 for key in keys])
 
     def test_insert_get_range(self):
         if sys_man.describe_partitioner() == 'RandomPartitioner':

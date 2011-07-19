@@ -565,9 +565,8 @@ class ColumnFamily(object):
         set `max_count`.
 
         """
-
         if max_count is None:
-            max_count=self.MAX_COUNT
+            max_count = self.MAX_COUNT
 
         packed_key = self._pack_key(key)
         cp = self._column_parent(super_column)
@@ -586,7 +585,8 @@ class ColumnFamily(object):
     def multiget_count(self, keys, super_column=None,
                        read_consistency_level=None,
                        columns=None, column_start="",
-                       column_finish="", buffer_size=None):
+                       column_finish="", buffer_size=None,
+                       column_reversed=False, max_count=None):
         """
         Perform a column count in parallel on a set of rows.
 
@@ -597,11 +597,17 @@ class ColumnFamily(object):
         `buffer_size` is the number of rows from the total list to count at a time.
         If left as ``None``, the ColumnFamily's :attr:`buffer_size` will be used.
         
+        To put an upper bound on the number of columns that are counted,
+        set `max_count`.
+
         """
+        if max_count is None:
+            max_count = self.MAX_COUNT
+
         packed_keys = map(self._pack_key, keys)
         cp = self._column_parent(super_column)
         sp = self._slice_predicate(columns, column_start, column_finish,
-                                   False, self.MAX_COUNT, super_column)
+                                   column_reversed, max_count, super_column)
         consistency = read_consistency_level or self.read_consistency_level
 
         buffer_size = buffer_size or self.buffer_size
