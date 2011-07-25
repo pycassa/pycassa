@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.columnfamily – Column Family &mdash; pycassa v1.1.0 documentation</title>
+    <title>pycassa.columnfamily – Column Family &mdash; pycassa v1.1.1 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,7 +22,7 @@
     <script type="text/javascript" src="../../static/jquery.js"></script>
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
-    <link rel="top" title="pycassa v1.1.0 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v1.1.1 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.columnfamilymap – Maps Classes to Column Families" href="columnfamilymap.html" />
     <link rel="prev" title="pycassa.pool – Connection Pooling" href="pool.html" /> 
@@ -43,7 +43,7 @@
         <li class="right" >
           <a href="pool.html" title="pycassa.pool – Connection Pooling"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.1.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.1.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -133,7 +133,7 @@ how to pack and unpack them.</p>
 <p>This is set automatically by inspecting the column family&#8217;s
 <tt class="docutils literal"><span class="pre">comparator_type</span></tt>, but it may also be set manually if you want
 autopacking behavior without setting a <tt class="docutils literal"><span class="pre">comparator_type</span></tt>. Options
-include anything in <tt class="xref py py-mod docutils literal"><span class="pre">system_manager</span></tt>, such as &#8220;LongType&#8221;.</p>
+include anything in <a class="reference internal" href="system_manager.html#module-pycassa.system_manager" title="pycassa.system_manager"><tt class="xref py py-mod docutils literal"><span class="pre">system_manager</span></tt></a>, such as &#8220;LongType&#8221;.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -150,7 +150,7 @@ to determine how to pack and unpack them.</p>
 <p>This is set automatically by inspecting the column family&#8217;s
 <tt class="docutils literal"><span class="pre">default_validation_class</span></tt>, but it may also be set manually if you want
 autopacking behavior without setting a <tt class="docutils literal"><span class="pre">default_validation_class</span></tt>. Options
-include anything in <tt class="xref py py-mod docutils literal"><span class="pre">system_manager</span></tt>, such as &#8220;LongType&#8221;.</p>
+include anything in <a class="reference internal" href="system_manager.html#module-pycassa.system_manager" title="pycassa.system_manager"><tt class="xref py py-mod docutils literal"><span class="pre">system_manager</span></tt></a>, such as &#8220;LongType&#8221;.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -169,7 +169,7 @@ to pack and unpack them.</p>
 <tt class="docutils literal"><span class="pre">key_validation_class</span></tt> (which only exists in Cassandra 0.8 or greater),
 but may be set manually if you want the autopacking behavior without
 setting a <tt class="docutils literal"><span class="pre">key_validation_class</span></tt> or if you are using Cassandra 0.7.
-Options include anything in <tt class="xref py py-mod docutils literal"><span class="pre">system_manager</span></tt>, such as
+Options include anything in <a class="reference internal" href="system_manager.html#module-pycassa.system_manager" title="pycassa.system_manager"><tt class="xref py py-mod docutils literal"><span class="pre">system_manager</span></tt></a>, such as
 &#8220;LongType&#8221;.</p>
 </dd></dl>
 
@@ -260,6 +260,8 @@ only those between <cite>column_start</cite> and <cite>column_finish</cite>.</p>
 <p>You may also count only the number of subcolumns in a single super column
 using <cite>super_column</cite>.  If this is set, <cite>columns</cite>, <cite>column_start</cite>, and
 <cite>column_finish</cite> only apply to the subcolumns of <cite>super_column</cite>.</p>
+<p>To put an upper bound on the number of columns that are counted,
+set <cite>max_count</cite>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -271,6 +273,8 @@ of keys may be used. A dictionary of the form <tt class="docutils literal"><span
 returned.</p>
 <p><cite>buffer_size</cite> is the number of rows from the total list to count at a time.
 If left as <tt class="xref docutils literal"><span class="pre">None</span></tt>, the ColumnFamily&#8217;s <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.buffer_size" title="pycassa.columnfamily.ColumnFamily.buffer_size"><tt class="xref py py-attr docutils literal"><span class="pre">buffer_size</span></tt></a> will be used.</p>
+<p>To put an upper bound on the number of columns that are counted,
+set <cite>max_count</cite>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -457,7 +461,7 @@ operations using as few roundtrips as possible.</p>
         <li class="right" >
           <a href="pool.html" title="pycassa.pool – Connection Pooling"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.1.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.1.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

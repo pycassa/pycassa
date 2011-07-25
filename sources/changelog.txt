@@ -1,6 +1,25 @@
 Changelog
 =========
 
+Changes in Version 1.1.1
+------------------------
+
+Features
+~~~~~~~~
+- Add ``max_count`` and ``column_reversed`` params to :meth:`~.ColumnFamily.get_count()`
+- Add ``max_count`` and ``column_reversed`` params to :meth:`~.ColumnFamily.multiget_count()`
+
+Bug Fixes
+~~~~~~~~~
+- Don't retry operations after a ``TApplicationException``. This exception
+  is reserved for programmatic errors (such as a bad API parameters), so
+  retries are not needed.
+- If the read_consistency_level kwarg was used in a :class:`~.ColumnFamily`
+  constructor, it would be ignored, resulting in a default read consistency
+  level of :const:`ONE`. This did not affect the read consistency level if it was
+  specified in any other way, including per-method or by setting the
+  :attr:`~.ColumnFamily.read_consistency_level` attribute.
+
 Changes in Version 1.1.0
 ------------------------
 This release adds compatibility with Cassandra 0.8, including support

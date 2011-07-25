@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Changelog &mdash; pycassa v1.1.0 documentation</title>
+    <title>Changelog &mdash; pycassa v1.1.1 documentation</title>
     <link rel="stylesheet" href="static/default.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.1.0',
+        VERSION:     '1.1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,7 +22,7 @@
     <script type="text/javascript" src="static/jquery.js"></script>
     <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="pycassa v1.1.0 documentation" href="index.html" />
+    <link rel="top" title="pycassa v1.1.1 documentation" href="index.html" />
     <link rel="prev" title="pycassa.cassandra.ttypes – Thrift Object Types" href="api/pycassa/cassandra/ttypes.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="api/pycassa/cassandra/ttypes.html" title="pycassa.cassandra.ttypes – Thrift Object Types"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">pycassa v1.1.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v1.1.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -49,6 +49,29 @@
             
   <div class="section" id="changelog">
 <h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="changes-in-version-1-1-1">
+<h2>Changes in Version 1.1.1<a class="headerlink" href="#changes-in-version-1-1-1" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="features">
+<h3>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Add <tt class="docutils literal"><span class="pre">max_count</span></tt> and <tt class="docutils literal"><span class="pre">column_reversed</span></tt> params to <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_count" title="pycassa.columnfamily.ColumnFamily.get_count"><tt class="xref py py-meth docutils literal"><span class="pre">get_count()</span></tt></a></li>
+<li>Add <tt class="docutils literal"><span class="pre">max_count</span></tt> and <tt class="docutils literal"><span class="pre">column_reversed</span></tt> params to <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.multiget_count" title="pycassa.columnfamily.ColumnFamily.multiget_count"><tt class="xref py py-meth docutils literal"><span class="pre">multiget_count()</span></tt></a></li>
+</ul>
+</div>
+<div class="section" id="bug-fixes">
+<h3>Bug Fixes<a class="headerlink" href="#bug-fixes" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Don&#8217;t retry operations after a <tt class="docutils literal"><span class="pre">TApplicationException</span></tt>. This exception
+is reserved for programmatic errors (such as a bad API parameters), so
+retries are not needed.</li>
+<li>If the read_consistency_level kwarg was used in a <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>
+constructor, it would be ignored, resulting in a default read consistency
+level of <tt class="xref py py-const docutils literal"><span class="pre">ONE</span></tt>. This did not affect the read consistency level if it was
+specified in any other way, including per-method or by setting the
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.read_consistency_level" title="pycassa.columnfamily.ColumnFamily.read_consistency_level"><tt class="xref py py-attr docutils literal"><span class="pre">read_consistency_level</span></tt></a> attribute.</li>
+</ul>
+</div>
+</div>
 <div class="section" id="changes-in-version-1-1-0">
 <h2>Changes in Version 1.1.0<a class="headerlink" href="#changes-in-version-1-1-0" title="Permalink to this headline">¶</a></h2>
 <p>This release adds compatibility with Cassandra 0.8, including support
@@ -58,8 +81,8 @@ a mixed cluster of both Cassandra 0.7 and 0.8.</p>
 <div class="section" id="changes-related-to-cassandra-0-8">
 <h3>Changes related to Cassandra 0.8<a class="headerlink" href="#changes-related-to-cassandra-0-8" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li>Addition of <tt class="xref py py-data docutils literal"><span class="pre">COUNTER_COLUMN_TYPE</span></tt> to
-<tt class="xref py py-mod docutils literal"><span class="pre">system_manager</span></tt>.</li>
+<li>Addition of <a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.COUNTER_COLUMN_TYPE" title="pycassa.system_manager.COUNTER_COLUMN_TYPE"><tt class="xref py py-data docutils literal"><span class="pre">COUNTER_COLUMN_TYPE</span></tt></a> to
+<a class="reference internal" href="api/pycassa/system_manager.html#module-pycassa.system_manager" title="pycassa.system_manager"><tt class="xref py py-mod docutils literal"><span class="pre">system_manager</span></tt></a>.</li>
 <li>Several new column family attributes, including <tt class="docutils literal"><span class="pre">key_validation_class</span></tt>,
 <tt class="docutils literal"><span class="pre">replicate_on_write</span></tt>, <tt class="docutils literal"><span class="pre">merge_shards_chance</span></tt>, <tt class="docutils literal"><span class="pre">row_cache_provider</span></tt>,
 and <tt class="docutils literal"><span class="pre">key_alias</span></tt>.</li>
@@ -96,8 +119,8 @@ behavior can be controlled through the following attributes:<ul>
 changes in validation classes with <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.load_schema" title="pycassa.columnfamily.ColumnFamily.load_schema"><tt class="xref py py-meth docutils literal"><span class="pre">ColumnFamily.load_schema()</span></tt></a>.</li>
 </ul>
 </div>
-<div class="section" id="bug-fixes">
-<h3>Bug Fixes<a class="headerlink" href="#bug-fixes" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id1">
+<h3>Bug Fixes<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <p>There were several related issues with overlow in <a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a>:</p>
 <ul class="simple">
 <li>Connection failures when a <a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a> was in a state
@@ -161,8 +184,8 @@ releases, but no warnings were issued until now.</li>
 <li>Deprecations are now split into separate sections for each release in the
 changelog.</li>
 </ul>
-<div class="section" id="id1">
-<h3>Deprecated<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id2">
+<h3>Deprecated<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>The <cite>instance</cite> parameter of <tt class="xref py py-meth docutils literal"><span class="pre">ColumnFamilyMap.get_indexed_slices()</span></tt></li>
 </ul>
@@ -200,8 +223,8 @@ overflow; 0 is now used when there is not currently any overflow</li>
 <tt class="xref py py-class docutils literal"><span class="pre">Long</span></tt> uses big-endian encoding, which is compatible with Cassandra&#8217;s LongType,
 while <tt class="xref py py-class docutils literal"><span class="pre">Int64</span></tt> used little-endian encoding.</li>
 </ul>
-<div class="section" id="id2">
-<h3>Deprecated<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id3">
+<h3>Deprecated<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><tt class="xref py py-class docutils literal"><span class="pre">pycassa.types.Int64</span></tt> has been deprecated in favor of <a class="reference internal" href="api/pycassa/types.html#pycassa.types.Long" title="pycassa.types.Long"><tt class="xref py py-class docutils literal"><span class="pre">pycassa.types.Long</span></tt></a></li>
 </ul>
@@ -225,18 +248,18 @@ while <tt class="xref py py-class docutils literal"><span class="pre">Int64</spa
 <li>Fix bug in <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.remove" title="pycassa.columnfamily.ColumnFamily.remove"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.columnfamily.ColumnFamily.remove()</span></tt></a> when a super_column
 argument is supplied</li>
 <li>Fix minor PoolLogger logging bugs</li>
-<li>Added <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.describe_partitioner()</span></tt></li>
-<li>Added <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.describe_snitch()</span></tt></li>
-<li>Added <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.get_keyspace_properties()</span></tt></li>
+<li>Added <a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.describe_partitioner" title="pycassa.system_manager.SystemManager.describe_partitioner"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.describe_partitioner()</span></tt></a></li>
+<li>Added <a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.describe_snitch" title="pycassa.system_manager.SystemManager.describe_snitch"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.describe_snitch()</span></tt></a></li>
+<li>Added <a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.get_keyspace_properties" title="pycassa.system_manager.SystemManager.get_keyspace_properties"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.get_keyspace_properties()</span></tt></a></li>
 <li>Moved <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.describe_keyspace()</span></tt>
 and <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.describe_column_family()</span></tt>
 to pycassaShell describe_keyspace() and describe_column_family()</li>
 </ul>
-<div class="section" id="id3">
-<h3>Deprecated<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id4">
+<h3>Deprecated<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Renamed <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.get_keyspace_description()</span></tt>
-to <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.get_keyspace_column_families()</span></tt>
+to <a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.get_keyspace_column_families" title="pycassa.system_manager.SystemManager.get_keyspace_column_families"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.get_keyspace_column_families()</span></tt></a>
 and deprecated the previous name</li>
 </ul>
 </div>
@@ -256,20 +279,20 @@ and deprecated the previous name</li>
 <li>pycassaShell now loads/reloads <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">pycassa.columnfamily.ColumnFamily</span></tt></a>
 instances when the underlying column family is created or updated</li>
 <li>Added an option to pycassaShell to run a script after startup</li>
-<li>Added <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.list_keyspaces()</span></tt></li>
+<li>Added <a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.list_keyspaces" title="pycassa.system_manager.SystemManager.list_keyspaces"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.list_keyspaces()</span></tt></a></li>
 </ul>
 </div>
 <div class="section" id="changes-in-version-1-0-1">
 <h2>Changes in Version 1.0.1<a class="headerlink" href="#changes-in-version-1-0-1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Allow pycassaShell to be run without specifying a keyspace</li>
-<li>Added <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.describe_schema_versions()</span></tt></li>
+<li>Added <a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.describe_schema_versions" title="pycassa.system_manager.SystemManager.describe_schema_versions"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.describe_schema_versions()</span></tt></a></li>
 </ul>
 </div>
 <div class="section" id="changes-in-version-1-0-0">
 <h2>Changes in Version 1.0.0<a class="headerlink" href="#changes-in-version-1-0-0" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>Created the <tt class="xref py py-class docutils literal"><span class="pre">SystemManager</span></tt> class to
+<li>Created the <a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager" title="pycassa.system_manager.SystemManager"><tt class="xref py py-class docutils literal"><span class="pre">SystemManager</span></tt></a> class to
 allow for keyspace, column family, and index creation, modification,
 and deletion. These operations are no longer provided by a Connection
 class.</li>
@@ -288,8 +311,8 @@ default dictionary class for column families</li>
 type</li>
 <li>Use Thrift API 19.4.0</li>
 </ul>
-<div class="section" id="id4">
-<h3>Deprecated<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id5">
+<h3>Deprecated<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><tt class="xref py py-meth docutils literal"><span class="pre">ColumnFamilyMap.get_count()</span></tt> has been deprecated. Use
 <tt class="xref py py-meth docutils literal"><span class="pre">ColumnFamily.get_count()</span></tt> instead.</li>
@@ -408,34 +431,39 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Changelog</a><ul>
+<li><a class="reference internal" href="#changes-in-version-1-1-1">Changes in Version 1.1.1</a><ul>
+<li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#bug-fixes">Bug Fixes</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#changes-in-version-1-1-0">Changes in Version 1.1.0</a><ul>
 <li><a class="reference internal" href="#changes-related-to-cassandra-0-8">Changes related to Cassandra 0.8</a></li>
 <li><a class="reference internal" href="#other-features">Other Features</a></li>
-<li><a class="reference internal" href="#bug-fixes">Bug Fixes</a></li>
+<li><a class="reference internal" href="#id1">Bug Fixes</a></li>
 <li><a class="reference internal" href="#other">Other</a></li>
 <li><a class="reference internal" href="#removed-deprecated-items">Removed Deprecated Items</a></li>
 <li><a class="reference internal" href="#deprecated">Deprecated</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#changes-in-version-1-0-8">Changes in Version 1.0.8</a><ul>
-<li><a class="reference internal" href="#id1">Deprecated</a></li>
+<li><a class="reference internal" href="#id2">Deprecated</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#changes-in-version-1-0-7">Changes in Version 1.0.7</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-0-6">Changes in Version 1.0.6</a><ul>
-<li><a class="reference internal" href="#id2">Deprecated</a></li>
+<li><a class="reference internal" href="#id3">Deprecated</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#changes-in-version-1-0-5">Changes in Version 1.0.5</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-0-4">Changes in Version 1.0.4</a><ul>
-<li><a class="reference internal" href="#id3">Deprecated</a></li>
+<li><a class="reference internal" href="#id4">Deprecated</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#changes-in-version-1-0-3">Changes in Version 1.0.3</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-0-2">Changes in Version 1.0.2</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-0-1">Changes in Version 1.0.1</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-0-0">Changes in Version 1.0.0</a><ul>
-<li><a class="reference internal" href="#id4">Deprecated</a></li>
+<li><a class="reference internal" href="#id5">Deprecated</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#changes-in-version-0-5-4">Changes in Version 0.5.4</a></li>
@@ -488,7 +516,7 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
         <li class="right" >
           <a href="api/pycassa/cassandra/ttypes.html" title="pycassa.cassandra.ttypes – Thrift Object Types"
              >previous</a> |</li>
-        <li><a href="index.html">pycassa v1.1.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v1.1.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
