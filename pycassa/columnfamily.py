@@ -137,7 +137,7 @@ class ColumnFamily(object):
         self.timestamp = gm_timestamp
         self.load_schema()
 
-        recognized_kwargs = ["buffer_size", "read_consitency_level",
+        recognized_kwargs = ["buffer_size", "read_consistency_level",
                              "write_consistency_level", "timestamp",
                              "dict_class", "buffer_size", "autopack_names",
                              "autopack_values", "autopack_keys"]
