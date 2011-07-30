@@ -21,6 +21,9 @@ The source code repository for **pycassa** can be found on `Github <http://githu
 :doc:`example/index`
   An example of how to use **pycassa** with `Twissandra <http://github.com/twissandra/twissandra>`_, an example project that uses Cassandra to provide functionality similar to Twitter.
 
+:doc:`using_with/index`
+  How to use **pycassa** with other projects, including Celery.
+
 :doc:`pycassa_shell`
   How to use the included pycassaShell.
 
