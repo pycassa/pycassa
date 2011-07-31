@@ -374,8 +374,7 @@ class ConnectionWrapper(connection.Connection):
             self.operation_count += 1
             try:
                 if kwargs.pop('reset', False):
-                    if hasattr(self._pool, '_replace_wrapper'):
-                        self._pool._replace_wrapper() # puts a new wrapper in the queue
+                    self._pool._replace_wrapper() # puts a new wrapper in the queue
                     self._replace(self._pool.get()) # swaps out transport
                 result = getattr(super(ConnectionWrapper, self), f.__name__)(*args, **kwargs)
                 self._retry_count = 0 # reset the count after a success
