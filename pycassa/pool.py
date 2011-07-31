@@ -609,17 +609,27 @@ class ConnectionPool(AbstractPool):
         self._recycle = recycle
         self._max_retries = max_retries
         self._prefill = prefill
+        self._pool_lock = threading.Lock()
+        self._current_conns = 0
         if max_overflow == -1:
             self._max_conns = (2 ** 31) - 1
         else:
             self._max_conns = pool_size + max_overflow
-        self._pool_lock = threading.Lock()
         if prefill:
-            for i in range(pool_size):
+            self.fill()
+
+    def fill(self):
+        """
+        Adds connections to the pool until at least ``pool_size`` connections
+        exist, whether they are currently checked out from the pool or not.
+        """
+        try:
+            self._pool_lock.acquire()
+            while self._current_conns < self._pool_size:
                 self._q.put(self._create_connection(), False)
-            self._current_conns = pool_size
-        else:
-            self._current_conns = 0
+                self._current_conns += 1
+        finally:
+            self._pool_lock.release()
 
     def recreate(self):
         """
