@@ -166,6 +166,69 @@ class PoolingCase(unittest.TestCase):
 
         pool.dispose()
 
+    def test_queue_pool_no_prefill(self):
+        listener = _TestListener()
+        pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
+                         prefill=False, pool_timeout=0.5, timeout=1,
+                         keyspace='PycassaTestKeyspace', credentials=_credentials,
+                         listeners=[listener], use_threadlocal=False)
+        conns = []
+        for i in range(10):
+            conns.append(pool.get())
+            assert_equal(listener.connect_count, i + 1)
+            assert_equal(listener.checkout_count, i + 1)
+
+        # Pool is maxed out now
+        assert_raises(NoConnectionAvailable, pool.get)
+        assert_equal(listener.connect_count, 10)
+        assert_equal(listener.max_count, 1)
+
+        for i in range(0, 5):
+            pool.return_conn(conns[i])
+            assert_equal(listener.checkin_count, i + 1)
+            assert_equal(listener.close_count, 0)
+
+        for i in range(5, 10):
+            pool.return_conn(conns[i])
+            assert_equal(listener.checkin_count, i + 1)
+            assert_equal(listener.close_count, (i - 5) + 1)
+
+        conns = []
+
+        # These connections should come from the pool
+        for i in range(5):
+            conns.append(pool.get())
+            assert_equal(listener.connect_count, 10)
+            assert_equal(listener.checkout_count, (i + 10) + 1)
+
+        # But these will need to be made
+        for i in range(5):
+            conns.append(pool.get())
+            assert_equal(listener.connect_count, (i + 10) + 1)
+            assert_equal(listener.checkout_count, (i + 15) + 1)
+
+        assert_equal(listener.close_count, 5)
+        for i in range(10):
+            conns[i].return_to_pool()
+            assert_equal(listener.checkin_count, (i +10) + 1)
+        assert_equal(listener.close_count, 10)
+
+        # Make sure a double return doesn't change our counts
+        assert_raises(InvalidRequestError, conns[0].return_to_pool)
+        assert_equal(listener.checkin_count, 20)
+        assert_equal(listener.close_count, 10)
+
+        assert_raises(InvalidRequestError, conns[-1].return_to_pool)
+        assert_equal(listener.checkin_count, 20)
+        assert_equal(listener.close_count, 10)
+
+        pool.dispose()
+        assert_equal(listener.dispose_count, 1)
+        pool.recreate()
+        assert_equal(listener.recreate_count, 1)
+        pool.dispose()
+
+
     def test_queue_pool_recycle(self):
         listener = _TestListener()
         pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=1,
@@ -245,28 +308,29 @@ class PoolingCase(unittest.TestCase):
         pool.dispose()
 
     def test_queue_failover(self):
-        listener = _TestListener()
-        pool = ConnectionPool(pool_size=1, max_overflow=0, recycle=10000,
-                         prefill=True, timeout=1,
-                         keyspace='PycassaTestKeyspace', credentials=_credentials,
-                         listeners=[listener], use_threadlocal=False,
-                         server_list=['localhost:9160', 'localhost:9160'])
+        for prefill in (True, False):
+            listener = _TestListener()
+            pool = ConnectionPool(pool_size=1, max_overflow=0, recycle=10000,
+                             prefill=prefill, timeout=1,
+                             keyspace='PycassaTestKeyspace', credentials=_credentials,
+                             listeners=[listener], use_threadlocal=False,
+                             server_list=['localhost:9160', 'localhost:9160'])
 
-        cf = ColumnFamily(pool, 'Standard1')
+            cf = ColumnFamily(pool, 'Standard1')
 
-        for i in range(1,5):
-            conn = pool.get()
-            setattr(conn, 'send_batch_mutate', conn._fail_once)
-            conn._should_fail = True
-            conn.return_to_pool()
+            for i in range(1,5):
+                conn = pool.get()
+                setattr(conn, 'send_batch_mutate', conn._fail_once)
+                conn._should_fail = True
+                conn.return_to_pool()
 
-            # The first insert attempt should fail, but failover should occur
-            # and the insert should succeed
-            cf.insert('key', {'col': 'val%d' % i, 'col2': 'val'})
-            assert_equal(listener.failure_count, i)
-            assert_equal(cf.get('key'), {'col': 'val%d' % i, 'col2': 'val'})
+                # The first insert attempt should fail, but failover should occur
+                # and the insert should succeed
+                cf.insert('key', {'col': 'val%d' % i, 'col2': 'val'})
+                assert_equal(listener.failure_count, i)
+                assert_equal(cf.get('key'), {'col': 'val%d' % i, 'col2': 'val'})
 
-        pool.dispose()
+            pool.dispose()
 
     def test_queue_threadlocal_failover(self):
         listener = _TestListener()
@@ -320,25 +384,26 @@ class PoolingCase(unittest.TestCase):
         pool.dispose()
 
     def test_queue_retry_limit(self):
-        listener = _TestListener()
-        pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
-                         prefill=True, max_retries=3, # allow 3 retries
-                         keyspace='PycassaTestKeyspace', credentials=_credentials,
-                         listeners=[listener], use_threadlocal=False,
-                         server_list=['localhost:9160', 'localhost:9160'])
+        for prefill in (True, False):
+            listener = _TestListener()
+            pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
+                             prefill=prefill, max_retries=3, # allow 3 retries
+                             keyspace='PycassaTestKeyspace', credentials=_credentials,
+                             listeners=[listener], use_threadlocal=False,
+                             server_list=['localhost:9160', 'localhost:9160'])
 
-        # Corrupt all of the connections
-        for i in range(5):
-            conn = pool.get()
-            setattr(conn, 'send_batch_mutate', conn._fail_once)
-            conn._should_fail = True
-            conn.return_to_pool()
+            # Corrupt all of the connections
+            for i in range(5):
+                conn = pool.get()
+                setattr(conn, 'send_batch_mutate', conn._fail_once)
+                conn._should_fail = True
+                conn.return_to_pool()
 
-        cf = ColumnFamily(pool, 'Standard1')
-        assert_raises(MaximumRetryException, cf.insert, 'key', {'col':'val', 'col2': 'val'})
-        assert_equal(listener.failure_count, 4) # On the 4th failure, didn't retry
+            cf = ColumnFamily(pool, 'Standard1')
+            assert_raises(MaximumRetryException, cf.insert, 'key', {'col':'val', 'col2': 'val'})
+            assert_equal(listener.failure_count, 4) # On the 4th failure, didn't retry
 
-        pool.dispose()
+            pool.dispose()
 
     def test_queue_failure_on_retry(self):
         listener = _TestListener()
