@@ -83,17 +83,9 @@ class AbstractPool(object):
             self.server_list = list(server_list())
         else:
             self.server_list = list(server_list)
-
         assert len(self.server_list) > 0
 
-        # Randomly permute the array (trust me, it's uniformly random)
-        n = len(self.server_list)
-        for i in range(0, n):
-            j = random.randint(i, n-1)
-            temp = self.server_list[j]
-            self.server_list[j] = self.server_list[i]
-            self.server_list[i] = temp
-
+        random.shuffle(self.server_list)
         self._list_position = 0
         self._notify_on_server_list(self.server_list)
 
@@ -104,7 +96,9 @@ class AbstractPool(object):
         but client-side load-balancing isn't so important that this is
         a problem.
         """
-        server = self.server_list[self._list_position % len(self.server_list)]
+        if self._list_position >= len(self.server_list):
+            self._list_position = 0
+        server = self.server_list[self._list_position]
         self._list_position += 1
         return server
 

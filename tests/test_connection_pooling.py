@@ -41,7 +41,7 @@ class PoolingCase(unittest.TestCase):
     def test_queue_pool(self):
         listener = _TestListener()
         pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
-                         prefill=True, pool_timeout=0.5, timeout=1,
+                         prefill=True, pool_timeout=0.1, timeout=1,
                          keyspace='PycassaTestKeyspace', credentials=_credentials,
                          listeners=[listener], use_threadlocal=False)
         conns = []
@@ -104,7 +104,7 @@ class PoolingCase(unittest.TestCase):
     def test_queue_pool_threadlocal(self):
         listener = _TestListener()
         pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
-                         prefill=True, pool_timeout=0.5, timeout=1,
+                         prefill=True, pool_timeout=0.01, timeout=1,
                          keyspace='PycassaTestKeyspace', credentials=_credentials,
                          listeners=[listener], use_threadlocal=True)
         conns = []
@@ -169,7 +169,7 @@ class PoolingCase(unittest.TestCase):
     def test_queue_pool_no_prefill(self):
         listener = _TestListener()
         pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
-                         prefill=False, pool_timeout=0.5, timeout=1,
+                         prefill=False, pool_timeout=0.1, timeout=1,
                          keyspace='PycassaTestKeyspace', credentials=_credentials,
                          listeners=[listener], use_threadlocal=False)
         conns = []
@@ -270,10 +270,9 @@ class PoolingCase(unittest.TestCase):
             else:
                 return 1
 
-        pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
-                         prefill=True,
+        pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000, prefill=True,
                          keyspace='PycassaTestKeyspace', credentials=_credentials,
-                         timeout=0.05,
+                         pool_timeout=0.01, timeout=0.05,
                          listeners=[listener], use_threadlocal=False,
                          server_list=['localhost:9160', 'foobar:1'])
 
@@ -287,10 +286,9 @@ class PoolingCase(unittest.TestCase):
         pool.dispose()
         listener.reset()
 
-        pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
-                         prefill=True,
+        pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000, prefill=True,
                          keyspace='PycassaTestKeyspace', credentials=_credentials,
-                         timeout=0.05,
+                         pool_timeout=0.01, timeout=0.05,
                          listeners=[listener], use_threadlocal=True,
                          server_list=['localhost:9160', 'foobar:1'])
 
