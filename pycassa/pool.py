@@ -22,257 +22,6 @@ __all__ = ['QueuePool', 'ConnectionPool', 'PoolListener',
            'MaximumRetryException', 'NoConnectionAvailable',
            'InvalidRequestError']
 
-class NoServerAvailable(Exception):
-    """Raised if all servers are currently marked dead."""
-    pass
-
-
-class AbstractPool(object):
-    """An abstract base class for all other pools."""
-
-    def __init__(self, keyspace, server_list, credentials, timeout,
-                 logging_name, use_threadlocal, listeners, framed_transport):
-        """An abstract base class for all other pools."""
-
-        if logging_name:
-            self.logging_name = self._orig_logging_name = logging_name
-        else:
-            self._orig_logging_name = None
-            self.logging_name = id(self)
-
-        self._pool_threadlocal = use_threadlocal
-        self.keyspace = keyspace
-        self.credentials = credentials
-        self.timeout = timeout
-        self.framed_transport = framed_transport
-        if use_threadlocal:
-            self._tlocal = threading.local()
-
-        # Listener groups
-        self.listeners = []
-        self._on_connect = []
-        self._on_checkout = []
-        self._on_checkin = []
-        self._on_dispose = []
-        self._on_recycle = []
-        self._on_failure = []
-        self._on_server_list = []
-        self._on_pool_recreate = []
-        self._on_pool_dispose = []
-        self._on_pool_max = []
-
-        self.add_listener(PoolLogger())
-
-        for l in listeners:
-            self.add_listener(l)
-
-        self.set_server_list(server_list)
-
-    def set_server_list(self, server_list):
-        """
-        Sets the server list that the pool will make connections to.
-
-        `server_list` should be sequence of servers in the form 'host:port' that
-        the pool will connect to.  The list will be randomly permuted before
-        being used. `server_list` may also be a function that returns the
-        sequence of servers.
-
-        """
-
-        if callable(server_list):
-            self.server_list = list(server_list())
-        else:
-            self.server_list = list(server_list)
-        assert len(self.server_list) > 0
-
-        random.shuffle(self.server_list)
-        self._list_position = 0
-        self._notify_on_server_list(self.server_list)
-
-    def _get_next_server(self):
-        """
-        Gets the next 'localhost:port' combination from the list of
-        servers and increments the position. This is not thread-safe,
-        but client-side load-balancing isn't so important that this is
-        a problem.
-        """
-        if self._list_position >= len(self.server_list):
-            self._list_position = 0
-        server = self.server_list[self._list_position]
-        self._list_position += 1
-        return server
-
-    def _create_connection(self):
-        """Creates a ConnectionWrapper, which opens a
-        pycassa.connection.Connection."""
-        failure_count = 0
-        while failure_count < 2 * len(self.server_list):
-            try:
-                server = self._get_next_server()
-                wrapper = self._get_new_wrapper(server)
-                return wrapper
-            except (Thrift.TException, socket.error, IOError, EOFError), exc:
-                self._notify_on_failure(exc, server)
-                failure_count += 1
-        raise AllServersUnavailable('An attempt was made to connect to each of the servers '
-                'twice, but none of the attempts succeeded.')
-
-    def _get_new_wrapper(self, server):
-        raise NotImplementedError()
-
-    def recreate(self):
-        """Return a new instance with identical creation arguments."""
-
-        raise NotImplementedError()
-
-    def dispose(self):
-        """ Dispose of this pool.  """
-        raise NotImplementedError()
-
-    def get(self):
-        raise NotImplementedError()
-
-    def return_conn(self, conn):
-        raise NotImplementedError()
-
-    def status(self):
-        raise NotImplementedError()
-
-    def add_listener(self, listener):
-        """
-        Add a :class:`PoolListener`-like object to this pool.
-
-        `listener` may be an object that implements some or all of
-        :class:`PoolListener`, or a dictionary of callables containing implementations
-        of some or all of the named methods in :class:`PoolListener`.
-
-        """
-
-        listener = as_interface(listener,
-            methods=('connection_created', 'connection_checked_out',
-                     'connection_checked_in', 'connection_disposed',
-                     'connection_recycled', 'connection_failed',
-                     'obtained_server_list', 'pool_recreated',
-                     'pool_disposed', 'pool_at_max'))
-
-        self.listeners.append(listener)
-        if hasattr(listener, 'connection_created'):
-            self._on_connect.append(listener)
-        if hasattr(listener, 'connection_checked_out'):
-            self._on_checkout.append(listener)
-        if hasattr(listener, 'connection_checked_in'):
-            self._on_checkin.append(listener)
-        if hasattr(listener, 'connection_disposed'):
-            self._on_dispose.append(listener)
-        if hasattr(listener, 'connection_recycled'):
-            self._on_recycle.append(listener)
-        if hasattr(listener, 'connection_failed'):
-            self._on_failure.append(listener)
-        if hasattr(listener, 'obtained_server_list'):
-            self._on_server_list.append(listener)
-        if hasattr(listener, 'pool_recreated'):
-            self._on_pool_recreate.append(listener)
-        if hasattr(listener, 'pool_disposed'):
-            self._on_pool_dispose.append(listener)
-        if hasattr(listener, 'pool_at_max'):
-            self._on_pool_max.append(listener)
-
-    def _notify_on_pool_recreate(self):
-        if self._on_pool_recreate:
-            dic = self._get_dic()
-            dic['level'] = 'info'
-            for l in self._on_pool_recreate:
-                l.pool_recreated(dic)
-
-    def _notify_on_pool_dispose(self):
-        if self._on_pool_dispose:
-            dic = self._get_dic()
-            dic['level'] = 'info'
-            for l in self._on_pool_dispose:
-                l.pool_disposed(dic)
-
-    def _notify_on_pool_max(self, pool_max):
-        if self._on_pool_max:
-            dic = self._get_dic()
-            dic['level'] = 'info'
-            dic['pool_max'] = pool_max
-            for l in self._on_pool_max:
-                l.pool_at_max(dic)
-
-    def _notify_on_dispose(self, conn_record, msg="", error=None):
-        if self._on_dispose:
-            dic = self._get_dic()
-            dic['level'] = 'debug'
-            dic['connection'] = conn_record
-            if msg:
-                dic['message'] = msg
-            if error:
-                dic['error'] = error
-                dic['level'] = 'warn'
-            for l in self._on_dispose:
-                l.connection_disposed(dic)
-
-    def _notify_on_server_list(self, server_list):
-        dic = self._get_dic()
-        dic['level'] = 'debug'
-        dic['server_list'] = server_list
-        if self._on_server_list:
-            for l in self._on_server_list:
-                l.obtained_server_list(dic)
-
-    def _notify_on_recycle(self, old_conn, new_conn):
-        if self._on_recycle:
-            dic = self._get_dic()
-            dic['level'] = 'debug'
-            dic['old_conn'] = old_conn
-            dic['new_conn'] = new_conn
-        for l in self._on_recycle:
-            l.connection_recycled(dic)
-
-    def _notify_on_connect(self, conn_record, msg="", error=None):
-        if self._on_connect:
-            dic = self._get_dic()
-            dic['level'] = 'debug'
-            dic['connection'] = conn_record
-            if msg:
-                dic['message'] = msg
-            if error:
-                dic['error'] = error
-                dic['level'] = 'warn'
-            for l in self._on_connect:
-                l.connection_created(dic)
-
-    def _notify_on_checkin(self, conn_record):
-        if self._on_checkin:
-            dic = self._get_dic()
-            dic['level'] = 'debug'
-            dic['connection'] = conn_record
-            for l in self._on_checkin:
-                l.connection_checked_in(dic)
-
-    def _notify_on_checkout(self, conn_record):
-        if self._on_checkout:
-            dic = self._get_dic()
-            dic['level'] = 'debug'
-            dic['connection'] = conn_record
-            for l in self._on_checkout:
-                l.connection_checked_out(dic)
-
-    def _notify_on_failure(self, error, server, connection=None):
-        if self._on_failure:
-            dic = self._get_dic()
-            dic['level'] = 'info'
-            dic['error'] = error
-            dic['server'] = server
-            dic['connection'] = connection
-            for l in self._on_failure:
-                l.connection_failed(dic)
-
-    def _get_dic(self):
-        return {'pool_type': self.__class__.__name__,
-                'pool_id': self.logging_name}
-
-
 class ConnectionWrapper(connection.Connection):
     """
     A wrapper class for :class:`Connection`s that adds pooling functionality.
@@ -288,17 +37,17 @@ class ConnectionWrapper(connection.Connection):
 
     def __init__(self, pool, max_retries, *args, **kwargs):
         """
-        Creates a wrapper for a :class:`pycassa.connection.Connection`
+        Creates a wrapper for a :class:`~.pycassa.connection.Connection`
         object, adding pooling related functionality while still allowing
         access to the thrift API calls.
 
         These should not be created directly, only obtained through
-        Pool's :meth:`~.AbstractPool.get()` method.
+        Pool's :meth:`~.ConnectionPool.get()` method.
 
         """
         self._pool = pool
         self._retry_count = 0
-        self._max_retries = max_retries
+        self.max_retries = max_retries
         self.info = {}
         self.starttime = time.time()
         self.operation_count = 0
@@ -314,7 +63,7 @@ class ConnectionWrapper(connection.Connection):
         """
         Returns this to the pool.
 
-        This has the same effect as calling :meth:`AbstractPool.return_conn()`
+        This has the same effect as calling :meth:`ConnectionPool.return_conn()`
         on the wrapper.
 
         """
@@ -384,7 +133,7 @@ class ConnectionWrapper(connection.Connection):
                 self._pool._decrement_overflow()
                 self._pool._clear_current()
 
-                if self._max_retries != -1 and self._retry_count > self._max_retries:
+                if self.max_retries != -1 and self._retry_count > self.max_retries:
                     raise MaximumRetryException('Retried %d times. Last failure was %s' %
                                                 (self._retry_count, exc))
                 # Exponential backoff
@@ -485,8 +234,61 @@ class ConnectionWrapper(connection.Connection):
                 cf_def.column_metadata = new_metadata
         return cf_defs
 
-class ConnectionPool(AbstractPool):
+class ConnectionPool(object):
     """A pool that maintains a queue of open connections."""
+
+    _max_overflow = 0
+
+    def _get_max_overflow(self):
+        return self._max_overflow
+
+    def _set_max_overflow(self, max_overflow):
+        try:
+            self._pool_lock.acquire()
+
+            self._max_overflow = max_overflow
+            self._overflow_enabled = max_overflow > 0 or max_overflow == -1
+            if max_overflow == -1:
+                self._max_conns = (2 ** 31) - 1
+            else:
+                self._max_conns = self._pool_size + max_overflow
+        finally:
+            self._pool_lock.release()
+
+    max_overflow = property(_get_max_overflow, _set_max_overflow)
+    """ Whether or not a new connection may be opened when the
+    pool is empty is controlled by `max_overflow`.  This specifies how many
+    additional connections may be opened after the pool has reached `pool_size`;
+    keep in mind that these extra connections will be discarded upon checkin
+    until the pool is below `pool_size`.  This may be set to -1 to indicate no
+    overflow limit. The default value is 0, which does not allow for overflow. """
+
+    pool_timeout = 30
+    """ If ``pool_size + max_overflow`` connections have already been checked
+    out, an attempt to retrieve a new connection from the pool will wait
+    up to `pool_timeout` seconds for a connection to be returned to the
+    pool before giving up. Note that this setting is only meaningful when you
+    are accessing the pool concurrently, such as with multiple threads.
+    This may be set to 0 to fail immediately or -1 to wait forever. 
+    The default value is 30. """
+
+    recycle = 10000
+    """ After performing `recycle` number of operations, connections will
+    be replaced when checked back in to the pool.  This may be set to
+    -1 to disable connection recycling. The default value is 10,000. """
+
+    max_retries = 5
+    """ When an operation on a connection fails due to an :exc:`~.TimedOutException`
+    or :exc:`~.UnavailableException`, which tend to indicate single or
+    multiple node failure, the operation will be retried on different nodes
+    up to `max_retries` times before an :exc:`~.MaximumRetryException` is raised.
+    Setting this to 0 disables retries and setting to -1 allows unlimited retries. 
+    The default value is 5. """
+
+    logging_name = None
+    """ By default, each pool identifies itself in the logs using ``id(self)``.
+    If multiple pools are in use for different purposes, setting `logging_name` will
+    help individual pools to be identified in the logs. """
 
     def __init__(self, keyspace,
                  server_list=['localhost:9160'],
@@ -494,25 +296,19 @@ class ConnectionPool(AbstractPool):
                  timeout=0.5,
                  use_threadlocal=True,
                  pool_size=5,
-                 max_overflow=0,
                  prefill=True,
-                 pool_timeout=30,
-                 recycle=10000,
-                 max_retries=5,
-                 listeners=[],
-                 logging_name=None,
-                 framed_transport=True):
+                 **kwargs):
         """
         Constructs a pool that maintains a queue of open connections.
 
         All connections in the pool will be opened to `keyspace`.
 
-        `server_list` is a sequence of servers in the form 'host:port' that
-        the pool will connect to.  The list will be randomly permuted before
-        being drawn from sequentially. `server_list` may also be a function
-        that returns the sequence of servers.
+        `server_list` is a sequence of servers in the form ``"host:port"`` that
+        the pool will connect to. The port defaults to 9160 if excluded.
+        The list will be randomly shuffled before being drawn from sequentially.
+        `server_list` may also be a function that returns the sequence of servers.
 
-        If authentication or autorization is required, `credentials` must
+        If authentication or authorization is required, `credentials` must
         be supplied.  This should be a dictionary containing 'username' and
         'password' keys with appropriate string values.
 
@@ -522,24 +318,18 @@ class ConnectionPool(AbstractPool):
 
         If `use_threadlocal` is set to ``True``, repeated calls to
         :meth:`get()` within the same application thread will
-        return the same :class:`ConnectionWrapper` object if one has
-        already been retrieved from the pool and has not been returned yet.
-        Be careful when setting `use_threadlocal` to ``False`` in a multithreaded
-        application, especially with retries enabled.  Synchronization may be
-        required to prevent the connection from changing while another thread is
-        using it.
+        return the same :class:`ConnectionWrapper` object if one is
+        already checked out from the pool.  Be careful when setting `use_threadlocal`
+        to ``False`` in a multithreaded application, especially with retries enabled.
+        Synchronization may be required to prevent the connection from changing while
+        another thread is using it.
 
         The pool will keep up `pool_size` open connections in the pool
         at any time.  When a connection is returned to the pool, the
         connection will be discarded is the pool already contains `pool_size`
-        connections.  Whether or not a new connection may be opened when the
-        pool is empty is controlled by `max_overflow`.  This specifies how many
-        additional connections may be opened after the pool has reached `pool_size`;
-        keep in mind that these extra connections will be discarded upon checkin
-        until the pool is below `pool_size`. It follows then that the total number
-        of simultaneous connections the pool will allow is ``pool_size + max_overflow``,
+        connections.  The total number of simultaneous connections the pool will
+        allow is ``pool_size + max_overflow``,
         and the number of "sleeping" connections the pool will allow is ``pool_size``.
-        `max_overflow` may be set to -1 to indicate no overflow limit.
 
         A good choice for `pool_size` is a multiple of the number of servers
         passed to the Pool constructor.  If a size less than this is chosen,
@@ -552,34 +342,6 @@ class ConnectionPool(AbstractPool):
         If `prefill` is set to ``True``, `pool_size` connections will be opened
         when the pool is created.
 
-        If ``pool_size + max_overflow`` connections have already been checked
-        out, an attempt to retrieve a new connection from the pool will wait
-        up to `pool_timeout` seconds for a connection to be returned to the
-        pool before giving up. This may be set to 0 to fail immediately or -1
-        to wait forever.
-
-        After performing `recycle` number of operations, connections will
-        be replaced when checked back in to the pool.  This may be set to
-        -1 to disable connection recycling.
-
-        When an operation on a connection fails due to an :exc:`TimedOutException`
-        or :exc:`UnavailableException`, which tend to indicate single or
-        multiple node failure, the operation will be retried on different nodes
-        up to `max_retries` times before an :exc:`MaximumRetryException` is raised.
-        Setting this to 0 disables retries and setting to -1 allows unlimited retries.
-
-        Pool monitoring may be achieved by supplying `listeners`, which should
-        be a list of :class:`PoolListener`-like objects or dictionaries of
-        callables that receive events when pool or connection events occur.
-
-        By default, each pool identifies itself in the logs using ``id(self)``.
-        If multiple pools are in use for different purposes, setting `logging_name`
-        will help individual pools to be identified in the logs.
-
-        `framed_transport` determines whether framed or buffered transport will
-        be used.  Cassandra 0.7 uses framed by default, while Cassandra 0.6 uses
-        buffered by default.
-
         Example Usage:
 
         .. code-block:: python
@@ -591,25 +353,104 @@ class ConnectionPool(AbstractPool):
 
         """
 
-        super(ConnectionPool, self).__init__(keyspace, server_list, credentials,
-                                             timeout, logging_name, use_threadlocal,
-                                             listeners, framed_transport)
+        self._pool_threadlocal = use_threadlocal
+        self.keyspace = keyspace
+        self.credentials = credentials
+        self.timeout = timeout
+        if use_threadlocal:
+            self._tlocal = threading.local()
+
         self._pool_size = pool_size
         self._q = pool_queue.Queue(pool_size)
-        self._max_overflow = max_overflow
-        self._overflow_enabled = max_overflow > 0 or max_overflow == -1
-        self._pool_timeout = pool_timeout
-        self._recycle = recycle
-        self._max_retries = max_retries
-        self._prefill = prefill
         self._pool_lock = threading.Lock()
         self._current_conns = 0
-        if max_overflow == -1:
-            self._max_conns = (2 ** 31) - 1
-        else:
-            self._max_conns = pool_size + max_overflow
-        if prefill:
+
+        # Listener groups
+        self.listeners = []
+        self._on_connect = []
+        self._on_checkout = []
+        self._on_checkin = []
+        self._on_dispose = []
+        self._on_recycle = []
+        self._on_failure = []
+        self._on_server_list = []
+        self._on_pool_recreate = []
+        self._on_pool_dispose = []
+        self._on_pool_max = []
+
+        self.add_listener(PoolLogger())
+
+        if "listeners" in kwargs:
+            listeners = kwargs["listeners"]
+            for l in listeners:
+                self.add_listener(l)
+
+        if "logging_name" in kwargs:
+            name = kwargs["logging_name"]
+            if name:
+                self.logging_name = name
+            else:
+                self.logging_name = id(self)
+
+        if "max_overflow" not in kwargs:
+            self._set_max_overflow(0)
+
+        recognized_kwargs = ["pool_timeout", "recycle", "max_retries", "max_overflow"]
+        for kw in recognized_kwargs:
+            if kw in kwargs:
+                setattr(self, kw, kwargs[kw])
+
+        self.set_server_list(server_list)
+
+        self._prefill = prefill
+        if self._prefill:
             self.fill()
+
+    def set_server_list(self, server_list):
+        """
+        Sets the server list that the pool will make connections to.
+
+        `server_list` should be sequence of servers in the form ``"host:port"`` that
+        the pool will connect to.  The list will be randomly permuted before
+        being used. `server_list` may also be a function that returns the
+        sequence of servers.
+        """
+        if callable(server_list):
+            self.server_list = list(server_list())
+        else:
+            self.server_list = list(server_list)
+
+        random.shuffle(self.server_list)
+        self._list_position = 0
+        self._notify_on_server_list(self.server_list)
+
+    def _get_next_server(self):
+        """
+        Gets the next 'localhost:port' combination from the list of
+        servers and increments the position. This is not thread-safe,
+        but client-side load-balancing isn't so important that this is
+        a problem.
+        """
+        if self._list_position >= len(self.server_list):
+            self._list_position = 0
+        server = self.server_list[self._list_position]
+        self._list_position += 1
+        return server
+
+    def _create_connection(self):
+        """Creates a ConnectionWrapper, which opens a
+        pycassa.connection.Connection."""
+        failure_count = 0
+        while failure_count < 2 * len(self.server_list):
+            try:
+                server = self._get_next_server()
+                wrapper = self._get_new_wrapper(server)
+                return wrapper
+            except (Thrift.TException, socket.error, IOError, EOFError), exc:
+                self._notify_on_failure(exc, server)
+                failure_count += 1
+        raise AllServersUnavailable('An attempt was made to connect to each of the servers '
+                'twice, but none of the attempts succeeded.')
 
     def fill(self):
         """
@@ -632,22 +473,22 @@ class ConnectionPool(AbstractPool):
         self._notify_on_pool_recreate()
         return ConnectionPool(pool_size=self._q.maxsize,
                          max_overflow=self._max_overflow,
-                         pool_timeout=self._pool_timeout,
+                         pool_timeout=self.pool_timeout,
                          keyspace=self.keyspace,
                          server_list=self.server_list,
                          credentials=self.credentials,
                          timeout=self.timeout,
-                         recycle=self._recycle,
-                         max_retries=self._max_retries,
+                         recycle=self.recycle,
+                         max_retries=self.max_retries,
                          prefill=self._prefill,
-                         logging_name=self._orig_logging_name,
+                         logging_name=self.logging_name,
                          use_threadlocal=self._pool_threadlocal,
                          listeners=self.listeners)
 
     def _get_new_wrapper(self, server):
-        return ConnectionWrapper(self, self._max_retries,
+        return ConnectionWrapper(self, self.max_retries,
                                  self.keyspace, server,
-                                 framed_transport=self.framed_transport,
+                                 framed_transport=True,
                                  timeout=self.timeout,
                                  credentials=self.credentials)
 
@@ -695,7 +536,7 @@ class ConnectionPool(AbstractPool):
         Put a connection in the queue, recycling first if needed.
         This method does not handle the pool queue being full.
         """
-        if self._recycle > -1 and conn.operation_count > self._recycle:
+        if self.recycle > -1 and conn.operation_count > self.recycle:
             new_conn = self._create_connection()
             self._notify_on_recycle(conn, new_conn)
             conn._dispose_wrapper(reason="recyling connection")
@@ -727,8 +568,16 @@ class ConnectionPool(AbstractPool):
                     # We don't want to waste time blocking if overflow is not enabled; similarly,
                     # if we're not at the max overflow, we can fail quickly and create a new
                     # connection
-                    block = self._pool_timeout > 0 and self._current_conns >= self._max_conns
-                    conn = self._q.get(block, self._pool_timeout)
+                    timeout = self.pool_timeout
+                    if timeout == -1:
+                        timeout = None
+                        block = self._current_conns >= self._max_conns
+                    elif timeout == 0:
+                        block = False
+                    else:
+                        block = self._current_conns >= self._max_conns
+
+                    conn = self._q.get(block, timeout)
                 except pool_queue.Empty:
                     if self._current_conns < self._max_conns:
                         conn = self._create_connection()
@@ -739,7 +588,7 @@ class ConnectionPool(AbstractPool):
                         if self._overflow_enabled:
                             size_msg += "overflow %d" % (self._max_overflow)
                         message = "ConnectionPool limit of %s reached, unable to obtain connection after %d seconds" \
-                                  % (size_msg, self._pool_timeout)
+                                  % (size_msg, self.pool_timeout)
                         raise NoConnectionAvailable(message)
         finally:
             self._pool_lock.release()
@@ -762,19 +611,6 @@ class ConnectionPool(AbstractPool):
         self._overflow = 0 - self.size()
         self._notify_on_pool_dispose()
 
-    def add_listener(self, listener):
-        """
-        Add a :class:`PoolListener`-like object to this pool.
-
-        `listener` may be an object that implements some or all of
-        :class:`PoolListener`, or a dictionary of callables containing implementations
-        of some or all of the named methods in :class:`PoolListener`.
-
-        """
-        super(ConnectionPool, self).add_listener(listener)
-
-
-
     def status(self):
         """ Returns the status of the pool. """
         return "Pool size: %d, connections in pool: %d, "\
@@ -785,21 +621,155 @@ class ConnectionPool(AbstractPool):
                                     self.checkedout())
 
     def size(self):
+        """ Returns the capacity of the pool. """
         return self._pool_size
 
     def checkedin(self):
+        """ Returns the number of connections currently in the pool. """
         return self._q.qsize()
 
     def overflow(self):
+        """ Returns the number of overflow connections that are currently open. """
         return max(self._current_conns - self._pool_size, 0)
 
     def checkedout(self):
+        """ Returns the number of connections currently checked out from the pool. """
         return self._current_conns - self.checkedin()
+
+    def add_listener(self, listener):
+        """
+        Add a :class:`PoolListener`-like object to this pool.
+
+        `listener` may be an object that implements some or all of
+        :class:`PoolListener`, or a dictionary of callables containing implementations
+        of some or all of the named methods in :class:`PoolListener`.
+
+        """
+
+        listener = as_interface(listener,
+            methods=('connection_created', 'connection_checked_out',
+                     'connection_checked_in', 'connection_disposed',
+                     'connection_recycled', 'connection_failed',
+                     'obtained_server_list', 'pool_recreated',
+                     'pool_disposed', 'pool_at_max'))
+
+        self.listeners.append(listener)
+        if hasattr(listener, 'connection_created'):
+            self._on_connect.append(listener)
+        if hasattr(listener, 'connection_checked_out'):
+            self._on_checkout.append(listener)
+        if hasattr(listener, 'connection_checked_in'):
+            self._on_checkin.append(listener)
+        if hasattr(listener, 'connection_disposed'):
+            self._on_dispose.append(listener)
+        if hasattr(listener, 'connection_recycled'):
+            self._on_recycle.append(listener)
+        if hasattr(listener, 'connection_failed'):
+            self._on_failure.append(listener)
+        if hasattr(listener, 'obtained_server_list'):
+            self._on_server_list.append(listener)
+        if hasattr(listener, 'pool_recreated'):
+            self._on_pool_recreate.append(listener)
+        if hasattr(listener, 'pool_disposed'):
+            self._on_pool_dispose.append(listener)
+        if hasattr(listener, 'pool_at_max'):
+            self._on_pool_max.append(listener)
+
+    def _notify_on_pool_recreate(self):
+        if self._on_pool_recreate:
+            dic = {'pool_id': self.logging_name,
+                   'level': 'info'}
+            for l in self._on_pool_recreate:
+                l.pool_recreated(dic)
+
+    def _notify_on_pool_dispose(self):
+        if self._on_pool_dispose:
+            dic = {'pool_id': self.logging_name,
+                   'level': 'info'}
+            for l in self._on_pool_dispose:
+                l.pool_disposed(dic)
+
+    def _notify_on_pool_max(self, pool_max):
+        if self._on_pool_max:
+            dic = {'pool_id': self.logging_name,
+                   'level': 'info',
+                   'pool_max': pool_max}
+            for l in self._on_pool_max:
+                l.pool_at_max(dic)
+
+    def _notify_on_dispose(self, conn_record, msg="", error=None):
+        if self._on_dispose:
+            dic = {'pool_id': self.logging_name,
+                   'level': 'debug',
+                   'connection': conn_record}
+            if msg:
+                dic['message'] = msg
+            if error:
+                dic['error'] = error
+                dic['level'] = 'warn'
+            for l in self._on_dispose:
+                l.connection_disposed(dic)
+
+    def _notify_on_server_list(self, server_list):
+        dic = {'pool_id': self.logging_name,
+               'level': 'debug',
+               'server_list': server_list}
+        if self._on_server_list:
+            for l in self._on_server_list:
+                l.obtained_server_list(dic)
+
+    def _notify_on_recycle(self, old_conn, new_conn):
+        if self._on_recycle:
+            dic = {'pool_id': self.logging_name,
+                   'level': 'debug',
+                   'old_conn': old_conn,
+                   'new_conn': new_conn}
+        for l in self._on_recycle:
+            l.connection_recycled(dic)
+
+    def _notify_on_connect(self, conn_record, msg="", error=None):
+        if self._on_connect:
+            dic = {'pool_id': self.logging_name,
+                   'level': 'debug',
+                   'connection': conn_record}
+            if msg:
+                dic['message'] = msg
+            if error:
+                dic['error'] = error
+                dic['level'] = 'warn'
+            for l in self._on_connect:
+                l.connection_created(dic)
+
+    def _notify_on_checkin(self, conn_record):
+        if self._on_checkin:
+            dic = {'pool_id': self.logging_name,
+                   'level': 'debug',
+                   'connection': conn_record}
+            for l in self._on_checkin:
+                l.connection_checked_in(dic)
+
+    def _notify_on_checkout(self, conn_record):
+        if self._on_checkout:
+            dic = {'pool_id': self.logging_name,
+                   'level': 'debug',
+                   'connection': conn_record}
+            for l in self._on_checkout:
+                l.connection_checked_out(dic)
+
+    def _notify_on_failure(self, error, server, connection=None):
+        if self._on_failure:
+            dic = {'pool_id': self.logging_name,
+                   'level': 'info',
+                   'error': error,
+                   'server': server,
+                   'connection': connection}
+            for l in self._on_failure:
+                l.connection_failed(dic)
 
 QueuePool = ConnectionPool
 
 class PoolListener(object):
-    """Hooks into the lifecycle of connections in a :class:`AbstractPool`.
+    """Hooks into the lifecycle of connections in a :class:`ConnectionPool`.
 
     Usage::
 
@@ -821,7 +791,7 @@ class PoolListener(object):
 
     There is no need to subclass :class:`PoolListener` to handle events.
     Any class that implements one or more of these methods can be used
-    as a pool listener.  The :class:`AbstractPool` will inspect the methods
+    as a pool listener.  The :class:`ConnectionPool` will inspect the methods
     provided by a listener object and add the listener to one or more
     internal event queues based on its capabilities.  In terms of
     efficiency and function call overhead, you're much better off only
