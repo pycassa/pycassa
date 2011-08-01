@@ -382,12 +382,9 @@ class ConnectionPool(object):
             for l in listeners:
                 self.add_listener(l)
 
-        if "logging_name" in kwargs:
-            name = kwargs["logging_name"]
-            if name:
-                self.logging_name = name
-            else:
-                self.logging_name = id(self)
+        self.logging_name = kwargs.get("logging_name", None)
+        if not self.logging_name:
+            self.logging_name = id(self)
 
         if "max_overflow" not in kwargs:
             self._set_max_overflow(0)
