@@ -1,19 +1,16 @@
-"""
-Connection pooling for Cassandra connections.
+""" Connection pooling for Cassandra connections. """
 
-"""
+import time
+import threading
+import random
+import socket
 
-import time, threading, random
-
+from thrift import Thrift
 import connection
 import queue as pool_queue
 from logging.pool_logger import PoolLogger
 from util import as_interface
 from cassandra.ttypes import TimedOutException, UnavailableException
-from thrift import Thrift
-
-import threading
-import socket
 
 _BASE_BACKOFF = 0.01
 
@@ -470,6 +467,8 @@ class ConnectionPool(object):
         Returns a new instance with idential creation arguments. This method
         does *not* affect the object it is called on.
         """
+        raise DeprecationWarning("ConnectionPool.recreate() has been deprecated.")
+
         self._notify_on_pool_recreate()
         return ConnectionPool(pool_size=self._q.maxsize,
                          max_overflow=self._max_overflow,

@@ -24,8 +24,6 @@ class PoolingCase(unittest.TestCase):
 
     def test_basic_pools(self):
         pool = ConnectionPool('PycassaTestKeyspace', credentials=_credentials)
-        pool.dispose()
-        pool = pool.recreate()
         cf = ColumnFamily(pool, 'Standard1')
         cf.insert('key1', {'col':'val'})
         pool.status()
@@ -97,9 +95,6 @@ class PoolingCase(unittest.TestCase):
 
         pool.dispose()
         assert_equal(listener.dispose_count, 1)
-        pool.recreate()
-        assert_equal(listener.recreate_count, 1)
-        pool.dispose()
 
     def test_queue_pool_threadlocal(self):
         listener = _TestListener()
@@ -224,10 +219,6 @@ class PoolingCase(unittest.TestCase):
 
         pool.dispose()
         assert_equal(listener.dispose_count, 1)
-        pool.recreate()
-        assert_equal(listener.recreate_count, 1)
-        pool.dispose()
-
 
     def test_queue_pool_recycle(self):
         listener = _TestListener()
