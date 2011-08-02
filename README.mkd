@@ -58,53 +58,60 @@ Basic Usage
 
 To get a connection pool, pass a Keyspace and an optional list of servers:
 
-    >>> import pycassa
-    >>> pool = pycassa.ConnectionPool('Keyspace1') # Defaults to connecting to the server at 'localhost:9160'
-    >>> pool = pycassa.ConnectionPool('Keyspace1', server_list=['192.168.2.10'])
+~~~~~~ {python}
+>>> import pycassa
+>>> pool = pycassa.ConnectionPool('Keyspace1') # Defaults to connecting to the server at 'localhost:9160'
+>>> pool = pycassa.ConnectionPool('Keyspace1', server_list=['192.168.2.10'])
+~~~~~~
 
 To use the standard interface, create a ColumnFamily instance.
 
-    >>> pool = pycassa.ConnectionPool('Keyspace1')
-    >>> cf = pycassa.ColumnFamily(pool, 'Standard1')
-    >>> cf.insert('foo', {'column1': 'val1'})
-    1261349837816957
-    >>> cf.get('foo')
-    {'column1': 'val1'}
+~~~~~~ {python}
+>>> pool = pycassa.ConnectionPool('Keyspace1')
+>>> cf = pycassa.ColumnFamily(pool, 'Standard1')
+>>> cf.insert('foo', {'column1': 'val1'})
+>>> cf.get('foo')
+{'column1': 'val1'}
+~~~~~~
 
 insert() also acts to update values:
 
-    >>> cf.insert('foo', {'column1': 'val2'})
-    1261349910511572
-    >>> cf.get('foo')
-    {'column1': 'val2'}
+~~~~~~ {python}
+>>> cf.insert('foo', {'column1': 'val2'})
+>>> cf.get('foo')
+{'column1': 'val2'}
+~~~~~~
 
 You may insert multiple columns at once:
 
-    >>> cf.insert('bar', {'column1': 'val3', 'column2': 'val4'})
-    1261350013606860
-    >>> cf.multiget(['foo', 'bar'])
-    {'foo': {'column1': 'val2'}, 'bar': {'column1': 'val3', 'column2': 'val4'}}
-    >>> cf.get_count('bar')
-    2
+~~~~~~ {python}
+>>> cf.insert('bar', {'column1': 'val3', 'column2': 'val4'})
+>>> cf.multiget(['foo', 'bar'])
+{'foo': {'column1': 'val2'}, 'bar': {'column1': 'val3', 'column2': 'val4'}}
+>>> cf.get_count('bar')
+2
+~~~~~~
 
 get_range() returns an iterable. Call it with list() to convert it to a list.
 
-    >>> list(cf.get_range())
-    [('bar', {'column1': 'val3', 'column2': 'val4'}), ('foo', {'column1': 'val2'})]
-    >>> list(cf.get_range(row_count=1))
-    [('bar', {'column1': 'val3', 'column2': 'val4'})]
+~~~~~~ {python}
+>>> list(cf.get_range())
+[('bar', {'column1': 'val3', 'column2': 'val4'}), ('foo', {'column1': 'val2'})]
+>>> list(cf.get_range(row_count=1))
+[('bar', {'column1': 'val3', 'column2': 'val4'})]
+~~~~~~
 
 You can remove entire keys or just a certain column.
 
-    >>> cf.remove('bar', columns=['column1'])
-    1261350220106863
-    >>> cf.get('bar')
-    {'column2': 'val4'}
-    >>> cf.remove('bar')
-    1261350226926859
-    >>> cf.get('bar')
-    Traceback (most recent call last):
-    ...
-    cassandra.ttypes.NotFoundException: NotFoundException()
+~~~~~~ {python}
+>>> cf.remove('bar', columns=['column1'])
+>>> cf.get('bar')
+{'column2': 'val4'}
+>>> cf.remove('bar')
+>>> cf.get('bar')
+Traceback (most recent call last):
+...
+cassandra.ttypes.NotFoundException: NotFoundException()
+~~~~~~
 
 See the [tutorial](http://pycassa.github.com/pycassa/tutorial.html#connecting-to-cassandra) for more details.
