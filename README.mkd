@@ -58,9 +58,11 @@ Basic Usage
 
 To get a connection pool, pass a Keyspace and an optional list of servers:
 
-    >>> import pycassa
-    >>> pool = pycassa.ConnectionPool('Keyspace1') # Defaults to connecting to the server at 'localhost:9160'
-    >>> pool = pycassa.ConnectionPool('Keyspace1', server_list=['192.168.2.10'])
+~~~~~~ {python}
+import pycassa
+pool = pycassa.ConnectionPool('Keyspace1') # Defaults to connecting to the server at 'localhost:9160'
+pool = pycassa.ConnectionPool('Keyspace1', server_list=['192.168.2.10'])
+~~~~~~
 
 To use the standard interface, create a ColumnFamily instance.
 
