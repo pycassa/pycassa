@@ -15,6 +15,10 @@ _number_types = frozenset((int, long, float))
 
 if hasattr(struct, 'Struct'): # new in Python 2.5
     _have_struct = True
+    _bool_packer   = struct.Struct('>?')
+    _float_packer  = struct.Struct('>f')
+    _double_packer = struct.Struct('>d')
+    _timestamp_packer = struct.Struct('>d')
     _long_packer = struct.Struct('>q')
     _int_packer = struct.Struct('>i')
 else:
@@ -114,7 +118,8 @@ def convert_uuid_to_time(uuid_arg):
     return (ts - 0x01b21dd213814000L)/1e7
 
 _TYPES = ['BytesType', 'LongType', 'IntegerType', 'UTF8Type', 'AsciiType',
-         'LexicalUUIDType', 'TimeUUIDType', 'CounterColumnType']
+         'LexicalUUIDType', 'TimeUUIDType', 'CounterColumnType',
+         'FloatType', 'DoubleType', 'DateType', 'BooleanType']
 
 def extract_type_name(string):
     if string is None: return 'BytesType'
@@ -134,6 +139,36 @@ def pack(value, data_type):
     """
     if data_type == 'BytesType':
         return value
+    elif data_type == 'DateType':
+        # Expects Value to be either date or datetime
+        try:
+            converted = time.mktime( value.timetuple() )
+        except AttributeError:
+            # Ints and floats are valid timestamps too
+            if not isinstance(value, (int, float)):
+                raise
+
+            converted = value
+
+        if _have_struct:
+            return _timestamp_packer.pack(float(converted))
+        else:
+            return struct.pack('>d', float(converted))
+    elif data_type == 'BooleanType':
+        if _have_struct:
+            return _bool_packer.pack(bool(value))
+        else:
+            return struct.pack('>?', bool(value))
+    elif data_type == 'DoubleType':
+        if _have_struct:
+            return _double_packer.pack(float(value))
+        else:
+            return struct.pack('>d', float(value))
+    elif data_type == 'FloatType':
+        if _have_struct:
+            return _float_packer.pack(float(value))
+        else:
+            return struct.pack('>f', float(value))
     elif data_type == 'LongType':
         if _have_struct:
             return _long_packer.pack(long(value))
