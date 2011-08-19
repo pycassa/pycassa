@@ -90,7 +90,7 @@ setup(
                   'pycassa.cassandra.c07',
                   'pycassa.cassandra.c08',
                   'pycassa.logging'],
-      requires = ['thrift05'],
+      requires = ['thrift'],
       scripts=['pycassaShell'],
       cmdclass={"doc": doc},
       classifiers=[
