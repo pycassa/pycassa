@@ -8,6 +8,7 @@ import random
 import uuid
 import time
 import struct
+import datetime
 
 __all__ = ['convert_time_to_uuid', 'convert_uuid_to_time', 'OrderedDict']
 
@@ -200,6 +201,28 @@ def unpack(byte_array, data_type):
     """
     if data_type == 'BytesType':
         return byte_array
+    elif data_type == 'DateType':
+        if _have_struct:
+            value = _timestamp_packer.unpack(byte_array)[0]
+        else:
+            value = struct.unpack('>d', byte_array)[0]
+
+        return datetime.date.fromtimestamp(value)
+    elif data_type == 'BooleanType':
+        if _have_struct:
+            return _bool_packer.unpack(byte_array)[0]
+        else:
+            return struct.unpack('>?', byte_array)[0]
+    elif data_type == 'DoubleType':
+        if _have_struct:
+            return _double_packer.unpack(byte_array)[0]
+        else:
+            return struct.unpack('>d', byte_array)[0]
+    elif data_type == 'FloatType':
+        if _have_struct:
+            return _float_packer.unpack(byte_array)[0]
+        else:
+            return struct.unpack('>f', byte_array)[0]
     elif data_type == 'LongType':
         if _have_struct:
             return _long_packer.unpack(byte_array)[0]
