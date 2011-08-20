@@ -39,6 +39,14 @@ LEXICAL_UUID_TYPE = 'LexicalUUIDType'
 """ Stores data as a non-version 1 UUID """
 COUNTER_COLUMN_TYPE = 'CounterColumnType'
 """ A 64bit counter column """
+DOUBLE_TYPE = 'DoubleType'
+""" Stores data as an 8 byte double """
+FLOAT_TYPE = 'FloatType'
+""" Stores data as an 4 byte float """
+BOOLEAN_TYPE = 'BooleanType'
+""" Stores data as an 1 bit boolean """
+DATE_TYPE = 'DateType'
+""" A timestamp as a 8 byte double """
 
 KEYS_INDEX = IndexType.KEYS
 """ A secondary index type where each indexed value receives its own row """
