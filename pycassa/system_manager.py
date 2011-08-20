@@ -46,7 +46,7 @@ FLOAT_TYPE = 'FloatType'
 BOOLEAN_TYPE = 'BooleanType'
 """ Stores data as an 1 bit boolean """
 DATE_TYPE = 'DateType'
-""" A timestamp as a 8 byte double """
+""" A timestamp as a 8 byte integer """
 
 KEYS_INDEX = IndexType.KEYS
 """ A secondary index type where each indexed value receives its own row """

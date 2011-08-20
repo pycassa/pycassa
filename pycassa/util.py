@@ -19,7 +19,6 @@ if hasattr(struct, 'Struct'): # new in Python 2.5
     _bool_packer   = struct.Struct('>?')
     _float_packer  = struct.Struct('>f')
     _double_packer = struct.Struct('>d')
-    _timestamp_packer = struct.Struct('>d')
     _long_packer = struct.Struct('>q')
     _int_packer = struct.Struct('>i')
 else:
@@ -144,18 +143,18 @@ def pack(value, data_type):
         # Expects Value to be either date or datetime
         try:
             converted = time.mktime(value.timetuple())
-            converted += getattr(value, 'microsecond', 0) / 1e6
+            converted = converted * 1e6 + getattr(value, 'microsecond', 0)
         except AttributeError:
             # Ints and floats are valid timestamps too
             if type(value) not in _number_types:
                 raise TypeError('DateType arguments must be a datetime or timestamp')
 
-            converted = value
+            converted = value * 1e6
 
         if _have_struct:
-            return _timestamp_packer.pack(float(converted))
+            return _long_packer.pack(long(converted))
         else:
-            return struct.pack('>d', float(converted))
+            return struct.pack('>q', long(converted))
     elif data_type == 'BooleanType':
         if _have_struct:
             return _bool_packer.pack(bool(value))
@@ -204,11 +203,11 @@ def unpack(byte_array, data_type):
         return byte_array
     elif data_type == 'DateType':
         if _have_struct:
-            value = _timestamp_packer.unpack(byte_array)[0]
+            value = _long_packer.unpack(byte_array)[0]
         else:
-            value = struct.unpack('>d', byte_array)[0]
+            value = struct.unpack('>q', byte_array)[0]
 
-        return datetime.datetime.fromtimestamp(value)
+        return datetime.datetime.fromtimestamp(value / 1e6)
     elif data_type == 'BooleanType':
         if _have_struct:
             return _bool_packer.unpack(byte_array)[0]
