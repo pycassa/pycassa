@@ -143,11 +143,12 @@ def pack(value, data_type):
     elif data_type == 'DateType':
         # Expects Value to be either date or datetime
         try:
-            converted = time.mktime( value.timetuple() )
+            converted = time.mktime(value.timetuple())
+            converted += getattr(value, 'microsecond', 0) / 1e6
         except AttributeError:
             # Ints and floats are valid timestamps too
-            if not isinstance(value, (int, float)):
-                raise
+            if type(value) not in _number_types:
+                raise TypeError('DateType arguments must be a datetime or timestamp')
 
             converted = value
 
@@ -207,7 +208,7 @@ def unpack(byte_array, data_type):
         else:
             value = struct.unpack('>d', byte_array)[0]
 
-        return datetime.date.fromtimestamp(value)
+        return datetime.datetime.fromtimestamp(value)
     elif data_type == 'BooleanType':
         if _have_struct:
             return _bool_packer.unpack(byte_array)[0]
