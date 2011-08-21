@@ -5,16 +5,19 @@ manipulation of data inside Cassandra.
 .. seealso:: :mod:`pycassa.columnfamilymap`
 """
 
+import time
+import sys
+import uuid
+import threading
+import struct
+from UserDict import DictMixin
+
 from pycassa.cassandra.ttypes import Column, ColumnOrSuperColumn,\
     ColumnParent, ColumnPath, ConsistencyLevel, NotFoundException,\
     SlicePredicate, SliceRange, SuperColumn, KeyRange,\
     IndexExpression, IndexClause, CounterColumn
 import pycassa.util as util
-
-import time
-import sys
-import uuid
-import threading
+import pycassa.marshal as marshal
 
 from batch import CfMutator
 
@@ -24,10 +27,34 @@ _NON_SLICE = 0
 _SLICE_START = 1
 _SLICE_FINISH = 2
 
+class ColumnValidatorDict(DictMixin):
+
+    def __init__(self, other_dict={}):
+        self.class_names = {}
+        self.packers = {}
+        self.unpackers = {}
+        for item, value in other_dict.items():
+            self[item] = value
+
+    def __getitem__(self, item):
+        return self.class_names[item]
+
+    def __setitem__(self, item, value):
+        self.class_names[item] = marshal.extract_type_name(value)
+        self.packers[item] = marshal.packer_for(value)
+        self.unpackers[item] = marshal.unpacker_for(value)
+
+    def __delitem__(self, item):
+        del self.class_names[item]
+        del self.packers[item]
+        del self.unpackers[item]
+
+    def keys(self):
+        return self.class_names.keys()
+
 def gm_timestamp():
     """ Gets the current GMT timestamp in microseconds. """
     return int(time.time() * 1e6)
-
 
 class ColumnFamily(object):
     """ An abstraction of a Cassandra column family or super column family. """
@@ -81,41 +108,85 @@ class ColumnFamily(object):
     By default, this is :const:`True`.
     """
 
-    column_name_class = None
-    """ The data type of column names, which pycassa will use to determine
-    how to pack and unpack them.
-    
-    This is set automatically by inspecting the column family's
-    ``comparator_type``, but it may also be set manually if you want
-    autopacking behavior without setting a ``comparator_type``. Options
-    include anything in :mod:`~pycassa.system_manager`, such as "LongType". """
+    def _set_column_name_class(self, typestr):
+        self._column_name_class = marshal.extract_type_name(typestr)
+        self._name_packer = marshal.packer_for(typestr)
+        self._name_unpacker = marshal.unpacker_for(typestr)
 
-    super_column_name_class = None
-    """ Like :attr:`column_name_class`, but for super column names. """
+    def _get_column_name_class(self):
+        return self._column_name_class
 
-    default_validation_class = None
-    """ The default data type of column values, which pycassa will use
-    to determine how to pack and unpack them.
-    
-    This is set automatically by inspecting the column family's
-    ``default_validation_class``, but it may also be set manually if you want
-    autopacking behavior without setting a ``default_validation_class``. Options
-    include anything in :mod:`~pycassa.system_manager`, such as "LongType". """
+    column_name_class = property(_get_column_name_class,
+                                 _set_column_name_class,
+        doc = """ The data type of column names, which pycassa will use
+        to determine how to pack and unpack them.
+        
+        This is set automatically by inspecting the column family's
+        ``comparator_type``, but it may also be set manually if you want
+        autopacking behavior without setting a ``comparator_type``. Options
+        include anything in :mod:`~pycassa.system_manager`, such as "LongType". """)
 
-    column_validators = {}
-    """ Like :attr:`default_validation_class`, but is a :class:`dict` mapping
-    individual columns to types. """
+    def _set_super_column_name_class(self, typestr):
+        self._super_column_name_class = marshal.extract_type_name(typestr)
+        self._super_name_packer = marshal.packer_for(typestr)
+        self._super_name_unpacker = marshal.unpacker_for(typestr)
 
-    key_validation_class = None
-    """ The data type of row keys, which pycassa will use to determine how
-    to pack and unpack them.
-    
-    This is set automatically by inspecting the column family's
-    ``key_validation_class`` (which only exists in Cassandra 0.8 or greater),
-    but may be set manually if you want the autopacking behavior without
-    setting a ``key_validation_class`` or if you are using Cassandra 0.7. 
-    Options include anything in :mod:`~pycassa.system_manager`, such as
-    "LongType"."""
+    def _get_super_column_name_class(self):
+        return self._super_column_name_class
+
+    super_column_name_class = property(_get_super_column_name_class,
+                                       _set_super_column_name_class,
+        doc = """ Like :attr:`column_name_class`, but for
+        super column names. """)
+
+    def _set_default_validation_class(self, typestr):
+        self._default_validation_class = marshal.extract_type_name(typestr)
+        self._default_value_packer = marshal.packer_for(typestr)
+        self._default_value_unpacker = marshal.unpacker_for(typestr)
+
+    def _get_default_validation_class(self):
+        return self._default_validation_class
+
+    default_validation_class = property(_get_default_validation_class,
+                                        _set_default_validation_class,
+        doc = """ The default data type of column values, which pycassa
+        will use to determine how to pack and unpack them.
+        
+        This is set automatically by inspecting the column family's
+        ``default_validation_class``, but it may also be set manually if you want
+        autopacking behavior without setting a ``default_validation_class``. Options
+        include anything in :mod:`~pycassa.system_manager`, such as "LongType". """)
+
+    def _set_column_validators(self, other_dict):
+        self._column_validators = ColumnValidatorDict(other_dict)
+
+    def _get_column_validators(self):
+        return self._column_validators
+
+    column_validators = property(_get_column_validators,
+                                 _set_column_validators,
+        doc = """ Like :attr:`default_validation_class`, but is a
+        :class:`dict` mapping individual columns to types. """)
+
+    def _set_key_validation_class(self, typestr):
+        self._key_validation_class = marshal.extract_type_name(typestr)
+        self._key_packer = marshal.packer_for(typestr)
+        self._key_unpacker = marshal.unpacker_for(typestr)
+
+    def _get_key_validation_class(self):
+        return self._key_validation_class
+
+    key_validation_class = property(_get_key_validation_class,
+                                    _set_key_validation_class,
+        doc = """ The data type of row keys, which pycassa will use
+        to determine how to pack and unpack them.
+        
+        This is set automatically by inspecting the column family's
+        ``key_validation_class`` (which only exists in Cassandra 0.8 or greater),
+        but may be set manually if you want the autopacking behavior without
+        setting a ``key_validation_class`` or if you are using Cassandra 0.7. 
+        Options include anything in :mod:`~pycassa.system_manager`, such as
+        "LongType".""")
 
     def __init__(self, pool, column_family, **kwargs):
         """
@@ -170,21 +241,21 @@ class ColumnFamily(object):
 
     def _load_comparator_classes(self):
         if not self.super:
-            self.column_name_class = util.extract_type_name(self._cfdef.comparator_type)
+            self.column_name_class = self._cfdef.comparator_type
             self.super_column_name_class = None
         else:
-            self.column_name_class = util.extract_type_name(self._cfdef.subcomparator_type)
-            self.super_column_name_class = util.extract_type_name(self._cfdef.comparator_type)
+            self.column_name_class = self._cfdef.subcomparator_type
+            self.super_column_name_class = self._cfdef.comparator_type
 
     def _load_validation_classes(self):
-        self.default_validation_class = util.extract_type_name(self._cfdef.default_validation_class)
+        self.default_validation_class = self._cfdef.default_validation_class
         self.column_validators = {}
         for name, coldef in self._cfdef.column_metadata.items():
-            self.column_validators[name] = util.extract_type_name(coldef.validation_class)
+            self.column_validators[name] = coldef.validation_class
 
     def _load_key_class(self):
         if hasattr(self._cfdef, "key_validation_class"):
-            self.key_validation_class = util.extract_type_name(self._cfdef.key_validation_class)
+            self.key_validation_class = self._cfdef.key_validation_class
         else:
             self.key_validation_class = 'BytesType'
 
@@ -255,12 +326,15 @@ class ColumnFamily(object):
             return SlicePredicate(slice_range=sr)
 
     def _pack_name(self, value, is_supercol_name=False, slice_end=_NON_SLICE):
+        if value is None:
+            return
+
         if not self.autopack_names:
-            if value is not None and not (isinstance(value, str) or isinstance(value, unicode)):
-                raise TypeError("A str or unicode column name was expected, but %s was received instead (%s)"
-                        % (value.__class__.__name__, str(value)))
+            if not isinstance(value, (str, unicode)):
+                raise TypeError("A str or unicode column name was expected, " +
+                                "but %s was received instead (%s)"
+                                % (value.__class__.__name__, str(value)))
             return value
-        if value is None: return
 
         if is_supercol_name:
             d_type = self.super_column_name_class
@@ -275,55 +349,95 @@ class ColumnFamily(object):
             else:
                 value = util.convert_time_to_uuid(value,
                         randomize=True)
-        elif d_type == 'BytesType' and not (isinstance(value, str) or isinstance(value, unicode)):
-            raise TypeError("A str or unicode column name was expected, but %s was received instead (%s)"
-                    % (value.__class__.__name__, str(value)))
+        elif d_type == 'BytesType' and not isinstance(value, (str, unicode)):
+            raise TypeError("A str or unicode column name was expected, " +
+                            "but %s was received instead (%s)"
+                            % (value.__class__.__name__, str(value)))
 
-        return util.pack(value, d_type)
+        try:
+            if is_supercol_name:
+                return self._super_name_packer(value)
+            else:
+                return self._name_packer(value)
+        except struct.error:
+            raise TypeError("%s is not a compatible type for %s" %
+                            (value.__class__.__name__, d_type))
 
     def _unpack_name(self, b, is_supercol_name=False):
-        if not self.autopack_names:
+        if not self.autopack_names or b is None:
             return b
-        if b is None: return
 
-        if is_supercol_name:
-            d_type = self.super_column_name_class
-        else:
-            d_type = self.column_name_class
+        try:
+            if is_supercol_name:
+                return self._super_name_unpacker(b)
+            else:
+                return self._name_unpacker(b)
+        except struct.error:
+            if is_supercol_name:
+                d_type = self.super_column_name_class
+            else:
+                d_type = self.column_name_class
+            raise TypeError("%s cannot be converted to a type matching %s" %
+                            (b, d_type))
 
-        return util.unpack(b, d_type)
 
     def _get_data_type_for_col(self, col_name):
         return self.column_validators.get(col_name, self.default_validation_class)
 
     def _pack_value(self, value, col_name):
+        if value is None:
+            return
+
         if not self.autopack_values:
-            if value is not None and not (isinstance(value, str) or isinstance(value, unicode)):
-                raise TypeError("A str or unicode column value was expected for column '%s', but %s was received instead (%s)"
-                        % (str(col_name), value.__class__.__name__, str(value)))
+            if not isinstance(value, (str, unicode)):
+                raise TypeError("A str or unicode column value was expected for " +
+                                "column '%s', but %s was received instead (%s)"
+                                % (str(col_name), value.__class__.__name__, str(value)))
             return value
 
-        d_type = self._get_data_type_for_col(col_name)
-        if d_type == 'BytesType' and not (isinstance(value, str) or isinstance(value, unicode)):
-            raise TypeError("A str or unicode column value was expected for column '%s', but %s was received instead (%s)"
-                    % (str(col_name), value.__class__.__name__, str(value)))
+        d_type = self.column_validators.get(col_name, self._default_validation_class)
+        if d_type == 'BytesType' and not isinstance(value, (str, unicode)):
+            raise TypeError("A str or unicode column value was expected for " +
+                            "column '%s', but %s was received instead (%s)"
+                            % (str(col_name), value.__class__.__name__, str(value)))
 
-        return util.pack(value, d_type)
+        packer = self._column_validators.packers.get(col_name, self._default_value_packer)
+        try:
+            return packer(value)
+        except struct.error:
+            raise TypeError("%s is not a compatible type for %s" %
+                            (value.__class__.__name__, d_type))
 
     def _unpack_value(self, value, col_name):
         if not self.autopack_values:
             return value
-        return util.unpack(value, self._get_data_type_for_col(col_name))
+        unpacker = self._column_validators.unpackers.get(col_name, self._default_value_unpacker)
+        try:
+            return unpacker(value)
+        except struct.error:
+            d_type = self.column_validators.get(col_name, self.default_validation_class)
+            raise TypeError("%s cannot be converted to a type matching %s" %
+                            (value, d_type))
 
     def _pack_key(self, key):
         if not self.autopack_keys or not key:
             return key
-        return util.pack(key, self.key_validation_class)
+        try:
+            return self._key_packer(key)
+        except struct.error:
+            d_type = self.key_validation_class
+            raise TypeError("%s is not a compatible type for %s" %
+                            (value.__class__.__name__, d_type))
 
     def _unpack_key(self, b):
         if not self.autopack_keys:
             return b
-        return util.unpack(b, self.key_validation_class)
+        try:
+            return self._key_unpacker(b)
+        except struct.error:
+            d_type = self.key_validation_class
+            raise TypeError("%s cannot be converted to a type matching %s" %
+                            (b, d_type))
 
     def _obtain_connection(self):
         self._tlocal.client = self.pool.get()

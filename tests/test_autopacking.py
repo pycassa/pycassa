@@ -761,72 +761,79 @@ class TestBigInt(unittest.TestCase):
 
 class TestTimeUUIDs(unittest.TestCase):
 
-    def setUp(self):
-        self.cf_time = ColumnFamily(pool, 'StdTimeUUID')
+    @classmethod
+    def setup_class(cls):
+        sys = SystemManager()
+        sys.create_column_family(TEST_KS, 'TestTimeUUIDs', comparator_type=TIME_UUID_TYPE)
+        sys.close()
+        cls.cf_time = ColumnFamily(pool, 'TestTimeUUIDs')
 
     def tearDown(self):
-        self.cf_time.remove('key1')
+        TestTimeUUIDs.cf_time.truncate()
 
     def test_datetime_to_uuid(self):
+        cf_time = TestTimeUUIDs.cf_time
         key = 'key1'
         timeline = []
 
         timeline.append(datetime.now())
         time1 = uuid1()
         col1 = {time1:'0'}
-        self.cf_time.insert(key, col1)
+        cf_time.insert(key, col1)
         time.sleep(1)
 
         timeline.append(datetime.now())
         time2 = uuid1()
         col2 = {time2:'1'}
-        self.cf_time.insert(key, col2)
+        cf_time.insert(key, col2)
         time.sleep(1)
 
         timeline.append(datetime.now())
 
         cols = {time1:'0', time2:'1'}
 
-        assert_equal(self.cf_time.get(key, column_start=timeline[0])                            , cols)
-        assert_equal(self.cf_time.get(key,                           column_finish=timeline[2]) , cols)
-        assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
-        assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
-        assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[1]) , col1)
-        assert_equal(self.cf_time.get(key, column_start=timeline[1], column_finish=timeline[2]) , col2)
+        assert_equal(cf_time.get(key, column_start=timeline[0])                            , cols)
+        assert_equal(cf_time.get(key,                           column_finish=timeline[2]) , cols)
+        assert_equal(cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
+        assert_equal(cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
+        assert_equal(cf_time.get(key, column_start=timeline[0], column_finish=timeline[1]) , col1)
+        assert_equal(cf_time.get(key, column_start=timeline[1], column_finish=timeline[2]) , col2)
 
     def test_time_to_uuid(self):
+        cf_time = TestTimeUUIDs.cf_time
         key = 'key1'
         timeline = []
 
         timeline.append(time.time())
         time1 = uuid1()
         col1 = {time1:'0'}
-        self.cf_time.insert(key, col1)
+        cf_time.insert(key, col1)
         time.sleep(0.1)
 
         timeline.append(time.time())
         time2 = uuid1()
         col2 = {time2:'1'}
-        self.cf_time.insert(key, col2)
+        cf_time.insert(key, col2)
         time.sleep(0.1)
 
         timeline.append(time.time())
 
         cols = {time1:'0', time2:'1'}
 
-        assert_equal(self.cf_time.get(key, column_start=timeline[0])                            , cols)
-        assert_equal(self.cf_time.get(key,                           column_finish=timeline[2]) , cols)
-        assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
-        assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
-        assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[1]) , col1)
-        assert_equal(self.cf_time.get(key, column_start=timeline[1], column_finish=timeline[2]) , col2)
+        assert_equal(cf_time.get(key, column_start=timeline[0])                            , cols)
+        assert_equal(cf_time.get(key,                           column_finish=timeline[2]) , cols)
+        assert_equal(cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
+        assert_equal(cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
+        assert_equal(cf_time.get(key, column_start=timeline[0], column_finish=timeline[1]) , col1)
+        assert_equal(cf_time.get(key, column_start=timeline[1], column_finish=timeline[2]) , col2)
 
     def test_auto_time_to_uuid1(self):
+        cf_time = TestTimeUUIDs.cf_time
         key = 'key1'
         t = time.time()
         col = {t: 'foo'}
-        self.cf_time.insert(key, col)
-        uuid_res = self.cf_time.get(key).keys()[0]
+        cf_time.insert(key, col)
+        uuid_res = cf_time.get(key).keys()[0]
         timestamp = convert_uuid_to_time(uuid_res)
         assert_almost_equal(timestamp, t, places=3)
 

@@ -6,6 +6,7 @@ from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef,\
                                      InvalidRequestException
 from pycassa.cassandra.constants import *
 import pycassa.util as util
+import pycassa.marshal as marshal
 from logging.pycassa_logger import *
 
 _DEFAULT_TIMEOUT = 30
@@ -509,11 +510,11 @@ class SystemManager(object):
         cfdef = self.get_keyspace_column_families(keyspace)[column_family]
 
         if cfdef.column_type == 'Super':
-            col_name_data_type = util.extract_type_name(cfdef.subcomparator_type)
+            packer = marshal.packer_for(cfdef.subcomparator_type)
         else:
-            col_name_data_type = util.extract_type_name(cfdef.comparator_type)
+            packer = marshal.packer_for(cfdef.comparator_type)
 
-        packed_column = util.pack(column, col_name_data_type)
+        packed_column = packer(column)
 
         if value_type.find('.') == -1:
             value_type = 'org.apache.cassandra.db.marshal.%s' % value_type
@@ -558,8 +559,8 @@ class SystemManager(object):
         self._conn.set_keyspace(keyspace)
         cfdef = self.get_keyspace_column_families(keyspace)[column_family]
 
-        col_name_data_type = util.extract_type_name(cfdef.comparator_type)
-        packed_column = util.pack(column, col_name_data_type)
+        packer = marshal.packer_for(cfdef.comparator_type)
+        packed_column = packer(column)
 
         if value_type.find('.') == -1:
             value_type = 'org.apache.cassandra.db.marshal.%s' % value_type
