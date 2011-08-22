@@ -31,7 +31,7 @@ def extract_type_name(typestr):
         return 'BytesType'
 
     if "CompositeType" in typestr:
-        return get_composite_name(typestr)
+        return _get_composite_name(typestr)
 
     if "ReversedType" in typestr:
         return _get_inner_type(typestr)
@@ -81,7 +81,7 @@ def get_composite_packer(typestr):
     else:
         len_packer = lambda v: struct.pack('>H', v)
 
-    def pack_composite(eosc=None, *items):
+    def pack_composite(items, eocs=None):
         if eocs is None:
             eocs = '\x00' * len(items)
         s = ''
@@ -189,7 +189,7 @@ def unpacker_for(typestr):
         return lambda v: v
 
     if "CompositeType" in typestr:
-        return get_composite_packer(typestr)
+        return get_composite_unpacker(typestr)
 
     if "ReversedType" in typestr:
         return unpacker_for(_get_inner_type(typestr))
