@@ -572,7 +572,6 @@ class TestDefaultValidators(unittest.TestCase):
         assert_equal(cf.get(key), {'aaaaaa': 1L, 'subcol': TIME1})
 
         assert_raises(TypeError, cf.insert, key, col_ncf)
-        assert_raises(TypeError, cf.insert, key, col_ncm)
 
         cf.remove(key)
 

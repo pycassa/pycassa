@@ -315,51 +315,38 @@ class ColumnFamily(object):
             if column_start != '':
                 column_start = self._pack_name(column_start,
                                                is_supercol_name=is_supercol_name,
-                                               slice_end=_SLICE_START)
+                                               slice_start=True)
             if column_finish != '':
                 column_finish = self._pack_name(column_finish,
                                                 is_supercol_name=is_supercol_name,
-                                                slice_end=_SLICE_FINISH)
+                                                slice_start=False)
 
             sr = SliceRange(start=column_start, finish=column_finish,
                             reversed=column_reversed, count=column_count)
             return SlicePredicate(slice_range=sr)
 
-    def _pack_name(self, value, is_supercol_name=False, slice_end=_NON_SLICE):
+    def _pack_name(self, value, is_supercol_name=False, slice_start=None):
         if value is None:
             return
 
         if not self.autopack_names:
-            if not isinstance(value, (str, unicode)):
+            if not isinstance(value, basestring):
                 raise TypeError("A str or unicode column name was expected, " +
                                 "but %s was received instead (%s)"
                                 % (value.__class__.__name__, str(value)))
             return value
 
-        if is_supercol_name:
-            d_type = self.super_column_name_class
-        else:
-            d_type = self.column_name_class
-
-        if d_type == 'TimeUUIDType':
-            if slice_end:
-                value = util.convert_time_to_uuid(value,
-                        lowest_val=(slice_end == _SLICE_START),
-                        randomize=False)
-            else:
-                value = util.convert_time_to_uuid(value,
-                        randomize=True)
-        elif d_type == 'BytesType' and not isinstance(value, (str, unicode)):
-            raise TypeError("A str or unicode column name was expected, " +
-                            "but %s was received instead (%s)"
-                            % (value.__class__.__name__, str(value)))
-
         try:
             if is_supercol_name:
-                return self._super_name_packer(value)
+                return self._super_name_packer(value, slice_start)
             else:
-                return self._name_packer(value)
+                return self._name_packer(value, slice_start)
         except struct.error:
+            if is_supercol_name:
+                d_type = self.super_column_name_class
+            else:
+                d_type = self.column_name_class
+
             raise TypeError("%s is not a compatible type for %s" %
                             (value.__class__.__name__, d_type))
 
@@ -389,22 +376,17 @@ class ColumnFamily(object):
             return
 
         if not self.autopack_values:
-            if not isinstance(value, (str, unicode)):
+            if not isinstance(value, basestring):
                 raise TypeError("A str or unicode column value was expected for " +
                                 "column '%s', but %s was received instead (%s)"
                                 % (str(col_name), value.__class__.__name__, str(value)))
             return value
 
-        d_type = self.column_validators.get(col_name, self._default_validation_class)
-        if d_type == 'BytesType' and not isinstance(value, (str, unicode)):
-            raise TypeError("A str or unicode column value was expected for " +
-                            "column '%s', but %s was received instead (%s)"
-                            % (str(col_name), value.__class__.__name__, str(value)))
-
         packer = self._column_validators.packers.get(col_name, self._default_value_packer)
         try:
             return packer(value)
         except struct.error:
+            d_type = self.column_validators.get(col_name, self._default_validation_class)
             raise TypeError("%s is not a compatible type for %s" %
                             (value.__class__.__name__, d_type))
 

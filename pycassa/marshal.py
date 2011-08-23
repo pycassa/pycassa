@@ -9,6 +9,8 @@ import time
 import struct
 from datetime import datetime
 
+import pycassa.util as util
+
 _number_types = frozenset((int, long, float))
 
 if hasattr(struct, 'Struct'): # new in Python 2.5
@@ -81,11 +83,17 @@ def get_composite_packer(typestr):
     else:
         len_packer = lambda v: struct.pack('>H', v)
 
-    def pack_composite(items, eocs=None):
-        if eocs is None:
-            eocs = '\x00' * len(items)
+    def pack_composite(items, slice_start=None):
         s = ''
-        for item, packer, eoc in zip(items, packers, eocs):
+        for item, packer in zip(items, packers):
+            eoc = '\x00'
+            if isinstance(item, tuple):
+                item, inclusive = item
+                if not inclusive:
+                    if slice_start:
+                        eoc = '\x01'
+                    elif slice_start is False:
+                        eoc = '\xff'
             packed = packer(item)
             s += ''.join((len_packer(len(packed)), packed, eoc))
         return s
@@ -125,48 +133,62 @@ def packer_for(typestr):
 
     data_type = extract_type_name(typestr)
 
-    if data_type == 'BytesType':
-        return lambda v: v
-
-    elif data_type == 'DateType':
+    if data_type == 'DateType':
         if _have_struct:
-            return lambda v: _long_packer.pack(_to_timestamp(v))
+            def pack_date(v, _=None):
+                return _long_packer.pack(_to_timestamp(v))
         else:
-            return lambda v: struct.pack('>q', _to_timestamp(v))
+            def pack_date(v, _=None):
+                return struct.pack('>q', _to_timestamp(v))
         return pack_date
 
     elif data_type == 'BooleanType':
         if _have_struct:
-            return _bool_packer.pack
+            def pack_bool(v, _=None):
+                return _bool_packer.pack(v)
         else:
-            return lambda v: struct.pack('>?', v)
+            def pack_bool(v, _=None):
+                return struct.pack('?', v)
+        return pack_bool
 
     elif data_type == 'DoubleType':
         if _have_struct:
-            return _double_packer.pack
+            def pack_double(v, _=None):
+                return _double_packer.pack(v)
         else:
-            return lambda v: struct.pack('>d', v)
+            def pack_double(v, _=None):
+                return struct.pack('>d', v)
+        return pack_double
 
     elif data_type == 'FloatType':
         if _have_struct:
-            return _float_packer.pack
+            def pack_float(v, _=None):
+                return _float_packer.pack(v)
         else:
-            return lambda v: struct.pack('>f', v)
+            def pack_float(v, _=None):
+                return struct.pack('>f', v)
+        return pack_float
 
     elif data_type == 'LongType':
         if _have_struct:
-            return _long_packer.pack
+            def pack_long(v, _=None):
+                return _long_packer.pack(v)
         else:
-            return lambda v: struct.pack('>q', v)
+            def pack_long(v, _=None):
+                return struct.pack('>q', v)
+        return pack_long
 
     elif data_type == 'IntegerType':
         if _have_struct:
-            return _int_packer.pack
+            def pack_int(v, _=None):
+                return _int_packer.pack(v)
         else:
-            return lambda v: struct.pack('>i', v)
+            def pack_int(v, _=None):
+                return struct.pack('>i', v)
+        return pack_int
 
     elif data_type == 'UTF8Type':
-        def pack_utf8(v):
+        def pack_utf8(v, _=None):
             try:
                 return v.encode('utf-8')
             except UnicodeDecodeError:
@@ -175,14 +197,28 @@ def packer_for(typestr):
         return pack_utf8
 
     elif 'UUIDType' in data_type:
-        def pack_uuid(v):
-            if not hasattr(v, 'bytes'):
-                raise TypeError("%s is not valid for UUIDType" % v)
-            return v.bytes
+        def pack_uuid(value, slice_start=None):
+            if slice_start is None:
+                value = util.convert_time_to_uuid(value,
+                        randomize=True)
+            else:
+                value = util.convert_time_to_uuid(value,
+                        lowest_val=slice_start,
+                        randomize=False)
+
+            if not hasattr(value, 'bytes'):
+                raise TypeError("%s is not valid for UUIDType" % value)
+            return value.bytes
         return pack_uuid
 
-    else:
-        return lambda v: v
+    else: # data_type == 'BytesType' or something unknown
+        def pack_bytes(v, _=None):
+            if not isinstance(v, basestring):
+                raise TypeError("A str or unicode column name was expected, " +
+                                "but %s was received instead (%s)"
+                                % (v.__class__.__name__, str(v)))
+            return v
+        return pack_bytes
 
 def unpacker_for(typestr):
     if typestr is None:
