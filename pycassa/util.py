@@ -16,7 +16,7 @@ _number_types = frozenset((int, long, float))
 
 if hasattr(struct, 'Struct'): # new in Python 2.5
     _have_struct = True
-    _bool_packer   = struct.Struct('>?')
+    _bool_packer   = struct.Struct('>B')
     _float_packer  = struct.Struct('>f')
     _double_packer = struct.Struct('>d')
     _long_packer = struct.Struct('>q')
@@ -159,7 +159,7 @@ def pack(value, data_type):
         if _have_struct:
             return _bool_packer.pack(bool(value))
         else:
-            return struct.pack('>?', bool(value))
+            return struct.pack('>B', bool(value))
     elif data_type == 'DoubleType':
         if _have_struct:
             return _double_packer.pack(float(value))
@@ -210,9 +210,9 @@ def unpack(byte_array, data_type):
         return datetime.datetime.fromtimestamp(value / 1e6)
     elif data_type == 'BooleanType':
         if _have_struct:
-            return _bool_packer.unpack(byte_array)[0]
+            return bool(_bool_packer.unpack(byte_array)[0])
         else:
-            return struct.unpack('>?', byte_array)[0]
+            return bool(struct.unpack('>B', byte_array)[0])
     elif data_type == 'DoubleType':
         if _have_struct:
             return _double_packer.unpack(byte_array)[0]
