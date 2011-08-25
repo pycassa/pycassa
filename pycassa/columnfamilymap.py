@@ -223,7 +223,8 @@ class ColumnFamilyMap(object):
             ret[key] = create_instance(self.cls, key=key, **combined)
         return ret
 
-    def insert(self, instance, columns=None, write_consistency_level=None):
+    def insert(self, instance, columns=None, timestamp=None, ttl=None,
+               write_consistency_level=None):
         """
         Insert or update stored instances.
 
@@ -246,6 +247,7 @@ class ColumnFamilyMap(object):
             insert_dict = {instance.super_column: insert_dict}
 
         return self.column_family.insert(instance.key, insert_dict,
+                                         timestamp=None, ttl=None,
                                          write_consistency_level=write_consistency_level)
 
     def remove(self, instance, columns=None, write_consistency_level=None):
