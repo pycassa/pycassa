@@ -759,6 +759,40 @@ class TestComposites(unittest.TestCase):
         cf.insert('key', {colname: 'val'})
         assert_equal(cf.get('key'), {colname: 'val'})
 
+
+        u1 = uuid.uuid1()
+        u4 = uuid.uuid4()
+        col0 = (0, 1, u1, u4, '', '', '')
+        col1 = (1, 1, u1, u4, '', '', '')
+        col2 = (1, 2, u1, u4, '', '', '')
+        col3 = (1, 3, u1, u4, '', '', '')
+        col4 = (2, 1, u1, u4, '', '', '')
+        cf.insert('key2', {col0: '', col1: '', col2: '', col3: '', col4: ''})
+
+        result = cf.get('key2', column_start=((1, True),), column_finish=((1, True),))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        result = cf.get('key2', column_start=(1,), column_finish=((2, False), ))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        result = cf.get('key2', column_start=((1, True),), column_finish=((2, False), ))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        result = cf.get('key2', column_start=(1, ), column_finish=((2, False), ))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        result = cf.get('key2', column_start=((0, False), ), column_finish=((2, False), ))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        result = cf.get('key2', column_start=(1, 1), column_finish=(1, 3))
+        assert_equal(result, {col1: '', col2: ''})
+
+        result = cf.get('key2', column_start=(1, 1), column_finish=(1, (3, True)))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        result = cf.get('key2', column_start=(1, (1, True)), column_finish=((2, False), ))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
         sys.drop_column_family(TEST_KS, 'StaticComposite')
 
 class TestBigInt(unittest.TestCase):
