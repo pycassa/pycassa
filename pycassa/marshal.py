@@ -89,7 +89,12 @@ def get_composite_packer(typestr):
             eoc = '\x00'
             if isinstance(item, tuple):
                 item, inclusive = item
-                if not inclusive:
+                if inclusive:
+                    if slice_start:
+                        eoc = '\xff'
+                    elif slice_start is False:
+                        eoc = '\x01'
+                else:
                     if slice_start:
                         eoc = '\x01'
                     elif slice_start is False:
