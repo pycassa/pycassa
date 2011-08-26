@@ -13,19 +13,6 @@ __all__ = ['convert_time_to_uuid', 'convert_uuid_to_time', 'OrderedDict']
 
 _number_types = frozenset((int, long, float))
 
-<<<<<<< HEAD
-if hasattr(struct, 'Struct'): # new in Python 2.5
-    _have_struct = True
-    _bool_packer   = struct.Struct('>B')
-    _float_packer  = struct.Struct('>f')
-    _double_packer = struct.Struct('>d')
-    _long_packer = struct.Struct('>q')
-    _int_packer = struct.Struct('>i')
-else:
-    _have_struct = False
-
-=======
->>>>>>> composites
 def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
     """
     Converts a datetime or timestamp to a type 1 :class:`uuid.UUID`.
