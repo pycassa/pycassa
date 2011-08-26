@@ -6,6 +6,7 @@ from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef,\
                                      InvalidRequestException
 from pycassa.cassandra.constants import *
 import pycassa.util as util
+import pycassa.marshal as marshal
 from logging.pycassa_logger import *
 
 _DEFAULT_TIMEOUT = 30
@@ -23,34 +24,95 @@ Original replication strategy for putting a number of replicas in each datacente
 This was originally called 'RackAwareStrategy'.
 """
 
-BYTES_TYPE = 'BytesType'
-""" Stores data as a byte array """
-LONG_TYPE = 'LongType'
-""" Stores data as an 8 byte integer """
-INT_TYPE = 'IntegerType'
-""" Stores data as an 4 byte integer """
-ASCII_TYPE = 'AsciiType'
-""" Stores data as ASCII text """
-UTF8_TYPE = 'UTF8Type'
-""" Stores data as UTF8 encoded text """
-TIME_UUID_TYPE = 'TimeUUIDType'
-""" Stores data as a version 1 UUID """
-LEXICAL_UUID_TYPE = 'LexicalUUIDType'
-""" Stores data as a non-version 1 UUID """
-COUNTER_COLUMN_TYPE = 'CounterColumnType'
-""" A 64bit counter column """
-DOUBLE_TYPE = 'DoubleType'
-""" Stores data as an 8 byte double """
-FLOAT_TYPE = 'FloatType'
-""" Stores data as an 4 byte float """
-BOOLEAN_TYPE = 'BooleanType'
-""" Stores data as an 1 bit boolean """
-DATE_TYPE = 'DateType'
-""" A timestamp as a 8 byte integer """
 
 KEYS_INDEX = IndexType.KEYS
 """ A secondary index type where each indexed value receives its own row """
 
+
+class CassandraType(object):
+
+    def __init__(self, reversed=False):
+        self.reversed = reversed
+
+    def __str__(self):
+        return self.__class__.__name__ + "(reversed=" + str(self.reversed).lower() + ")"
+
+class BytesType(CassandraType):
+    """ Stores data as a byte array """
+    pass
+
+class LongType(CassandraType):
+    """ Stores data as an 8 byte integer """
+    pass
+
+class IntegerType(CassandraType):
+    """ Stores data as an 4 byte integer """
+    pass
+class AsciiType(CassandraType):
+    """ Stores data as ASCII text """
+    pass
+
+class UTF8Type(CassandraType):
+    """ Stores data as UTF8 encoded text """
+    pass
+
+class TimeUUIDType(CassandraType):
+    """ Stores data as a version 1 UUID """
+    pass
+
+class LexicalUUIDType(CassandraType):
+    """ Stores data as a non-version 1 UUID """
+    pass
+
+class CounterColumnType(CassandraType):
+    """ A 64bit counter column """
+    pass
+
+class DoubleType(CassandraType):
+    """ Stores data as an 8 byte double """
+    pass
+
+class FloatType(CassandraType):
+    """ Stores data as an 4 byte float """
+    pass
+
+class BooleanType(CassandraType):
+    """ Stores data as an 1 byte boolean """
+    pass
+
+class DateType(CassandraType):
+    """ A timestamp as a 8 byte integer """
+    pass
+
+class CompositeType(CassandraType):
+
+    def __init__(self, *components):
+        """
+        A type composed of one or more components, each of
+        which have their own type.  When sorted, items are
+        primarily sorted by their first component, secondarily
+        by their second component, and so on.
+
+        Each of `*components` should be an instance of
+        a subclass of :class:`CassandraType`.
+        """
+        self.components = components
+
+    def __str__(self):
+        return "CompositeType(" + ", ".join(map(str, self.components)) + ")"
+
+BYTES_TYPE = BytesType()
+LONG_TYPE = LongType()
+INT_TYPE = IntegerType()
+ASCII_TYPE = AsciiType()
+UTF8_TYPE = UTF8Type()
+TIME_UUID_TYPE = TimeUUIDType()
+LEXICAL_UUID_TYPE = LexicalUUIDType()
+COUNTER_COLUMN_TYPE = CounterColumnType()
+DOUBLE_TYPE = DoubleType()
+FLOAT_TYPE = FloatType()
+BOOLEAN_TYPE = BooleanType()
+DATE_TYPE = DateType()
 
 class SystemManager(object):
     """
@@ -274,6 +336,16 @@ class SystemManager(object):
         self._wait_for_agreement()
         return schema_version
 
+    def _qualify_type_class(self, classname):
+        if classname:
+            s = str(classname)
+            if s.find('.') == -1:
+                return 'org.apache.cassandra.db.marshal.%s' % s
+            else:
+                return s
+        else:
+            return None
+
     def create_column_family(self, keyspace, name, super=False,
                              comparator_type=None,
                              subcomparator_type=None,
@@ -379,15 +451,10 @@ class SystemManager(object):
         if super:
             cfdef.column_type = 'Super'
 
-        def qualify_class(classname):
-            if classname and classname.find('.') == -1:
-                classname = 'org.apache.cassandra.db.marshal.%s' % classname
-            return classname
-
-        cfdef.comparator_type = qualify_class(comparator_type)
-        cfdef.subcomparator_type = qualify_class(subcomparator_type)
-        cfdef.default_validation_class = qualify_class(default_validation_class)
-        cfdef.key_validation_class = qualify_class(key_validation_class)
+        cfdef.comparator_type = self._qualify_type_class(comparator_type)
+        cfdef.subcomparator_type = self._qualify_type_class(subcomparator_type)
+        cfdef.default_validation_class = self._qualify_type_class(default_validation_class)
+        cfdef.key_validation_class = self._qualify_type_class(key_validation_class)
 
         cfdef.replicate_on_write = replicate_on_write
         cfdef.comment = comment
@@ -509,14 +576,13 @@ class SystemManager(object):
         cfdef = self.get_keyspace_column_families(keyspace)[column_family]
 
         if cfdef.column_type == 'Super':
-            col_name_data_type = util.extract_type_name(cfdef.subcomparator_type)
+            packer = marshal.packer_for(cfdef.subcomparator_type)
         else:
-            col_name_data_type = util.extract_type_name(cfdef.comparator_type)
+            packer = marshal.packer_for(cfdef.comparator_type)
 
-        packed_column = util.pack(column, col_name_data_type)
+        packed_column = packer(column)
 
-        if value_type.find('.') == -1:
-            value_type = 'org.apache.cassandra.db.marshal.%s' % value_type
+        value_type = self._qualify_type_class(value_type)
 
         matched = False
         for c in cfdef.column_metadata:
@@ -558,11 +624,10 @@ class SystemManager(object):
         self._conn.set_keyspace(keyspace)
         cfdef = self.get_keyspace_column_families(keyspace)[column_family]
 
-        col_name_data_type = util.extract_type_name(cfdef.comparator_type)
-        packed_column = util.pack(column, col_name_data_type)
+        packer = marshal.packer_for(cfdef.comparator_type)
+        packed_column = packer(column)
 
-        if value_type.find('.') == -1:
-            value_type = 'org.apache.cassandra.db.marshal.%s' % value_type
+        value_type = self._qualify_type_class(value_type)
 
         coldef = ColumnDef(packed_column, value_type, index_type, index_name)
 
