@@ -31,7 +31,7 @@ Getting Help
 
 IRC:
 
-* Use channel #cassandra on irc.freenode.net. If you don't have an IRC client,
+* Use the #cassandra channel on irc.freenode.net. If you don't have an IRC client,
   you can use [freenode's web based client](http://webchat.freenode.net/?channels=#cassandra).
 
 Mailing List:
@@ -42,13 +42,13 @@ Mailing List:
 Installation
 ------------
 
-If easy_install is available, you can use:
+If easy_install is available, you can install the lastest pycassa release
+with:
 
     easy_install pycassa
 
-The simplest way to install manually is to copy the pycassa directories to
-your program.  If you want to install, make sure you have thrift installed,
-and run setup.py as a superuser.
+If you want to install from a source checkout, make sure you have Thrift
+installed, and run setup.py as a superuser:
 
     easy_install thrift
     python setup.py install
@@ -61,6 +61,8 @@ To get a connection pool, pass a Keyspace and an optional list of servers:
 ~~~~~~ {python}
 >>> import pycassa
 >>> pool = pycassa.ConnectionPool('Keyspace1') # Defaults to connecting to the server at 'localhost:9160'
+>>>
+>>> # or, we can specify our servers:
 >>> pool = pycassa.ConnectionPool('Keyspace1', server_list=['192.168.2.10'])
 ~~~~~~
 
@@ -74,7 +76,7 @@ To use the standard interface, create a ColumnFamily instance.
 {'column1': 'val1'}
 ~~~~~~
 
-insert() also acts to update values:
+insert() will also update existing columns:
 
 ~~~~~~ {python}
 >>> cf.insert('foo', {'column1': 'val2'})
@@ -92,7 +94,7 @@ You may insert multiple columns at once:
 2
 ~~~~~~
 
-get_range() returns an iterable. Call it with list() to convert it to a list.
+get_range() returns an iterable. You can use list() to convert it to a list:
 
 ~~~~~~ {python}
 >>> list(cf.get_range())
@@ -101,7 +103,7 @@ get_range() returns an iterable. Call it with list() to convert it to a list.
 [('bar', {'column1': 'val3', 'column2': 'val4'})]
 ~~~~~~
 
-You can remove entire keys or just a certain column.
+You can remove entire keys or just a certain column:
 
 ~~~~~~ {python}
 >>> cf.remove('bar', columns=['column1'])
