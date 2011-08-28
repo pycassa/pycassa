@@ -698,16 +698,13 @@ class ConnectionPool(object):
             for l in self._on_pool_max:
                 l.pool_at_max(dic)
 
-    def _notify_on_dispose(self, conn_record, msg="", error=None):
+    def _notify_on_dispose(self, conn_record, msg=""):
         if self._on_dispose:
             dic = {'pool_id': self.logging_name,
                    'level': 'debug',
                    'connection': conn_record}
             if msg:
                 dic['message'] = msg
-            if error:
-                dic['error'] = error
-                dic['level'] = 'warn'
             for l in self._on_dispose:
                 l.connection_disposed(dic)
 
@@ -798,178 +795,90 @@ class PoolListener(object):
     efficiency and function call overhead, you're much better off only
     providing implementations for the hooks you'll be using.
 
+    Each of the :class:`PoolListener` methods wil be called with a
+    :class:`dict` as the single parameter. This :class:`dict` may
+    contain the following fields:
+
+        * `connection`: The :class:`ConnectionWrapper` object that persistently
+          manages the connection
+
+        * `message`: The reason this event happened
+
+        * `error`: The :class:`Exception` that caused this event
+
+        * `pool_id`: The id of the :class:`ConnectionPool` that this event came from
+
+        * `level`: The prescribed logging level for this event.  Can be 'debug', 'info',
+          'warn', 'error', or 'critical'
+
+    Entries in the :class:`dict` that are specific to only one event type are
+    detailed with each method.
+
+
     """
 
     def connection_created(self, dic):
         """Called once for each new Cassandra connection.
 
-        dic['connection']
-          The :class:`ConnectionWrapper` that persistently manages the connection
-
-        dic['message']
-            A reason for closing the connection, if any.
-
-        dic['error']
-            An error that occured while closing the connection, if any.
-
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
-
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
+        Fields: `pool_id`, `level`, and `connection`.
         """
 
     def connection_checked_out(self, dic):
         """Called when a connection is retrieved from the Pool.
 
-        dic['connection']
-          The :class:`ConnectionWrapper` that persistently manages the connection
-
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
-
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
+        Fields: `pool_id`, `level`, and `connection`.
         """
 
     def connection_checked_in(self, dic):
         """Called when a connection returns to the pool.
 
-        Note that the connection may be None if the connection has been closed.
-
-        dic['connection']
-          The :class:`ConnectionWrapper` that persistently manages the connection
-
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
-
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
+        Fields: `pool_id`, `level`, and `connection`.
         """
 
     def connection_disposed(self, dic):
         """Called when a connection is closed.
 
-        dic['connection']
-            The :class:`ConnectionWrapper` that persistently manages the connection
+        ``dic['message']``: A reason for closing the connection, if any.
 
-        dic['message']
-            A reason for closing the connection, if any.
-
-        dic['error']
-            An error that occured while closing the connection, if any.
-
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
-
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
+        Fields: `pool_id`, `level`, `connection`, and `message`.
         """
 
     def connection_recycled(self, dic):
         """Called when a connection is recycled.
 
-        dic['old_conn']
-            The :class:`ConnectionWrapper` that is being recycled
+        ``dic['old_conn']``: The :class:`ConnectionWrapper` that is being recycled
 
-        dic['new_conn']
-            The :class:`ConnectionWrapper` that is replacing it
+        ``dic['new_conn']``: The :class:`ConnectionWrapper` that is replacing it
 
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
-
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
+        Fields: `pool_id`, `level`, `old_conn`, and `new_conn`.
         """
 
     def connection_failed(self, dic):
         """Called when a connection to a single server fails.
 
-        dic['error']
-          The connection error (Exception).
+        ``dic['server']``: The server the connection was made to.
 
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
-
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
+        Fields: `pool_id`, `level`, `error`, `server`, and `connection`.
         """
     def server_list_obtained(self, dic):
         """Called when the pool finalizes its server list.
 
-        dic['server_list']
-            The randomly permuted list of servers.
+        ``dic['server_list']``: The randomly permuted list of servers that the
+        pool will choose from.
 
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
-
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
-       """
+        Fields: `pool_id`, `level`, and `server_list`.
+        """
 
     def pool_recreated(self, dic):
         """Called when a pool is recreated.
 
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
-
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
+        Fields: `pool_id`, and `level`.
         """
 
     def pool_disposed(self, dic):
-        """Called when a pool is recreated.
+        """Called when a pool is disposed.
 
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
-
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
+        Fields: `pool_id`, and `level`.
         """
 
     def pool_at_max(self, dic):
@@ -977,16 +886,10 @@ class PoolListener(object):
         Called when an attempt is made to get a new connection from the
         pool, but the pool is already at its max size.
 
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
+        ``dic['pool_max']``: The max number of connections the pool will
+        keep open at one time.
 
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
+        Fields: `pool_id`, `pool_max`, and `level`.
         """
 
 
@@ -1001,7 +904,6 @@ class MaximumRetryException(Exception):
     Raised when a :class:`ConnectionWrapper` has retried the maximum
     allowed times before being returned to the pool; note that all of
     the retries do not have to be on the same operation.
-
     """
 
 class InvalidRequestError(Exception):
@@ -1009,5 +911,4 @@ class InvalidRequestError(Exception):
     Pycassa was asked to do something it can't do.
 
     This error generally corresponds to runtime state errors.
-
     """
