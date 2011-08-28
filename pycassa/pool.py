@@ -4,10 +4,10 @@ import time
 import threading
 import random
 import socket
+import Queue
 
 from thrift import Thrift
 import connection
-import queue as pool_queue
 from logging.pool_logger import PoolLogger
 from util import as_interface
 from cassandra.ttypes import TimedOutException, UnavailableException
@@ -358,7 +358,7 @@ class ConnectionPool(object):
             self._tlocal = threading.local()
 
         self._pool_size = pool_size
-        self._q = pool_queue.Queue(pool_size)
+        self._q = Queue.Queue(pool_size)
         self._pool_lock = threading.Lock()
         self._current_conns = 0
 
@@ -455,7 +455,9 @@ class ConnectionPool(object):
         try:
             self._pool_lock.acquire()
             while self._current_conns < self._pool_size:
-                self._q.put(self._create_connection(), False)
+                conn = self._create_connection()
+                conn._checkin()
+                self._q.put(conn, False)
                 self._current_conns += 1
         finally:
             self._pool_lock.release()
@@ -493,9 +495,11 @@ class ConnectionPool(object):
         """Try to replace the connection."""
         if not self._q.full():
             try:
-                self._q.put(self._create_connection(), False)
+                conn = self._create_connection()
+                conn._checkin()
+                self._q.put(conn, False)
                 self._current_conns += 1
-            except pool_queue.Full:
+            except Queue.Full:
                 pass
 
     def _clear_current(self):
@@ -518,7 +522,7 @@ class ConnectionPool(object):
                     raise InvalidRequestError("Connection was already checked in or disposed")
                 conn = self._put_conn(conn)
                 self._notify_on_checkin(conn)
-            except pool_queue.Full:
+            except Queue.Full:
                 self._notify_on_checkin(conn)
                 conn._dispose_wrapper(reason="pool is already full")
                 self._decrement_overflow()
@@ -537,11 +541,10 @@ class ConnectionPool(object):
             new_conn = self._create_connection()
             self._notify_on_recycle(conn, new_conn)
             conn._dispose_wrapper(reason="recyling connection")
-            self._q.put_nowait(new_conn)
-            return new_conn
-        else:
-            self._q.put_nowait(conn)
-            return conn
+            conn = new_conn
+        conn._checkin()
+        self._q.put_nowait(conn)
+        return conn
 
     def get(self):
         """ Gets a connection from the pool. """
@@ -575,7 +578,8 @@ class ConnectionPool(object):
                         block = self._current_conns >= self._max_conns
 
                     conn = self._q.get(block, timeout)
-                except pool_queue.Empty:
+                    conn._checkout()
+                except Queue.Empty:
                     if self._current_conns < self._max_conns:
                         conn = self._create_connection()
                         self._current_conns += 1
@@ -602,7 +606,7 @@ class ConnectionPool(object):
                 conn = self._q.get(False)
                 conn._dispose_wrapper(
                         reason="Pool %s is being disposed" % id(self))
-            except pool_queue.Empty:
+            except Queue.Empty:
                 break
 
         self._overflow = 0 - self.size()
