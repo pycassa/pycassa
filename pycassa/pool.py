@@ -131,8 +131,8 @@ class ConnectionWrapper(connection.Connection):
                 self._pool._clear_current()
 
                 if self.max_retries != -1 and self._retry_count > self.max_retries:
-                    raise MaximumRetryException('Retried %d times. Last failure was %s' %
-                                                (self._retry_count, exc))
+                    raise MaximumRetryException('Retried %d times. Last failure was %s: %s' %
+                                                (self._retry_count, exc.__class__.__name__, exc))
                 # Exponential backoff
                 time.sleep(_BASE_BACKOFF * (2 ** self._retry_count))
 
@@ -443,8 +443,9 @@ class ConnectionPool(object):
             except (Thrift.TException, socket.error, IOError, EOFError), exc:
                 self._notify_on_failure(exc, server)
                 failure_count += 1
-        raise AllServersUnavailable('An attempt was made to connect to each of the servers '
-                'twice, but none of the attempts succeeded.')
+        raise AllServersUnavailable('An attempt was made to connect to each of the servers ' +
+                                    'twice, but none of the attempts succeeded. The last failure was %s: %s' %
+                                    (exc.__class__.__name, exc))
 
     def fill(self):
         """
