@@ -116,15 +116,14 @@ class ColumnFamily(object):
     def _get_column_name_class(self):
         return self._column_name_class
 
-    column_name_class = property(_get_column_name_class,
-                                 _set_column_name_class,
-        doc = """ The data type of column names, which pycassa will use
-        to determine how to pack and unpack them.
-        
-        This is set automatically by inspecting the column family's
-        ``comparator_type``, but it may also be set manually if you want
-        autopacking behavior without setting a ``comparator_type``. Options
-        include anything in :mod:`~pycassa.system_manager`, such as "LongType". """)
+    column_name_class = property(_get_column_name_class, _set_column_name_class)
+    """ The data type of column names, which pycassa will use
+    to determine how to pack and unpack them.
+    
+    This is set automatically by inspecting the column family's
+    ``comparator_type``, but it may also be set manually if you want
+    autopacking behavior without setting a ``comparator_type``. Options
+    include anything in :mod:`~pycassa.system_manager`, such as "LongType". """
 
     def _set_super_column_name_class(self, typestr):
         self._super_column_name_class = marshal.extract_type_name(typestr)
@@ -135,9 +134,9 @@ class ColumnFamily(object):
         return self._super_column_name_class
 
     super_column_name_class = property(_get_super_column_name_class,
-                                       _set_super_column_name_class,
-        doc = """ Like :attr:`column_name_class`, but for
-        super column names. """)
+                                       _set_super_column_name_class)
+    """ Like :attr:`column_name_class`, but for
+    super column names. """
 
     def _set_default_validation_class(self, typestr):
         self._default_validation_class = marshal.extract_type_name(typestr)
@@ -148,14 +147,14 @@ class ColumnFamily(object):
         return self._default_validation_class
 
     default_validation_class = property(_get_default_validation_class,
-                                        _set_default_validation_class,
-        doc = """ The default data type of column values, which pycassa
-        will use to determine how to pack and unpack them.
-        
-        This is set automatically by inspecting the column family's
-        ``default_validation_class``, but it may also be set manually if you want
-        autopacking behavior without setting a ``default_validation_class``. Options
-        include anything in :mod:`~pycassa.system_manager`, such as "LongType". """)
+                                        _set_default_validation_class)
+    """ The default data type of column values, which pycassa
+    will use to determine how to pack and unpack them.
+    
+    This is set automatically by inspecting the column family's
+    ``default_validation_class``, but it may also be set manually if you want
+    autopacking behavior without setting a ``default_validation_class``. Options
+    include anything in :mod:`~pycassa.system_manager`, such as "LongType". """
 
     def _set_column_validators(self, other_dict):
         self._column_validators = ColumnValidatorDict(other_dict)
@@ -163,10 +162,9 @@ class ColumnFamily(object):
     def _get_column_validators(self):
         return self._column_validators
 
-    column_validators = property(_get_column_validators,
-                                 _set_column_validators,
-        doc = """ Like :attr:`default_validation_class`, but is a
-        :class:`dict` mapping individual columns to types. """)
+    column_validators = property(_get_column_validators, _set_column_validators)
+    """ Like :attr:`default_validation_class`, but is a
+    :class:`dict` mapping individual columns to types. """
 
     def _set_key_validation_class(self, typestr):
         self._key_validation_class = marshal.extract_type_name(typestr)
@@ -177,16 +175,16 @@ class ColumnFamily(object):
         return self._key_validation_class
 
     key_validation_class = property(_get_key_validation_class,
-                                    _set_key_validation_class,
-        doc = """ The data type of row keys, which pycassa will use
-        to determine how to pack and unpack them.
-        
-        This is set automatically by inspecting the column family's
-        ``key_validation_class`` (which only exists in Cassandra 0.8 or greater),
-        but may be set manually if you want the autopacking behavior without
-        setting a ``key_validation_class`` or if you are using Cassandra 0.7. 
-        Options include anything in :mod:`~pycassa.system_manager`, such as
-        "LongType".""")
+                                    _set_key_validation_class)
+    """ The data type of row keys, which pycassa will use
+    to determine how to pack and unpack them.
+    
+    This is set automatically by inspecting the column family's
+    ``key_validation_class`` (which only exists in Cassandra 0.8 or greater),
+    but may be set manually if you want the autopacking behavior without
+    setting a ``key_validation_class`` or if you are using Cassandra 0.7. 
+    Options include anything in :mod:`~pycassa.system_manager`, such as
+    "LongType"."""
 
     def __init__(self, pool, column_family, **kwargs):
         """
