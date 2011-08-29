@@ -60,11 +60,11 @@ class ConnectionWrapper(connection.Connection):
         """
         Returns this to the pool.
 
-        This has the same effect as calling :meth:`ConnectionPool.return_conn()`
+        This has the same effect as calling :meth:`ConnectionPool.put()`
         on the wrapper.
 
         """
-        self._pool.return_conn(self)
+        self._pool.put(self)
 
     def _checkin(self):
         if self._state == ConnectionWrapper._IN_QUEUE:
@@ -507,7 +507,7 @@ class ConnectionPool(object):
         if self._pool_threadlocal:
             self._tlocal.current = None
 
-    def return_conn(self, conn):
+    def put(self, conn):
         """ Returns a connection to the pool. """
         if self._pool_threadlocal:
             if hasattr(self._tlocal, 'current') and self._tlocal.current:
@@ -526,6 +526,7 @@ class ConnectionPool(object):
                 self._notify_on_checkin(conn)
                 conn._dispose_wrapper(reason="pool is already full")
                 self._decrement_overflow()
+    return_conn = put
 
     def _decrement_overflow(self):
         self._pool_lock.acquire()
