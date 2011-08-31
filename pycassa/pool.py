@@ -120,16 +120,19 @@ class ConnectionWrapper(connection.Connection):
                 self._retry_count = 0 # reset the count after a success
                 return result
             except Thrift.TApplicationException, app_exc:
+                self.close()
+                self._pool._decrement_overflow()
+                self._pool._clear_current()
                 raise app_exc
             except (TimedOutException, UnavailableException, Thrift.TException,
                     socket.error, IOError, EOFError), exc:
                 self._pool._notify_on_failure(exc, server=self.server, connection=self)
 
-                self._retry_count += 1
                 self.close()
                 self._pool._decrement_overflow()
                 self._pool._clear_current()
 
+                self._retry_count += 1
                 if self.max_retries != -1 and self._retry_count > self.max_retries:
                     raise MaximumRetryException('Retried %d times. Last failure was %s: %s' %
                                                 (self._retry_count, exc.__class__.__name__, exc))
