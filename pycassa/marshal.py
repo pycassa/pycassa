@@ -40,12 +40,10 @@ def extract_type_name(typestr):
         return _get_inner_type(typestr)
 
     index = typestr.rfind('.')
-    if index == -1:
-        typestr = 'BytesType'
-    else:
+    if index != -1:
         typestr = typestr[index + 1: ]
-        if typestr not in _BASIC_TYPES:
-            typestr = 'BytesType'
+    if typestr not in _BASIC_TYPES:
+        typestr = 'BytesType'
     return typestr
 
 def _get_inner_type(typestr):
@@ -75,6 +73,7 @@ def _to_timestamp(v):
             raise TypeError('DateType arguments must be a datetime or timestamp')
 
         converted = value * 1e6
+    return converted
 
 def get_composite_packer(typestr):
     packers = map(packer_for, _get_inner_types(typestr))
@@ -243,9 +242,9 @@ def unpacker_for(typestr):
 
     elif data_type == 'DateType':
         if _have_struct:
-            return lambda v: datetime.fromtimestamp(_long_packer.unpack(byte_array)[0] / 1e6)
+            return lambda v: datetime.fromtimestamp(_long_packer.unpack(v)[0] / 1e6)
         else:
-            return lambda v: datetime.fromtimestamp(_struct.unpack('>q', byte_array)[0] / 1e6)
+            return lambda v: datetime.fromtimestamp(_struct.unpack('>q', v)[0] / 1e6)
 
     elif data_type == 'BooleanType':
         if _have_struct:
