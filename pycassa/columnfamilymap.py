@@ -20,7 +20,7 @@ IntString may be defined as:
 
 import warnings
 
-from pycassa.types import Column
+from pycassa.types import CassandraType
 from pycassa.cassandra.ttypes import IndexExpression, IndexClause
 from pycassa.columnfamily import ColumnFamily
 import pycassa.util as util
@@ -54,35 +54,26 @@ class ColumnFamilyMap(ColumnFamily):
 
         self.cls = cls
         self.autopack_names = False
-        self.autopack_values = False
 
         self.raw_columns = raw_columns
         self.dict_class = util.OrderedDict
-
-    def _set_dict_class(self, klass):
-        self._dict_class = klass
-        self.columns = self._dict_class()
-        for name, column in self.cls.__dict__.iteritems():
-            if isinstance(column, Column):
-                self.columns[name] = column
-
-    def _get_dict_class(self):
-        return self._dict_class
-
-    dict_class = property(_get_dict_class, _set_dict_class)
+        self.defaults = {}
+        self.fields = []
+        for name, val_type in self.cls.__dict__.iteritems():
+            if isinstance(val_type, CassandraType):
+                self.fields.append(name)
+                self.column_validators[name] = val_type
+                self.defaults[name] = val_type.default
 
     def combine_columns(self, columns):
-        combined_columns = self.dict_class()
+        combined_columns = columns
+
         if self.raw_columns:
-            combined_columns['raw_columns'] = self.dict_class()
-        for column, type in self.columns.iteritems():
-            combined_columns[column] = type.default
-        for column, value in columns.iteritems():
-            col_cls = self.columns.get(column, None)
-            if col_cls is not None:
-                combined_columns[column] = col_cls.unpack(value)
-            if self.raw_columns:
-                combined_columns['raw_columns'][column] = value
+            combined_columns['raw_columns'] = columns
+
+        for column, default in self.defaults.items():
+            combined_columns.setdefault(column, default)
+
         return combined_columns
 
     def get(self, key, *args, **kwargs):
@@ -104,7 +95,7 @@ class ColumnFamilyMap(ColumnFamily):
 
         """
         if 'columns' not in kwargs and not self.super and not self.raw_columns:
-            kwargs['columns'] = self.columns.keys()
+            kwargs['columns'] = self.fields
 
         columns = ColumnFamily.get(self, key, *args, **kwargs)
 
@@ -136,7 +127,8 @@ class ColumnFamilyMap(ColumnFamily):
 
         """
         if 'columns' not in kwargs and not self.super and not self.raw_columns:
-            kwargs['columns'] = self.columns.keys()
+            kwargs['columns'] = self.fields
+
         kcmap = ColumnFamily.multiget(self, *args, **kwargs)
         ret = self.dict_class()
         for key, columns in kcmap.iteritems():
@@ -181,7 +173,8 @@ class ColumnFamilyMap(ColumnFamily):
 
         """
         if 'columns' not in kwargs and not self.super and not self.raw_columns:
-            kwargs['columns'] = self.columns.keys()
+            kwargs['columns'] = self.fields
+
         for key, columns in ColumnFamily.get_range(self, *args, **kwargs):
             if self.super:
                 if 'super_column' not in kwargs:
@@ -211,17 +204,7 @@ class ColumnFamilyMap(ColumnFamily):
                 "supported by super column families"
 
         if 'columns' not in kwargs and not self.raw_columns:
-            kwargs['columns'] = self.columns.keys()
-
-        # Autopack the index clause's values
-        new_exprs = []
-        for expr in kwargs['index_clause'].expressions:
-            packed_val = self.columns[expr.column_name].pack(expr.value)
-            new_expr = IndexExpression(expr.column_name, expr.op, value=packed_val)
-            new_exprs.append(new_expr)
-        old_clause = kwargs['index_clause']
-        new_clause = IndexClause(new_exprs, old_clause.start_key, old_clause.count)
-        kwargs['index_clause'] = new_clause
+            kwargs['columns'] = self.fields
 
         keyslice_map = ColumnFamily.get_indexed_slices(self, *args, **kwargs)
 
@@ -241,21 +224,24 @@ class ColumnFamilyMap(ColumnFamily):
         The `columns` parameter allows to you specify which attributes of
         `instance` should be inserted or updated. If left as ``None``, all
         attributes will be inserted.
-
         """
-        insert_dict = {}
-        if columns is None:
-            columns = self.columns.keys()
 
-        for column in columns:
-            if instance.__dict__.has_key(column) and instance.__dict__[column] is not None:
-                insert_dict[column] = self.columns[column].pack(instance.__dict__[column])
+        if columns is None:
+            fields = self.fields
+        else:
+            fields = columns
+
+        insert_dict = {}
+        for field in self.fields:
+            val = getattr(instance, field, None)
+            if val is not None:
+                insert_dict[field] = val
 
         if self.super:
             insert_dict = {instance.super_column: insert_dict}
 
         return ColumnFamily.insert(self, instance.key, insert_dict,
-                                   timestamp=None, ttl=None,
+                                   timestamp=timestamp, ttl=ttl,
                                    write_consistency_level=write_consistency_level)
 
     def remove(self, instance, columns=None, write_consistency_level=None):

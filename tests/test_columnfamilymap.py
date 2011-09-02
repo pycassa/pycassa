@@ -1,36 +1,34 @@
 from datetime import datetime
 
+import pycassa.types as types
 from pycassa import index, ColumnFamily, ConnectionPool, \
-    ColumnFamilyMap, ConsistencyLevel, NotFoundException, String, Long, \
-    Float64, DateTime, IntString, FloatString, DateTimeString, \
-    SystemManager
+    ColumnFamilyMap, ConsistencyLevel, NotFoundException, SystemManager
 from nose.tools import assert_raises, assert_equal, assert_true
 from nose.plugins.skip import *
 
 import struct
 
+CF = 'Standard1'
+SCF = 'Super1'
+INDEXED_CF = 'Indexed1'
+
 def setup_module():
-    global pool, cf, scf, indexed_cf, sys_man
+    global pool, sys_man
     credentials = {'username': 'jsmith', 'password': 'havebadpass'}
     pool = ConnectionPool(keyspace='PycassaTestKeyspace', credentials=credentials)
-    cf = ColumnFamily(pool, 'Standard1', autopack_names=False, autopack_values=False)
-    scf = ColumnFamily(pool, 'Super1', autopack_names=False, autopack_values=False)
-    indexed_cf = ColumnFamily(pool, 'Indexed1', autopack_names=False, autopack_values=False)
     sys_man = SystemManager()
 
 def teardown_module():
-    cf.truncate()
-    indexed_cf.truncate()
     pool.dispose()
 
 class TestUTF8(object):
-    strcol = String(default='default')
-    intcol = Long(default=0)
-    floatcol = Float64(default=0.0)
-    datetimecol = DateTime(default=None)
-    intstrcol = IntString()
-    floatstrcol = FloatString()
-    datetimestrcol = DateTimeString()
+    strcol = types.AsciiType(default='default')
+    intcol = types.LongType(default=0)
+    floatcol = types.FloatType(default=0.0)
+    datetimecol = types.DateType()
+
+    def __str__(self):
+        return str(map(str, [self.strcol, self.intcol, self.floatcol, self.datetimecol]))
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
@@ -39,7 +37,7 @@ class TestUTF8(object):
         return self.__dict__ != other.__dict__
 
 class TestIndex(object):
-    birthdate = Long(default=0)
+    birthdate = types.LongType(default=0)
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
@@ -52,15 +50,15 @@ class TestEmpty(object):
 
 class TestColumnFamilyMap:
     def setUp(self):
-        self.map = ColumnFamilyMap(TestUTF8, cf)
-        self.indexed_map = ColumnFamilyMap(TestIndex, indexed_cf)
-        self.empty_map = ColumnFamilyMap(TestEmpty, cf, raw_columns=True)
+        self.map = ColumnFamilyMap(TestUTF8, pool, CF)
+        self.indexed_map = ColumnFamilyMap(TestIndex, pool, INDEXED_CF)
+        self.empty_map = ColumnFamilyMap(TestEmpty, pool, CF, raw_columns=True)
 
     def tearDown(self):
-        for key, columns in cf.get_range():
-            cf.remove(key)
-        for key, columns in indexed_cf.get_range():
-            cf.remove(key)
+        for instance in self.map.get_range():
+            self.map.remove(instance)
+        for instance in self.indexed_map.get_range():
+            self.indexed_map.remove(instance)
 
     def instance(self, key):
         instance = TestUTF8()
@@ -69,9 +67,6 @@ class TestColumnFamilyMap:
         instance.intcol = 2
         instance.floatcol = 3.5
         instance.datetimecol = datetime.now().replace(microsecond=0)
-        instance.intstrcol = 8
-        instance.floatstrcol = 4.6
-        instance.datetimestrcol = datetime.now().replace(microsecond=0)
 
         return instance
 
@@ -85,7 +80,6 @@ class TestColumnFamilyMap:
         assert_raises(NotFoundException, self.map.get, instance.key)
         self.map.insert(instance)
         assert_equal(self.map.get(instance.key), instance)
-        assert_equal(self.empty_map.get(instance.key).raw_columns['intstrcol'], str(instance.intstrcol))
 
     def test_insert_get_indexed_slices(self):
         instance1 = TestIndex()
@@ -122,7 +116,6 @@ class TestColumnFamilyMap:
         assert_equal(rows[instance1.key], instance1)
         assert_equal(rows[instance2.key], instance2)
         assert_true(missing_key not in rows)
-        assert_equal(self.empty_map.multiget([instance1.key])[instance1.key].raw_columns['intstrcol'], str(instance1.intstrcol))
 
     def test_insert_get_range(self):
         if sys_man.describe_partitioner() == 'RandomPartitioner':
@@ -139,7 +132,6 @@ class TestColumnFamilyMap:
         rows = list(self.map.get_range(start=instances[0].key, finish=instances[-1].key))
         assert_equal(len(rows), len(instances))
         assert_equal(rows, instances)
-        assert_equal(list(self.empty_map.get_range(start=instances[0].key, finish=instances[0].key))[0].raw_columns['intstrcol'], str(instances[0].intstrcol))
 
     def test_remove(self):
         instance = self.instance('TestColumnFamilyMap.test_remove')
@@ -163,23 +155,21 @@ class TestColumnFamilyMap:
 
     def test_has_defaults(self):
         key = 'TestColumnFamilyMap.test_has_defaults'
-        cf.insert(key, {'strcol': '1'})
+        ColumnFamily.insert(self.map, key, {'strcol': '1'})
         instance = self.map.get(key)
 
         assert_equal(instance.intcol, TestUTF8.intcol.default)
         assert_equal(instance.floatcol, TestUTF8.floatcol.default)
         assert_equal(instance.datetimecol, TestUTF8.datetimecol.default)
-        assert_equal(instance.intstrcol, TestUTF8.intstrcol.default)
-        assert_equal(instance.floatstrcol, TestUTF8.floatstrcol.default)
-        assert_equal(instance.datetimestrcol, TestUTF8.datetimestrcol.default)
 
 class TestSuperColumnFamilyMap:
     def setUp(self):
-        self.map = ColumnFamilyMap(TestUTF8, scf)
+        self.map = ColumnFamilyMap(TestUTF8, pool, SCF)
 
     def tearDown(self):
-        for key, columns in scf.get_range():
-            scf.remove(key)
+        for scols in self.map.get_range():
+            for instance in scols.values():
+                self.map.remove(instance)
 
     def instance(self, key, super_column):
         instance = TestUTF8()
@@ -189,9 +179,6 @@ class TestSuperColumnFamilyMap:
         instance.intcol = 2
         instance.floatcol = 3.5
         instance.datetimecol = datetime.now().replace(microsecond=0)
-        instance.intstrcol = 8
-        instance.floatstrcol = 4.6
-        instance.datetimestrcol = datetime.now().replace(microsecond=0)
 
         return instance
 
