@@ -18,6 +18,7 @@ from pycassa.cassandra.ttypes import Column, ColumnOrSuperColumn,\
     IndexExpression, IndexClause, CounterColumn
 import pycassa.util as util
 import pycassa.marshal as marshal
+import pycassa.types as types
 
 from batch import CfMutator
 
@@ -30,27 +31,32 @@ _SLICE_FINISH = 2
 class ColumnValidatorDict(DictMixin):
 
     def __init__(self, other_dict={}):
-        self.class_names = {}
+        self.type_map = {}
         self.packers = {}
         self.unpackers = {}
         for item, value in other_dict.items():
             self[item] = value
 
     def __getitem__(self, item):
-        return self.class_names[item]
+        return self.type_map[item]
 
     def __setitem__(self, item, value):
-        self.class_names[item] = marshal.extract_type_name(value)
-        self.packers[item] = marshal.packer_for(value)
-        self.unpackers[item] = marshal.unpacker_for(value)
+        if isinstance(value, types.CassandraType):
+            self.type_map[item] = value
+            self.packers[item] = value.pack
+            self.unpackers[item] = value.unpack
+        else:
+            self.type_map[item] = marshal.extract_type_name(value)
+            self.packers[item] = marshal.packer_for(value)
+            self.unpackers[item] = marshal.unpacker_for(value)
 
     def __delitem__(self, item):
-        del self.class_names[item]
+        del self.type_map[item]
         del self.packers[item]
         del self.unpackers[item]
 
     def keys(self):
-        return self.class_names.keys()
+        return self.type_map.keys()
 
 def gm_timestamp():
     """ Gets the current GMT timestamp in microseconds. """
@@ -108,10 +114,15 @@ class ColumnFamily(object):
     By default, this is :const:`True`.
     """
 
-    def _set_column_name_class(self, typestr):
-        self._column_name_class = marshal.extract_type_name(typestr)
-        self._name_packer = marshal.packer_for(typestr)
-        self._name_unpacker = marshal.unpacker_for(typestr)
+    def _set_column_name_class(self, t):
+        if isinstance(t, types.CassandraType):
+            self._column_name_class = t
+            self._name_packer = t.pack
+            self._name_unpacker = t.unpack
+        else:
+            self._column_name_class = marshal.extract_type_name(t)
+            self._name_packer = marshal.packer_for(t)
+            self._name_unpacker = marshal.unpacker_for(t)
 
     def _get_column_name_class(self):
         return self._column_name_class
@@ -125,10 +136,15 @@ class ColumnFamily(object):
     autopacking behavior without setting a ``comparator_type``. Options
     include anything in :mod:`~pycassa.system_manager`, such as "LongType". """
 
-    def _set_super_column_name_class(self, typestr):
-        self._super_column_name_class = marshal.extract_type_name(typestr)
-        self._super_name_packer = marshal.packer_for(typestr)
-        self._super_name_unpacker = marshal.unpacker_for(typestr)
+    def _set_super_column_name_class(self, t):
+        if isinstance(t, types.CassandraType):
+            self._super_column_name_class = t
+            self._super_name_packer = t.pack
+            self._super_name_unpacker = t.unpack
+        else:
+            self._super_column_name_class = marshal.extract_type_name(t)
+            self._super_name_packer = marshal.packer_for(t)
+            self._super_name_unpacker = marshal.unpacker_for(t)
 
     def _get_super_column_name_class(self):
         return self._super_column_name_class
@@ -138,10 +154,15 @@ class ColumnFamily(object):
     """ Like :attr:`column_name_class`, but for
     super column names. """
 
-    def _set_default_validation_class(self, typestr):
-        self._default_validation_class = marshal.extract_type_name(typestr)
-        self._default_value_packer = marshal.packer_for(typestr)
-        self._default_value_unpacker = marshal.unpacker_for(typestr)
+    def _set_default_validation_class(self, t):
+        if isinstance(t, types.CassandraType):
+            self._default_validation_class = t
+            self._default_value_packer = t.pack
+            self._default_value_unpacker = t.unpack
+        else:
+            self._default_validation_class = marshal.extract_type_name(t)
+            self._default_value_packer = marshal.packer_for(t)
+            self._default_value_unpacker = marshal.unpacker_for(t)
 
     def _get_default_validation_class(self):
         return self._default_validation_class
@@ -166,10 +187,15 @@ class ColumnFamily(object):
     """ Like :attr:`default_validation_class`, but is a
     :class:`dict` mapping individual columns to types. """
 
-    def _set_key_validation_class(self, typestr):
-        self._key_validation_class = marshal.extract_type_name(typestr)
-        self._key_packer = marshal.packer_for(typestr)
-        self._key_unpacker = marshal.unpacker_for(typestr)
+    def _set_key_validation_class(self, t):
+        if isinstance(t, types.CassandraType):
+            self._key_validation_class = t
+            self._key_packer = t.pack
+            self._key_unpacker = t.unpack
+        else:
+            self._key_validation_class = marshal.extract_type_name(t)
+            self._key_packer = marshal.packer_for(t)
+            self._key_unpacker = marshal.unpacker_for(t)
 
     def _get_key_validation_class(self):
         return self._key_validation_class

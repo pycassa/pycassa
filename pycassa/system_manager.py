@@ -7,6 +7,7 @@ from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef,\
 from pycassa.cassandra.constants import *
 import pycassa.util as util
 import pycassa.marshal as marshal
+import pycassa.types as types
 from logging.pycassa_logger import *
 
 _DEFAULT_TIMEOUT = 30
@@ -24,95 +25,21 @@ Original replication strategy for putting a number of replicas in each datacente
 This was originally called 'RackAwareStrategy'.
 """
 
-
 KEYS_INDEX = IndexType.KEYS
 """ A secondary index type where each indexed value receives its own row """
 
-
-class CassandraType(object):
-
-    def __init__(self, reversed=False):
-        self.reversed = reversed
-
-    def __str__(self):
-        return self.__class__.__name__ + "(reversed=" + str(self.reversed).lower() + ")"
-
-class BytesType(CassandraType):
-    """ Stores data as a byte array """
-    pass
-
-class LongType(CassandraType):
-    """ Stores data as an 8 byte integer """
-    pass
-
-class IntegerType(CassandraType):
-    """ Stores data as an 4 byte integer """
-    pass
-class AsciiType(CassandraType):
-    """ Stores data as ASCII text """
-    pass
-
-class UTF8Type(CassandraType):
-    """ Stores data as UTF8 encoded text """
-    pass
-
-class TimeUUIDType(CassandraType):
-    """ Stores data as a version 1 UUID """
-    pass
-
-class LexicalUUIDType(CassandraType):
-    """ Stores data as a non-version 1 UUID """
-    pass
-
-class CounterColumnType(CassandraType):
-    """ A 64bit counter column """
-    pass
-
-class DoubleType(CassandraType):
-    """ Stores data as an 8 byte double """
-    pass
-
-class FloatType(CassandraType):
-    """ Stores data as an 4 byte float """
-    pass
-
-class BooleanType(CassandraType):
-    """ Stores data as an 1 byte boolean """
-    pass
-
-class DateType(CassandraType):
-    """ A timestamp as a 8 byte integer """
-    pass
-
-class CompositeType(CassandraType):
-
-    def __init__(self, *components):
-        """
-        A type composed of one or more components, each of
-        which have their own type.  When sorted, items are
-        primarily sorted by their first component, secondarily
-        by their second component, and so on.
-
-        Each of `*components` should be an instance of
-        a subclass of :class:`CassandraType`.
-        """
-        self.components = components
-
-    def __str__(self):
-        return "CompositeType(" + ", ".join(map(str, self.components)) + ")"
-
-BYTES_TYPE = BytesType()
-LONG_TYPE = LongType()
-INT_TYPE = IntegerType()
-ASCII_TYPE = AsciiType()
-UTF8_TYPE = UTF8Type()
-TIME_UUID_TYPE = TimeUUIDType()
-LEXICAL_UUID_TYPE = LexicalUUIDType()
-COUNTER_COLUMN_TYPE = CounterColumnType()
-DOUBLE_TYPE = DoubleType()
-FLOAT_TYPE = FloatType()
-BOOLEAN_TYPE = BooleanType()
-DATE_TYPE = DateType()
+BYTES_TYPE = types.BytesType()
+LONG_TYPE = types.LongType()
+INT_TYPE = types.IntegerType()
+ASCII_TYPE = types.AsciiType()
+UTF8_TYPE = types.UTF8Type()
+TIME_UUID_TYPE = types.TimeUUIDType()
+LEXICAL_UUID_TYPE = types.LexicalUUIDType()
+COUNTER_COLUMN_TYPE = types.CounterColumnType()
+DOUBLE_TYPE = types.DoubleType()
+FLOAT_TYPE = types.FloatType()
+BOOLEAN_TYPE = types.BooleanType()
+DATE_TYPE = types.DateType()
 
 class SystemManager(object):
     """

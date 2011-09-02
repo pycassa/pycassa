@@ -1,104 +1,76 @@
-from datetime import datetime
-import struct
-import time
-import warnings
+import pycassa.marshal as marshal
 
-__all__ = ['Column', 'DateTime', 'DateTimeString', 'Float64', 'FloatString',
-           'Long', 'IntString', 'String']
+class CassandraType(object):
 
-class Column(object):
-    """Base class for typed columns."""
-    def __init__(self, default=None):
+    def __init__(self, reversed=False, default=None):
+        self.reversed = reversed
         self.default = default
+        self.pack = marshal.packer_for(self.__class__.__name__)
+        self.unpack = marshal.unpacker_for(self.__class__.__name__)
 
-class DateTime(Column):
-    """Column for :class:`datetime` objects stored as long timestamps."""
-    def __init__(self, *args, **kwargs):
-        Column.__init__(self, *args, **kwargs)
-        self.struct = struct.Struct('q')
+    def __str__(self):
+        return self.__class__.__name__ + "(reversed=" + str(self.reversed).lower() + ")"
 
-    def pack(self, val):
-        if not isinstance(val, datetime):
-            raise TypeError('expected datetime, %s found' % type(val).__name__)
-        return self.struct.pack(int(time.mktime(val.timetuple())))
+class BytesType(CassandraType):
+    """ Stores data as a byte array """
+    pass
 
-    def unpack(self, val):
-        return datetime.fromtimestamp(self.struct.unpack(val)[0])
+class LongType(CassandraType):
+    """ Stores data as an 8 byte integer """
+    pass
 
-class DateTimeString(Column):
-    """
-    Column for :class:`datetime` objects stored as ``%Y-%m-%d %H:%M:%S``
+class IntegerType(CassandraType):
+    """ Stores data as an 4 byte integer """
+    pass
+class AsciiType(CassandraType):
+    """ Stores data as ASCII text """
+    pass
 
-    """
-    format = '%Y-%m-%d %H:%M:%S'
-    def pack(self, val):
-        if not isinstance(val, datetime):
-            raise TypeError('expected datetime, %s found' % type(val).__name__)
-        return val.strftime(self.format)
+class UTF8Type(CassandraType):
+    """ Stores data as UTF8 encoded text """
+    pass
 
-    def unpack(self, val):
-        return datetime.strptime(val, self.format)
+class TimeUUIDType(CassandraType):
+    """ Stores data as a version 1 UUID """
+    pass
 
-class Float64(Column):
-    """Column for 64bit floats."""
-    def __init__(self, *args, **kwargs):
-        Column.__init__(self, *args, **kwargs)
-        self.struct = struct.Struct('d')
+class LexicalUUIDType(CassandraType):
+    """ Stores data as a non-version 1 UUID """
+    pass
 
-    def pack(self, val):
-        if not isinstance(val, float):
-            raise TypeError('expected float, %s found' % type(val).__name__)
-        return self.struct.pack(val)
+class CounterColumnType(CassandraType):
+    """ A 64bit counter column """
+    pass
 
-    def unpack(self, val):
-        return self.struct.unpack(val)[0]
+class DoubleType(CassandraType):
+    """ Stores data as an 8 byte double """
+    pass
 
-class FloatString(Column):
-    """Column for floats stored as strings."""
-    def pack(self, val):
-        if not isinstance(val, float):
-            raise TypeError('expected float, %s found' % type(val).__name__)
-        return str(val)
+class FloatType(CassandraType):
+    """ Stores data as an 4 byte float """
+    pass
 
-    def unpack(self, val):
-        return float(val)
+class BooleanType(CassandraType):
+    """ Stores data as an 1 byte boolean """
+    pass
 
-class Long(Column):
-    """
-    Column for 64bit ints.
+class DateType(CassandraType):
+    """ A timestamp as a 8 byte integer """
+    pass
 
-    This uses big-endian encoding, which is the normal encoding for integers
-    in Cassandra.
+class CompositeType(CassandraType):
 
-    """
-    def __init__(self, *args, **kwargs):
-        Column.__init__(self, *args, **kwargs)
-        self.struct = struct.Struct('>q')
+    def __init__(self, *components):
+        """
+        A type composed of one or more components, each of
+        which have their own type.  When sorted, items are
+        primarily sorted by their first component, secondarily
+        by their second component, and so on.
 
-    def pack(self, val):
-        if not isinstance(val, (int, long)):
-            raise TypeError('expected int or long, %s found' % type(val).__name__)
-        return self.struct.pack(val)
+        Each of `*components` should be an instance of
+        a subclass of :class:`CassandraType`.
+        """
+        self.components = components
 
-    def unpack(self, val):
-        return self.struct.unpack(val)[0]
-
-class IntString(Column):
-    """Column for ints stored as strings."""
-    def pack(self, val):
-        if not isinstance(val, (int, long)):
-            raise TypeError('expected int or long, %s found' % type(val).__name__)
-        return str(val)
-
-    def unpack(self, val):
-        return int(val)
-
-class String(Column):
-    """Column for :class:`str` or :class:`unicode` objects."""
-    def pack(self, val):
-        if not isinstance(val, basestring):
-            raise TypeError('expected str or unicode, %s found' % type(val).__name__)
-        return val
-
-    def unpack(self, val):
-        return val
+    def __str__(self):
+        return "CompositeType(" + ", ".join(map(str, self.components)) + ")"
