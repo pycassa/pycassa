@@ -426,14 +426,14 @@ class ColumnFamily(object):
                             (value, d_type))
 
     def _pack_key(self, key):
-        if not self.autopack_keys or not key:
+        if not self.autopack_keys or key == '':
             return key
         try:
             return self._key_packer(key)
         except struct.error:
             d_type = self.key_validation_class
             raise TypeError("%s is not a compatible type for %s" %
-                            (value.__class__.__name__, d_type))
+                            (key.__class__.__name__, d_type))
 
     def _unpack_key(self, b):
         if not self.autopack_keys:
