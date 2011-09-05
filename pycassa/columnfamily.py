@@ -6,9 +6,7 @@ manipulation of data inside Cassandra.
 """
 
 import time
-import sys
 import uuid
-import threading
 import struct
 from UserDict import DictMixin
 
@@ -19,14 +17,9 @@ from pycassa.cassandra.ttypes import Column, ColumnOrSuperColumn,\
 import pycassa.util as util
 import pycassa.marshal as marshal
 import pycassa.types as types
-
-from batch import CfMutator
+from pycassa.batch import CfMutator
 
 __all__ = ['gm_timestamp', 'ColumnFamily', 'PooledColumnFamily']
-
-_NON_SLICE = 0
-_SLICE_START = 1
-_SLICE_FINISH = 2
 
 class ColumnValidatorDict(DictMixin):
 
