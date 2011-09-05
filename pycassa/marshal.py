@@ -216,6 +216,11 @@ def packer_for(typestr):
             return value.bytes
         return pack_uuid
 
+    elif data_type == "CounterColumnType":
+        def noop(value, slice_start=None):
+            return value
+        return noop
+
     else: # data_type == 'BytesType' or something unknown
         def pack_bytes(v, _=None):
             if not isinstance(v, basestring):
