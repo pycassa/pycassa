@@ -7,7 +7,7 @@ import socket
 import Queue
 
 from thrift import Thrift
-import connection
+from connection import Connection
 from logging.pool_logger import PoolLogger
 from util import as_interface
 from cassandra.ttypes import TimedOutException, UnavailableException
@@ -19,7 +19,7 @@ __all__ = ['QueuePool', 'ConnectionPool', 'PoolListener',
            'MaximumRetryException', 'NoConnectionAvailable',
            'InvalidRequestError']
 
-class ConnectionWrapper(connection.Connection):
+class ConnectionWrapper(Connection):
     """
     A wrapper class for :class:`Connection`s that adds pooling functionality.
 
@@ -109,14 +109,15 @@ class ConnectionWrapper(connection.Connection):
         self._state = ConnectionWrapper._CHECKED_OUT
         self._should_fail = new_conn_wrapper._should_fail
 
-    def _retry(f):
+    @classmethod
+    def _retry(cls, f):
         def new_f(self, *args, **kwargs):
             self.operation_count += 1
             try:
                 if kwargs.pop('reset', False):
                     self._pool._replace_wrapper() # puts a new wrapper in the queue
                     self._replace(self._pool.get()) # swaps out transport
-                result = getattr(super(ConnectionWrapper, self), f.__name__)(*args, **kwargs)
+                result = f(self, *args, **kwargs)
                 self._retry_count = 0 # reset the count after a success
                 return result
             except Thrift.TApplicationException, app_exc:
@@ -152,63 +153,6 @@ class ConnectionWrapper(connection.Connection):
         else:
             return self._original_meth(*args, **kwargs)
 
-    @_retry
-    def get(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def get_slice(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def multiget_slice(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def get_count(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def multiget_count(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def get_range_slices(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def get_indexed_slices(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def batch_mutate(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def add(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def insert(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def remove(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def remove_counter(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def truncate(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def describe_keyspace(self, *args, **kwargs):
-        pass
-
-
     def get_keyspace_description(self, keyspace=None, use_dict_for_col_metadata=False):
         """
         Describes the given keyspace.
@@ -233,6 +177,13 @@ class ConnectionWrapper(connection.Connection):
                     new_metadata[datum.name] = datum
                 cf_def.column_metadata = new_metadata
         return cf_defs
+
+retryable = ('get', 'get_slice', 'multiget_slice', 'get_count', 'multiget_count',
+             'get_range_slices', 'get_indexed_slices', 'batch_mutate', 'add',
+             'insert', 'remove', 'remove_counter', 'truncate', 'describe_keyspace')
+for fname in retryable:
+    new_f = ConnectionWrapper._retry(getattr(Connection, fname))
+    setattr(ConnectionWrapper, fname, new_f)
 
 class ConnectionPool(object):
     """A pool that maintains a queue of open connections."""
