@@ -63,10 +63,7 @@ Calls to :meth:`insert` and :meth:`remove` can also be chained:
 """
 
 import threading
-from pycassa.cassandra.ttypes import (Column, ColumnOrSuperColumn,
-                                      CounterColumn, CounterSuperColumn,
-                                      ConsistencyLevel, Deletion, Mutation,
-                                      SlicePredicate, SuperColumn)
+from pycassa.cassandra.ttypes import (ConsistencyLevel, Deletion, Mutation, SlicePredicate)
 
 __all__ = ['Mutator', 'CfMutator']
 
