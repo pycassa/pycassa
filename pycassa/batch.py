@@ -162,8 +162,8 @@ class Mutator(object):
         if super_column:
             deletion.super_column = _pack_name(super_column, True)
         if columns:
-            packed_cols = [_pack_name(col, column_family.super and not super_column)
-                           for col in columns]
+            is_super = column_family.super and not super_column
+            packed_cols = [_pack_name(col, is_super) for col in columns]
             deletion.predicate = SlicePredicate(column_names=packed_cols)
         mutation = Mutation(deletion=deletion)
         packed_key = column_family._pack_key(key)
