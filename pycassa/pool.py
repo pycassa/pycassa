@@ -603,6 +603,18 @@ class ConnectionPool(object):
         self._notify_on_checkout(conn)
         return conn
 
+    def execute(self, f, *args, **kwargs):
+        """
+        Get a connection from the pool, execute
+        `f` on it with `*args` and `**kwargs`, return the
+        connection to the pool, and return the result of `f`.
+        """
+        try:
+            conn = self.get()
+            return getattr(conn, f)(*args, **kwargs)
+        finally:
+            self.put(conn)
+
     def dispose(self):
         """ Closes all checked in connections in the pool. """
         while True:

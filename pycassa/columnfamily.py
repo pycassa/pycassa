@@ -250,8 +250,6 @@ class ColumnFamily(object):
         """
 
         self.pool = pool
-        self._tlocal = threading.local()
-        self._tlocal.client = None
         self.column_family = column_family
         self.timestamp = gm_timestamp
         self.load_schema()
@@ -270,17 +268,14 @@ class ColumnFamily(object):
         Cassandra and updates comparator and validation classes if
         neccessary.
         """
+        ksdef = self.pool.execute('get_keyspace_description',
+                                  use_dict_for_col_metadata=True)
         try:
-            try:
-                self._obtain_connection()
-                ksdef = self._tlocal.client.get_keyspace_description(use_dict_for_col_metadata=True)
-                self._cfdef = ksdef[self.column_family]
-            except KeyError:
-                nfe = NotFoundException()
-                nfe.why = 'Column family %s not found.' % self.column_family
-                raise nfe
-        finally:
-            self._release_connection()
+            self._cfdef = ksdef[self.column_family]
+        except KeyError:
+            nfe = NotFoundException()
+            nfe.why = 'Column family %s not found.' % self.column_family
+            raise nfe
 
         self.super = self._cfdef.column_type == 'Super'
         self._load_comparator_classes()
@@ -482,15 +477,6 @@ class ColumnFamily(object):
                 mut_list.append(Mutation(self._make_cosc(_pack_name(super_col, True), subcols)))
             return mut_list
 
-    def _obtain_connection(self):
-        self._tlocal.client = self.pool.get()
-
-    def _release_connection(self):
-        if hasattr(self._tlocal, 'client'):
-            if self._tlocal.client:
-                self._tlocal.client.return_to_pool()
-                self._tlocal.client = None
-
     def get(self, key, columns=None, column_start="", column_finish="",
             column_reversed=False, column_count=100, include_timestamp=False,
             super_column=None, read_consistency_level = None):
@@ -541,26 +527,16 @@ class ColumnFamily(object):
             else:
                 column = columns[0]
             cp = self._column_path(super_column, column)
-            try:
-                self._obtain_connection()
-                col_or_super = self._tlocal.client.get(
-                    packed_key, cp,
+            col_or_super = self.pool.execute('get', packed_key, cp,
                     read_consistency_level or self.read_consistency_level)
-            finally:
-                self._release_connection()
             return self._cosc_to_dict([col_or_super], include_timestamp)
         else:
             cp = self._column_parent(super_column)
             sp = self._slice_predicate(columns, column_start, column_finish,
                                        column_reversed, column_count, super_column)
 
-            try:
-                self._obtain_connection()
-                list_col_or_super = self._tlocal.client.get_slice(
-                    packed_key, cp, sp,
-                    read_consistency_level or self.read_consistency_level)
-            finally:
-                self._release_connection()
+            list_col_or_super = self.pool.execute('get_slice', packed_key, cp, sp,
+                read_consistency_level or self.read_consistency_level)
 
             if len(list_col_or_super) == 0:
                 raise NotFoundException()
@@ -616,12 +592,7 @@ class ColumnFamily(object):
                 buffer_size = min(row_count - count + 1, buffer_size)
             clause.count = buffer_size
             clause.start_key = last_key
-            try:
-                self._obtain_connection()
-                key_slices = self._tlocal.client.get_indexed_slices(
-                    cp, clause, sp, cl)
-            finally:
-                self._release_connection()
+            key_slices = self.pool.execute('get_indexed_slices', cp, clause, sp, cl)
 
             if key_slices is None:
                 return
@@ -672,12 +643,8 @@ class ColumnFamily(object):
         offset = 0
         keymap = {}
         while offset < len(packed_keys):
-            try:
-                self._obtain_connection()
-                new_keymap = self._tlocal.client.multiget_slice(
-                    packed_keys[offset:offset+buffer_size], cp, sp, consistency)
-            finally:
-                self._release_connection()
+            new_keymap = self.pool.execute('multiget_slice',
+                packed_keys[offset:offset+buffer_size], cp, sp, consistency)
             keymap.update(new_keymap)
             offset += buffer_size
 
@@ -730,14 +697,8 @@ class ColumnFamily(object):
         sp = self._slice_predicate(columns, column_start, column_finish,
                                    column_reversed, max_count, super_column)
 
-        try:
-            self._obtain_connection()
-            ret = self._tlocal.client.get_count(
-                packed_key, cp, sp,
+        return self.pool.execute('get_count', packed_key, cp, sp,
                 read_consistency_level or self.read_consistency_level)
-        finally:
-            self._release_connection()
-        return ret
 
     def multiget_count(self, keys, super_column=None,
                        read_consistency_level=None,
@@ -771,12 +732,8 @@ class ColumnFamily(object):
         offset = 0
         keymap = {}
         while offset < len(packed_keys):
-            try:
-                self._obtain_connection()
-                new_keymap = self._tlocal.client.multiget_count(
-                    packed_keys[offset:offset+buffer_size], cp, sp, consistency)
-            finally:
-                self._release_connection()
+            new_keymap = self.pool.execute('multiget_count',
+                packed_keys[offset:offset+buffer_size], cp, sp, consistency)
             keymap.update(new_keymap)
             offset += buffer_size
 
@@ -838,12 +795,7 @@ class ColumnFamily(object):
             if row_count is not None:
                 buffer_size = min(row_count - count + 1, buffer_size)
             key_range = KeyRange(start_key=last_key, end_key=finish, count=buffer_size)
-            try:
-                self._obtain_connection()
-                key_slices = self._tlocal.client.get_range_slices(
-                    cp, sp, key_range, cl)
-            finally:
-                self._release_connection()
+            key_slices = self.pool.execute('get_range_slices', cp, sp, key_range, cl)
             # This may happen if nothing was ever inserted
             if key_slices is None:
                 return
@@ -901,21 +853,13 @@ class ColumnFamily(object):
             colname = self._pack_name(columns.keys()[0], False)
             colval = self._pack_value(columns.values()[0], colname)
             column = Column(colname, colval, timestamp, ttl)
-            try:
-                self._obtain_connection()
-                return self._tlocal.client.insert(packed_key, cp, column,
-                        write_consistency_level or self.write_consistency_level)
-            finally:
-                self._release_connection()
+            return self.pool.execute('insert', packed_key, cp, column,
+                    write_consistency_level or self.write_consistency_level)
         else:
             mut_list = self._make_mutation_list(columns, timestamp, ttl)
             mutations = {packed_key: {self.column_family: mut_list}}
-            try:
-                self._obtain_connection()
-                return self._tlocal.client.batch_mutate(mutations,
-                        write_consistency_level or self.write_consistency_level)
-            finally:
-                self._release_connection()
+            return self.pool.execute('batch_mutate', mutations,
+                    write_consistency_level or self.write_consistency_level)
 
     def batch_insert(self, rows, timestamp=None, ttl=None, write_consistency_level = None):
         """
@@ -939,11 +883,8 @@ class ColumnFamily(object):
             mutations[packed_key] = {cf: mut_list}
 
         if mutations:
-            try:
-                self._obtain_connection()
-                res = self._tlocal.client.batch_mutate(mutations, write_consistency_level or self.write_consistency_level)
-            finally:
-                self._release_connection()
+            self.pool.execute('batch_mutate', mutations,
+                    write_consistency_level or self.write_consistency_level)
 
         return timestamp
 
@@ -966,13 +907,8 @@ class ColumnFamily(object):
         packed_key = self._pack_key(key)
         cp = self._column_parent(super_column)
         column = self._pack_name(column)
-        try:
-            self._obtain_connection()
-            self._tlocal.client.add(packed_key, cp, CounterColumn(column, value),
-                                    write_consistency_level or self.write_consistency_level)
-        finally:
-            self._release_connection()
-
+        self.pool.execute('add', packed_key, cp, CounterColumn(column, value),
+                          write_consistency_level or self.write_consistency_level)
 
     def remove(self, key, columns=None, super_column=None,
                write_consistency_level=None, timestamp=None, counter=None):
@@ -1014,12 +950,8 @@ class ColumnFamily(object):
         """
         packed_key = self._pack_key(key)
         cp = self._column_path(super_column, column)
-        consistency = write_consistency_level or self.write_consistency_level
-        try:
-            self._obtain_connection()
-            self._tlocal.client.remove_counter(packed_key, cp, consistency)
-        finally:
-            self._release_connection()
+        self.pool.execute('remove_counter', packed_key, cp,
+                          write_consistency_level or self.write_consistency_level)
 
     def batch(self, queue_size=100, write_consistency_level=None):
         """
@@ -1049,10 +981,6 @@ class ColumnFamily(object):
         down.
 
         """
-        try:
-            self._obtain_connection()
-            self._tlocal.client.truncate(self.column_family)
-        finally:
-            self._release_connection()
+        self.pool.execute('truncate', self.column_family)
 
 PooledColumnFamily = ColumnFamily
