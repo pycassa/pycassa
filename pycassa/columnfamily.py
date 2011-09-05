@@ -14,10 +14,13 @@ from pycassa.cassandra.ttypes import Column, ColumnOrSuperColumn,\
     ColumnParent, ColumnPath, ConsistencyLevel, NotFoundException,\
     SlicePredicate, SliceRange, SuperColumn, KeyRange,\
     IndexExpression, IndexClause, CounterColumn, Mutation
-import pycassa.util as util
 import pycassa.marshal as marshal
 import pycassa.types as types
 from pycassa.batch import CfMutator
+try:
+    from collections import OrderedDict
+except ImportError:
+    from pycassa.util import OrderedDict
 
 __all__ = ['gm_timestamp', 'ColumnFamily', 'PooledColumnFamily']
 
@@ -81,10 +84,11 @@ class ColumnFamily(object):
     column. This attribute is a function that is used to get
     this timestamp when needed.  The default function is :meth:`gm_timestamp()`."""
 
-    dict_class = util.OrderedDict
-    """ Results are returned as dictionaries. :class:`~pycassa.util.OrderedDict` is
-    used by default so that order is maintained. A different class, such as
-    :class:`dict` may be used setting this. """
+    dict_class = OrderedDict
+    """ Results are returned as dictionaries. By default, python 2.7's
+    :class:`collections.OrderedDict` is used if available, otherwise
+    :class:`~pycassa.util.OrderedDict` is used so that order is maintained.
+    A different class, such as :class:`dict` may be used setting this. """
 
     autopack_names = True
     """ Controls whether column names are automatically converted to or from
