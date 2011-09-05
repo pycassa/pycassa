@@ -411,9 +411,6 @@ class ColumnFamily(object):
                             (b, d_type))
 
 
-    def _get_data_type_for_col(self, col_name):
-        return self.column_validators.get(col_name, self.default_validation_class)
-
     def _pack_value(self, value, col_name):
         if value is None:
             return
