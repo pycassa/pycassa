@@ -1,35 +1,32 @@
 pycassa |release| Documentation
 ===============================
 
-Contents
---------
 **pycassa** is a Python client for
 `Apache Cassandra <http://cassandra.apache.org>`_.
+The latest release of pycassa is compatible with Cassandra 0.7 and 0.8.
 
-The latest release of **pycassa** is compatible with Cassandra 0.7 and 0.8.
+pycassa is open source under the `MIT license <http://www.opensource.org/licenses/mit-license.php>`_.
+The source code repository for pycassa can be found on `Github <http://github.com/pycassa/pycassa>`_.
 
-**pycassa** is open source under the `MIT license <http://www.opensource.org/licenses/mit-license.php>`_.
-
-The source code repository for **pycassa** can be found on `Github <http://github.com/pycassa/pycassa>`_.
-
+Contents
+--------
 :doc:`installation`
-  How to install **pycassa**.
+  How to install pycassa.
 
 :doc:`tutorial`
-  A short overview of **pycassa** usage.
-
-:doc:`example/index`
-  An example of how to use **pycassa** with `Twissandra <http://github.com/twissandra/twissandra>`_, an example project that uses Cassandra to provide functionality similar to Twitter.
-
-:doc:`using_with/index`
-  How to use **pycassa** with other projects, including Celery.
-
-:doc:`pycassa_shell`
-  How to use the included pycassaShell.
+  A short overview of pycassa usage.
 
 :doc:`api/index`
-  The **pycassa** API documentation.
+  The pycassa API documentation.
 
+:doc:`Assorted Functionality <assorted/index>`
+  How to work with various Cassandra and pycassa features.
+
+:doc:`using_with/index`
+  How to use pycassa with other projects, including Celery.
+
+:doc:`changelog`
+    The changelog for every version of pycassa.
 
 Help
 ------------
@@ -42,27 +39,25 @@ IRC
 
 Issues
 ------
-Bugs and feature requests for **pycassa** are currently tracked through the `github issue tracker <http://github.com/pycassa/pycassa/issues>`_.
+Bugs and feature requests for pycassa are currently tracked through the `github issue tracker <http://github.com/pycassa/pycassa/issues>`_.
 
 Contributing
 ------------
-**pycassa** encourages you to offer any contributions or ideas you have.
+You are encouraged to offer any contributions or ideas you have.
 Contributing to the documentation or examples, reporting bugs, requesting
 features, and (of course) improving the code are all equally welcome.
 To contribute, fork the project on
-`github <http://github.com/pycassa/pycassa/>`_ and make a pull request.
+`github <http://github.com/pycassa/pycassa/>`_ and make a 
+`pull request <http://help.github.com/send-pull-requests/>`_.
 
-Changes
--------
-The :doc:`changelog` lists the changes between versions of **pycassa**.
 
 About This Documentation
 ------------------------
 This documentation is generated using the `Sphinx
 <http://sphinx.pocoo.org/>`_ documentation generator. The source files
 for the documentation are located in the *doc/* directory of 
-**pycassa**. To generate the documentation, run the
-following command from the root directory of **pycassa**:
+pycassa. To generate the documentation, run the
+following command from the root directory of pycassa:
 
 .. code-block:: bash
 
@@ -80,8 +75,8 @@ Indices and tables
 
    installation
    tutorial
-   pycassa_shell
    example/index
    api/index
    changelog
-
+   assorted/index
+   using_with/index
