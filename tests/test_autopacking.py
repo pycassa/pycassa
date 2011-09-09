@@ -833,9 +833,6 @@ class TestTimeUUIDs(unittest.TestCase):
         sys.close()
         cls.cf_time = ColumnFamily(pool, 'TestTimeUUIDs')
 
-    def tearDown(self):
-        TestTimeUUIDs.cf_time.truncate()
-
     def test_datetime_to_uuid(self):
         cf_time = TestTimeUUIDs.cf_time
         key = 'key1'
@@ -863,6 +860,7 @@ class TestTimeUUIDs(unittest.TestCase):
         assert_equal(cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
         assert_equal(cf_time.get(key, column_start=timeline[0], column_finish=timeline[1]) , col1)
         assert_equal(cf_time.get(key, column_start=timeline[1], column_finish=timeline[2]) , col2)
+        cf_time.remove(key)
 
     def test_time_to_uuid(self):
         cf_time = TestTimeUUIDs.cf_time
@@ -891,6 +889,7 @@ class TestTimeUUIDs(unittest.TestCase):
         assert_equal(cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
         assert_equal(cf_time.get(key, column_start=timeline[0], column_finish=timeline[1]) , col1)
         assert_equal(cf_time.get(key, column_start=timeline[1], column_finish=timeline[2]) , col2)
+        cf_time.remove(key)
 
     def test_auto_time_to_uuid1(self):
         cf_time = TestTimeUUIDs.cf_time
@@ -901,6 +900,7 @@ class TestTimeUUIDs(unittest.TestCase):
         uuid_res = cf_time.get(key).keys()[0]
         timestamp = convert_uuid_to_time(uuid_res)
         assert_almost_equal(timestamp, t, places=3)
+        cf_time.remove(key)
 
 class TestTypeErrors(unittest.TestCase):
 
