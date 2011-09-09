@@ -184,13 +184,7 @@ def packer_for(typestr):
         return pack_long
 
     elif data_type == 'IntegerType':
-        if _have_struct:
-            def pack_int(v, _=None):
-                return _int_packer.pack(v)
-        else:
-            def pack_int(v, _=None):
-                return struct.pack('>i', v)
-        return pack_int
+        return encode_int
 
     elif data_type == 'UTF8Type':
         def pack_utf8(v, _=None):
@@ -287,7 +281,29 @@ def unpacker_for(typestr):
     else:
         return lambda v: v
 
-def decode_int(term):
+def encode_int(x, *args):
+    if x >= 0:
+        out = []
+        while x >= 256:
+            out.append(struct.pack('B', 0xff & x))
+            x >>= 8
+        out.append(struct.pack('B', 0xff & x))
+        if x > 127:
+            out.append('\x00')
+    else:
+        x = -1 - x
+        out = []
+        while x >= 256:
+            out.append(struct.pack('B', 0xff & ~x))
+            x >>= 8
+        if x <= 127:
+            out.append(struct.pack('B', 0xff & ~x))
+        else:
+            out.append(struct.pack('>H', 0xffff & ~x))
+
+    return ''.join(reversed(out))
+
+def decode_int(term, *args):
     val = int(term.encode('hex'), 16)
     if (ord(term[0]) & 128) != 0:
         val = val - (1 << (len(term) * 8))
