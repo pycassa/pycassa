@@ -23,7 +23,7 @@ Contents
   How to work with various Cassandra and pycassa features.
 
 :doc:`using_with/index`
-  How to use pycassa with other projects, including Celery.
+  How to use pycassa with other projects, including eventlet and Celery.
 
 :doc:`changelog`
     The changelog for every version of pycassa.
