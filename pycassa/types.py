@@ -59,17 +59,19 @@ class DateType(CassandraType):
     pass
 
 class CompositeType(CassandraType):
+    """
+    A type composed of one or more components, each of
+    which have their own type.  When sorted, items are
+    primarily sorted by their first component, secondarily
+    by their second component, and so on.
+
+    Each of `*components` should be an instance of
+    a subclass of :class:`CassandraType`.
+
+    .. seealso:: :ref:`composite-types`
+    """
 
     def __init__(self, *components):
-        """
-        A type composed of one or more components, each of
-        which have their own type.  When sorted, items are
-        primarily sorted by their first component, secondarily
-        by their second component, and so on.
-
-        Each of `*components` should be an instance of
-        a subclass of :class:`CassandraType`.
-        """
         self.components = components
 
     def __str__(self):
