@@ -20,8 +20,14 @@ class LongType(CassandraType):
     pass
 
 class IntegerType(CassandraType):
-    """ Stores data as an 4 byte integer """
+    """
+    Stores data as a variable-length integer. This
+    is a more compact format for storing small integers
+    than :class:`~.LongType`, and the limits
+    on the size of the integer are much higher.
+    """
     pass
+
 class AsciiType(CassandraType):
     """ Stores data as ASCII text """
     pass
@@ -51,11 +57,15 @@ class FloatType(CassandraType):
     pass
 
 class BooleanType(CassandraType):
-    """ Stores data as an 1 byte boolean """
+    """ Stores data as a 1 byte boolean """
     pass
 
 class DateType(CassandraType):
-    """ A timestamp as a 8 byte integer """
+    """
+    An 8 byte timestamp. This will be returned
+    as a :class:`datetime.datetime` instance by pycassa. Either
+    :class:`datetime` instances or timestamps will be accepted.
+    """
     pass
 
 class CompositeType(CassandraType):
