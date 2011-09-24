@@ -43,8 +43,11 @@ class ColumnFamilyMap(ColumnFamily):
 
         Instances of `cls` are returned from :meth:`get()`, :meth:`multiget()`,
         :meth:`get_range()` and :meth:`get_indexed_slices()`.
+        
+        `pool` is a :class:`~pycassa.pool.ConnectionPool` that will be used
+        in the same way a :class:ColumnFamily uses one.
 
-        `column_family` is a :class:`~.ColumnFamily` to tie to `cls`.
+        `column_family` is the name of a column family to tie to `cls`.
 
         If `raw_columns` is ``True``, all columns will be fetched into the
         `raw_columns` field in requests.
