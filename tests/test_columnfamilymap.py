@@ -1,4 +1,5 @@
 from datetime import datetime
+import unittest
 
 import pycassa.types as types
 from pycassa import index, ColumnFamily, ConnectionPool, \
@@ -48,7 +49,8 @@ class TestIndex(object):
 class TestEmpty(object):
     pass
 
-class TestColumnFamilyMap:
+class TestColumnFamilyMap(unittest.TestCase):
+
     def setUp(self):
         self.map = ColumnFamilyMap(TestUTF8, pool, CF)
         self.indexed_map = ColumnFamilyMap(TestIndex, pool, INDEXED_CF)
@@ -101,8 +103,11 @@ class TestColumnFamilyMap:
         clause = index.create_index_clause([expr])
 
         result = self.indexed_map.get_indexed_slices(index_clause=clause)
-        assert_equal(len(result), 1)
-        assert_equal(result.get('key3'), instance3)
+        count = 0
+        for instance in result:
+            assert_equal(instance, instance3)
+            count +=1
+        assert_equal(count, 1)
 
     def test_insert_multiget(self):
         instance1 = self.instance('TestColumnFamilyMap.test_insert_multiget1')
@@ -162,7 +167,8 @@ class TestColumnFamilyMap:
         assert_equal(instance.floatcol, TestUTF8.floatcol.default)
         assert_equal(instance.datetimecol, TestUTF8.datetimecol.default)
 
-class TestSuperColumnFamilyMap:
+class TestSuperColumnFamilyMap(unittest.TestCase):
+
     def setUp(self):
         self.map = ColumnFamilyMap(TestUTF8, pool, SCF)
 

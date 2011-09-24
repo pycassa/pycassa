@@ -209,13 +209,9 @@ class ColumnFamilyMap(ColumnFamily):
         if 'columns' not in kwargs and not self.raw_columns:
             kwargs['columns'] = self.fields
 
-        keyslice_map = ColumnFamily.get_indexed_slices(self, *args, **kwargs)
-
-        ret = self.dict_class()
-        for key, columns in keyslice_map:
+        for key, columns in ColumnFamily.get_indexed_slices(self, *args, **kwargs):
             combined = self.combine_columns(columns)
-            ret[key] = create_instance(self.cls, key=key, **combined)
-        return ret
+            yield create_instance(self.cls, key=key, **combined)
 
     def insert(self, instance, columns=None, timestamp=None, ttl=None,
                write_consistency_level=None):
