@@ -1,6 +1,6 @@
 To run the tests:
 1. Install python-nose (easy_install nose)
-2. Change Cassandra's cassandra.yaml to use OrderPreservingPartitioner
+2. Change Cassandra's cassandra.yaml to use ByteOrderedPartitioner
 3. If you want to test authN/authZ, use SimpleAuthenticator and SimpleAuthority
    in cassandra.yaml and start Cassandra with:
    bin/cassandra -f -Dpasswd.properties=conf/passwd.properties -Daccess.properties=conf/access.properties
