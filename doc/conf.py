@@ -33,9 +33,9 @@ project = 'pycassa'
 # built documents.
 #
 # The short X.Y version.
-version = '1.1'
+version = '1.2'
 # The full version, including alpha/beta/rc tags.
-release = '1.1.1'
+release = '1.2.0'
 
 # List of documents that shouldn't be included in the build.
 unused_docs = []

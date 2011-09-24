@@ -1,3 +1,5 @@
+.. _column-family-map:
+
 Class Mapping with Column Family Map
 ====================================
 You can map existing classes to column families using
