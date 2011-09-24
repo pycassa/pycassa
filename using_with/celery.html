@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Using with Celery &mdash; pycassa v1.1.1 documentation</title>
+    <title>Using with Celery &mdash; pycassa v1.2.0 documentation</title>
     <link rel="stylesheet" href="../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.1',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,7 +22,11 @@
     <script type="text/javascript" src="../static/jquery.js"></script>
     <script type="text/javascript" src="../static/underscore.js"></script>
     <script type="text/javascript" src="../static/doctools.js"></script>
-    <link rel="top" title="pycassa v1.1.1 documentation" href="../index.html" /> 
+    <link rel="shortcut icon" href="../static/favicon.ico"/>
+    <link rel="top" title="pycassa v1.2.0 documentation" href="../index.html" />
+    <link rel="up" title="Using pycassa with Other Tools" href="index.html" />
+    <link rel="next" title="Using with Eventlet" href="eventlet.html" />
+    <link rel="prev" title="Using pycassa with Other Tools" href="index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -34,7 +38,14 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../index.html">pycassa v1.1.1 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="eventlet.html" title="Using with Eventlet"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Using pycassa with Other Tools"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">pycassa v1.2.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Using pycassa with Other Tools</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -54,9 +65,8 @@ celeryd process.  The
 <a class="reference external" href="http://docs.python.org/library/multiprocessing.html">multiprocessing</a>
 module is used to spawn new worker processes, while
 <a class="reference external" href="http://eventlet.net/">eventlet</a> is used to spawn new worker green threads.</p>
-</div>
 <div class="section" id="id2">
-<h2><tt class="xref py py-mod docutils literal"><span class="pre">multiprocessing</span></tt><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<h3><tt class="xref py py-mod docutils literal"><span class="pre">multiprocessing</span></tt><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
 <p>The <a class="reference internal" href="../api/pycassa/pool.html#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a> class is not <tt class="xref py py-mod docutils literal"><span class="pre">multiprocessing</span></tt>-safe. Because
 celery evaluates globals prior to spawning new worker processes, a global
 <a class="reference internal" href="../api/pycassa/pool.html#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a> will be shared among multiple processes. This is
@@ -66,18 +76,29 @@ you set
 <a class="reference external" href="http://docs.celeryproject.org/en/latest/configuration.html#celeryd-concurrency">CELERYD_CONCURRENCY</a>
 to 1 and start multiple separate celery processes. The process argument
 <tt class="docutils literal"><span class="pre">--pool=solo</span></tt> may also be used when starting the celery processes.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="multiprocessing.html#using-with-multiprocessing"><em>Using with multiprocessing</em></a></p>
+</div>
 </div>
 <div class="section" id="id3">
-<h2><tt class="xref py py-mod docutils literal"><span class="pre">eventlet</span></tt><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<h3><tt class="xref py py-mod docutils literal"><span class="pre">eventlet</span></tt><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <p>Because the <a class="reference internal" href="../api/pycassa/pool.html#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a> class uses concurrency primitives from
-the <tt class="xref py py-mod docutils literal"><span class="pre">threading</span></tt> module, it should be possible to support
-<tt class="xref py py-mod docutils literal"><span class="pre">eventlet</span></tt> worker threads after
+the <tt class="xref py py-mod docutils literal"><span class="pre">threading</span></tt> module, you can use <tt class="xref py py-mod docutils literal"><span class="pre">eventlet</span></tt> worker threads after
 <a class="reference external" href="http://eventlet.net/doc/basic_usage.html#patching-functions">monkey patching</a>
-the standard library.  However, this option has not yet been well explored.</p>
+the standard library. Specifically, the <tt class="xref py py-mod docutils literal"><span class="pre">threading</span></tt> and <tt class="xref py py-mod docutils literal"><span class="pre">socket</span></tt>
+modules must monkey-patched.</p>
+<p>Be aware that you may need to install <a class="reference external" href="http://pypi.python.org/pypi/dnspython">dnspython</a>
+in order to connect to your nodes.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="eventlet.html#using-with-eventlet"><em>Using with Eventlet</em></a></p>
+</div>
+</div>
 </div>
 <div class="section" id="usage-as-a-broker-backend">
 <h2>Usage as a Broker Backend<a class="headerlink" href="#usage-as-a-broker-backend" title="Permalink to this headline">¶</a></h2>
-<p><strong>pycassa</strong> is not currently a broker backend option.</p>
+<p>pycassa is not currently a broker backend option.</p>
 </div>
 </div>
 
@@ -90,14 +111,22 @@ the standard library.  However, this option has not yet been well explored.</p>
   <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Using with Celery</a><ul>
-<li><a class="reference internal" href="#usage-in-a-worker">Usage in a Worker</a></li>
+<li><a class="reference internal" href="#usage-in-a-worker">Usage in a Worker</a><ul>
 <li><a class="reference internal" href="#id2"><tt class="docutils literal"><span class="pre">multiprocessing</span></tt></a></li>
 <li><a class="reference internal" href="#id3"><tt class="docutils literal"><span class="pre">eventlet</span></tt></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#usage-as-a-broker-backend">Usage as a Broker Backend</a></li>
 </ul>
 </li>
 </ul>
 
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Using pycassa with Other Tools</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="eventlet.html"
+                        title="next chapter">Using with Eventlet</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../sources/using_with/celery.txt"
@@ -129,7 +158,14 @@ the standard library.  However, this option has not yet been well explored.</p>
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../index.html">pycassa v1.1.1 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="eventlet.html" title="Using with Eventlet"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Using pycassa with Other Tools"
+             >previous</a> |</li>
+        <li><a href="../index.html">pycassa v1.2.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Using pycassa with Other Tools</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

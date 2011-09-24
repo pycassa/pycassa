@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.system_manager – Manage Schema Definitions &mdash; pycassa v1.1.1 documentation</title>
+    <title>pycassa.system_manager – Manage Schema Definitions &mdash; pycassa v1.2.0 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.1.1',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,7 +22,8 @@
     <script type="text/javascript" src="../../static/jquery.js"></script>
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
-    <link rel="top" title="pycassa v1.1.1 documentation" href="../../index.html" />
+    <link rel="shortcut icon" href="../../static/favicon.ico"/>
+    <link rel="top" title="pycassa v1.2.0 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.index – Secondary Index Tools" href="index.html" />
     <link rel="prev" title="pycassa.columnfamilymap – Maps Classes to Column Families" href="columnfamilymap.html" /> 
@@ -43,7 +44,7 @@
         <li class="right" >
           <a href="columnfamilymap.html" title="pycassa.columnfamilymap – Maps Classes to Column Families"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.1.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.2.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -72,54 +73,6 @@
 <tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">OLD_NETWORK_TOPOLOGY_STRATEGY</tt><a class="headerlink" href="#pycassa.system_manager.OLD_NETWORK_TOPOLOGY_STRATEGY" title="Permalink to this definition">¶</a></dt>
 <dd><p>Original replication strategy for putting a number of replicas in each datacenter.
 This was originally called &#8216;RackAwareStrategy&#8217;.</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="pycassa.system_manager.BYTES_TYPE">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">BYTES_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.BYTES_TYPE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores data as a byte array</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="pycassa.system_manager.LONG_TYPE">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">LONG_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.LONG_TYPE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores data as an 8 byte integer</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="pycassa.system_manager.INT_TYPE">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">INT_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.INT_TYPE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores data as an 4 byte integer</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="pycassa.system_manager.ASCII_TYPE">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">ASCII_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.ASCII_TYPE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores data as ASCII text</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="pycassa.system_manager.UTF8_TYPE">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">UTF8_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.UTF8_TYPE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores data as UTF8 encoded text</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="pycassa.system_manager.TIME_UUID_TYPE">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">TIME_UUID_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.TIME_UUID_TYPE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores data as a version 1 UUID</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="pycassa.system_manager.LEXICAL_UUID_TYPE">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">LEXICAL_UUID_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.LEXICAL_UUID_TYPE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores data as a non-version 1 UUID</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="pycassa.system_manager.COUNTER_COLUMN_TYPE">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">COUNTER_COLUMN_TYPE</tt><a class="headerlink" href="#pycassa.system_manager.COUNTER_COLUMN_TYPE" title="Permalink to this definition">¶</a></dt>
-<dd><p>A 64bit counter column</p>
 </dd></dl>
 
 <dl class="data">
@@ -281,9 +234,9 @@ default value.</p>
 <li><strong>name</strong> (<em>str</em>) &#8211; the name of the column family</li>
 <li><strong>super</strong> (<em>bool</em>) &#8211; Whether or not this column family is a super column family</li>
 <li><strong>comparator_type</strong> (<em>str</em>) &#8211; What type the column names will be, which affects
-their sort order.  By default, <a class="reference internal" href="#pycassa.system_manager.LONG_TYPE" title="pycassa.system_manager.LONG_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">LONG_TYPE</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.INT_TYPE" title="pycassa.system_manager.INT_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">INT_TYPE</span></tt></a>,
-<a class="reference internal" href="#pycassa.system_manager.ASCII_TYPE" title="pycassa.system_manager.ASCII_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">ASCII_TYPE</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.UTF8_TYPE" title="pycassa.system_manager.UTF8_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">UTF8_TYPE</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.TIME_UUID_TYPE" title="pycassa.system_manager.TIME_UUID_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">TIME_UUID_TYPE</span></tt></a>,
-<a class="reference internal" href="#pycassa.system_manager.LEXICAL_UUID_TYPE" title="pycassa.system_manager.LEXICAL_UUID_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">LEXICAL_UUID_TYPE</span></tt></a> and <a class="reference internal" href="#pycassa.system_manager.BYTES_TYPE" title="pycassa.system_manager.BYTES_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">BYTES_TYPE</span></tt></a> are provided.  Custom
+their sort order.  By default, <tt class="xref py py-const docutils literal"><span class="pre">LONG_TYPE</span></tt>, <tt class="xref py py-const docutils literal"><span class="pre">INT_TYPE</span></tt>,
+<tt class="xref py py-const docutils literal"><span class="pre">ASCII_TYPE</span></tt>, <tt class="xref py py-const docutils literal"><span class="pre">UTF8_TYPE</span></tt>, <tt class="xref py py-const docutils literal"><span class="pre">TIME_UUID_TYPE</span></tt>,
+<tt class="xref py py-const docutils literal"><span class="pre">LEXICAL_UUID_TYPE</span></tt> and <tt class="xref py py-const docutils literal"><span class="pre">BYTES_TYPE</span></tt> are provided.  Custom
 types may be used as well by providing the class name; if the custom
 comparator class is not in <tt class="docutils literal"><span class="pre">org.apache.cassandra.db.marshal</span></tt>, the fully
 qualified class name must be given.</li>
@@ -349,9 +302,9 @@ included here.</p>
 <tt class="descname">alter_column</tt><big>(</big><em>keyspace</em>, <em>column_family</em>, <em>column</em>, <em>value_type</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.alter_column" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets a data type for the value of a specific column.</p>
 <p><cite>value_type</cite> is a string that determines what type the column value will be.
-By default, <a class="reference internal" href="#pycassa.system_manager.LONG_TYPE" title="pycassa.system_manager.LONG_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">LONG_TYPE</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.INT_TYPE" title="pycassa.system_manager.INT_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">INT_TYPE</span></tt></a>,
-<a class="reference internal" href="#pycassa.system_manager.ASCII_TYPE" title="pycassa.system_manager.ASCII_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">ASCII_TYPE</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.UTF8_TYPE" title="pycassa.system_manager.UTF8_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">UTF8_TYPE</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.TIME_UUID_TYPE" title="pycassa.system_manager.TIME_UUID_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">TIME_UUID_TYPE</span></tt></a>,
-<a class="reference internal" href="#pycassa.system_manager.LEXICAL_UUID_TYPE" title="pycassa.system_manager.LEXICAL_UUID_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">LEXICAL_UUID_TYPE</span></tt></a> and <a class="reference internal" href="#pycassa.system_manager.BYTES_TYPE" title="pycassa.system_manager.BYTES_TYPE"><tt class="xref py py-const docutils literal"><span class="pre">BYTES_TYPE</span></tt></a> are provided.  Custom
+By default, <tt class="xref py py-const docutils literal"><span class="pre">LONG_TYPE</span></tt>, <tt class="xref py py-const docutils literal"><span class="pre">INT_TYPE</span></tt>,
+<tt class="xref py py-const docutils literal"><span class="pre">ASCII_TYPE</span></tt>, <tt class="xref py py-const docutils literal"><span class="pre">UTF8_TYPE</span></tt>, <tt class="xref py py-const docutils literal"><span class="pre">TIME_UUID_TYPE</span></tt>,
+<tt class="xref py py-const docutils literal"><span class="pre">LEXICAL_UUID_TYPE</span></tt> and <tt class="xref py py-const docutils literal"><span class="pre">BYTES_TYPE</span></tt> are provided.  Custom
 types may be used as well by providing the class name; if the custom
 comparator class is not in <tt class="docutils literal"><span class="pre">org.apache.cassandra.db.marshal</span></tt>, the fully
 qualified class name must be given.</p>
@@ -439,7 +392,7 @@ for the index.</p>
         <li class="right" >
           <a href="columnfamilymap.html" title="pycassa.columnfamilymap – Maps Classes to Column Families"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.1.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.2.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

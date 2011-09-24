@@ -1,0 +1,151 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Super Columns &mdash; pycassa v1.2.0 documentation</title>
+    <link rel="stylesheet" href="../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../static/jquery.js"></script>
+    <script type="text/javascript" src="../static/underscore.js"></script>
+    <script type="text/javascript" src="../static/doctools.js"></script>
+    <link rel="shortcut icon" href="../static/favicon.ico"/>
+    <link rel="top" title="pycassa v1.2.0 documentation" href="../index.html" />
+    <link rel="up" title="Assorted Cassandra and pycassa Functionality" href="index.html" />
+    <link rel="next" title="Composite Types" href="composite_types.html" />
+    <link rel="prev" title="Secondary Indexes" href="secondary_indexes.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="composite_types.html" title="Composite Types"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="secondary_indexes.html" title="Secondary Indexes"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">pycassa v1.2.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Assorted Cassandra and pycassa Functionality</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="super-columns">
+<h1>Super Columns<a class="headerlink" href="#super-columns" title="Permalink to this headline">¶</a></h1>
+<p>Cassandra allows you to group columns in &#8220;super columns&#8221;.
+You would create a super column family through <tt class="file docutils literal"><span class="pre">cassandra-cli</span></tt>
+in the following way:</p>
+<div class="highlight-python"><pre>[default@keyspace1] create column family Super1 with column_type=Super;
+632cf985-645e-11e0-ad9e-e700f669bcfc
+Waiting for schema agreement...
+... schemas agree across the cluster</pre>
+</div>
+<p>To use a super column in <strong>pycassa</strong>, you only need to
+add an extra level to the dictionary:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;Super1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;supercol_name&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;col_name&#39;</span><span class="p">:</span> <span class="s">&#39;col_val&#39;</span><span class="p">}})</span>
+<span class="go">1354491238721345</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">)</span>
+<span class="go">{&#39;supercol_name&#39;: {&#39;col_name&#39;: &#39;col_val&#39;}}</span>
+</pre></div>
+</div>
+<p>The <cite>super_column</cite> parameter for <tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt>-like methods allows
+you to be selective about what subcolumns you get from a single
+super column.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;Letters&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;lowercase&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">:</span> <span class="s">&#39;2&#39;</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">:</span> <span class="s">&#39;3&#39;</span><span class="p">}})</span>
+<span class="go">1354491239132744</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="n">super_column</span><span class="o">=</span><span class="s">&#39;lowercase&#39;</span><span class="p">)</span>
+<span class="go">{&#39;supercol1&#39;: {&#39;a&#39;: &#39;1&#39;: &#39;b&#39;: &#39;2&#39;, &#39;c&#39;: &#39;3&#39;}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="n">super_column</span><span class="o">=</span><span class="s">&#39;lowercase&#39;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">])</span>
+<span class="go">{&#39;supercol1&#39;: {&#39;a&#39;: &#39;1&#39;: &#39;b&#39;: &#39;2&#39;}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="n">super_column</span><span class="o">=</span><span class="s">&#39;lowercase&#39;</span><span class="p">,</span> <span class="n">column_start</span><span class="o">=</span><span class="s">&#39;b&#39;</span><span class="p">)</span>
+<span class="go">{&#39;supercol1&#39;: {&#39;b&#39;: &#39;1&#39;: &#39;c&#39;: &#39;2&#39;}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="n">super_column</span><span class="o">=</span><span class="s">&#39;lowercase&#39;</span><span class="p">,</span> <span class="n">column_finish</span><span class="o">=</span><span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="n">column_reversed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">{&#39;supercol1&#39;: {&#39;c&#39;: &#39;2&#39;, &#39;b&#39;: &#39;1&#39;}}</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="secondary_indexes.html"
+                        title="previous chapter">Secondary Indexes</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="composite_types.html"
+                        title="next chapter">Composite Types</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../sources/assorted/super_columns.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="composite_types.html" title="Composite Types"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="secondary_indexes.html" title="Secondary Indexes"
+             >previous</a> |</li>
+        <li><a href="../index.html">pycassa v1.2.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Assorted Cassandra and pycassa Functionality</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

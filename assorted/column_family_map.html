@@ -1,0 +1,186 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Class Mapping with Column Family Map &mdash; pycassa v1.2.0 documentation</title>
+    <link rel="stylesheet" href="../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../static/jquery.js"></script>
+    <script type="text/javascript" src="../static/underscore.js"></script>
+    <script type="text/javascript" src="../static/doctools.js"></script>
+    <link rel="shortcut icon" href="../static/favicon.ico"/>
+    <link rel="top" title="pycassa v1.2.0 documentation" href="../index.html" />
+    <link rel="up" title="Assorted Cassandra and pycassa Functionality" href="index.html" />
+    <link rel="next" title="Version 1 UUIDs (TimeUUIDType)" href="time_uuid.html" />
+    <link rel="prev" title="Composite Types" href="composite_types.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="time_uuid.html" title="Version 1 UUIDs (TimeUUIDType)"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="composite_types.html" title="Composite Types"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">pycassa v1.2.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Assorted Cassandra and pycassa Functionality</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="class-mapping-with-column-family-map">
+<span id="column-family-map"></span><h1>Class Mapping with Column Family Map<a class="headerlink" href="#class-mapping-with-column-family-map" title="Permalink to this headline">¶</a></h1>
+<p>You can map existing classes to column families using
+<a class="reference internal" href="../api/pycassa/columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</p>
+<p>To specify the fields to be persisted, use any of the
+subclasses of <tt class="xref py py-class docutils literal"><span class="pre">pycassa.types.CassandraType</span></tt> available
+in <a class="reference internal" href="../api/pycassa/types.html#module-pycassa.types" title="pycassa.types"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.types</span></tt></a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pycassa.types</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">key</span> <span class="o">=</span> <span class="n">LexicalUUIDType</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">name</span> <span class="o">=</span> <span class="n">Utf8Type</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">age</span> <span class="o">=</span> <span class="n">IntegerType</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">height</span> <span class="o">=</span> <span class="n">FloatType</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">score</span> <span class="o">=</span> <span class="n">DoubleType</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">joined</span> <span class="o">=</span> <span class="n">DateType</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The defaults will be filled in whenever you retrieve instances from the
+Cassandra server and the column doesn&#8217;t exist. If you want to add a
+column in the future, you can simply add the relevant attribute to the class
+and the default value will be used when you get old instances.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pycassa.pool</span> <span class="kn">import</span> <span class="n">ConnectionPool</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pycassa.columnfamilymap</span> <span class="kn">import</span> <span class="n">ColumnFamilyMap</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">ConnectionPool</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cfmap</span> <span class="o">=</span> <span class="n">ColumnFamilyMap</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="n">User</span><span class="p">,</span> <span class="s">&#39;users&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>All the functions are exactly the same as for <tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt>,
+except that they return instances of the supplied class when possible.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">uuid</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">key</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">&#39;John&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span><span class="o">.</span><span class="n">age</span> <span class="o">=</span> <span class="mi">18</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="mf">5.9</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span><span class="o">.</span><span class="n">joined</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cfmap</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+<span class="go">1261395560186855</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">user</span> <span class="o">=</span> <span class="n">cfmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span><span class="o">.</span><span class="n">name</span>
+<span class="go">&quot;John&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span><span class="o">.</span><span class="n">age</span>
+<span class="go">18</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">users</span> <span class="o">=</span> <span class="n">cfmap</span><span class="o">.</span><span class="n">multiget</span><span class="p">([</span><span class="n">key1</span><span class="p">,</span> <span class="n">key2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">users</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+<span class="go">&quot;John&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">cfmap</span><span class="o">.</span><span class="n">get_range</span><span class="p">():</span>
+<span class="gp">... </span>   <span class="k">print</span> <span class="n">user</span><span class="o">.</span><span class="n">name</span>
+<span class="go">&quot;John&quot;</span>
+<span class="go">&quot;Bob&quot;</span>
+<span class="go">&quot;Alex&quot;</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">cfmap</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+<span class="go">1261395603906864</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cfmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">cassandra.ttypes.NotFoundException</span>: <span class="n">NotFoundException()</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="composite_types.html"
+                        title="previous chapter">Composite Types</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="time_uuid.html"
+                        title="next chapter">Version 1 UUIDs (TimeUUIDType)</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../sources/assorted/column_family_map.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="time_uuid.html" title="Version 1 UUIDs (TimeUUIDType)"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="composite_types.html" title="Composite Types"
+             >previous</a> |</li>
+        <li><a href="../index.html">pycassa v1.2.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Assorted Cassandra and pycassa Functionality</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

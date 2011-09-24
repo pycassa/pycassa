@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.columnfamilymap – Maps Classes to Column Families &mdash; pycassa v1.1.1 documentation</title>
+    <title>pycassa.columnfamilymap – Maps Classes to Column Families &mdash; pycassa v1.2.0 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.1.1',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,7 +22,8 @@
     <script type="text/javascript" src="../../static/jquery.js"></script>
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
-    <link rel="top" title="pycassa v1.1.1 documentation" href="../../index.html" />
+    <link rel="shortcut icon" href="../../static/favicon.ico"/>
+    <link rel="top" title="pycassa v1.2.0 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.system_manager – Manage Schema Definitions" href="system_manager.html" />
     <link rel="prev" title="pycassa.columnfamily – Column Family" href="columnfamily.html" /> 
@@ -43,7 +44,7 @@
         <li class="right" >
           <a href="columnfamily.html" title="pycassa.columnfamily – Column Family"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.1.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.2.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -60,7 +61,7 @@
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference internal" href="types.html#module-pycassa.types" title="pycassa.types"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.types</span></tt></a></p>
 </div>
-<p>In addition to the default <a class="reference internal" href="types.html#pycassa.types.Column" title="pycassa.types.Column"><tt class="xref py py-class docutils literal"><span class="pre">Column</span></tt></a> classes,
+<p>In addition to the default <tt class="xref py py-class docutils literal"><span class="pre">Column</span></tt> classes,
 you may also define your own types for the mapper. For example, the
 IntString may be defined as:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">IntString</span><span class="p">(</span><span class="n">pycassa</span><span class="o">.</span><span class="n">Column</span><span class="p">):</span>
@@ -79,7 +80,9 @@ and instances of that class can be represented as rows in standard column
 families or super columns in super column families.</p>
 <p>Instances of <cite>cls</cite> are returned from <a class="reference internal" href="#pycassa.columnfamilymap.ColumnFamilyMap.get" title="pycassa.columnfamilymap.ColumnFamilyMap.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a>, <a class="reference internal" href="#pycassa.columnfamilymap.ColumnFamilyMap.multiget" title="pycassa.columnfamilymap.ColumnFamilyMap.multiget"><tt class="xref py py-meth docutils literal"><span class="pre">multiget()</span></tt></a>,
 <a class="reference internal" href="#pycassa.columnfamilymap.ColumnFamilyMap.get_range" title="pycassa.columnfamilymap.ColumnFamilyMap.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a> and <a class="reference internal" href="#pycassa.columnfamilymap.ColumnFamilyMap.get_indexed_slices" title="pycassa.columnfamilymap.ColumnFamilyMap.get_indexed_slices"><tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt></a>.</p>
-<p><cite>column_family</cite> is a <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a> to tie to <cite>cls</cite>.</p>
+<p><cite>pool</cite> is a <a class="reference internal" href="pool.html#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a> that will be used
+in the same way a :class:ColumnFamily uses one.</p>
+<p><cite>column_family</cite> is the name of a column family to tie to <cite>cls</cite>.</p>
 <p>If <cite>raw_columns</cite> is <tt class="xref docutils literal"><span class="pre">True</span></tt>, all columns will be fetched into the
 <cite>raw_columns</cite> field in requests.</p>
 <dl class="method">
@@ -211,7 +214,7 @@ instance will be removed.</p>
         <li class="right" >
           <a href="columnfamily.html" title="pycassa.columnfamily – Column Family"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.1.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.2.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

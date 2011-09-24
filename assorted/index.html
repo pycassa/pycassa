@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Using pycassa with Other Tools &mdash; pycassa v1.2.0 documentation</title>
+    <title>Assorted Cassandra and pycassa Functionality &mdash; pycassa v1.2.0 documentation</title>
     <link rel="stylesheet" href="../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -24,8 +24,8 @@
     <script type="text/javascript" src="../static/doctools.js"></script>
     <link rel="shortcut icon" href="../static/favicon.ico"/>
     <link rel="top" title="pycassa v1.2.0 documentation" href="../index.html" />
-    <link rel="next" title="Using with Celery" href="celery.html" />
-    <link rel="prev" title="pycassaShell" href="../assorted/pycassa_shell.html" /> 
+    <link rel="next" title="Secondary Indexes" href="secondary_indexes.html" />
+    <link rel="prev" title="Changelog" href="../changelog.html" /> 
   </head>
   <body>
     <div class="related">
@@ -38,10 +38,10 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="celery.html" title="Using with Celery"
+          <a href="secondary_indexes.html" title="Secondary Indexes"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="../assorted/pycassa_shell.html" title="pycassaShell"
+          <a href="../changelog.html" title="Changelog"
              accesskey="P">previous</a> |</li>
         <li><a href="../index.html">pycassa v1.2.0 documentation</a> &raquo;</li> 
       </ul>
@@ -52,17 +52,30 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="using-pycassa-with-other-tools">
-<h1>Using pycassa with Other Tools<a class="headerlink" href="#using-pycassa-with-other-tools" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="assorted-cassandra-and-pycassa-functionality">
+<h1>Assorted Cassandra and pycassa Functionality<a class="headerlink" href="#assorted-cassandra-and-pycassa-functionality" title="Permalink to this headline">¶</a></h1>
+<p>These sections document how to make use of various features
+offered by either Cassandra or pycassa.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="celery.html">Using with Celery</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="celery.html#usage-in-a-worker">Usage in a Worker</a></li>
-<li class="toctree-l2"><a class="reference internal" href="celery.html#usage-as-a-broker-backend">Usage as a Broker Backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="secondary_indexes.html">Secondary Indexes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="super_columns.html">Super Columns</a></li>
+<li class="toctree-l1"><a class="reference internal" href="composite_types.html">Composite Types</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="composite_types.html#creating-a-compositetype-column-family">Creating a CompositeType Column Family</a></li>
+<li class="toctree-l2"><a class="reference internal" href="composite_types.html#insert-compositetype-data">Insert CompositeType Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="composite_types.html#fetching-compositetype-data">Fetching CompositeType Data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="composite_types.html#inclusive-or-exclusive-slice-ends">Inclusive or Exclusive Slice Ends</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="eventlet.html">Using with Eventlet</a></li>
-<li class="toctree-l1"><a class="reference internal" href="multiprocessing.html">Using with <tt class="docutils literal"><span class="pre">multiprocessing</span></tt></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="column_family_map.html">Class Mapping with Column Family Map</a></li>
+<li class="toctree-l1"><a class="reference internal" href="time_uuid.html">Version 1 UUIDs (TimeUUIDType)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pycassa_shell.html">pycassaShell</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pycassa_shell.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pycassa_shell.html#usage">Usage</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -74,14 +87,14 @@
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="../assorted/pycassa_shell.html"
-                        title="previous chapter">pycassaShell</a></p>
+  <p class="topless"><a href="../changelog.html"
+                        title="previous chapter">Changelog</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="celery.html"
-                        title="next chapter">Using with Celery</a></p>
+  <p class="topless"><a href="secondary_indexes.html"
+                        title="next chapter">Secondary Indexes</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="../sources/using_with/index.txt"
+    <li><a href="../sources/assorted/index.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -111,10 +124,10 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="celery.html" title="Using with Celery"
+          <a href="secondary_indexes.html" title="Secondary Indexes"
              >next</a> |</li>
         <li class="right" >
-          <a href="../assorted/pycassa_shell.html" title="pycassaShell"
+          <a href="../changelog.html" title="Changelog"
              >previous</a> |</li>
         <li><a href="../index.html">pycassa v1.2.0 documentation</a> &raquo;</li> 
       </ul>

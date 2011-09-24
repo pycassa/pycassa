@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.columnfamily – Column Family &mdash; pycassa v1.1.1 documentation</title>
+    <title>pycassa.columnfamily – Column Family &mdash; pycassa v1.2.0 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.1.1',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,7 +22,8 @@
     <script type="text/javascript" src="../../static/jquery.js"></script>
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
-    <link rel="top" title="pycassa v1.1.1 documentation" href="../../index.html" />
+    <link rel="shortcut icon" href="../../static/favicon.ico"/>
+    <link rel="top" title="pycassa v1.2.0 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.columnfamilymap – Maps Classes to Column Families" href="columnfamilymap.html" />
     <link rel="prev" title="pycassa.pool – Connection Pooling" href="pool.html" /> 
@@ -43,7 +44,7 @@
         <li class="right" >
           <a href="pool.html" title="pycassa.pool – Connection Pooling"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.1.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.2.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -128,8 +129,8 @@ By default, this is <tt class="xref py py-const xref docutils literal"><span cla
 <dl class="attribute">
 <dt id="pycassa.columnfamily.ColumnFamily.column_name_class">
 <tt class="descname">column_name_class</tt><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.column_name_class" title="Permalink to this definition">¶</a></dt>
-<dd><p>The data type of column names, which pycassa will use to determine
-how to pack and unpack them.</p>
+<dd><p>The data type of column names, which pycassa will use
+to determine how to pack and unpack them.</p>
 <p>This is set automatically by inspecting the column family&#8217;s
 <tt class="docutils literal"><span class="pre">comparator_type</span></tt>, but it may also be set manually if you want
 autopacking behavior without setting a <tt class="docutils literal"><span class="pre">comparator_type</span></tt>. Options
@@ -139,14 +140,15 @@ include anything in <a class="reference internal" href="system_manager.html#modu
 <dl class="attribute">
 <dt id="pycassa.columnfamily.ColumnFamily.super_column_name_class">
 <tt class="descname">super_column_name_class</tt><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.super_column_name_class" title="Permalink to this definition">¶</a></dt>
-<dd><p>Like <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.column_name_class" title="pycassa.columnfamily.ColumnFamily.column_name_class"><tt class="xref py py-attr docutils literal"><span class="pre">column_name_class</span></tt></a>, but for super column names.</p>
+<dd><p>Like <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.column_name_class" title="pycassa.columnfamily.ColumnFamily.column_name_class"><tt class="xref py py-attr docutils literal"><span class="pre">column_name_class</span></tt></a>, but for
+super column names.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="pycassa.columnfamily.ColumnFamily.default_validation_class">
 <tt class="descname">default_validation_class</tt><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.default_validation_class" title="Permalink to this definition">¶</a></dt>
-<dd><p>The default data type of column values, which pycassa will use
-to determine how to pack and unpack them.</p>
+<dd><p>The default data type of column values, which pycassa
+will use to determine how to pack and unpack them.</p>
 <p>This is set automatically by inspecting the column family&#8217;s
 <tt class="docutils literal"><span class="pre">default_validation_class</span></tt>, but it may also be set manually if you want
 autopacking behavior without setting a <tt class="docutils literal"><span class="pre">default_validation_class</span></tt>. Options
@@ -156,15 +158,15 @@ include anything in <a class="reference internal" href="system_manager.html#modu
 <dl class="attribute">
 <dt id="pycassa.columnfamily.ColumnFamily.column_validators">
 <tt class="descname">column_validators</tt><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.column_validators" title="Permalink to this definition">¶</a></dt>
-<dd><p>Like <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.default_validation_class" title="pycassa.columnfamily.ColumnFamily.default_validation_class"><tt class="xref py py-attr docutils literal"><span class="pre">default_validation_class</span></tt></a>, but is a <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> mapping
-individual columns to types.</p>
+<dd><p>Like <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.default_validation_class" title="pycassa.columnfamily.ColumnFamily.default_validation_class"><tt class="xref py py-attr docutils literal"><span class="pre">default_validation_class</span></tt></a>, but is a
+<tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> mapping individual columns to types.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="pycassa.columnfamily.ColumnFamily.key_validation_class">
 <tt class="descname">key_validation_class</tt><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.key_validation_class" title="Permalink to this definition">¶</a></dt>
-<dd><p>The data type of row keys, which pycassa will use to determine how
-to pack and unpack them.</p>
+<dd><p>The data type of row keys, which pycassa will use
+to determine how to pack and unpack them.</p>
 <p>This is set automatically by inspecting the column family&#8217;s
 <tt class="docutils literal"><span class="pre">key_validation_class</span></tt> (which only exists in Cassandra 0.8 or greater),
 but may be set manually if you want the autopacking behavior without
@@ -176,9 +178,10 @@ Options include anything in <a class="reference internal" href="system_manager.h
 <dl class="attribute">
 <dt id="pycassa.columnfamily.ColumnFamily.dict_class">
 <tt class="descname">dict_class</tt><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.dict_class" title="Permalink to this definition">¶</a></dt>
-<dd><p>Results are returned as dictionaries. <a class="reference internal" href="util.html#pycassa.util.OrderedDict" title="pycassa.util.OrderedDict"><tt class="xref py py-class docutils literal"><span class="pre">OrderedDict</span></tt></a> is
-used by default so that order is maintained. A different class, such as
-<tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> may be used setting this.</p>
+<dd><p>Results are returned as dictionaries. By default, python 2.7&#8217;s
+<tt class="xref py py-class docutils literal"><span class="pre">collections.OrderedDict</span></tt> is used if available, otherwise
+<a class="reference internal" href="util.html#pycassa.util.OrderedDict" title="pycassa.util.OrderedDict"><tt class="xref py py-class docutils literal"><span class="pre">OrderedDict</span></tt></a> is used so that order is maintained.
+A different class, such as <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> may be used setting this.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -461,7 +464,7 @@ operations using as few roundtrips as possible.</p>
         <li class="right" >
           <a href="pool.html" title="pycassa.pool – Connection Pooling"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.1.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.2.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

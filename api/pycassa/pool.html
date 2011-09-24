@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.pool – Connection Pooling &mdash; pycassa v1.1.1 documentation</title>
+    <title>pycassa.pool – Connection Pooling &mdash; pycassa v1.2.0 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.1.1',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,7 +22,8 @@
     <script type="text/javascript" src="../../static/jquery.js"></script>
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
-    <link rel="top" title="pycassa v1.1.1 documentation" href="../../index.html" />
+    <link rel="shortcut icon" href="../../static/favicon.ico"/>
+    <link rel="top" title="pycassa v1.2.0 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.columnfamily – Column Family" href="columnfamily.html" />
     <link rel="prev" title="API Documentation" href="../index.html" /> 
@@ -43,7 +44,7 @@
         <li class="right" >
           <a href="../index.html" title="API Documentation"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.1.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.2.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -58,14 +59,14 @@
 <p>Connection pooling for Cassandra connections.</p>
 <dl class="class">
 <dt id="pycassa.pool.ConnectionPool">
-<em class="property">class </em><tt class="descclassname">pycassa.pool.</tt><tt class="descname">ConnectionPool</tt><big>(</big><em>keyspace, server_list=['localhost:9160'], credentials=None, timeout=0.5, use_threadlocal=True, pool_size=5, max_overflow=0, prefill=True, pool_timeout=30, recycle=10000, max_retries=5, listeners=[], logging_name=None, framed_transport=True</em><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">pycassa.pool.</tt><tt class="descname">ConnectionPool</tt><big>(</big><em>keyspace, server_list=['localhost:9160'], credentials=None, timeout=0.5, use_threadlocal=True, pool_size=5, prefill=True, **kwargs</em><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructs a pool that maintains a queue of open connections.</p>
 <p>All connections in the pool will be opened to <cite>keyspace</cite>.</p>
-<p><cite>server_list</cite> is a sequence of servers in the form &#8216;host:port&#8217; that
-the pool will connect to.  The list will be randomly permuted before
-being drawn from sequentially. <cite>server_list</cite> may also be a function
-that returns the sequence of servers.</p>
-<p>If authentication or autorization is required, <cite>credentials</cite> must
+<p><cite>server_list</cite> is a sequence of servers in the form <tt class="docutils literal"><span class="pre">&quot;host:port&quot;</span></tt> that
+the pool will connect to. The port defaults to 9160 if excluded.
+The list will be randomly shuffled before being drawn from sequentially.
+<cite>server_list</cite> may also be a function that returns the sequence of servers.</p>
+<p>If authentication or authorization is required, <cite>credentials</cite> must
 be supplied.  This should be a dictionary containing &#8216;username&#8217; and
 &#8216;password&#8217; keys with appropriate string values.</p>
 <p><cite>timeout</cite> specifies in seconds how long individual connections will
@@ -73,23 +74,17 @@ block before timing out. If set to <tt class="xref docutils literal"><span class
 timeout.</p>
 <p>If <cite>use_threadlocal</cite> is set to <tt class="xref docutils literal"><span class="pre">True</span></tt>, repeated calls to
 <a class="reference internal" href="#pycassa.pool.ConnectionPool.get" title="pycassa.pool.ConnectionPool.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a> within the same application thread will
-return the same <a class="reference internal" href="#pycassa.pool.ConnectionWrapper" title="pycassa.pool.ConnectionWrapper"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionWrapper</span></tt></a> object if one has
-already been retrieved from the pool and has not been returned yet.
-Be careful when setting <cite>use_threadlocal</cite> to <tt class="xref docutils literal"><span class="pre">False</span></tt> in a multithreaded
-application, especially with retries enabled.  Synchronization may be
-required to prevent the connection from changing while another thread is
-using it.</p>
+return the same <a class="reference internal" href="#pycassa.pool.ConnectionWrapper" title="pycassa.pool.ConnectionWrapper"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionWrapper</span></tt></a> object if one is
+already checked out from the pool.  Be careful when setting <cite>use_threadlocal</cite>
+to <tt class="xref docutils literal"><span class="pre">False</span></tt> in a multithreaded application, especially with retries enabled.
+Synchronization may be required to prevent the connection from changing while
+another thread is using it.</p>
 <p>The pool will keep up <cite>pool_size</cite> open connections in the pool
 at any time.  When a connection is returned to the pool, the
 connection will be discarded is the pool already contains <cite>pool_size</cite>
-connections.  Whether or not a new connection may be opened when the
-pool is empty is controlled by <cite>max_overflow</cite>.  This specifies how many
-additional connections may be opened after the pool has reached <cite>pool_size</cite>;
-keep in mind that these extra connections will be discarded upon checkin
-until the pool is below <cite>pool_size</cite>. It follows then that the total number
-of simultaneous connections the pool will allow is <tt class="docutils literal"><span class="pre">pool_size</span> <span class="pre">+</span> <span class="pre">max_overflow</span></tt>,
-and the number of &#8220;sleeping&#8221; connections the pool will allow is <tt class="docutils literal"><span class="pre">pool_size</span></tt>.
-<cite>max_overflow</cite> may be set to -1 to indicate no overflow limit.</p>
+connections.  The total number of simultaneous connections the pool will
+allow is <tt class="docutils literal"><span class="pre">pool_size</span> <span class="pre">+</span> <span class="pre">max_overflow</span></tt>,
+and the number of &#8220;sleeping&#8221; connections the pool will allow is <tt class="docutils literal"><span class="pre">pool_size</span></tt>.</p>
 <p>A good choice for <cite>pool_size</cite> is a multiple of the number of servers
 passed to the Pool constructor.  If a size less than this is chosen,
 the last <tt class="docutils literal"><span class="pre">(len(server_list)</span> <span class="pre">-</span> <span class="pre">pool_size)</span></tt> servers may not be used until
@@ -99,28 +94,6 @@ those same servers would have a decreased load. By default, overflow
 is disabled.</p>
 <p>If <cite>prefill</cite> is set to <tt class="xref docutils literal"><span class="pre">True</span></tt>, <cite>pool_size</cite> connections will be opened
 when the pool is created.</p>
-<p>If <tt class="docutils literal"><span class="pre">pool_size</span> <span class="pre">+</span> <span class="pre">max_overflow</span></tt> connections have already been checked
-out, an attempt to retrieve a new connection from the pool will wait
-up to <cite>pool_timeout</cite> seconds for a connection to be returned to the
-pool before giving up. This may be set to 0 to fail immediately or -1
-to wait forever.</p>
-<p>After performing <cite>recycle</cite> number of operations, connections will
-be replaced when checked back in to the pool.  This may be set to
--1 to disable connection recycling.</p>
-<p>When an operation on a connection fails due to an <tt class="xref py py-exc docutils literal"><span class="pre">TimedOutException</span></tt>
-or <tt class="xref py py-exc docutils literal"><span class="pre">UnavailableException</span></tt>, which tend to indicate single or
-multiple node failure, the operation will be retried on different nodes
-up to <cite>max_retries</cite> times before an <tt class="xref py py-exc docutils literal"><span class="pre">MaximumRetryException</span></tt> is raised.
-Setting this to 0 disables retries and setting to -1 allows unlimited retries.</p>
-<p>Pool monitoring may be achieved by supplying <cite>listeners</cite>, which should
-be a list of <a class="reference internal" href="#pycassa.pool.PoolListener" title="pycassa.pool.PoolListener"><tt class="xref py py-class docutils literal"><span class="pre">PoolListener</span></tt></a>-like objects or dictionaries of
-callables that receive events when pool or connection events occur.</p>
-<p>By default, each pool identifies itself in the logs using <tt class="docutils literal"><span class="pre">id(self)</span></tt>.
-If multiple pools are in use for different purposes, setting <cite>logging_name</cite>
-will help individual pools to be identified in the logs.</p>
-<p><cite>framed_transport</cite> determines whether framed or buffered transport will
-be used.  Cassandra 0.7 uses framed by default, while Cassandra 0.6 uses
-buffered by default.</p>
 <p>Example Usage:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ConnectionPool</span><span class="p">(</span><span class="n">keyspace</span><span class="o">=</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="n">server_list</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;10.0.0.4:9160&#39;</span><span class="p">,</span> <span class="s">&#39;10.0.0.5:9160&#39;</span><span class="p">],</span> <span class="n">prefill</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;Standard1&#39;</span><span class="p">)</span>
@@ -128,19 +101,54 @@ buffered by default.</p>
 <span class="go">1287785685530679</span>
 </pre></div>
 </div>
-<dl class="method">
-<dt id="pycassa.pool.ConnectionPool.add_listener">
-<tt class="descname">add_listener</tt><big>(</big><em>listener</em><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool.add_listener" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add a <a class="reference internal" href="#pycassa.pool.PoolListener" title="pycassa.pool.PoolListener"><tt class="xref py py-class docutils literal"><span class="pre">PoolListener</span></tt></a>-like object to this pool.</p>
-<p><cite>listener</cite> may be an object that implements some or all of
-<a class="reference internal" href="#pycassa.pool.PoolListener" title="pycassa.pool.PoolListener"><tt class="xref py py-class docutils literal"><span class="pre">PoolListener</span></tt></a>, or a dictionary of callables containing implementations
-of some or all of the named methods in <a class="reference internal" href="#pycassa.pool.PoolListener" title="pycassa.pool.PoolListener"><tt class="xref py py-class docutils literal"><span class="pre">PoolListener</span></tt></a>.</p>
+<dl class="attribute">
+<dt id="pycassa.pool.ConnectionPool.max_overflow">
+<tt class="descname">max_overflow</tt><a class="headerlink" href="#pycassa.pool.ConnectionPool.max_overflow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether or not a new connection may be opened when the
+pool is empty is controlled by <cite>max_overflow</cite>.  This specifies how many
+additional connections may be opened after the pool has reached <cite>pool_size</cite>;
+keep in mind that these extra connections will be discarded upon checkin
+until the pool is below <cite>pool_size</cite>.  This may be set to -1 to indicate no
+overflow limit. The default value is 0, which does not allow for overflow.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="pycassa.pool.ConnectionPool.dispose">
-<tt class="descname">dispose</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool.dispose" title="Permalink to this definition">¶</a></dt>
-<dd><p>Closes all checked in connections in the pool.</p>
+<dl class="attribute">
+<dt id="pycassa.pool.ConnectionPool.pool_timeout">
+<tt class="descname">pool_timeout</tt><a class="headerlink" href="#pycassa.pool.ConnectionPool.pool_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <tt class="docutils literal"><span class="pre">pool_size</span> <span class="pre">+</span> <span class="pre">max_overflow</span></tt> connections have already been checked
+out, an attempt to retrieve a new connection from the pool will wait
+up to <cite>pool_timeout</cite> seconds for a connection to be returned to the
+pool before giving up. Note that this setting is only meaningful when you
+are accessing the pool concurrently, such as with multiple threads.
+This may be set to 0 to fail immediately or -1 to wait forever.
+The default value is 30.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pycassa.pool.ConnectionPool.recycle">
+<tt class="descname">recycle</tt><a class="headerlink" href="#pycassa.pool.ConnectionPool.recycle" title="Permalink to this definition">¶</a></dt>
+<dd><p>After performing <cite>recycle</cite> number of operations, connections will
+be replaced when checked back in to the pool.  This may be set to
+-1 to disable connection recycling. The default value is 10,000.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pycassa.pool.ConnectionPool.max_retries">
+<tt class="descname">max_retries</tt><a class="headerlink" href="#pycassa.pool.ConnectionPool.max_retries" title="Permalink to this definition">¶</a></dt>
+<dd><p>When an operation on a connection fails due to an <tt class="xref py py-exc docutils literal"><span class="pre">TimedOutException</span></tt>
+or <tt class="xref py py-exc docutils literal"><span class="pre">UnavailableException</span></tt>, which tend to indicate single or
+multiple node failure, the operation will be retried on different nodes
+up to <cite>max_retries</cite> times before an <a class="reference internal" href="#pycassa.pool.MaximumRetryException" title="pycassa.pool.MaximumRetryException"><tt class="xref py py-exc docutils literal"><span class="pre">MaximumRetryException</span></tt></a> is raised.
+Setting this to 0 disables retries and setting to -1 allows unlimited retries.
+The default value is 5.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pycassa.pool.ConnectionPool.logging_name">
+<tt class="descname">logging_name</tt><a class="headerlink" href="#pycassa.pool.ConnectionPool.logging_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>By default, each pool identifies itself in the logs using <tt class="docutils literal"><span class="pre">id(self)</span></tt>.
+If multiple pools are in use for different purposes, setting <cite>logging_name</cite> will
+help individual pools to be identified in the logs.</p>
 </dd></dl>
 
 <dl class="method">
@@ -150,23 +158,31 @@ of some or all of the named methods in <a class="reference internal" href="#pyca
 </dd></dl>
 
 <dl class="method">
-<dt id="pycassa.pool.ConnectionPool.recreate">
-<tt class="descname">recreate</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool.recreate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a new instance with idential creation arguments. This method
-does <em>not</em> affect the object it is called on.</p>
+<dt id="pycassa.pool.ConnectionPool.put">
+<tt class="descname">put</tt><big>(</big><em>conn</em><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool.put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a connection to the pool.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pycassa.pool.ConnectionPool.return_conn">
-<tt class="descname">return_conn</tt><big>(</big><em>conn</em><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool.return_conn" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a connection to the pool.</p>
+<dt id="pycassa.pool.ConnectionPool.fill">
+<tt class="descname">fill</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool.fill" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds connections to the pool until at least <tt class="docutils literal"><span class="pre">pool_size</span></tt> connections
+exist, whether they are currently checked out from the pool or not.</p>
+<p class="versionadded">
+<span class="versionmodified">New in version 1.2.0.</span></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.pool.ConnectionPool.dispose">
+<tt class="descname">dispose</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool.dispose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Closes all checked in connections in the pool.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pycassa.pool.ConnectionPool.set_server_list">
 <tt class="descname">set_server_list</tt><big>(</big><em>server_list</em><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool.set_server_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets the server list that the pool will make connections to.</p>
-<p><cite>server_list</cite> should be sequence of servers in the form &#8216;host:port&#8217; that
+<p><cite>server_list</cite> should be sequence of servers in the form <tt class="docutils literal"><span class="pre">&quot;host:port&quot;</span></tt> that
 the pool will connect to.  The list will be randomly permuted before
 being used. <cite>server_list</cite> may also be a function that returns the
 sequence of servers.</p>
@@ -176,18 +192,80 @@ sequence of servers.</p>
 <dt id="pycassa.pool.ConnectionPool.status">
 <tt class="descname">status</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool.status" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the status of the pool.</p>
+<p class="deprecated">
+<span class="versionmodified">Deprecated since version 1.2.0.</span></p>
 </dd></dl>
 
+<dl class="method">
+<dt id="pycassa.pool.ConnectionPool.size">
+<tt class="descname">size</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the capacity of the pool.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.pool.ConnectionPool.overflow">
+<tt class="descname">overflow</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool.overflow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of overflow connections that are currently open.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.pool.ConnectionPool.checkedin">
+<tt class="descname">checkedin</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool.checkedin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of connections currently in the pool.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.pool.ConnectionPool.checkedout">
+<tt class="descname">checkedout</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool.checkedout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of connections currently checked out from the pool.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.pool.ConnectionPool.add_listener">
+<tt class="descname">add_listener</tt><big>(</big><em>listener</em><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool.add_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a <a class="reference internal" href="#pycassa.pool.PoolListener" title="pycassa.pool.PoolListener"><tt class="xref py py-class docutils literal"><span class="pre">PoolListener</span></tt></a>-like object to this pool.</p>
+<p><cite>listener</cite> may be an object that implements some or all of
+<a class="reference internal" href="#pycassa.pool.PoolListener" title="pycassa.pool.PoolListener"><tt class="xref py py-class docutils literal"><span class="pre">PoolListener</span></tt></a>, or a dictionary of callables containing implementations
+of some or all of the named methods in <a class="reference internal" href="#pycassa.pool.PoolListener" title="pycassa.pool.PoolListener"><tt class="xref py py-class docutils literal"><span class="pre">PoolListener</span></tt></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="pycassa.pool.AllServersUnavailable">
+<em class="property">exception </em><tt class="descclassname">pycassa.pool.</tt><tt class="descname">AllServersUnavailable</tt><a class="headerlink" href="#pycassa.pool.AllServersUnavailable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raised when none of the servers given to a pool can be connected to.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pycassa.pool.NoConnectionAvailable">
+<em class="property">exception </em><tt class="descclassname">pycassa.pool.</tt><tt class="descname">NoConnectionAvailable</tt><a class="headerlink" href="#pycassa.pool.NoConnectionAvailable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raised when there are no connections left in a pool.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pycassa.pool.MaximumRetryException">
+<em class="property">exception </em><tt class="descclassname">pycassa.pool.</tt><tt class="descname">MaximumRetryException</tt><a class="headerlink" href="#pycassa.pool.MaximumRetryException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raised when a <a class="reference internal" href="#pycassa.pool.ConnectionWrapper" title="pycassa.pool.ConnectionWrapper"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionWrapper</span></tt></a> has retried the maximum
+allowed times before being returned to the pool; note that all of
+the retries do not have to be on the same operation.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pycassa.pool.InvalidRequestError">
+<em class="property">exception </em><tt class="descclassname">pycassa.pool.</tt><tt class="descname">InvalidRequestError</tt><a class="headerlink" href="#pycassa.pool.InvalidRequestError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pycassa was asked to do something it can&#8217;t do.</p>
+<p>This error generally corresponds to runtime state errors.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="pycassa.pool.ConnectionWrapper">
 <em class="property">class </em><tt class="descclassname">pycassa.pool.</tt><tt class="descname">ConnectionWrapper</tt><big>(</big><em>pool</em>, <em>max_retries</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionWrapper" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a wrapper for a <tt class="xref py py-class docutils literal"><span class="pre">pycassa.connection.Connection</span></tt>
+<dd><p>Creates a wrapper for a <tt class="xref py py-class docutils literal"><span class="pre">Connection</span></tt>
 object, adding pooling related functionality while still allowing
 access to the thrift API calls.</p>
 <p>These should not be created directly, only obtained through
-Pool&#8217;s <tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt> method.</p>
+Pool&#8217;s <a class="reference internal" href="#pycassa.pool.ConnectionPool.get" title="pycassa.pool.ConnectionPool.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a> method.</p>
 <dl class="method">
 <dt id="pycassa.pool.ConnectionWrapper.get_keyspace_description">
 <tt class="descname">get_keyspace_description</tt><big>(</big><em>keyspace=None</em>, <em>use_dict_for_col_metadata=False</em><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionWrapper.get_keyspace_description" title="Permalink to this definition">¶</a></dt>
@@ -201,7 +279,7 @@ as a dictionary instead of a list</p>
 <dt id="pycassa.pool.ConnectionWrapper.return_to_pool">
 <tt class="descname">return_to_pool</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionWrapper.return_to_pool" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns this to the pool.</p>
-<p>This has the same effect as calling <tt class="xref py py-meth docutils literal"><span class="pre">AbstractPool.return_conn()</span></tt>
+<p>This has the same effect as calling <a class="reference internal" href="#pycassa.pool.ConnectionPool.put" title="pycassa.pool.ConnectionPool.put"><tt class="xref py py-meth docutils literal"><span class="pre">ConnectionPool.put()</span></tt></a>
 on the wrapper.</p>
 </dd></dl>
 
@@ -210,7 +288,7 @@ on the wrapper.</p>
 <dl class="class">
 <dt id="pycassa.pool.PoolListener">
 <em class="property">class </em><tt class="descclassname">pycassa.pool.</tt><tt class="descname">PoolListener</tt><a class="headerlink" href="#pycassa.pool.PoolListener" title="Permalink to this definition">¶</a></dt>
-<dd><p>Hooks into the lifecycle of connections in a <tt class="xref py py-class docutils literal"><span class="pre">AbstractPool</span></tt>.</p>
+<dd><p>Hooks into the lifecycle of connections in a <a class="reference internal" href="#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a>.</p>
 <p>Usage:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyListener</span><span class="p">(</span><span class="n">PoolListener</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">connection_created</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dic</span><span class="p">):</span>
@@ -230,122 +308,71 @@ all event dictionaries include &#8216;level&#8217;, so dic[&#8216;level&#8217;] 
 the prescribed logging level.</p>
 <p>There is no need to subclass <a class="reference internal" href="#pycassa.pool.PoolListener" title="pycassa.pool.PoolListener"><tt class="xref py py-class docutils literal"><span class="pre">PoolListener</span></tt></a> to handle events.
 Any class that implements one or more of these methods can be used
-as a pool listener.  The <tt class="xref py py-class docutils literal"><span class="pre">AbstractPool</span></tt> will inspect the methods
+as a pool listener.  The <a class="reference internal" href="#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a> will inspect the methods
 provided by a listener object and add the listener to one or more
 internal event queues based on its capabilities.  In terms of
 efficiency and function call overhead, you&#8217;re much better off only
 providing implementations for the hooks you&#8217;ll be using.</p>
+<p>Each of the <a class="reference internal" href="#pycassa.pool.PoolListener" title="pycassa.pool.PoolListener"><tt class="xref py py-class docutils literal"><span class="pre">PoolListener</span></tt></a> methods wil be called with a
+<tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> as the single parameter. This <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> may
+contain the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><cite>connection</cite>: The <a class="reference internal" href="#pycassa.pool.ConnectionWrapper" title="pycassa.pool.ConnectionWrapper"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionWrapper</span></tt></a> object that persistently
+manages the connection</li>
+<li><cite>message</cite>: The reason this event happened</li>
+<li><cite>error</cite>: The <tt class="xref py py-class docutils literal"><span class="pre">Exception</span></tt> that caused this event</li>
+<li><cite>pool_id</cite>: The id of the <a class="reference internal" href="#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a> that this event came from</li>
+<li><cite>level</cite>: The prescribed logging level for this event.  Can be &#8216;debug&#8217;, &#8216;info&#8217;,
+&#8216;warn&#8217;, &#8216;error&#8217;, or &#8216;critical&#8217;</li>
+</ul>
+</div></blockquote>
+<p>Entries in the <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> that are specific to only one event type are
+detailed with each method.</p>
 <dl class="method">
 <dt id="pycassa.pool.PoolListener.connection_checked_in">
 <tt class="descname">connection_checked_in</tt><big>(</big><em>dic</em><big>)</big><a class="headerlink" href="#pycassa.pool.PoolListener.connection_checked_in" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called when a connection returns to the pool.</p>
-<p>Note that the connection may be None if the connection has been closed.</p>
-<dl class="docutils">
-<dt>dic[&#8216;connection&#8217;]</dt>
-<dd>The <a class="reference internal" href="#pycassa.pool.ConnectionWrapper" title="pycassa.pool.ConnectionWrapper"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionWrapper</span></tt></a> that persistently manages the connection</dd>
-<dt>dic[&#8216;pool_type&#8217;]</dt>
-<dd>The type of pool the connection was created in; e.g. <a class="reference internal" href="#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a></dd>
-<dt>dic[&#8216;pool_id&#8217;]</dt>
-<dd>The logging name of the connection&#8217;s pool (defaults to id(pool))</dd>
-<dt>dic[&#8216;level&#8217;]</dt>
-<dd>The prescribed logging level for this event.  Can be &#8216;debug&#8217;, &#8216;info&#8217;,
-&#8216;warn&#8217;, &#8216;error&#8217;, or &#8216;critical&#8217;.</dd>
-</dl>
+<p>Fields: <cite>pool_id</cite>, <cite>level</cite>, and <cite>connection</cite>.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pycassa.pool.PoolListener.connection_checked_out">
 <tt class="descname">connection_checked_out</tt><big>(</big><em>dic</em><big>)</big><a class="headerlink" href="#pycassa.pool.PoolListener.connection_checked_out" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called when a connection is retrieved from the Pool.</p>
-<dl class="docutils">
-<dt>dic[&#8216;connection&#8217;]</dt>
-<dd>The <a class="reference internal" href="#pycassa.pool.ConnectionWrapper" title="pycassa.pool.ConnectionWrapper"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionWrapper</span></tt></a> that persistently manages the connection</dd>
-<dt>dic[&#8216;pool_type&#8217;]</dt>
-<dd>The type of pool the connection was created in; e.g. <a class="reference internal" href="#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a></dd>
-<dt>dic[&#8216;pool_id&#8217;]</dt>
-<dd>The logging name of the connection&#8217;s pool (defaults to id(pool))</dd>
-<dt>dic[&#8216;level&#8217;]</dt>
-<dd>The prescribed logging level for this event.  Can be &#8216;debug&#8217;, &#8216;info&#8217;,
-&#8216;warn&#8217;, &#8216;error&#8217;, or &#8216;critical&#8217;.</dd>
-</dl>
+<p>Fields: <cite>pool_id</cite>, <cite>level</cite>, and <cite>connection</cite>.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pycassa.pool.PoolListener.connection_created">
 <tt class="descname">connection_created</tt><big>(</big><em>dic</em><big>)</big><a class="headerlink" href="#pycassa.pool.PoolListener.connection_created" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called once for each new Cassandra connection.</p>
-<dl class="docutils">
-<dt>dic[&#8216;connection&#8217;]</dt>
-<dd>The <a class="reference internal" href="#pycassa.pool.ConnectionWrapper" title="pycassa.pool.ConnectionWrapper"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionWrapper</span></tt></a> that persistently manages the connection</dd>
-<dt>dic[&#8216;message&#8217;]</dt>
-<dd>A reason for closing the connection, if any.</dd>
-<dt>dic[&#8216;error&#8217;]</dt>
-<dd>An error that occured while closing the connection, if any.</dd>
-<dt>dic[&#8216;pool_type&#8217;]</dt>
-<dd>The type of pool the connection was created in; e.g. <a class="reference internal" href="#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a></dd>
-<dt>dic[&#8216;pool_id&#8217;]</dt>
-<dd>The logging name of the connection&#8217;s pool (defaults to id(pool))</dd>
-<dt>dic[&#8216;level&#8217;]</dt>
-<dd>The prescribed logging level for this event.  Can be &#8216;debug&#8217;, &#8216;info&#8217;,
-&#8216;warn&#8217;, &#8216;error&#8217;, or &#8216;critical&#8217;.</dd>
-</dl>
+<p>Fields: <cite>pool_id</cite>, <cite>level</cite>, and <cite>connection</cite>.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pycassa.pool.PoolListener.connection_disposed">
 <tt class="descname">connection_disposed</tt><big>(</big><em>dic</em><big>)</big><a class="headerlink" href="#pycassa.pool.PoolListener.connection_disposed" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called when a connection is closed.</p>
-<dl class="docutils">
-<dt>dic[&#8216;connection&#8217;]</dt>
-<dd>The <a class="reference internal" href="#pycassa.pool.ConnectionWrapper" title="pycassa.pool.ConnectionWrapper"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionWrapper</span></tt></a> that persistently manages the connection</dd>
-<dt>dic[&#8216;message&#8217;]</dt>
-<dd>A reason for closing the connection, if any.</dd>
-<dt>dic[&#8216;error&#8217;]</dt>
-<dd>An error that occured while closing the connection, if any.</dd>
-<dt>dic[&#8216;pool_type&#8217;]</dt>
-<dd>The type of pool the connection was created in; e.g. <a class="reference internal" href="#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a></dd>
-<dt>dic[&#8216;pool_id&#8217;]</dt>
-<dd>The logging name of the connection&#8217;s pool (defaults to id(pool))</dd>
-<dt>dic[&#8216;level&#8217;]</dt>
-<dd>The prescribed logging level for this event.  Can be &#8216;debug&#8217;, &#8216;info&#8217;,
-&#8216;warn&#8217;, &#8216;error&#8217;, or &#8216;critical&#8217;.</dd>
-</dl>
+<p><tt class="docutils literal"><span class="pre">dic['message']</span></tt>: A reason for closing the connection, if any.</p>
+<p>Fields: <cite>pool_id</cite>, <cite>level</cite>, <cite>connection</cite>, and <cite>message</cite>.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pycassa.pool.PoolListener.connection_failed">
 <tt class="descname">connection_failed</tt><big>(</big><em>dic</em><big>)</big><a class="headerlink" href="#pycassa.pool.PoolListener.connection_failed" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called when a connection to a single server fails.</p>
-<dl class="docutils">
-<dt>dic[&#8216;error&#8217;]</dt>
-<dd>The connection error (Exception).</dd>
-<dt>dic[&#8216;pool_type&#8217;]</dt>
-<dd>The type of pool the connection was created in; e.g. <a class="reference internal" href="#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a></dd>
-<dt>dic[&#8216;pool_id&#8217;]</dt>
-<dd>The logging name of the connection&#8217;s pool (defaults to id(pool))</dd>
-<dt>dic[&#8216;level&#8217;]</dt>
-<dd>The prescribed logging level for this event.  Can be &#8216;debug&#8217;, &#8216;info&#8217;,
-&#8216;warn&#8217;, &#8216;error&#8217;, or &#8216;critical&#8217;.</dd>
-</dl>
+<p><tt class="docutils literal"><span class="pre">dic['server']</span></tt>: The server the connection was made to.</p>
+<p>Fields: <cite>pool_id</cite>, <cite>level</cite>, <cite>error</cite>, <cite>server</cite>, and <cite>connection</cite>.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pycassa.pool.PoolListener.connection_recycled">
 <tt class="descname">connection_recycled</tt><big>(</big><em>dic</em><big>)</big><a class="headerlink" href="#pycassa.pool.PoolListener.connection_recycled" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called when a connection is recycled.</p>
-<dl class="docutils">
-<dt>dic[&#8216;old_conn&#8217;]</dt>
-<dd>The <a class="reference internal" href="#pycassa.pool.ConnectionWrapper" title="pycassa.pool.ConnectionWrapper"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionWrapper</span></tt></a> that is being recycled</dd>
-<dt>dic[&#8216;new_conn&#8217;]</dt>
-<dd>The <a class="reference internal" href="#pycassa.pool.ConnectionWrapper" title="pycassa.pool.ConnectionWrapper"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionWrapper</span></tt></a> that is replacing it</dd>
-<dt>dic[&#8216;pool_type&#8217;]</dt>
-<dd>The type of pool the connection was created in; e.g. <a class="reference internal" href="#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a></dd>
-<dt>dic[&#8216;pool_id&#8217;]</dt>
-<dd>The logging name of the connection&#8217;s pool (defaults to id(pool))</dd>
-<dt>dic[&#8216;level&#8217;]</dt>
-<dd>The prescribed logging level for this event.  Can be &#8216;debug&#8217;, &#8216;info&#8217;,
-&#8216;warn&#8217;, &#8216;error&#8217;, or &#8216;critical&#8217;.</dd>
-</dl>
+<p><tt class="docutils literal"><span class="pre">dic['old_conn']</span></tt>: The <a class="reference internal" href="#pycassa.pool.ConnectionWrapper" title="pycassa.pool.ConnectionWrapper"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionWrapper</span></tt></a> that is being recycled</p>
+<p><tt class="docutils literal"><span class="pre">dic['new_conn']</span></tt>: The <a class="reference internal" href="#pycassa.pool.ConnectionWrapper" title="pycassa.pool.ConnectionWrapper"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionWrapper</span></tt></a> that is replacing it</p>
+<p>Fields: <cite>pool_id</cite>, <cite>level</cite>, <cite>old_conn</cite>, and <cite>new_conn</cite>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -353,62 +380,32 @@ providing implementations for the hooks you&#8217;ll be using.</p>
 <tt class="descname">pool_at_max</tt><big>(</big><em>dic</em><big>)</big><a class="headerlink" href="#pycassa.pool.PoolListener.pool_at_max" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called when an attempt is made to get a new connection from the
 pool, but the pool is already at its max size.</p>
-<dl class="docutils">
-<dt>dic[&#8216;pool_type&#8217;]</dt>
-<dd>The type of pool the connection was created in; e.g. <a class="reference internal" href="#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a></dd>
-<dt>dic[&#8216;pool_id&#8217;]</dt>
-<dd>The logging name of the connection&#8217;s pool (defaults to id(pool))</dd>
-<dt>dic[&#8216;level&#8217;]</dt>
-<dd>The prescribed logging level for this event.  Can be &#8216;debug&#8217;, &#8216;info&#8217;,
-&#8216;warn&#8217;, &#8216;error&#8217;, or &#8216;critical&#8217;.</dd>
-</dl>
+<p><tt class="docutils literal"><span class="pre">dic['pool_max']</span></tt>: The max number of connections the pool will
+keep open at one time.</p>
+<p>Fields: <cite>pool_id</cite>, <cite>pool_max</cite>, and <cite>level</cite>.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pycassa.pool.PoolListener.pool_disposed">
 <tt class="descname">pool_disposed</tt><big>(</big><em>dic</em><big>)</big><a class="headerlink" href="#pycassa.pool.PoolListener.pool_disposed" title="Permalink to this definition">¶</a></dt>
-<dd><p>Called when a pool is recreated.</p>
-<dl class="docutils">
-<dt>dic[&#8216;pool_type&#8217;]</dt>
-<dd>The type of pool the connection was created in; e.g. <a class="reference internal" href="#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a></dd>
-<dt>dic[&#8216;pool_id&#8217;]</dt>
-<dd>The logging name of the connection&#8217;s pool (defaults to id(pool))</dd>
-<dt>dic[&#8216;level&#8217;]</dt>
-<dd>The prescribed logging level for this event.  Can be &#8216;debug&#8217;, &#8216;info&#8217;,
-&#8216;warn&#8217;, &#8216;error&#8217;, or &#8216;critical&#8217;.</dd>
-</dl>
+<dd><p>Called when a pool is disposed.</p>
+<p>Fields: <cite>pool_id</cite>, and <cite>level</cite>.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pycassa.pool.PoolListener.pool_recreated">
 <tt class="descname">pool_recreated</tt><big>(</big><em>dic</em><big>)</big><a class="headerlink" href="#pycassa.pool.PoolListener.pool_recreated" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called when a pool is recreated.</p>
-<dl class="docutils">
-<dt>dic[&#8216;pool_type&#8217;]</dt>
-<dd>The type of pool the connection was created in; e.g. <a class="reference internal" href="#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a></dd>
-<dt>dic[&#8216;pool_id&#8217;]</dt>
-<dd>The logging name of the connection&#8217;s pool (defaults to id(pool))</dd>
-<dt>dic[&#8216;level&#8217;]</dt>
-<dd>The prescribed logging level for this event.  Can be &#8216;debug&#8217;, &#8216;info&#8217;,
-&#8216;warn&#8217;, &#8216;error&#8217;, or &#8216;critical&#8217;.</dd>
-</dl>
+<p>Fields: <cite>pool_id</cite>, and <cite>level</cite>.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pycassa.pool.PoolListener.server_list_obtained">
 <tt class="descname">server_list_obtained</tt><big>(</big><em>dic</em><big>)</big><a class="headerlink" href="#pycassa.pool.PoolListener.server_list_obtained" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called when the pool finalizes its server list.</p>
-<dl class="docutils">
-<dt>dic[&#8216;server_list&#8217;]</dt>
-<dd>The randomly permuted list of servers.</dd>
-<dt>dic[&#8216;pool_type&#8217;]</dt>
-<dd>The type of pool the connection was created in; e.g. <a class="reference internal" href="#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a></dd>
-<dt>dic[&#8216;pool_id&#8217;]</dt>
-<dd>The logging name of the connection&#8217;s pool (defaults to id(pool))</dd>
-<dt>dic[&#8216;level&#8217;]</dt>
-<dd>The prescribed logging level for this event.  Can be &#8216;debug&#8217;, &#8216;info&#8217;,
-&#8216;warn&#8217;, &#8216;error&#8217;, or &#8216;critical&#8217;.</dd>
-</dl>
+<p><tt class="docutils literal"><span class="pre">dic['server_list']</span></tt>: The randomly permuted list of servers that the
+pool will choose from.</p>
+<p>Fields: <cite>pool_id</cite>, <cite>level</cite>, and <cite>server_list</cite>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -464,7 +461,7 @@ pool, but the pool is already at its max size.</p>
         <li class="right" >
           <a href="../index.html" title="API Documentation"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.1.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.2.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

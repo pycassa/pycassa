@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Using pycassa with Other Tools &mdash; pycassa v1.2.0 documentation</title>
+    <title>Using with Eventlet &mdash; pycassa v1.2.0 documentation</title>
     <link rel="stylesheet" href="../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -24,8 +24,9 @@
     <script type="text/javascript" src="../static/doctools.js"></script>
     <link rel="shortcut icon" href="../static/favicon.ico"/>
     <link rel="top" title="pycassa v1.2.0 documentation" href="../index.html" />
-    <link rel="next" title="Using with Celery" href="celery.html" />
-    <link rel="prev" title="pycassaShell" href="../assorted/pycassa_shell.html" /> 
+    <link rel="up" title="Using pycassa with Other Tools" href="index.html" />
+    <link rel="next" title="Using with multiprocessing" href="multiprocessing.html" />
+    <link rel="prev" title="Using with Celery" href="celery.html" /> 
   </head>
   <body>
     <div class="related">
@@ -38,12 +39,13 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="celery.html" title="Using with Celery"
+          <a href="multiprocessing.html" title="Using with multiprocessing"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="../assorted/pycassa_shell.html" title="pycassaShell"
+          <a href="celery.html" title="Using with Celery"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">pycassa v1.2.0 documentation</a> &raquo;</li> 
+        <li><a href="../index.html">pycassa v1.2.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Using pycassa with Other Tools</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -52,19 +54,15 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="using-pycassa-with-other-tools">
-<h1>Using pycassa with Other Tools<a class="headerlink" href="#using-pycassa-with-other-tools" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="celery.html">Using with Celery</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="celery.html#usage-in-a-worker">Usage in a Worker</a></li>
-<li class="toctree-l2"><a class="reference internal" href="celery.html#usage-as-a-broker-backend">Usage as a Broker Backend</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="eventlet.html">Using with Eventlet</a></li>
-<li class="toctree-l1"><a class="reference internal" href="multiprocessing.html">Using with <tt class="docutils literal"><span class="pre">multiprocessing</span></tt></a></li>
-</ul>
-</div>
+  <div class="section" id="using-with-eventlet">
+<span id="id1"></span><h1>Using with Eventlet<a class="headerlink" href="#using-with-eventlet" title="Permalink to this headline">¶</a></h1>
+<p>Because the <a class="reference internal" href="../api/pycassa/pool.html#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a> class uses concurrency primitives from
+the <tt class="xref py py-mod docutils literal"><span class="pre">threading</span></tt> module, you can use <tt class="xref py py-mod docutils literal"><span class="pre">eventlet</span></tt> green threads after
+<a class="reference external" href="http://eventlet.net/doc/basic_usage.html#patching-functions">monkey patching</a>
+the standard library. Specifically, the <tt class="xref py py-mod docutils literal"><span class="pre">threading</span></tt> and <tt class="xref py py-mod docutils literal"><span class="pre">socket</span></tt>
+modules must monkey-patched.</p>
+<p>Be aware that you may need to install <a class="reference external" href="http://pypi.python.org/pypi/dnspython">dnspython</a>
+in order to connect to your nodes.</p>
 </div>
 
 
@@ -74,14 +72,14 @@
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="../assorted/pycassa_shell.html"
-                        title="previous chapter">pycassaShell</a></p>
-  <h4>Next topic</h4>
   <p class="topless"><a href="celery.html"
-                        title="next chapter">Using with Celery</a></p>
+                        title="previous chapter">Using with Celery</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="multiprocessing.html"
+                        title="next chapter">Using with <tt class="docutils literal"><span class="pre">multiprocessing</span></tt></a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="../sources/using_with/index.txt"
+    <li><a href="../sources/using_with/eventlet.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -111,12 +109,13 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="celery.html" title="Using with Celery"
+          <a href="multiprocessing.html" title="Using with multiprocessing"
              >next</a> |</li>
         <li class="right" >
-          <a href="../assorted/pycassa_shell.html" title="pycassaShell"
+          <a href="celery.html" title="Using with Celery"
              >previous</a> |</li>
-        <li><a href="../index.html">pycassa v1.2.0 documentation</a> &raquo;</li> 
+        <li><a href="../index.html">pycassa v1.2.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Using pycassa with Other Tools</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

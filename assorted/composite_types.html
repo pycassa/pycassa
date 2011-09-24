@@ -1,0 +1,206 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Composite Types &mdash; pycassa v1.2.0 documentation</title>
+    <link rel="stylesheet" href="../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../static/jquery.js"></script>
+    <script type="text/javascript" src="../static/underscore.js"></script>
+    <script type="text/javascript" src="../static/doctools.js"></script>
+    <link rel="shortcut icon" href="../static/favicon.ico"/>
+    <link rel="top" title="pycassa v1.2.0 documentation" href="../index.html" />
+    <link rel="up" title="Assorted Cassandra and pycassa Functionality" href="index.html" />
+    <link rel="next" title="Class Mapping with Column Family Map" href="column_family_map.html" />
+    <link rel="prev" title="Super Columns" href="super_columns.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="column_family_map.html" title="Class Mapping with Column Family Map"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="super_columns.html" title="Super Columns"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">pycassa v1.2.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Assorted Cassandra and pycassa Functionality</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="composite-types">
+<span id="id1"></span><h1>Composite Types<a class="headerlink" href="#composite-types" title="Permalink to this headline">¶</a></h1>
+<p>pycassa currently supports static CompositeTypes. DynamicCompositeType support
+is planned.</p>
+<div class="section" id="creating-a-compositetype-column-family">
+<h2>Creating a CompositeType Column Family<a class="headerlink" href="#creating-a-compositetype-column-family" title="Permalink to this headline">¶</a></h2>
+<p>When creating a column family, you can specify a CompositeType comparator
+or validator using <a class="reference internal" href="../api/pycassa/types.html#pycassa.types.CompositeType" title="pycassa.types.CompositeType"><tt class="xref py py-class docutils literal"><span class="pre">CompositeType</span></tt></a> in conjunction with
+the other types in <a class="reference internal" href="../api/pycassa/types.html#module-pycassa.types" title="pycassa.types"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.types</span></tt></a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pycassa.types</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pycassa.system_manager</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span> <span class="o">=</span> <span class="n">SystemManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comparator</span> <span class="o">=</span> <span class="n">CompositeType</span><span class="p">(</span><span class="n">LongType</span><span class="p">(</span><span class="nb">reversed</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span> <span class="n">AsciiType</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">create_column_family</span><span class="p">(</span><span class="s">&quot;Keyspace1&quot;</span><span class="p">,</span> <span class="s">&quot;CF1&quot;</span><span class="p">,</span> <span class="n">comparator_type</span><span class="o">=</span><span class="n">comparator</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This example creates a column family with column names that have two components.
+The first component is a <a class="reference internal" href="../api/pycassa/types.html#pycassa.types.LongType" title="pycassa.types.LongType"><tt class="xref py py-class docutils literal"><span class="pre">LongType</span></tt></a>, sorted in reverse order; the
+second is a normally sorted <a class="reference internal" href="../api/pycassa/types.html#pycassa.types.AsciiType" title="pycassa.types.AsciiType"><tt class="xref py py-class docutils literal"><span class="pre">AsciiType</span></tt></a>.</p>
+<p>You may put an aribtrary number of components in a <a class="reference internal" href="../api/pycassa/types.html#pycassa.types.CompositeType" title="pycassa.types.CompositeType"><tt class="xref py py-class docutils literal"><span class="pre">CompositeType</span></tt></a>,
+and each component may be reversed or not.</p>
+</div>
+<div class="section" id="insert-compositetype-data">
+<h2>Insert CompositeType Data<a class="headerlink" href="#insert-compositetype-data" title="Permalink to this headline">¶</a></h2>
+<p>When inserting data, where a <a class="reference internal" href="../api/pycassa/types.html#pycassa.types.CompositeType" title="pycassa.types.CompositeType"><tt class="xref py py-class docutils literal"><span class="pre">CompositeType</span></tt></a> is expected, you should supply
+a tuple which includes all of the components.</p>
+<p>Continuing the example from above:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span> <span class="o">=</span> <span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&quot;CF1&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">,</span> <span class="p">{(</span><span class="mi">1234</span><span class="p">,</span> <span class="s">&quot;abc&quot;</span><span class="p">):</span> <span class="s">&quot;colval&quot;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>When dealing with composite keys or column values, supply tuples in exactly
+the same manner.</p>
+</div>
+<div class="section" id="fetching-compositetype-data">
+<h2>Fetching CompositeType Data<a class="headerlink" href="#fetching-compositetype-data" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="../api/pycassa/types.html#pycassa.types.CompositeType" title="pycassa.types.CompositeType"><tt class="xref py py-class docutils literal"><span class="pre">CompositeType</span></tt></a> data is also returned in a tuple format.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">)</span>
+<span class="go">{(1234, &quot;abc&quot;): &quot;colval&quot;})</span>
+</pre></div>
+</div>
+<p>When fetching a slice of columns, slice ends are specified using tuples as
+well.  However, you are only required to supply at least the first component
+of the <a class="reference internal" href="../api/pycassa/types.html#pycassa.types.CompositeType" title="pycassa.types.CompositeType"><tt class="xref py py-class docutils literal"><span class="pre">CompositeType</span></tt></a>; elements may be left off of the end of the
+tuple in order to slice columns based on only the first or first few
+components.</p>
+<p>For example, suppose our <cite>comparator_type</cite> is
+<tt class="docutils literal"><span class="pre">CompositeType(LongType,</span> <span class="pre">AsciiType,</span> <span class="pre">LongType)</span></tt>. Valid slice ends would
+include <tt class="docutils literal"><span class="pre">(1,</span> <span class="pre">)</span></tt>, <tt class="docutils literal"><span class="pre">(1,</span> <span class="pre">&quot;a&quot;)</span></tt>, and <tt class="docutils literal"><span class="pre">(1,</span> <span class="pre">&quot;a&quot;,</span> <span class="pre">2011)</span></tt>.</p>
+<p>If you supply a slice start and a slice end that only specify the first
+component, you will get back all columns where the first component falls
+in that range, regardless of what the value of the other components is.</p>
+<p>When slicing columns, the second component is only compared to the second
+component of the slice start if the first component of the column name
+matches the first component of the slice start. Likewise with the slice
+end, the second component will only be checked if the first components
+match.  In essence, components after the first only serve as &#8220;tie-breakers&#8221;
+at the slice ends, and have no effect in the &#8220;middle&#8221; of the slice. Keep
+in mind the sorted order of the columns within Cassandra, and that when you
+get a slice of columns, you can only get a contiguous slice, not separate
+chunks out of the row.</p>
+<div class="section" id="inclusive-or-exclusive-slice-ends">
+<h3>Inclusive or Exclusive Slice Ends<a class="headerlink" href="#inclusive-or-exclusive-slice-ends" title="Permalink to this headline">¶</a></h3>
+<p>By default, slice ends are inclusive on the final component you supply
+for that slice end. This means that if you give a <tt class="docutils literal"><span class="pre">column_finish</span></tt> of
+<tt class="docutils literal"><span class="pre">(123,</span> <span class="pre">&quot;b&quot;)</span></tt>, then columns named <tt class="docutils literal"><span class="pre">(123,</span> <span class="pre">&quot;a&quot;,</span> <span class="pre">2011)</span></tt>, <tt class="docutils literal"><span class="pre">(123,</span> <span class="pre">&quot;b&quot;,</span> <span class="pre">0)</span></tt>,
+and <tt class="docutils literal"><span class="pre">(123,</span> <span class="pre">&quot;b&quot;</span> <span class="pre">123098123012)</span></tt> would all be returned.</p>
+<p>With composite types, you have the option to make the slice start and
+finish exlusive.  To do so, replace the final component in your slice end
+with a tuple like <tt class="docutils literal"><span class="pre">(value,</span> <span class="pre">False)</span></tt>. (Think of the <tt class="xref docutils literal"><span class="pre">False</span></tt> as being
+short for <tt class="docutils literal"><span class="pre">inclusive=False</span></tt>. You can also explicitly specify <tt class="xref docutils literal"><span class="pre">True</span></tt>,
+but this is redundant.)  Now, if you gave a <tt class="docutils literal"><span class="pre">column_finish</span></tt> of
+<tt class="docutils literal"><span class="pre">(123,</span> <span class="pre">(&quot;b&quot;,</span> <span class="pre">False))</span></tt>, you would only get back <tt class="docutils literal"><span class="pre">(123,</span> <span class="pre">&quot;a&quot;,</span> <span class="pre">2011)</span></tt>.
+The same principle applies for <tt class="docutils literal"><span class="pre">column_start</span></tt>.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Composite Types</a><ul>
+<li><a class="reference internal" href="#creating-a-compositetype-column-family">Creating a CompositeType Column Family</a></li>
+<li><a class="reference internal" href="#insert-compositetype-data">Insert CompositeType Data</a></li>
+<li><a class="reference internal" href="#fetching-compositetype-data">Fetching CompositeType Data</a><ul>
+<li><a class="reference internal" href="#inclusive-or-exclusive-slice-ends">Inclusive or Exclusive Slice Ends</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="super_columns.html"
+                        title="previous chapter">Super Columns</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="column_family_map.html"
+                        title="next chapter">Class Mapping with Column Family Map</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../sources/assorted/composite_types.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="column_family_map.html" title="Class Mapping with Column Family Map"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="super_columns.html" title="Super Columns"
+             >previous</a> |</li>
+        <li><a href="../index.html">pycassa v1.2.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Assorted Cassandra and pycassa Functionality</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
