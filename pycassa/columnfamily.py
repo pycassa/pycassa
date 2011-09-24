@@ -798,6 +798,8 @@ class ColumnFamily(object):
                 # because it will be a duplicate.
                 if j == 0 and i != 0:
                     continue
+                if not key_slice.columns:
+                    continue
                 yield (self._unpack_key(key_slice.key),
                        self._cosc_to_dict(key_slice.columns, include_timestamp))
                 count += 1
