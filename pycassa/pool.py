@@ -5,6 +5,7 @@ import threading
 import random
 import socket
 import Queue
+import warnings
 
 from thrift import Thrift
 from connection import Connection
@@ -405,6 +406,8 @@ class ConnectionPool(object):
         """
         Adds connections to the pool until at least ``pool_size`` connections
         exist, whether they are currently checked out from the pool or not.
+
+        .. versionadded:: 1.2.0
         """
         try:
             self._pool_lock.acquire()
@@ -420,8 +423,11 @@ class ConnectionPool(object):
         """
         Returns a new instance with idential creation arguments. This method
         does *not* affect the object it is called on.
+
+        .. deprecated:: 1.2.0
         """
-        raise DeprecationWarning("ConnectionPool.recreate() has been deprecated.")
+        msg = "ConnectionPool.recreate() has been deprecated."
+        warnings.warn(msg, DeprecationWarning)
 
         self._notify_on_pool_recreate()
         return ConnectionPool(pool_size=self._q.maxsize,
@@ -580,7 +586,16 @@ class ConnectionPool(object):
         self._notify_on_pool_dispose()
 
     def status(self):
-        """ Returns the status of the pool. """
+        """
+        Returns the status of the pool.
+
+        .. deprecated:: 1.2.0
+        """
+        msg ="ConnectionPool.status() is deprecated, use " +\
+             "ConnectionPool.size(), checkedin(), overflow(), " +\
+             "and checkedout() instead."
+        warnings.warn(msg, DeprecationWarning)
+
         return "Pool size: %d, connections in pool: %d, "\
                "current overflow: %d, current checked out "\
                "connections: %d" % (self.size(),
