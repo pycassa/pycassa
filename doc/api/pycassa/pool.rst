@@ -19,6 +19,8 @@
 
         .. automethod:: put
 
+        .. automethod:: execute
+
         .. automethod:: fill
 
         .. automethod:: dispose
