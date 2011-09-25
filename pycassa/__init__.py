@@ -11,3 +11,5 @@ from pycassa.cassandra.ttypes import ConsistencyLevel,\
     TimedOutException
 
 from pycassa.logging.pycassa_logger import *
+
+version = (1, 2, 0)

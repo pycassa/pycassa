@@ -24,8 +24,8 @@ except ImportError:
 
 from distutils.cmd import Command
 
-__version_info__ = (1, 2, 0)
-__version__ = '.'.join([str(v) for v in __version_info__])
+import pycassa
+__version__ = '.'.join(map(str, pycassa.version))
 
 long_description = """pycassa is a python client library for Apache Cassandra with the following features:
 
