@@ -39,3 +39,16 @@ for :meth:`get()`; this is because there is no way to know the non-timestamp
 components of the UUID ahead of time.  Instead, simply pass the same :class:`datetime`
 object for both `column_start` and `column_finish` and you'll get one or more
 columns for that exact moment in time.
+
+Note that Python does not sort UUIDs the same way that Cassandra does. When Cassandra sorts V1
+UUIDs it first compares the time component, and then the raw bytes of the UUID. Python on the 
+other hand just sorts the raw bytes. If you need to sort UUIDs in Python the same way Cassandra
+does you will want to use something like this:
+
+.. code-block:: python
+
+  >>> import uuid, random
+  >>> uuids = [uuid.uuid1() for _ xrange(10)]
+  >>> random.shuffle(uuids)
+  >>> improperly_sorted = sorted(uuids)
+  >>> properly_sorted = sorted(uuids, key=lambda k: (k.time, k.bytes))
