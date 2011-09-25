@@ -12,4 +12,4 @@ from pycassa.cassandra.ttypes import ConsistencyLevel,\
 
 from pycassa.logging.pycassa_logger import *
 
-version = (1, 2, 0)
+version = (1, 2, 1)
