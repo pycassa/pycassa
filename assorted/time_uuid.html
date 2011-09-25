@@ -89,6 +89,17 @@ for <tt class="xref py py-meth docutils literal"><span class="pre">get()</span><
 components of the UUID ahead of time.  Instead, simply pass the same <tt class="xref py py-class docutils literal"><span class="pre">datetime</span></tt>
 object for both <cite>column_start</cite> and <cite>column_finish</cite> and you&#8217;ll get one or more
 columns for that exact moment in time.</p>
+<p>Note that Python does not sort UUIDs the same way that Cassandra does. When Cassandra sorts V1
+UUIDs it first compares the time component, and then the raw bytes of the UUID. Python on the
+other hand just sorts the raw bytes. If you need to sort UUIDs in Python the same way Cassandra
+does you will want to use something like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">uuid</span><span class="o">,</span> <span class="nn">random</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">uuids</span> <span class="o">=</span> <span class="p">[</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid1</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">uuids</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">improperly_sorted</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">uuids</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">properly_sorted</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">uuids</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">k</span><span class="o">.</span><span class="n">bytes</span><span class="p">))</span>
+</pre></div>
+</div>
 </div>
 
 
