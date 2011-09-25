@@ -54,6 +54,24 @@
             
   <div class="section" id="changelog">
 <h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="changes-in-version-1-2-1">
+<h2>Changes in Version 1.2.1<a class="headerlink" href="#changes-in-version-1-2-1" title="Permalink to this headline">¶</a></h2>
+<p>This is strictly a bug-fix release addressing a few
+issues created in 1.2.0.</p>
+<div class="section" id="bug-fixes">
+<h3>Bug Fixes<a class="headerlink" href="#bug-fixes" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Correctly check for Counters in <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>
+when setting <cite>default_validation_class</cite></li>
+<li>Pass kwargs in <a class="reference internal" href="api/pycassa/columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a> to
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a></li>
+<li>Avoid potential UnboundLocal in <a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.ConnectionPool.execute" title="pycassa.pool.ConnectionPool.execute"><tt class="xref py py-meth docutils literal"><span class="pre">ConnectionPool.execute()</span></tt></a>
+when <a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.ConnectionPool.get" title="pycassa.pool.ConnectionPool.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a> fails</li>
+<li>Fix ez_setup dependency/bundling so that package installations
+using easy_install or pip don&#8217;t fail without ez_setup installed</li>
+</ul>
+</div>
+</div>
 <div class="section" id="changes-in-version-1-2-0">
 <h2>Changes in Version 1.2.0<a class="headerlink" href="#changes-in-version-1-2-0" title="Permalink to this headline">¶</a></h2>
 <p>This should be a fairly smooth upgrade from pycassa 1.1. The
@@ -93,8 +111,8 @@ Rows without any columns will not be returned by the generator,
 and these rows will not count towards the supplied <cite>row_count</cite>.</li>
 </ul>
 </div>
-<div class="section" id="bug-fixes">
-<h3>Bug Fixes<a class="headerlink" href="#bug-fixes" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id1">
+<h3>Bug Fixes<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Add connections to <a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a> more readily
 when <cite>prefill</cite> is <tt class="xref docutils literal"><span class="pre">False</span></tt>.
@@ -132,15 +150,15 @@ bundled version when available</li>
 </div>
 <div class="section" id="changes-in-version-1-1-1">
 <h2>Changes in Version 1.1.1<a class="headerlink" href="#changes-in-version-1-1-1" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id1">
-<h3>Features<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id2">
+<h3>Features<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Add <tt class="docutils literal"><span class="pre">max_count</span></tt> and <tt class="docutils literal"><span class="pre">column_reversed</span></tt> params to <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_count" title="pycassa.columnfamily.ColumnFamily.get_count"><tt class="xref py py-meth docutils literal"><span class="pre">get_count()</span></tt></a></li>
 <li>Add <tt class="docutils literal"><span class="pre">max_count</span></tt> and <tt class="docutils literal"><span class="pre">column_reversed</span></tt> params to <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.multiget_count" title="pycassa.columnfamily.ColumnFamily.multiget_count"><tt class="xref py py-meth docutils literal"><span class="pre">multiget_count()</span></tt></a></li>
 </ul>
 </div>
-<div class="section" id="id2">
-<h3>Bug Fixes<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id3">
+<h3>Bug Fixes<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Don&#8217;t retry operations after a <tt class="docutils literal"><span class="pre">TApplicationException</span></tt>. This exception
 is reserved for programmatic errors (such as a bad API parameters), so
@@ -200,8 +218,8 @@ behavior can be controlled through the following attributes:<ul>
 changes in validation classes with <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.load_schema" title="pycassa.columnfamily.ColumnFamily.load_schema"><tt class="xref py py-meth docutils literal"><span class="pre">ColumnFamily.load_schema()</span></tt></a>.</li>
 </ul>
 </div>
-<div class="section" id="id3">
-<h3>Bug Fixes<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id4">
+<h3>Bug Fixes<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <p>There were several related issues with overlow in <a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a>:</p>
 <ul class="simple">
 <li>Connection failures when a <a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a> was in a state
@@ -236,8 +254,8 @@ packaged tarballs.</li>
 <li><tt class="xref py py-meth docutils literal"><span class="pre">SystemManager.get_keyspace_description()</span></tt></li>
 </ul>
 </div>
-<div class="section" id="id4">
-<h3>Deprecated<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id5">
+<h3>Deprecated<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <p>Athough not technically deprecated, most <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>
 constructor arguments should instead be set by setting the
 corresponding attribute on the <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a> after
@@ -265,8 +283,8 @@ releases, but no warnings were issued until now.</li>
 <li>Deprecations are now split into separate sections for each release in the
 changelog.</li>
 </ul>
-<div class="section" id="id5">
-<h3>Deprecated<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id6">
+<h3>Deprecated<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>The <cite>instance</cite> parameter of <tt class="xref py py-meth docutils literal"><span class="pre">ColumnFamilyMap.get_indexed_slices()</span></tt></li>
 </ul>
@@ -304,8 +322,8 @@ overflow; 0 is now used when there is not currently any overflow</li>
 <tt class="xref py py-class docutils literal"><span class="pre">Long</span></tt> uses big-endian encoding, which is compatible with Cassandra&#8217;s LongType,
 while <tt class="xref py py-class docutils literal"><span class="pre">Int64</span></tt> used little-endian encoding.</li>
 </ul>
-<div class="section" id="id6">
-<h3>Deprecated<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id7">
+<h3>Deprecated<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><tt class="xref py py-class docutils literal"><span class="pre">pycassa.types.Int64</span></tt> has been deprecated in favor of <tt class="xref py py-class docutils literal"><span class="pre">pycassa.types.Long</span></tt></li>
 </ul>
@@ -336,8 +354,8 @@ argument is supplied</li>
 and <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.describe_column_family()</span></tt>
 to pycassaShell describe_keyspace() and describe_column_family()</li>
 </ul>
-<div class="section" id="id7">
-<h3>Deprecated<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id8">
+<h3>Deprecated<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Renamed <tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.get_keyspace_description()</span></tt>
 to <a class="reference internal" href="api/pycassa/system_manager.html#pycassa.system_manager.SystemManager.get_keyspace_column_families" title="pycassa.system_manager.SystemManager.get_keyspace_column_families"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.system_manager.SystemManager.get_keyspace_column_families()</span></tt></a>
@@ -392,8 +410,8 @@ default dictionary class for column families</li>
 type</li>
 <li>Use Thrift API 19.4.0</li>
 </ul>
-<div class="section" id="id8">
-<h3>Deprecated<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id9">
+<h3>Deprecated<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><tt class="xref py py-meth docutils literal"><span class="pre">ColumnFamilyMap.get_count()</span></tt> has been deprecated. Use
 <tt class="xref py py-meth docutils literal"><span class="pre">ColumnFamily.get_count()</span></tt> instead.</li>
@@ -512,46 +530,50 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Changelog</a><ul>
+<li><a class="reference internal" href="#changes-in-version-1-2-1">Changes in Version 1.2.1</a><ul>
+<li><a class="reference internal" href="#bug-fixes">Bug Fixes</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#changes-in-version-1-2-0">Changes in Version 1.2.0</a><ul>
 <li><a class="reference internal" href="#features">Features</a></li>
-<li><a class="reference internal" href="#bug-fixes">Bug Fixes</a></li>
+<li><a class="reference internal" href="#id1">Bug Fixes</a></li>
 <li><a class="reference internal" href="#deprecated">Deprecated</a></li>
 <li><a class="reference internal" href="#miscellaneous">Miscellaneous</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#changes-in-version-1-1-1">Changes in Version 1.1.1</a><ul>
-<li><a class="reference internal" href="#id1">Features</a></li>
-<li><a class="reference internal" href="#id2">Bug Fixes</a></li>
+<li><a class="reference internal" href="#id2">Features</a></li>
+<li><a class="reference internal" href="#id3">Bug Fixes</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#changes-in-version-1-1-0">Changes in Version 1.1.0</a><ul>
 <li><a class="reference internal" href="#changes-related-to-cassandra-0-8">Changes related to Cassandra 0.8</a></li>
 <li><a class="reference internal" href="#other-features">Other Features</a></li>
-<li><a class="reference internal" href="#id3">Bug Fixes</a></li>
+<li><a class="reference internal" href="#id4">Bug Fixes</a></li>
 <li><a class="reference internal" href="#other">Other</a></li>
 <li><a class="reference internal" href="#removed-deprecated-items">Removed Deprecated Items</a></li>
-<li><a class="reference internal" href="#id4">Deprecated</a></li>
+<li><a class="reference internal" href="#id5">Deprecated</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#changes-in-version-1-0-8">Changes in Version 1.0.8</a><ul>
-<li><a class="reference internal" href="#id5">Deprecated</a></li>
+<li><a class="reference internal" href="#id6">Deprecated</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#changes-in-version-1-0-7">Changes in Version 1.0.7</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-0-6">Changes in Version 1.0.6</a><ul>
-<li><a class="reference internal" href="#id6">Deprecated</a></li>
+<li><a class="reference internal" href="#id7">Deprecated</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#changes-in-version-1-0-5">Changes in Version 1.0.5</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-0-4">Changes in Version 1.0.4</a><ul>
-<li><a class="reference internal" href="#id7">Deprecated</a></li>
+<li><a class="reference internal" href="#id8">Deprecated</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#changes-in-version-1-0-3">Changes in Version 1.0.3</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-0-2">Changes in Version 1.0.2</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-0-1">Changes in Version 1.0.1</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-0-0">Changes in Version 1.0.0</a><ul>
-<li><a class="reference internal" href="#id8">Deprecated</a></li>
+<li><a class="reference internal" href="#id9">Deprecated</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#changes-in-version-0-5-4">Changes in Version 0.5.4</a></li>

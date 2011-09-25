@@ -164,6 +164,14 @@ help individual pools to be identified in the logs.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pycassa.pool.ConnectionPool.execute">
+<tt class="descname">execute</tt><big>(</big><em>f</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a connection from the pool, execute
+<cite>f</cite> on it with <cite>*args</cite> and <cite>**kwargs</cite>, return the
+connection to the pool, and return the result of <cite>f</cite>.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="pycassa.pool.ConnectionPool.fill">
 <tt class="descname">fill</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool.fill" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds connections to the pool until at least <tt class="docutils literal"><span class="pre">pool_size</span></tt> connections

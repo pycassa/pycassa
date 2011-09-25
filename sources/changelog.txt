@@ -1,6 +1,22 @@
 Changelog
 =========
 
+Changes in Version 1.2.1
+------------------------
+This is strictly a bug-fix release addressing a few
+issues created in 1.2.0.
+
+Bug Fixes
+~~~~~~~~~
+- Correctly check for Counters in :class:`.ColumnFamily`
+  when setting `default_validation_class`
+- Pass kwargs in :class:`.ColumnFamilyMap` to
+  :class:`.ColumnFamily`
+- Avoid potential UnboundLocal in :meth:`.ConnectionPool.execute`
+  when :meth:`~.ConnectionPool.get` fails
+- Fix ez_setup dependency/bundling so that package installations
+  using easy_install or pip don't fail without ez_setup installed
+
 Changes in Version 1.2.0
 ------------------------
 This should be a fairly smooth upgrade from pycassa 1.1. The
