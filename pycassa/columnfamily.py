@@ -156,7 +156,7 @@ class ColumnFamily(object):
             self._default_validation_class = t
             self._default_value_packer = t.pack
             self._default_value_unpacker = t.unpack
-            have_counters = isinstance(t, types.CountercolumnType)
+            have_counters = isinstance(t, types.CounterColumnType)
         else:
             self._default_validation_class = marshal.extract_type_name(t)
             self._default_value_packer = marshal.packer_for(t)
