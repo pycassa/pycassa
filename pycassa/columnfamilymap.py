@@ -35,7 +35,7 @@ def create_instance(cls, **kwargs):
 class ColumnFamilyMap(ColumnFamily):
     """ Maps an existing class to a column family. """
 
-    def __init__(self, cls, pool, column_family, columns=None, raw_columns=False):
+    def __init__(self, cls, pool, column_family, columns=None, raw_columns=False, **kwargs):
         """
         Maps an existing class to a column family.  Class fields become columns,
         and instances of that class can be represented as rows in standard column
@@ -53,7 +53,7 @@ class ColumnFamilyMap(ColumnFamily):
         `raw_columns` field in requests.
 
         """
-        ColumnFamily.__init__(self, pool, column_family)
+        ColumnFamily.__init__(self, pool, column_family, **kwargs)
 
         self.cls = cls
         self.autopack_names = False
