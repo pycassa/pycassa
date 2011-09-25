@@ -39,6 +39,7 @@ class TestCFs(unittest.TestCase):
         sys = SystemManager()
         sys.create_column_family(TEST_KS, 'StdLong', comparator_type=LongType())
         sys.create_column_family(TEST_KS, 'StdInteger', comparator_type=IntegerType())
+        sys.create_column_family(TEST_KS, 'StdBigInteger', comparator_type=IntegerType())
         sys.create_column_family(TEST_KS, 'StdTimeUUID', comparator_type=TimeUUIDType())
         sys.create_column_family(TEST_KS, 'StdLexicalUUID', comparator_type=LexicalUUIDType())
         sys.create_column_family(TEST_KS, 'StdAscii', comparator_type=AsciiType())
@@ -50,6 +51,7 @@ class TestCFs(unittest.TestCase):
 
         cls.cf_long  = ColumnFamily(pool, 'StdLong')
         cls.cf_int   = ColumnFamily(pool, 'StdInteger')
+        cls.cf_big_int = ColumnFamily(pool, 'StdBigInteger')
         cls.cf_time  = ColumnFamily(pool, 'StdTimeUUID')
         cls.cf_lex   = ColumnFamily(pool, 'StdLexicalUUID')
         cls.cf_ascii = ColumnFamily(pool, 'StdAscii')
@@ -87,6 +89,11 @@ class TestCFs(unittest.TestCase):
         int_cols = [1,2,3]
         type_groups.append(self.make_group(TestCFs.cf_int, int_cols))
 
+        big_int_cols = [1 + int(time.time() * 10 ** 6),
+                        2 + int(time.time() * 10 ** 6),
+                        3 + int(time.time() * 10 ** 6)]
+        type_groups.append(self.make_group(TestCFs.cf_big_int, big_int_cols))
+        
         time_cols = [TIME1, TIME2, TIME3]
         type_groups.append(self.make_group(TestCFs.cf_time, time_cols))
 
@@ -198,6 +205,7 @@ class TestSuperCFs(unittest.TestCase):
         sys = SystemManager()
         sys.create_column_family(TEST_KS, 'SuperLong', super=True, comparator_type=LongType())
         sys.create_column_family(TEST_KS, 'SuperInt', super=True, comparator_type=IntegerType())
+        sys.create_column_family(TEST_KS, 'SuperBigInt', super=True, comparator_type=IntegerType())
         sys.create_column_family(TEST_KS, 'SuperTime', super=True, comparator_type=TimeUUIDType())
         sys.create_column_family(TEST_KS, 'SuperLex', super=True, comparator_type=LexicalUUIDType())
         sys.create_column_family(TEST_KS, 'SuperAscii', super=True, comparator_type=AsciiType())
@@ -207,6 +215,7 @@ class TestSuperCFs(unittest.TestCase):
 
         cls.cf_suplong  = ColumnFamily(pool, 'SuperLong')
         cls.cf_supint   = ColumnFamily(pool, 'SuperInt')
+        cls.cf_supbigint   = ColumnFamily(pool, 'SuperBigInt')
         cls.cf_suptime  = ColumnFamily(pool, 'SuperTime')
         cls.cf_suplex   = ColumnFamily(pool, 'SuperLex')
         cls.cf_supascii = ColumnFamily(pool, 'SuperAscii')
@@ -242,7 +251,12 @@ class TestSuperCFs(unittest.TestCase):
 
         int_cols = [1,2,3]
         type_groups.append(self.make_super_group(TestSuperCFs.cf_supint, int_cols))
-
+        
+        big_int_cols = [1 + int(time.time() * 10 ** 6),
+                        2 + int(time.time() * 10 ** 6),
+                        3 + int(time.time() * 10 ** 6)]
+        type_groups.append(self.make_super_group(TestSuperCFs.cf_supbigint, big_int_cols))
+        
         time_cols = [TIME1, TIME2, TIME3]
         type_groups.append(self.make_super_group(TestSuperCFs.cf_suptime, time_cols))
 
@@ -352,6 +366,8 @@ class TestSuperSubCFs(unittest.TestCase):
                                  comparator_type=LongType(), subcomparator_type=LongType())
         sys.create_column_family(TEST_KS, 'SuperLongSubInt', super=True,
                                  comparator_type=LongType(), subcomparator_type=IntegerType())
+        sys.create_column_family(TEST_KS, 'SuperLongSubBigInt', super=True,
+                                 comparator_type=LongType(), subcomparator_type=IntegerType())
         sys.create_column_family(TEST_KS, 'SuperLongSubTime', super=True,
                                  comparator_type=LongType(), subcomparator_type=TimeUUIDType())
         sys.create_column_family(TEST_KS, 'SuperLongSubLex', super=True,
@@ -366,6 +382,7 @@ class TestSuperSubCFs(unittest.TestCase):
 
         cls.cf_suplong_sublong  = ColumnFamily(pool, 'SuperLongSubLong')
         cls.cf_suplong_subint   = ColumnFamily(pool, 'SuperLongSubInt')
+        cls.cf_suplong_subbigint   = ColumnFamily(pool, 'SuperLongSubBigInt')
         cls.cf_suplong_subtime  = ColumnFamily(pool, 'SuperLongSubTime')
         cls.cf_suplong_sublex   = ColumnFamily(pool, 'SuperLongSubLex')
         cls.cf_suplong_subascii = ColumnFamily(pool, 'SuperLongSubAscii')
@@ -402,6 +419,11 @@ class TestSuperSubCFs(unittest.TestCase):
 
         int_cols = [1,2,3]
         type_groups.append(self.make_sub_group(TestSuperSubCFs.cf_suplong_subint, int_cols))
+        
+        big_int_cols = [1 + int(time.time() * 10 ** 6),
+                        2 + int(time.time() * 10 ** 6),
+                        3 + int(time.time() * 10 ** 6)]
+        type_groups.append(self.make_sub_group(TestSuperSubCFs.cf_suplong_subbigint, big_int_cols))
 
         time_cols = [TIME1, TIME2, TIME3]
         type_groups.append(self.make_sub_group(TestSuperSubCFs.cf_suplong_subtime, time_cols))
