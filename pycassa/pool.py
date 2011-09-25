@@ -566,11 +566,13 @@ class ConnectionPool(object):
         `f` on it with `*args` and `**kwargs`, return the
         connection to the pool, and return the result of `f`.
         """
+        conn = None
         try:
             conn = self.get()
             return getattr(conn, f)(*args, **kwargs)
         finally:
-            self.put(conn)
+            if conn:
+                self.put(conn)
 
     def dispose(self):
         """ Closes all checked in connections in the pool. """
