@@ -21,6 +21,7 @@ def setup_module():
 def teardown_module():
     pool.dispose()
 
+
 class TestUTF8(object):
     strcol = types.AsciiType(default='default')
     intcol = types.LongType(default=0)
@@ -36,6 +37,7 @@ class TestUTF8(object):
     def __ne__(self, other):
         return self.__dict__ != other.__dict__
 
+
 class TestIndex(object):
     birthdate = types.LongType(default=0)
 
@@ -45,8 +47,10 @@ class TestIndex(object):
     def __ne__(self, other):
         return self.__dict__ != other.__dict__
 
+
 class TestEmpty(object):
     pass
+
 
 class TestColumnFamilyMap(unittest.TestCase):
 
@@ -81,6 +85,30 @@ class TestColumnFamilyMap(unittest.TestCase):
         assert_raises(NotFoundException, self.map.get, instance.key)
         self.map.insert(instance)
         assert_equal(self.map.get(instance.key), instance)
+    
+    def test_insert_get_omitting_columns(self):
+        r"""
+        When omitting columns, pycassa should not try to insert the CassandraType
+        instance on a ColumnFamilyMap object
+        """
+        instance2 = TestUTF8()
+        instance2.key = 'TestColumnFamilyMap.test_insert_get_2'
+        instance2.strcol = 'lol'
+        instance2.intcol = 2
+        assert_raises(NotFoundException, self.map.get, instance2.key)
+        self.map.insert(instance2)
+        ret_inst = self.map.get(instance2.key)
+        assert_equal(ret_inst.key, instance2.key)
+        assert_equal(ret_inst.strcol, instance2.strcol)
+        assert_equal(ret_inst.intcol, instance2.intcol)
+
+        ## these lines are commented out because, though they should work, wont
+        ## because CassandraTypes are not descriptors when used on a ColumnFamilyMap 
+        ## instance, they are merely class attributes that are overwritten at runtime
+
+        # assert_equal(ret_inst.floatcol, instance2.floatcol)
+        # assert_equal(ret_inst.datetimecol, instance2.datetimecol)
+        # assert_equal(self.map.get(instance2.key), instance2)
 
     def test_insert_get_indexed_slices(self):
         instance1 = TestIndex()
