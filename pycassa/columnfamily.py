@@ -6,7 +6,6 @@ manipulation of data inside Cassandra.
 """
 
 import time
-import uuid
 import struct
 from UserDict import DictMixin
 
