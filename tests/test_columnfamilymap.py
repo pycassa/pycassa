@@ -3,11 +3,10 @@ import unittest
 
 import pycassa.types as types
 from pycassa import index, ColumnFamily, ConnectionPool, \
-    ColumnFamilyMap, ConsistencyLevel, NotFoundException, SystemManager
+    ColumnFamilyMap, NotFoundException, SystemManager
 from nose.tools import assert_raises, assert_equal, assert_true
 from nose.plugins.skip import *
 
-import struct
 
 CF = 'Standard1'
 SCF = 'Super1'
