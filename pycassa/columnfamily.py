@@ -161,7 +161,7 @@ class ColumnFamily(object):
             self._default_value_packer = marshal.packer_for(t)
             self._default_value_unpacker = marshal.unpacker_for(t)
             have_counters = self._default_validation_class == "CounterColumnType"
-
+        
         if not self.super:
             if have_counters:
                 def _make_cosc(name, value, timestamp, ttl):
@@ -460,13 +460,15 @@ class ColumnFamily(object):
     def _make_mutation_list(self, columns, timestamp, ttl):
         _pack_name = self._pack_name
         _pack_value = self._pack_value
+        _validate = lambda _: not isinstance(_[1], types.CassandraType)
         if not self.super:
             return map(lambda (c, v): Mutation(self._make_cosc(_pack_name(c), _pack_value(v, c), timestamp, ttl)),
-                columns.items())
+                       filter(_validate, columns.iteritems()))
         else:
             mut_list = []
             for super_col, subcs in columns.items():
-                subcols = map(lambda (c, v): self._make_column(_pack_name(c), _pack_value(v, c), timestamp, ttl), subcs.items())
+                subcols = map(lambda (c, v): self._make_column(_pack_name(c), _pack_value(v, c), timestamp, ttl), 
+                             filter(_validate, subcs.iteritems()))
                 mut_list.append(Mutation(self._make_cosc(_pack_name(super_col, True), subcols)))
             return mut_list
 
