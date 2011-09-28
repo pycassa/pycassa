@@ -233,7 +233,7 @@ class ColumnFamilyMap(ColumnFamily):
         insert_dict = {}
         for field in fields:
             val = getattr(instance, field, None)
-            if val is not None:
+            if val is not None and not isinstance(val, CassandraType):
                 insert_dict[field] = val
 
         if self.super:

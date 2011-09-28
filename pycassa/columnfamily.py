@@ -463,12 +463,12 @@ class ColumnFamily(object):
         _validate = lambda _: not isinstance(_[1], types.CassandraType)
         if not self.super:
             return map(lambda (c, v): Mutation(self._make_cosc(_pack_name(c), _pack_value(v, c), timestamp, ttl)),
-                       filter(_validate, columns.iteritems()))
+                       columns.iteritems())
         else:
             mut_list = []
             for super_col, subcs in columns.items():
-                subcols = map(lambda (c, v): self._make_column(_pack_name(c), _pack_value(v, c), timestamp, ttl), 
-                             filter(_validate, subcs.iteritems()))
+                subcols = map(lambda (c, v): self._make_column(_pack_name(c), _pack_value(v, c), timestamp, ttl),
+                              subcs.iteritems())
                 mut_list.append(Mutation(self._make_cosc(_pack_name(super_col, True), subcols)))
             return mut_list
 
