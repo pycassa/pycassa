@@ -231,7 +231,7 @@ class ColumnFamilyMap(ColumnFamily):
             fields = columns
 
         insert_dict = {}
-        for field in self.fields:
+        for field in fields:
             val = getattr(instance, field, None)
             if val is not None:
                 insert_dict[field] = val
