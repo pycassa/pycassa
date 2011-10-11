@@ -74,7 +74,7 @@ class Connection(Cassandra.Client):
         self.transport.close()
 
 
-def connect(keyspace, servers=None, framed_transport=True, timeout=None,
+def connect(keyspace, servers=None, framed_transport=True, timeout=0.5,
             credentials=None, retry_time=60, recycle=None, use_threadlocal=True):
     """
     Constructs a :class:`~pycassa.pool.ConnectionPool`. This is primarily available
