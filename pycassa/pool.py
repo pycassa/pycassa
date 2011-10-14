@@ -400,7 +400,7 @@ class ConnectionPool(object):
                 failure_count += 1
         raise AllServersUnavailable('An attempt was made to connect to each of the servers ' +
                                     'twice, but none of the attempts succeeded. The last failure was %s: %s' %
-                                    (exc.__class__.__name, exc))
+                                    (exc.__class__.__name__, exc))
 
     def fill(self):
         """
