@@ -1,6 +1,7 @@
 from exceptions import Exception
 import socket
 import time
+import warnings
 
 from thrift import Thrift
 from thrift.transport import TTransport
@@ -83,7 +84,12 @@ def connect(keyspace, servers=None, framed_transport=True, timeout=0.5,
     with parameters of the same name in
     :meth:`pycassa.pool.ConnectionPool.__init__()`
 
+    .. deprecated:: 1.2.2
+
     """
+    msg = "pycassa.connect() has been deprecated. Create a ConnectionPool " +\
+          "instance directly instead."
+    warnings.warn(msg, DeprecationWarning)
     if servers is None:
         servers = [DEFAULT_SERVER]
     return pool.ConnectionPool(keyspace=keyspace, server_list=servers,
