@@ -27,7 +27,7 @@ else:
 _BASIC_TYPES = ['BytesType', 'LongType', 'IntegerType', 'UTF8Type',
                 'AsciiType', 'LexicalUUIDType', 'TimeUUIDType',
                 'CounterColumnType', 'FloatType', 'DoubleType',
-                'DateType', 'BooleanType']
+                'DateType', 'BooleanType', 'UUIDType']
 
 def extract_type_name(typestr):
     if typestr is None:
