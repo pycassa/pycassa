@@ -747,7 +747,7 @@ class ColumnFamily(object):
                   column_finish="", column_reversed=False, column_count=100,
                   row_count=None, include_timestamp=False,
                   super_column=None, read_consistency_level=None,
-                  buffer_size=None):
+                  buffer_size=None, filter_empty=True):
         """
         Get an iterator over rows in a specified key range.
 
@@ -766,6 +766,10 @@ class ColumnFamily(object):
         server will overallocate memory and fail. `buffer_size` is the
         size of that buffer in number of rows. If left as ``None``, the
         ColumnFamily's :attr:`buffer_size` attribute will be used.
+
+        When `filter_empty` is left as ``True``, empty rows (including
+        `range ghosts <http://wiki.apache.org/cassandra/FAQ#range_ghosts>`_)
+        will be skipped and will not count towards `row_count`.
 
         All other parameters are the same as those of :meth:`get()`.
 
@@ -799,7 +803,7 @@ class ColumnFamily(object):
                 # because it will be a duplicate.
                 if j == 0 and i != 0:
                     continue
-                if not key_slice.columns and column_count != 0:
+                if filter_empty and not key_slice.columns:
                     continue
                 yield (self._unpack_key(key_slice.key),
                        self._cosc_to_dict(key_slice.columns, include_timestamp))
