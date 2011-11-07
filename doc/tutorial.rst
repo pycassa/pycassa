@@ -92,7 +92,7 @@ Here's how to create the keyspace and column family:
 
 .. code-block:: python
 
-    >>> SYSTEM_MANAGER.create_keyspace('Keyspace1', replication_factor=1)
+    >>> SYSTEM_MANAGER.create_keyspace('Keyspace1', strategy_options={"replication_factor": "1"})
     >>> SYSTEM_MANAGER.create_column_family('Keyspace1', 'ColumnFamily1')
 
 Connecting to Cassandra

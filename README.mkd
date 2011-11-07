@@ -10,7 +10,8 @@ with the following features:
 * A batch interface
 * A class for mapping classes to Cassandra column families
 
-The latest release is compatible with Cassandra 0.7 and 0.8.
+The latest release is fully compatible with Cassandra 0.8 and 1.0, and
+compatible with data API of 0.7.
 
 *pycassa* is open source under the [MIT license](http://www.opensource.org/licenses/mit-license.php).
 

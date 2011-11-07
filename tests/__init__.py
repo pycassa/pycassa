@@ -8,7 +8,7 @@ def setup_package():
     if TEST_KS in sys.list_keyspaces():
         sys.drop_keyspace(TEST_KS)
     try:
-        sys.create_keyspace(TEST_KS, 1)
+        sys.create_keyspace(TEST_KS, SIMPLE_STRATEGY, {'replication_factor': '1'})
         sys.create_column_family(TEST_KS, 'Standard1')
         sys.create_column_family(TEST_KS, 'Super1', super=True)
         sys.create_column_family(TEST_KS, 'Indexed1')
