@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial &mdash; pycassa v1.2.1 documentation</title>
+    <title>Tutorial &mdash; pycassa v1.3.0 documentation</title>
     <link rel="stylesheet" href="static/default.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.2.1',
+        VERSION:     '1.3.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
     <link rel="shortcut icon" href="static/favicon.ico"/>
-    <link rel="top" title="pycassa v1.2.1 documentation" href="index.html" />
+    <link rel="top" title="pycassa v1.3.0 documentation" href="index.html" />
     <link rel="next" title="Twissandra Example" href="example/index.html" />
     <link rel="prev" title="Installing" href="installation.html" /> 
   </head>
@@ -43,7 +43,7 @@
         <li class="right" >
           <a href="installation.html" title="Installing"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">pycassa v1.2.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v1.3.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -134,7 +134,7 @@ ColumnFamily instances are only available <span class="k">if </span>a keyspace i
 Schema definition tools and cluster information are available through SYSTEM_MANAGER.
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">SYSTEM_MANAGER</span><span class="o">.</span><span class="n">create_keyspace</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="n">replication_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">SYSTEM_MANAGER</span><span class="o">.</span><span class="n">create_keyspace</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="n">strategy_options</span><span class="o">=</span><span class="p">{</span><span class="s">&quot;replication_factor&quot;</span><span class="p">:</span> <span class="s">&quot;1&quot;</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">SYSTEM_MANAGER</span><span class="o">.</span><span class="n">create_column_family</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="s">&#39;ColumnFamily1&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -479,7 +479,7 @@ on other servers until it succeeds or a maximum number of failures is reached.</
         <li class="right" >
           <a href="installation.html" title="Installing"
              >previous</a> |</li>
-        <li><a href="index.html">pycassa v1.2.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v1.3.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

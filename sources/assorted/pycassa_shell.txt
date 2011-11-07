@@ -123,7 +123,7 @@ Example usage:
         Index Type:                      KEYS
         Index Name:                      None
 
-    >>> SYSTEM_MANAGER.create_keyspace('Keyspace1', replication_factor=1)
+    >>> SYSTEM_MANAGER.create_keyspace('Keyspace1', strategy_options={"replication_factor": "1"})
     >>> SYSTEM_MANAGER.create_column_family('Keyspace1', 'Users', comparator_type=INT_TYPE)
     >>> SYSTEM_MANAGER.alter_column_family('Keyspace1', 'Users', key_cache_size=100)
     >>> SYSTEM_MANAGER.create_index('Keyspace1', 'Users', 'birthdate', LONG_TYPE, index_name='bday_index')

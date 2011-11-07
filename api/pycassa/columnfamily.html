@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.columnfamily – Column Family &mdash; pycassa v1.2.1 documentation</title>
+    <title>pycassa.columnfamily – Column Family &mdash; pycassa v1.3.0 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.2.1',
+        VERSION:     '1.3.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
     <link rel="shortcut icon" href="../../static/favicon.ico"/>
-    <link rel="top" title="pycassa v1.2.1 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v1.3.0 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.columnfamilymap – Maps Classes to Column Families" href="columnfamilymap.html" />
     <link rel="prev" title="pycassa.pool – Connection Pooling" href="pool.html" /> 
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="pool.html" title="pycassa.pool – Connection Pooling"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.2.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.3.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -297,6 +297,9 @@ buffered if we are fetching many rows, otherwise the Cassandra
 server will overallocate memory and fail. <cite>buffer_size</cite> is the
 size of that buffer in number of rows. If left as <tt class="xref docutils literal"><span class="pre">None</span></tt>, the
 ColumnFamily&#8217;s <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.buffer_size" title="pycassa.columnfamily.ColumnFamily.buffer_size"><tt class="xref py py-attr docutils literal"><span class="pre">buffer_size</span></tt></a> attribute will be used.</p>
+<p>When <cite>filter_empty</cite> is left as <tt class="xref docutils literal"><span class="pre">True</span></tt>, empty rows (including
+<a class="reference external" href="http://wiki.apache.org/cassandra/FAQ#range_ghosts">range ghosts</a>)
+will be skipped and will not count towards <cite>row_count</cite>.</p>
 <p>All other parameters are the same as those of <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.get" title="pycassa.columnfamily.ColumnFamily.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a>.</p>
 <p>A generator over <tt class="docutils literal"><span class="pre">(key,</span> <span class="pre">{column_name:</span> <span class="pre">column_value})</span></tt> is returned.
 To convert this to a list, use <tt class="docutils literal"><span class="pre">list()</span></tt> on the result.</p>
@@ -464,7 +467,7 @@ operations using as few roundtrips as possible.</p>
         <li class="right" >
           <a href="pool.html" title="pycassa.pool – Connection Pooling"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.2.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.3.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

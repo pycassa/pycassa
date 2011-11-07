@@ -1,6 +1,39 @@
 Changelog
 =========
 
+Changes in Version 1.3.0
+------------------------
+This release adds full compatibility with Cassandra 1.0 and
+removes support for schema manipulation in Cassandra 0.7.
+
+In this release, schema manipulation should work with Cassandra 0.8
+and 1.0, but not 0.7.  The data API should continue to work with all
+three versions.
+
+Bug Fixes
+~~~~~~~~~
+- Don't ignore `columns` parameter in :meth:`.ColumnFamilyMap.insert()`
+- Handle empty instance fields in :meth:`.ColumnFamilyMap.insert()`
+- Use the same default for `timeout` in :meth:`pycassa.connect()` as
+  :class:`~.ConnectionPool` uses
+- Fix typo which caused a different exception to be thrown when an
+  :exc:`.AllServersUnavailable` exception was raised
+- IPython 0.11 compatibility in pycassaShell
+- Correct dependency declaration in :file:`setup.py`
+- Add UUIDType to supported types
+
+Features
+~~~~~~~~
+- The `filter_empty` parameter was added to
+  :meth:`~.ColumnFamily.get_range()` with a default of ``True``; this
+  allows empty rows to be kept if desired
+
+Deprecated
+~~~~~~~~~~
+- :meth:`pycassa.connect()`
+- :meth:`pycassa.connect_thread_local()`
+
+
 Changes in Version 1.2.1
 ------------------------
 This is strictly a bug-fix release addressing a few

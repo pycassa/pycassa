@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.system_manager – Manage Schema Definitions &mdash; pycassa v1.2.1 documentation</title>
+    <title>pycassa.system_manager – Manage Schema Definitions &mdash; pycassa v1.3.0 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.2.1',
+        VERSION:     '1.3.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
     <link rel="shortcut icon" href="../../static/favicon.ico"/>
-    <link rel="top" title="pycassa v1.2.1 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v1.3.0 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.index – Secondary Index Tools" href="index.html" />
     <link rel="prev" title="pycassa.columnfamilymap – Maps Classes to Column Families" href="columnfamilymap.html" /> 
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="columnfamilymap.html" title="pycassa.columnfamilymap – Maps Classes to Column Families"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.2.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.3.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -94,7 +94,7 @@ the modification.</p>
 <p>Example Usage:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pycassa.system_manager</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span> <span class="o">=</span> <span class="n">SystemManager</span><span class="p">(</span><span class="s">&#39;192.168.10.2:9160&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">create_keyspace</span><span class="p">(</span><span class="s">&#39;TestKeyspace&#39;</span><span class="p">,</span> <span class="n">replication_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">create_keyspace</span><span class="p">(</span><span class="s">&#39;TestKeyspace&#39;</span><span class="p">,</span> <span class="n">SIMPLE_STRATEGY</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;replication_factor&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">create_column_family</span><span class="p">(</span><span class="s">&#39;TestKeyspace&#39;</span><span class="p">,</span> <span class="s">&#39;TestCF&#39;</span><span class="p">,</span> <span class="n">column_type</span><span class="o">=</span><span class="s">&#39;Standard&#39;</span><span class="p">,</span>
 <span class="gp">... </span>                         <span class="n">comparator_type</span><span class="o">=</span><span class="n">LONG_TYPE</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">alter_column_family</span><span class="p">(</span><span class="s">&#39;TestKeyspace&#39;</span><span class="p">,</span> <span class="s">&#39;TestCF&#39;</span><span class="p">,</span> <span class="n">key_cache_size</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">gc_grace_seconds</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
@@ -122,8 +122,8 @@ be stored as a dictionary where the keys are column names instead of a list.</p>
 <dt id="pycassa.system_manager.SystemManager.get_keyspace_properties">
 <tt class="descname">get_keyspace_properties</tt><big>(</big><em>keyspace</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.get_keyspace_properties" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets a keyspace&#8217;s properties.</p>
-<p>Returns a <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> with &#8216;replication_factor&#8217;, &#8216;strategy_class&#8217;,
-and &#8216;strategy_options&#8217; as keys.</p>
+<p>Returns a <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> with &#8216;strategy_class&#8217; and 
+&#8216;strategy_options&#8217; as keys.</p>
 </dd></dl>
 
 <dl class="method">
@@ -170,33 +170,26 @@ and &#8216;strategy_options&#8217; as keys.</p>
 
 <dl class="method">
 <dt id="pycassa.system_manager.SystemManager.create_keyspace">
-<tt class="descname">create_keyspace</tt><big>(</big><em>name</em>, <em>replication_factor=None</em>, <em>replication_strategy='SimpleStrategy'</em>, <em>strategy_options=None</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.create_keyspace" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">create_keyspace</tt><big>(</big><em>name</em>, <em>replication_strategy='SimpleStrategy'</em>, <em>strategy_options=None</em>, <em>durable_writes=True</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.create_keyspace" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a new keyspace.  Column families may be added to this keyspace
 after it is created using <a class="reference internal" href="#pycassa.system_manager.SystemManager.create_column_family" title="pycassa.system_manager.SystemManager.create_column_family"><tt class="xref py py-meth docutils literal"><span class="pre">create_column_family()</span></tt></a>.</p>
-<p><cite>replication_factor</cite> determines how many nodes hold a copy of a given
-row. Note that for Cassandra 0.8, <cite>replication_factor</cite> should be an entry
-in the strategy_options <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt>. For example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">create_keyspace</span><span class="p">(</span><span class="s">&#39;KS&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">SIMPLE_STRATEGY</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;replication_factor&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">})</span>
-</pre></div>
-</div>
-<p>However, pycassa will copy the value from <cite>replication_factor</cite> or <cite>strategy_options</cite>
-to the other as needed, depending on the version of Cassandra.</p>
 <p><cite>replication_strategy</cite> determines how replicas are chosen for this keyspace.
 The strategies that Cassandra provides by default
 are available as <a class="reference internal" href="#pycassa.system_manager.SIMPLE_STRATEGY" title="pycassa.system_manager.SIMPLE_STRATEGY"><tt class="xref py py-const docutils literal"><span class="pre">SIMPLE_STRATEGY</span></tt></a>, <a class="reference internal" href="#pycassa.system_manager.NETWORK_TOPOLOGY_STRATEGY" title="pycassa.system_manager.NETWORK_TOPOLOGY_STRATEGY"><tt class="xref py py-const docutils literal"><span class="pre">NETWORK_TOPOLOGY_STRATEGY</span></tt></a>,
-and <a class="reference internal" href="#pycassa.system_manager.OLD_NETWORK_TOPOLOGY_STRATEGY" title="pycassa.system_manager.OLD_NETWORK_TOPOLOGY_STRATEGY"><tt class="xref py py-const docutils literal"><span class="pre">OLD_NETWORK_TOPOLOGY_STRATEGY</span></tt></a>.  <cite>NETWORK_TOPOLOGY_STRATEGY</cite> requires
-<cite>strategy_options</cite> to be present.</p>
-<p><cite>strategy_options</cite> is an optional dictionary of strategy options. By default, these
-are only used by NetworkTopologyStrategy; in this case, the dictionary should
-look like: <tt class="docutils literal"><span class="pre">{'Datacenter1':</span> <span class="pre">'2',</span> <span class="pre">'Datacenter2':</span> <span class="pre">'1'}</span></tt>.  This maps each
-datacenter (as defined in a Cassandra property file) to a replica count.</p>
+and <a class="reference internal" href="#pycassa.system_manager.OLD_NETWORK_TOPOLOGY_STRATEGY" title="pycassa.system_manager.OLD_NETWORK_TOPOLOGY_STRATEGY"><tt class="xref py py-const docutils literal"><span class="pre">OLD_NETWORK_TOPOLOGY_STRATEGY</span></tt></a>.</p>
+<p><cite>strategy_options</cite> is a dictionary of strategy options. For
+NetworkTopologyStrategy, the dictionary should look like
+<tt class="docutils literal"><span class="pre">{'Datacenter1':</span> <span class="pre">'2',</span> <span class="pre">'Datacenter2':</span> <span class="pre">'1'}</span></tt>. This maps each
+datacenter (as defined in a Cassandra property file) to a replica count.
+For SimpleStrategy, you can specify the replication factor as follows:
+<tt class="docutils literal"><span class="pre">{'replication_factor':</span> <span class="pre">'1'}</span></tt>.</p>
 <p>Example Usage:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pycassa.system_manager</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span> <span class="o">=</span> <span class="n">SystemManager</span><span class="p">(</span><span class="s">&#39;192.168.10.2:9160&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># Create a SimpleStrategy keyspace</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">create_keyspace</span><span class="p">(</span><span class="s">&#39;SimpleKS&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">create_keyspace</span><span class="p">(</span><span class="s">&#39;SimpleKS&#39;</span><span class="p">,</span> <span class="n">SIMPLE_STRATEGY</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;replication_factor&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># Create a NetworkTopologyStrategy keyspace</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">create_keyspace</span><span class="p">(</span><span class="s">&#39;NTS_KS&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">NETWORK_TOPOLOGY_STRATEGY</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;DC1&#39;</span><span class="p">:</span> <span class="s">&#39;2&#39;</span><span class="p">,</span> <span class="s">&#39;DC2&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">create_keyspace</span><span class="p">(</span><span class="s">&#39;NTS_KS&#39;</span><span class="p">,</span> <span class="n">NETWORK_TOPOLOGY_STRATEGY</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;DC1&#39;</span><span class="p">:</span> <span class="s">&#39;2&#39;</span><span class="p">,</span> <span class="s">&#39;DC2&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -204,7 +197,7 @@ datacenter (as defined in a Cassandra property file) to a replica count.</p>
 
 <dl class="method">
 <dt id="pycassa.system_manager.SystemManager.alter_keyspace">
-<tt class="descname">alter_keyspace</tt><big>(</big><em>keyspace</em>, <em>replication_factor=None</em>, <em>replication_strategy=None</em>, <em>strategy_options=None</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.alter_keyspace" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">alter_keyspace</tt><big>(</big><em>keyspace</em>, <em>replication_strategy=None</em>, <em>strategy_options=None</em>, <em>durable_writes=None</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.alter_keyspace" title="Permalink to this definition">¶</a></dt>
 <dd><p>Alters an existing keyspace.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
@@ -221,7 +214,7 @@ datacenter (as defined in a Cassandra property file) to a replica count.</p>
 
 <dl class="method">
 <dt id="pycassa.system_manager.SystemManager.create_column_family">
-<tt class="descname">create_column_family</tt><big>(</big><em>keyspace</em>, <em>name</em>, <em>super=False</em>, <em>comparator_type=None</em>, <em>subcomparator_type=None</em>, <em>key_cache_size=None</em>, <em>row_cache_size=None</em>, <em>gc_grace_seconds=None</em>, <em>read_repair_chance=None</em>, <em>default_validation_class=None</em>, <em>key_validation_class=None</em>, <em>min_compaction_threshold=None</em>, <em>max_compaction_threshold=None</em>, <em>key_cache_save_period_in_seconds=None</em>, <em>row_cache_save_period_in_seconds=None</em>, <em>memtable_flush_after_mins=None</em>, <em>memtable_throughput_in_mb=None</em>, <em>memtable_operations_in_millions=None</em>, <em>replicate_on_write=None</em>, <em>merge_shards_chance=None</em>, <em>row_cache_provider=None</em>, <em>key_alias=None</em>, <em>comment=None</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.create_column_family" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">create_column_family</tt><big>(</big><em>keyspace</em>, <em>name</em>, <em>super=False</em>, <em>comparator_type=None</em>, <em>subcomparator_type=None</em>, <em>key_cache_size=None</em>, <em>row_cache_size=None</em>, <em>gc_grace_seconds=None</em>, <em>read_repair_chance=None</em>, <em>default_validation_class=None</em>, <em>key_validation_class=None</em>, <em>min_compaction_threshold=None</em>, <em>max_compaction_threshold=None</em>, <em>key_cache_save_period_in_seconds=None</em>, <em>row_cache_save_period_in_seconds=None</em>, <em>replicate_on_write=None</em>, <em>merge_shards_chance=None</em>, <em>row_cache_provider=None</em>, <em>key_alias=None</em>, <em>compaction_strategy=None</em>, <em>compaction_strategy_options=None</em>, <em>row_cache_keys_to_save=None</em>, <em>compression_options=None</em>, <em>comment=None</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.create_column_family" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a new column family in a given keyspace.  If a value is not
 supplied for any of optional parameters, Cassandra will use a reasonable
 default value.</p>
@@ -262,11 +255,6 @@ disables minor compactions.</li>
 be saved; this helps to avoid a cold cache on restart</li>
 <li><strong>row_cache_save_period_in_seconds</strong> (<em>int</em>) &#8211; How often the row cache should
 be saved; this helps to avoid a cold cache on restart</li>
-<li><strong>memtable_flush_after_mins</strong> (<em>int</em>) &#8211; Memtables are flushed when they reach this age</li>
-<li><strong>memtable_throughput_in_mb</strong> (<em>int</em>) &#8211; Memtables are flushed when this many MBs have
-been written to them</li>
-<li><strong>memtable_operations_in_millions</strong> (<em>int</em>) &#8211; Memtables are flushed when this many million
-operations have been performed on them</li>
 <li><strong>replicate_on_write</strong> (<em>bool</em>) &#8211; Whether counter operations are replicated at write-time.
 This should almost always be True.</li>
 <li><strong>merge_shards_chance</strong> (<em>float</em>) &#8211; The probability that counter shards will be merged.</li>
@@ -274,6 +262,16 @@ This should almost always be True.</li>
 Defaults to <tt class="docutils literal"><span class="pre">org.apache.cassandra.cache.ConcurrentLinkedHashCacheProvider</span></tt>.</li>
 <li><strong>key_alias</strong> &#8211; A &#8220;column name&#8221; to be used for the row key. This currently only
 matters for CQL. The default is &#8220;KEY&#8221;.</li>
+<li><strong>compaction_strategy</strong> &#8211; The name of the compaction strategy. Choices include
+TieredCompactionStrategy and LeveledCompactionStrategy.</li>
+<li><strong>compaction_strategy_options</strong> &#8211; A <tt class="docutils literal"><span class="pre">dict</span></tt> of options for the compaction
+strategy.</li>
+<li><strong>row_cache_keys_to_save</strong> &#8211; A list of keys to be saved in the row cache. The
+default of <tt class="xref docutils literal"><span class="pre">None</span></tt> allows any row to be cached.</li>
+<li><strong>compression_options</strong> &#8211; A <tt class="docutils literal"><span class="pre">dict</span></tt> of options for compression. Available
+keys include &#8220;sstable_compression&#8221;, which may be <tt class="xref docutils literal"><span class="pre">None</span></tt> for no compression,
+&#8220;SnappyCompressor&#8221;, &#8220;DeflateCompressor&#8221;, or a custom compressor, and
+&#8220;chunk_length_kb&#8221;, which must be a power of 2.</li>
 <li><strong>comment</strong> (<em>str</em>) &#8211; A human readable description</li>
 </ul>
 </td>
@@ -284,7 +282,7 @@ matters for CQL. The default is &#8220;KEY&#8221;.</li>
 
 <dl class="method">
 <dt id="pycassa.system_manager.SystemManager.alter_column_family">
-<tt class="descname">alter_column_family</tt><big>(</big><em>keyspace</em>, <em>column_family</em>, <em>key_cache_size=None</em>, <em>row_cache_size=None</em>, <em>gc_grace_seconds=None</em>, <em>read_repair_chance=None</em>, <em>default_validation_class=None</em>, <em>min_compaction_threshold=None</em>, <em>max_compaction_threshold=None</em>, <em>key_cache_save_period_in_seconds=None</em>, <em>row_cache_save_period_in_seconds=None</em>, <em>memtable_flush_after_mins=None</em>, <em>memtable_throughput_in_mb=None</em>, <em>memtable_operations_in_millions=None</em>, <em>replicate_on_write=None</em>, <em>merge_shards_chance=None</em>, <em>row_cache_provider=None</em>, <em>key_alias=None</em>, <em>comment=None</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.alter_column_family" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">alter_column_family</tt><big>(</big><em>keyspace</em>, <em>column_family</em>, <em>key_cache_size=None</em>, <em>row_cache_size=None</em>, <em>gc_grace_seconds=None</em>, <em>read_repair_chance=None</em>, <em>default_validation_class=None</em>, <em>min_compaction_threshold=None</em>, <em>max_compaction_threshold=None</em>, <em>key_cache_save_period_in_seconds=None</em>, <em>row_cache_save_period_in_seconds=None</em>, <em>replicate_on_write=None</em>, <em>merge_shards_chance=None</em>, <em>row_cache_provider=None</em>, <em>key_alias=None</em>, <em>compaction_strategy=None</em>, <em>compaction_strategy_options=None</em>, <em>row_cache_keys_to_save=None</em>, <em>compression_options=None</em>, <em>comment=None</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.alter_column_family" title="Permalink to this definition">¶</a></dt>
 <dd><p>Alters an existing column family.</p>
 <p>Parameter meanings are the same as for <a class="reference internal" href="#pycassa.system_manager.SystemManager.create_column_family" title="pycassa.system_manager.SystemManager.create_column_family"><tt class="xref py py-meth docutils literal"><span class="pre">create_column_family()</span></tt></a>,
 but column family attributes which may not be modified are not
@@ -392,7 +390,7 @@ for the index.</p>
         <li class="right" >
           <a href="columnfamilymap.html" title="pycassa.columnfamilymap – Maps Classes to Column Families"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.2.1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.3.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>
