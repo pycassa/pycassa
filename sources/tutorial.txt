@@ -102,15 +102,15 @@ running cassandra instance:
 
 .. code-block:: python
 
-  >>> import pycassa
-  >>> pool = pycassa.connect('Keyspace1')
+  >>> from pycassa.pool import ConnectionPool
+  >>> pool = ConnectionPool('Keyspace1')
 
 The above code will connect by default to ``localhost:9160``. We can
-also specify the host and port explicitly, as follows:
+also specify the host (or hosts) and port explicitly as follows:
 
 .. code-block:: python
 
-  >>> pool = pycassa.connect('Keyspace1', ['localhost:9160'])
+  >>> pool = ConnectionPool('Keyspace1', ['localhost:9160'])
 
 This creates a small connection pool for use with a
 :class:`~pycassa.columnfamily.ColumnFamily` . See `Connection Pooling`_
@@ -125,7 +125,10 @@ are included in the default schema file:
 
 .. code-block:: python
 
-  >>> pool = pycassa.connect('Keyspace1')
+  >>> from pycassa.pool import ConnectionPool
+  >>> from pycassa.columnfamily import ColumnFamily
+  >>>
+  >>> pool = ConnectionPool('Keyspace1')
   >>> col_fam = pycassa.ColumnFamily(pool, 'ColumnFamily1')
 
 If you get an error about the keyspace or column family not

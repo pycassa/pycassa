@@ -144,13 +144,13 @@ Schema definition tools and cluster information are available through SYSTEM_MAN
 <h2>Connecting to Cassandra<a class="headerlink" href="#connecting-to-cassandra" title="Permalink to this headline">¶</a></h2>
 <p>The first step when working with <strong>pycassa</strong> is to connect to the
 running cassandra instance:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pycassa</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pycassa.pool</span> <span class="kn">import</span> <span class="n">ConnectionPool</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">ConnectionPool</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The above code will connect by default to <tt class="docutils literal"><span class="pre">localhost:9160</span></tt>. We can
-also specify the host and port explicitly, as follows:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;localhost:9160&#39;</span><span class="p">])</span>
+also specify the host (or hosts) and port explicitly as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">ConnectionPool</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;localhost:9160&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>This creates a small connection pool for use with a
@@ -163,7 +163,10 @@ for more details.</p>
 and can be thought of as roughly the equivalent of a table in a
 relational database. We&#8217;ll use one of the column families that
 are included in the default schema file:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pycassa.pool</span> <span class="kn">import</span> <span class="n">ConnectionPool</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pycassa.columnfamily</span> <span class="kn">import</span> <span class="n">ColumnFamily</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">ConnectionPool</span><span class="p">(</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;ColumnFamily1&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
