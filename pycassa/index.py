@@ -5,10 +5,12 @@ Example Usage:
 
 .. code-block:: python
 
-    >>> import pycassa
+    >>> from pycassa.columnfamily import ColumnFamily
+    >>> from pycassa.pool import ConnectionPool
     >>> from pycassa.index import *
-    >>> pool = pycassa.connect('Keyspace1')
-    >>> users = pycassa.ColumnFamily(pool, 'Users')
+    >>>
+    >>> pool = ConnectionPool('Keyspace1')
+    >>> users = ColumnFamily(pool, 'Users')
     >>> state_expr = create_index_expression('state', 'Utah')
     >>> bday_expr = create_index_expression('birthdate', 1970, GT)
     >>> clause = create_index_clause([state_expr, bday_expr], count=20)
