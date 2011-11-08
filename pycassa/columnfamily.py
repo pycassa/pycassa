@@ -63,8 +63,9 @@ class ColumnFamily(object):
     buffer_size = 1024
     """ When calling :meth:`get_range()` or :meth:`get_indexed_slices()`,
     the intermediate results need to be buffered if we are fetching many
-    rows, otherwise the Cassandra server will overallocate memory and fail.
-    This is the size of that buffer in number of rows. The default is 1024. """
+    rows, otherwise performance may suffer and the Cassandra server may
+    overallocate memory and fail. This is the size of that buffer in number
+    of rows. The default is 1024. """
 
     read_consistency_level = ConsistencyLevel.ONE
     """ The default consistency level for every read operation, such as 
@@ -87,7 +88,8 @@ class ColumnFamily(object):
     """ Results are returned as dictionaries. By default, python 2.7's
     :class:`collections.OrderedDict` is used if available, otherwise
     :class:`~pycassa.util.OrderedDict` is used so that order is maintained.
-    A different class, such as :class:`dict` may be used setting this. """
+    A different class, such as :class:`dict`, may be instead by used setting
+    this. """
 
     autopack_names = True
     """ Controls whether column names are automatically converted to or from
@@ -130,7 +132,8 @@ class ColumnFamily(object):
     This is set automatically by inspecting the column family's
     ``comparator_type``, but it may also be set manually if you want
     autopacking behavior without setting a ``comparator_type``. Options
-    include anything in :mod:`~pycassa.system_manager`, such as "LongType". """
+    include an instance of any class in :mod:`pycassa.types`, such as ``LongType()``.
+    """
 
     def _set_super_column_name_class(self, t):
         if isinstance(t, types.CassandraType):
@@ -195,7 +198,8 @@ class ColumnFamily(object):
     This is set automatically by inspecting the column family's
     ``default_validation_class``, but it may also be set manually if you want
     autopacking behavior without setting a ``default_validation_class``. Options
-    include anything in :mod:`~pycassa.system_manager`, such as "LongType". """
+    include an instance of any class in :mod:`pycassa.types`, such as ``LongType()``.
+    """
 
     def _set_column_validators(self, other_dict):
         self._column_validators = ColumnValidatorDict(other_dict)
@@ -229,8 +233,9 @@ class ColumnFamily(object):
     ``key_validation_class`` (which only exists in Cassandra 0.8 or greater),
     but may be set manually if you want the autopacking behavior without
     setting a ``key_validation_class`` or if you are using Cassandra 0.7. 
-    Options include anything in :mod:`~pycassa.system_manager`, such as
-    "LongType"."""
+    Options include an instance of any class in :mod:`pycassa.types`,
+    such as ``LongType()``.
+    """
 
     def __init__(self, pool, column_family, **kwargs):
         """
@@ -926,8 +931,7 @@ class ColumnFamily(object):
         If `columns` and `super_column` are both ``None``, the entire row is
         removed.
 
-        The timestamp used for remove is returned.
-
+        The timestamp used for the mutation is returned.
         """
 
         if timestamp is None:

@@ -3,8 +3,8 @@ Provides a means for mapping an existing class to a column family.
 
 .. seealso:: :mod:`pycassa.types`
 
-In addition to the default :class:`~pycassa.types.Column` classes,
-you may also define your own types for the mapper. For example, the
+In addition to the default classes in :class:`~pycassa.types`,
+you may also define your own types for the mapper. For example,
 IntString may be defined as:
 
 .. code-block:: python
@@ -45,7 +45,7 @@ class ColumnFamilyMap(ColumnFamily):
         :meth:`get_range()` and :meth:`get_indexed_slices()`.
         
         `pool` is a :class:`~pycassa.pool.ConnectionPool` that will be used
-        in the same way a :class:ColumnFamily uses one.
+        in the same way a :class:`~.ColumnFamily` uses one.
 
         `column_family` is the name of a column family to tie to `cls`.
 
