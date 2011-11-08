@@ -61,8 +61,8 @@
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference internal" href="types.html#module-pycassa.types" title="pycassa.types"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.types</span></tt></a></p>
 </div>
-<p>In addition to the default <tt class="xref py py-class docutils literal"><span class="pre">Column</span></tt> classes,
-you may also define your own types for the mapper. For example, the
+<p>In addition to the default classes in <a class="reference internal" href="types.html#module-pycassa.types" title="pycassa.types"><tt class="xref py py-class docutils literal"><span class="pre">types</span></tt></a>,
+you may also define your own types for the mapper. For example,
 IntString may be defined as:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">IntString</span><span class="p">(</span><span class="n">pycassa</span><span class="o">.</span><span class="n">Column</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">def</span> <span class="nf">pack</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
@@ -81,7 +81,7 @@ families or super columns in super column families.</p>
 <p>Instances of <cite>cls</cite> are returned from <a class="reference internal" href="#pycassa.columnfamilymap.ColumnFamilyMap.get" title="pycassa.columnfamilymap.ColumnFamilyMap.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a>, <a class="reference internal" href="#pycassa.columnfamilymap.ColumnFamilyMap.multiget" title="pycassa.columnfamilymap.ColumnFamilyMap.multiget"><tt class="xref py py-meth docutils literal"><span class="pre">multiget()</span></tt></a>,
 <a class="reference internal" href="#pycassa.columnfamilymap.ColumnFamilyMap.get_range" title="pycassa.columnfamilymap.ColumnFamilyMap.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a> and <a class="reference internal" href="#pycassa.columnfamilymap.ColumnFamilyMap.get_indexed_slices" title="pycassa.columnfamilymap.ColumnFamilyMap.get_indexed_slices"><tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt></a>.</p>
 <p><cite>pool</cite> is a <a class="reference internal" href="pool.html#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a> that will be used
-in the same way a :class:ColumnFamily uses one.</p>
+in the same way a <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a> uses one.</p>
 <p><cite>column_family</cite> is the name of a column family to tie to <cite>cls</cite>.</p>
 <p>If <cite>raw_columns</cite> is <tt class="xref docutils literal"><span class="pre">True</span></tt>, all columns will be fetched into the
 <cite>raw_columns</cite> field in requests.</p>

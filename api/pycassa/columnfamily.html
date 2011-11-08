@@ -134,7 +134,7 @@ to determine how to pack and unpack them.</p>
 <p>This is set automatically by inspecting the column family&#8217;s
 <tt class="docutils literal"><span class="pre">comparator_type</span></tt>, but it may also be set manually if you want
 autopacking behavior without setting a <tt class="docutils literal"><span class="pre">comparator_type</span></tt>. Options
-include anything in <a class="reference internal" href="system_manager.html#module-pycassa.system_manager" title="pycassa.system_manager"><tt class="xref py py-mod docutils literal"><span class="pre">system_manager</span></tt></a>, such as &#8220;LongType&#8221;.</p>
+include an instance of any class in <a class="reference internal" href="types.html#module-pycassa.types" title="pycassa.types"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.types</span></tt></a>, such as <tt class="docutils literal"><span class="pre">LongType()</span></tt>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -152,7 +152,7 @@ will use to determine how to pack and unpack them.</p>
 <p>This is set automatically by inspecting the column family&#8217;s
 <tt class="docutils literal"><span class="pre">default_validation_class</span></tt>, but it may also be set manually if you want
 autopacking behavior without setting a <tt class="docutils literal"><span class="pre">default_validation_class</span></tt>. Options
-include anything in <a class="reference internal" href="system_manager.html#module-pycassa.system_manager" title="pycassa.system_manager"><tt class="xref py py-mod docutils literal"><span class="pre">system_manager</span></tt></a>, such as &#8220;LongType&#8221;.</p>
+include an instance of any class in <a class="reference internal" href="types.html#module-pycassa.types" title="pycassa.types"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.types</span></tt></a>, such as <tt class="docutils literal"><span class="pre">LongType()</span></tt>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -171,8 +171,8 @@ to determine how to pack and unpack them.</p>
 <tt class="docutils literal"><span class="pre">key_validation_class</span></tt> (which only exists in Cassandra 0.8 or greater),
 but may be set manually if you want the autopacking behavior without
 setting a <tt class="docutils literal"><span class="pre">key_validation_class</span></tt> or if you are using Cassandra 0.7.
-Options include anything in <a class="reference internal" href="system_manager.html#module-pycassa.system_manager" title="pycassa.system_manager"><tt class="xref py py-mod docutils literal"><span class="pre">system_manager</span></tt></a>, such as
-&#8220;LongType&#8221;.</p>
+Options include an instance of any class in <a class="reference internal" href="types.html#module-pycassa.types" title="pycassa.types"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.types</span></tt></a>,
+such as <tt class="docutils literal"><span class="pre">LongType()</span></tt>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -181,7 +181,8 @@ Options include anything in <a class="reference internal" href="system_manager.h
 <dd><p>Results are returned as dictionaries. By default, python 2.7&#8217;s
 <tt class="xref py py-class docutils literal"><span class="pre">collections.OrderedDict</span></tt> is used if available, otherwise
 <a class="reference internal" href="util.html#pycassa.util.OrderedDict" title="pycassa.util.OrderedDict"><tt class="xref py py-class docutils literal"><span class="pre">OrderedDict</span></tt></a> is used so that order is maintained.
-A different class, such as <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> may be used setting this.</p>
+A different class, such as <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt>, may be instead by used setting
+this.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -189,8 +190,9 @@ A different class, such as <tt class="xref py py-class docutils literal"><span c
 <tt class="descname">buffer_size</tt><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.buffer_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>When calling <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.get_range" title="pycassa.columnfamily.ColumnFamily.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a> or <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.get_indexed_slices" title="pycassa.columnfamily.ColumnFamily.get_indexed_slices"><tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt></a>,
 the intermediate results need to be buffered if we are fetching many
-rows, otherwise the Cassandra server will overallocate memory and fail.
-This is the size of that buffer in number of rows. The default is 1024.</p>
+rows, otherwise performance may suffer and the Cassandra server may
+overallocate memory and fail. This is the size of that buffer in number
+of rows. The default is 1024.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -378,7 +380,7 @@ with counters.</p>
 of <cite>super_column</cite>.</p>
 <p>If <cite>columns</cite> and <cite>super_column</cite> are both <tt class="xref docutils literal"><span class="pre">None</span></tt>, the entire row is
 removed.</p>
-<p>The timestamp used for remove is returned.</p>
+<p>The timestamp used for the mutation is returned.</p>
 </dd></dl>
 
 <dl class="method">

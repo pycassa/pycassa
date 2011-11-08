@@ -70,10 +70,9 @@ should run without raising an exception:</p>
 </div>
 <p>This tutorial also assumes that a Cassandra instance is running on the
 default host and port. Read the <a class="reference external" href="http://www.datastax.com/docs/0.7/getting_started/index">instructions for getting started
-with Cassandra</a> ,
-making sure that you choose a <a class="reference external" href="http://wiki.github.com/pycassa/pycassa/pycassa-cassandra-compatibility">version that is compatible with
-pycassa</a>.
-You can start Cassandra like so:</p>
+with Cassandra</a> if
+you need help with this.</p>
+<p>You can start Cassandra like so:</p>
 <div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span><span class="nb">pwd</span>
 ~/cassandra
 <span class="nv">$ </span>bin/cassandra -f
@@ -113,6 +112,7 @@ user@~ $
 </div>
 <p>This connects to a local instance of Cassandra and creates a keyspace
 named &#8216;Keyspace1&#8217; with a column family named &#8216;ColumnFamily1&#8217;.</p>
+<p>You can find further <a class="reference external" href="http://www.datastax.com/docs/1.0/dml/using_cli">documentation for the CLI online</a>.</p>
 </div>
 <div class="section" id="using-pycassashell">
 <h3>Using pycassaShell<a class="headerlink" href="#using-pycassashell" title="Permalink to this headline">¶</a></h3>
@@ -122,14 +122,14 @@ you typically work with when using <strong>pycassa</strong>.  It provides most o
 functionality that cassandra-cli does, but also gives you a full Python
 environment to work with.</p>
 <p>Here&#8217;s how to create the keyspace and column family:</p>
-<div class="highlight-bash"><div class="highlight"><pre>user@~ <span class="nv">$ </span>pycassaShell
+<div class="highlight-none"><div class="highlight"><pre>user@~ $ pycassaShell
 ----------------------------------
 Cassandra Interactive Python Shell
 ----------------------------------
 Keyspace: None
 Host: localhost:9160
 
-ColumnFamily instances are only available <span class="k">if </span>a keyspace is specified with -k/--keyspace
+ColumnFamily instances are only available if a keyspace is specified with -k/--keyspace
 
 Schema definition tools and cluster information are available through SYSTEM_MANAGER.
 </pre></div>
@@ -268,7 +268,7 @@ with keys &#8216;row_key1&#8217; through &#8216;row_key9&#8217;, we can do this:
 <p class="last">Cassandra must be using an OrderPreservingPartitioner for you to be
 able to get a meaningful range of rows; the default, RandomPartitioner,
 stores rows in the order of the MD5 hash of their keys. See
-<a class="reference external" href="http://www.riptano.com/docs/0.7/operations/clustering#partitioners">http://www.riptano.com/docs/0.7/operations/clustering#partitioners</a>.</p>
+<a class="reference external" href="http://www.datastax.com/docs/1.0/cluster_architecture/partitioning">http://www.datastax.com/docs/1.0/cluster_architecture/partitioning</a>.</p>
 </div>
 <p>The last way to get multiple rows at a time is to take advantage of
 secondary indexes by using <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_indexed_slices" title="pycassa.columnfamily.ColumnFamily.get_indexed_slices"><tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt></a>,
@@ -313,36 +313,19 @@ of a slice or have particular names, you can do that as well:</p>
 </div>
 <div class="section" id="typed-column-names-and-values">
 <h2>Typed Column Names and Values<a class="headerlink" href="#typed-column-names-and-values" title="Permalink to this headline">¶</a></h2>
-<p>In Cassandra 0.7, you can specify a comparator type for column names
-and a validator type for column values.</p>
-<p>The types available are:</p>
-<ul class="simple">
-<li>BytesType - no type</li>
-<li>IntegerType - 32 bit integer</li>
-<li>LongType - 64 bit integer</li>
-<li>AsciiType - ASCII string</li>
-<li>UTF8Type - UTF8 encoded string</li>
-<li>TimeUUIDType - version 1 UUID (timestamp based)</li>
-<li>LexicalUUID - non-version 1 UUID</li>
-</ul>
-<p>The column name comparator types affect how columns are sorted within
-a row. You can use these with standard column families as well as with
-super column families; with super column families, the subcolumns may
-even have a different comparator type.  Here&#8217;s an example <tt class="docutils literal"><span class="pre">cassandra.yaml</span></tt>:</p>
-<div class="highlight-python"><pre>- name: StandardInt
-  column_type: Standard
-  compare_with: IntegerType
-
-- name: SuperLongSubAscii
-  column_type: Super
-  compare_with: LongType
-  compare_subcolumns_with: AsciiType</pre>
-</div>
-<p>Cassandra still requires you to pack these types into a format it can
+<p>Within a column family, column names have a specified <cite>comparator type</cite>
+which controls how they are sorted. Column values and row keys may also
+have a <cite>validation class</cite>, which validates that inserted values are
+the correct type.</p>
+<p>The different types available include ASCII strings, integers, dates,
+UTF8, raw bytes, UUIDs, and more. See <a class="reference internal" href="api/pycassa/types.html#module-pycassa.types" title="pycassa.types"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.types</span></tt></a> for a full
+list.</p>
+<p>Cassandra requires you to pack column names and values into a format it can
 understand by using something like <tt class="xref py py-meth docutils literal"><span class="pre">struct.pack()</span></tt>.  Fortunately,
-when <strong>pycassa</strong> sees that a column family uses these types, it knows
-to pack and unpack these data types automatically for you. So, if we want to
-write to the StandardInt column family, we can do the following:</p>
+when <strong>pycassa</strong> sees that a column family has a particular comparator type
+or validation class, it knows to pack and unpack these data types automatically
+for you. So, if we want to write to the StandardInt column family, which has
+an IntegerType comparator, we can do the following:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;StandardInt&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="mi">42</span><span class="p">:</span> <span class="s">&#39;some_val&#39;</span><span class="p">})</span>
 <span class="go">1354491238721387</span>
@@ -351,43 +334,22 @@ write to the StandardInt column family, we can do the following:</p>
 </pre></div>
 </div>
 <p>Notice that 42 is an integer here, not a string.</p>
-<p>As mentioned above, Cassandra also offers validators on column values with
-the same set of types.  Validators can be set for an entire column family,
-for individual columns, or both.  Here&#8217;s another example <tt class="docutils literal"><span class="pre">cassandra.yaml</span></tt>:</p>
-<div class="highlight-python"><pre>- name: AllLongs
-  column_type: Standard
-  default_validation_class: LongType
-
-- name: OneUUID
-  column_type: Standard
-  column_metadata:
-    - name: uuid
-      validator_class: TimeUUIDType
-
-- name: LongsExceptUUID
-  column_type: Standard
-  default_validation_class: LongType
-  column_metadata:
-    - name: uuid
-      validator_class: TimeUUIDType</pre>
-</div>
-<p><strong>pycassa</strong> knows to pack these column values automatically too:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">uuid</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;LongsExceptUUID&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;foo&#39;</span><span class="p">:</span> <span class="mi">123456789</span><span class="p">,</span> <span class="s">&#39;uuid&#39;</span><span class="p">:</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid1</span><span class="p">()})</span>
+<p>As mentioned above, Cassandra also offers validators on column values and keys
+with the same set of types. Column value validators can be set for an entire
+column family, for individual columns, or both.  <strong>pycassa</strong> knows to pack these
+column values automatically too. Suppose we have a <cite>Users</cite> column family with
+two columns, <tt class="docutils literal"><span class="pre">name</span></tt> and <tt class="docutils literal"><span class="pre">age</span></tt>, with types UTF8Type and IntegerType:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;Users&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;thobbs&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;Tyler&#39;</span><span class="p">,</span> <span class="s">&#39;age&#39;</span><span class="p">:</span> <span class="mi">24</span><span class="p">})</span>
 <span class="go">1354491238782746</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;row_key&#39;</span><span class="p">)</span>
-<span class="go">{&#39;foo&#39;: 123456789, &#39;uuid&#39;: UUID(&#39;5880c4b8-bd1a-11df-bbe1-00234d21610a&#39;)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;thobbs&#39;</span><span class="p">)</span>
+<span class="go">{&#39;name&#39;: &#39;Tyler&#39;, &#39;age&#39;: 24}</span>
 </pre></div>
 </div>
 <p>Of course, if <strong>pycassa</strong>&#8216;s automatic behavior isn&#8217;t working for you, you
-can turn it off when you create the
-<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col_fam</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;Standard1&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                               <span class="n">autopack_names</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-<span class="gp">... </span>                               <span class="n">autopack_values</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-</pre></div>
-</div>
+can turn it off or change it using <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.autopack_names" title="pycassa.columnfamily.ColumnFamily.autopack_names"><tt class="xref py py-attr docutils literal"><span class="pre">autopack_names</span></tt></a>,
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.autopack_values" title="pycassa.columnfamily.ColumnFamily.autopack_values"><tt class="xref py py-attr docutils literal"><span class="pre">autopack_values</span></tt></a>, <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.column_name_class" title="pycassa.columnfamily.ColumnFamily.column_name_class"><tt class="xref py py-attr docutils literal"><span class="pre">column_name_class</span></tt></a>,
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.default_validation_class" title="pycassa.columnfamily.ColumnFamily.default_validation_class"><tt class="xref py py-attr docutils literal"><span class="pre">default_validation_class</span></tt></a>, and so on.</p>
 </div>
 <div class="section" id="connection-pooling">
 <h2>Connection Pooling<a class="headerlink" href="#connection-pooling" title="Permalink to this headline">¶</a></h2>

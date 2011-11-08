@@ -19,9 +19,9 @@ should run without raising an exception:
 
 This tutorial also assumes that a Cassandra instance is running on the
 default host and port. Read the `instructions for getting started
-with Cassandra <http://www.datastax.com/docs/0.7/getting_started/index>`_ , 
-making sure that you choose a `version that is compatible with
-pycassa <http://wiki.github.com/pycassa/pycassa/pycassa-cassandra-compatibility>`_.
+with Cassandra <http://www.datastax.com/docs/0.7/getting_started/index>`_ if
+you need help with this.
+
 You can start Cassandra like so:
 
 .. code-block:: bash
@@ -67,6 +67,9 @@ for this tutorial:
 This connects to a local instance of Cassandra and creates a keyspace
 named 'Keyspace1' with a column family named 'ColumnFamily1'.
 
+You can find further `documentation for the CLI online
+<http://www.datastax.com/docs/1.0/dml/using_cli>`_.
+
 Using pycassaShell
 ^^^^^^^^^^^^^^^^^^
 :ref:`pycassa-shell` is an interactive Python shell that is included
@@ -77,7 +80,7 @@ environment to work with.
 
 Here's how to create the keyspace and column family:
 
-.. code-block:: bash
+.. code-block:: none
 
     user@~ $ pycassaShell 
     ----------------------------------
@@ -246,7 +249,7 @@ with keys 'row_key1' through 'row_key9', we can do this:
 .. note:: Cassandra must be using an OrderPreservingPartitioner for you to be
           able to get a meaningful range of rows; the default, RandomPartitioner,
           stores rows in the order of the MD5 hash of their keys. See
-          http://www.riptano.com/docs/0.7/operations/clustering#partitioners.
+          http://www.datastax.com/docs/1.0/cluster_architecture/partitioning.
 
 The last way to get multiple rows at a time is to take advantage of
 secondary indexes by using :meth:`~pycassa.columnfamily.ColumnFamily.get_indexed_slices()`,
@@ -299,40 +302,21 @@ You can also do this in parallel for multiple rows using
 
 Typed Column Names and Values
 -----------------------------
-In Cassandra 0.7, you can specify a comparator type for column names
-and a validator type for column values.
+Within a column family, column names have a specified `comparator type`
+which controls how they are sorted. Column values and row keys may also
+have a `validation class`, which validates that inserted values are
+the correct type.
 
-The types available are:
+The different types available include ASCII strings, integers, dates,
+UTF8, raw bytes, UUIDs, and more. See :mod:`pycassa.types` for a full
+list.
 
-* BytesType - no type
-* IntegerType - 32 bit integer
-* LongType - 64 bit integer
-* AsciiType - ASCII string
-* UTF8Type - UTF8 encoded string
-* TimeUUIDType - version 1 UUID (timestamp based)
-* LexicalUUID - non-version 1 UUID
-
-The column name comparator types affect how columns are sorted within
-a row. You can use these with standard column families as well as with
-super column families; with super column families, the subcolumns may
-even have a different comparator type.  Here's an example ``cassandra.yaml``:
-
-::
-
-  - name: StandardInt
-    column_type: Standard
-    compare_with: IntegerType
-
-  - name: SuperLongSubAscii
-    column_type: Super
-    compare_with: LongType
-    compare_subcolumns_with: AsciiType
-
-Cassandra still requires you to pack these types into a format it can
+Cassandra requires you to pack column names and values into a format it can
 understand by using something like :meth:`struct.pack()`.  Fortunately,
-when **pycassa** sees that a column family uses these types, it knows
-to pack and unpack these data types automatically for you. So, if we want to
-write to the StandardInt column family, we can do the following:
+when **pycassa** sees that a column family has a particular comparator type
+or validation class, it knows to pack and unpack these data types automatically
+for you. So, if we want to write to the StandardInt column family, which has
+an IntegerType comparator, we can do the following:
 
 .. code-block:: python
 
@@ -344,49 +328,24 @@ write to the StandardInt column family, we can do the following:
 
 Notice that 42 is an integer here, not a string.
 
-As mentioned above, Cassandra also offers validators on column values with
-the same set of types.  Validators can be set for an entire column family,
-for individual columns, or both.  Here's another example ``cassandra.yaml``:
-
-::
-
-  - name: AllLongs
-    column_type: Standard
-    default_validation_class: LongType
-
-  - name: OneUUID
-    column_type: Standard
-    column_metadata:
-      - name: uuid
-        validator_class: TimeUUIDType
-
-  - name: LongsExceptUUID
-    column_type: Standard
-    default_validation_class: LongType
-    column_metadata:
-      - name: uuid
-        validator_class: TimeUUIDType
-
-**pycassa** knows to pack these column values automatically too:
+As mentioned above, Cassandra also offers validators on column values and keys
+with the same set of types. Column value validators can be set for an entire
+column family, for individual columns, or both.  **pycassa** knows to pack these
+column values automatically too. Suppose we have a `Users` column family with
+two columns, ``name`` and ``age``, with types UTF8Type and IntegerType:
 
 .. code-block:: python
 
-  >>> import uuid
-  >>> col_fam = pycassa.ColumnFamily(pool, 'LongsExceptUUID')
-  >>> col_fam.insert('row_key', {'foo': 123456789, 'uuid': uuid.uuid1()})
+  >>> col_fam = pycassa.ColumnFamily(pool, 'Users')
+  >>> col_fam.insert('thobbs', {'name': 'Tyler', 'age': 24})
   1354491238782746
-  >>> col_fam.get('row_key')
-  {'foo': 123456789, 'uuid': UUID('5880c4b8-bd1a-11df-bbe1-00234d21610a')}
+  >>> col_fam.get('thobbs')
+  {'name': 'Tyler', 'age': 24}
 
 Of course, if **pycassa**'s automatic behavior isn't working for you, you
-can turn it off when you create the
-:class:`~pycassa.columnfamily.ColumnFamily`:
-
-.. code-block:: python
-
-  >>> col_fam = pycassa.ColumnFamily(pool, 'Standard1',
-  ...                                autopack_names=False,
-  ...                                autopack_values=False)
+can turn it off or change it using :attr:`~.ColumnFamily.autopack_names`,
+:attr:`~.ColumnFamily.autopack_values`, :attr:`~.ColumnFamily.column_name_class`,
+:attr:`~.ColumnFamily.default_validation_class`, and so on.  
 
 Connection Pooling
 ------------------
