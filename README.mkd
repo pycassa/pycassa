@@ -11,7 +11,7 @@ with the following features:
 * A class for mapping classes to Cassandra column families
 
 The latest release is fully compatible with Cassandra 0.8 and 1.0, and
-compatible with data API of 0.7.
+compatible with the data API of 0.7.
 
 *pycassa* is open source under the [MIT license](http://www.opensource.org/licenses/mit-license.php).
 
@@ -43,15 +43,15 @@ Mailing List:
 Installation
 ------------
 
-If easy_install is available, you can install the lastest pycassa release
+If pip is available, you can install the lastest pycassa release
 with:
 
-    easy_install pycassa
+    pip install pycassa
 
 If you want to install from a source checkout, make sure you have Thrift
 installed, and run setup.py as a superuser:
 
-    easy_install thrift
+    pip install thrift
     python setup.py install
 
 Basic Usage
@@ -114,7 +114,7 @@ You can remove entire keys or just a certain column:
 >>> cf.get('bar')
 Traceback (most recent call last):
 ...
-cassandra.ttypes.NotFoundException: NotFoundException()
+pycassa.NotFoundException: NotFoundException()
 ~~~~~~
 
 See the [tutorial](http://pycassa.github.com/pycassa/tutorial.html#connecting-to-cassandra) for more details.
