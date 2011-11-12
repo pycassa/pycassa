@@ -3,13 +3,13 @@
 Installing
 ==========
 
-easy_install
-------------
-If you have :file:`easy_install` installed, you can simply do:
+Installing from PyPi
+--------------------
+If you have :file:`pip` installed, you can simply do:
 
 .. code-block:: bash
 
-  $ easy_install pycassa
+  $ pip install pycassa
 
 This will also install the Thrift python bindings automatically.
 
@@ -19,7 +19,7 @@ Make sure that you have Thrift's python bindings installed:
 
 .. code-block:: bash
 
-  $ easy_install thrift05
+  $ pip install thrift
 
 You can download a release from 
 `github <http://github.com/pycassa/pycassa/downloads>`_

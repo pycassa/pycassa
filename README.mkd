@@ -10,7 +10,8 @@ with the following features:
 * A batch interface
 * A class for mapping classes to Cassandra column families
 
-The latest release is compatible with Cassandra 0.7 and 0.8.
+The latest release is fully compatible with Cassandra 0.8 and 1.0, and
+compatible with the data API of 0.7.
 
 *pycassa* is open source under the [MIT license](http://www.opensource.org/licenses/mit-license.php).
 
@@ -31,7 +32,7 @@ Getting Help
 
 IRC:
 
-* Use channel #cassandra on irc.freenode.net. If you don't have an IRC client,
+* Use the #cassandra channel on irc.freenode.net. If you don't have an IRC client,
   you can use [freenode's web based client](http://webchat.freenode.net/?channels=#cassandra).
 
 Mailing List:
@@ -42,15 +43,15 @@ Mailing List:
 Installation
 ------------
 
-If easy_install is available, you can use:
+If pip is available, you can install the lastest pycassa release
+with:
 
-    easy_install pycassa
+    pip install pycassa
 
-The simplest way to install manually is to copy the pycassa directories to
-your program.  If you want to install, make sure you have thrift installed,
-and run setup.py as a superuser.
+If you want to install from a source checkout, make sure you have Thrift
+installed, and run setup.py as a superuser:
 
-    easy_install thrift
+    pip install thrift
     python setup.py install
 
 Basic Usage
@@ -61,52 +62,59 @@ To get a connection pool, pass a Keyspace and an optional list of servers:
 ~~~~~~ {python}
 >>> import pycassa
 >>> pool = pycassa.ConnectionPool('Keyspace1') # Defaults to connecting to the server at 'localhost:9160'
+>>>
+>>> # or, we can specify our servers:
 >>> pool = pycassa.ConnectionPool('Keyspace1', server_list=['192.168.2.10'])
 ~~~~~~
 
 To use the standard interface, create a ColumnFamily instance.
 
-    >>> pool = pycassa.ConnectionPool('Keyspace1')
-    >>> cf = pycassa.ColumnFamily(pool, 'Standard1')
-    >>> cf.insert('foo', {'column1': 'val1'})
-    1261349837816957
-    >>> cf.get('foo')
-    {'column1': 'val1'}
+~~~~~~ {python}
+>>> pool = pycassa.ConnectionPool('Keyspace1')
+>>> cf = pycassa.ColumnFamily(pool, 'Standard1')
+>>> cf.insert('foo', {'column1': 'val1'})
+>>> cf.get('foo')
+{'column1': 'val1'}
+~~~~~~
 
-insert() also acts to update values:
+insert() will also update existing columns:
 
-    >>> cf.insert('foo', {'column1': 'val2'})
-    1261349910511572
-    >>> cf.get('foo')
-    {'column1': 'val2'}
+~~~~~~ {python}
+>>> cf.insert('foo', {'column1': 'val2'})
+>>> cf.get('foo')
+{'column1': 'val2'}
+~~~~~~
 
 You may insert multiple columns at once:
 
-    >>> cf.insert('bar', {'column1': 'val3', 'column2': 'val4'})
-    1261350013606860
-    >>> cf.multiget(['foo', 'bar'])
-    {'foo': {'column1': 'val2'}, 'bar': {'column1': 'val3', 'column2': 'val4'}}
-    >>> cf.get_count('bar')
-    2
+~~~~~~ {python}
+>>> cf.insert('bar', {'column1': 'val3', 'column2': 'val4'})
+>>> cf.multiget(['foo', 'bar'])
+{'foo': {'column1': 'val2'}, 'bar': {'column1': 'val3', 'column2': 'val4'}}
+>>> cf.get_count('bar')
+2
+~~~~~~
 
-get_range() returns an iterable. Call it with list() to convert it to a list.
+get_range() returns an iterable. You can use list() to convert it to a list:
 
-    >>> list(cf.get_range())
-    [('bar', {'column1': 'val3', 'column2': 'val4'}), ('foo', {'column1': 'val2'})]
-    >>> list(cf.get_range(row_count=1))
-    [('bar', {'column1': 'val3', 'column2': 'val4'})]
+~~~~~~ {python}
+>>> list(cf.get_range())
+[('bar', {'column1': 'val3', 'column2': 'val4'}), ('foo', {'column1': 'val2'})]
+>>> list(cf.get_range(row_count=1))
+[('bar', {'column1': 'val3', 'column2': 'val4'})]
+~~~~~~
 
-You can remove entire keys or just a certain column.
+You can remove entire keys or just a certain column:
 
-    >>> cf.remove('bar', columns=['column1'])
-    1261350220106863
-    >>> cf.get('bar')
-    {'column2': 'val4'}
-    >>> cf.remove('bar')
-    1261350226926859
-    >>> cf.get('bar')
-    Traceback (most recent call last):
-    ...
-    cassandra.ttypes.NotFoundException: NotFoundException()
+~~~~~~ {python}
+>>> cf.remove('bar', columns=['column1'])
+>>> cf.get('bar')
+{'column2': 'val4'}
+>>> cf.remove('bar')
+>>> cf.get('bar')
+Traceback (most recent call last):
+...
+pycassa.NotFoundException: NotFoundException()
+~~~~~~
 
 See the [tutorial](http://pycassa.github.com/pycassa/tutorial.html#connecting-to-cassandra) for more details.

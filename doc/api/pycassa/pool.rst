@@ -17,7 +17,9 @@
 
         .. automethod:: get
 
-        .. automethod:: return_conn
+        .. automethod:: put
+
+        .. automethod:: execute
 
         .. automethod:: fill
 

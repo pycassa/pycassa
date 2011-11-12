@@ -1,14 +1,15 @@
 from exceptions import Exception
 import socket
 import time
+import warnings
 
 from thrift import Thrift
 from thrift.transport import TTransport
 from thrift.transport import TSocket
 from thrift.protocol import TBinaryProtocol
 
-from pycassa.cassandra.c08 import Cassandra
-from pycassa.cassandra.constants import (CASSANDRA_07, CASSANDRA_08)
+from pycassa.cassandra.c10 import Cassandra
+from pycassa.cassandra.constants import *
 from pycassa.cassandra.ttypes import AuthenticationRequest
 from pycassa.util import compatible
 import pool
@@ -48,14 +49,16 @@ class Connection(Cassandra.Client):
 
         if api_version is None:
             server_api_version = self.describe_version()
+            if compatible(CASSANDRA_10, server_api_version):
+                self.version = CASSANDRA_10
             if compatible(CASSANDRA_08, server_api_version):
                 self.version = CASSANDRA_08
             elif compatible(CASSANDRA_07, server_api_version):
                 self.version = CASSANDRA_07
             else:
                 raise ApiMismatch("Thrift API version incompatibility: " \
-                                  "server version %s is not either Cassandra 0.7 (%s) or 0.8 (%s)." %
-                                  (server_api_version, CASSANDRA_07, CASSANDRA_08))
+                                  "server version %s is not Cassandra 0.7, 0.8, or 1.0" %
+                                  (server_api_version))
         else:
             self.version = api_version
 
@@ -74,7 +77,7 @@ class Connection(Cassandra.Client):
         self.transport.close()
 
 
-def connect(keyspace, servers=None, framed_transport=True, timeout=None,
+def connect(keyspace, servers=None, framed_transport=True, timeout=0.5,
             credentials=None, retry_time=60, recycle=None, use_threadlocal=True):
     """
     Constructs a :class:`~pycassa.pool.ConnectionPool`. This is primarily available
@@ -83,7 +86,12 @@ def connect(keyspace, servers=None, framed_transport=True, timeout=None,
     with parameters of the same name in
     :meth:`pycassa.pool.ConnectionPool.__init__()`
 
+    .. deprecated:: 1.2.2
+
     """
+    msg = "pycassa.connect() has been deprecated. Create a ConnectionPool " +\
+          "instance directly instead."
+    warnings.warn(msg, DeprecationWarning)
     if servers is None:
         servers = [DEFAULT_SERVER]
     return pool.ConnectionPool(keyspace=keyspace, server_list=servers,

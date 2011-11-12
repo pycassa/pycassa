@@ -24,8 +24,8 @@ class SystemManagerTest(unittest.TestCase):
             sys.drop_keyspace('TestKeyspace')
         except InvalidRequestException:
             pass
-        sys.create_keyspace('TestKeyspace', 3, SIMPLE_STRATEGY)
-        sys.alter_keyspace('TestKeyspace', replication_factor=1)
+        sys.create_keyspace('TestKeyspace', SIMPLE_STRATEGY, {'replication_factor': '3'})
+        sys.alter_keyspace('TestKeyspace', strategy_options={'replication_factor': '1'})
 
         sys.create_column_family('TestKeyspace', 'TestCF')
         sys.alter_column_family('TestKeyspace', 'TestCF', comment='testing')

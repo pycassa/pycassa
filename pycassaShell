@@ -5,19 +5,27 @@ interactive Cassandra Python shell
 
 """
 
+#try:
+#    from IPython.Shell import IPShellEmbed
+#except ImportError:
+#    print "[I]: IPython not found, falling back to default interpreter."
 try:
-    from IPython.Shell import IPShellEmbed
+    import IPython
+
+    if hasattr(IPython, "embed"):
+        def runshell():
+            IPython.embed(banner1="")
+    else:
+        import IPython.Shell
+        def runshell():
+            IPython.Shell.IPShellEmbed([])()
+
 except ImportError:
     print "[I]: IPython not found, falling back to default interpreter."
 
-def runshell():
-    import os
-    os.environ['PYTHONINSPECT'] = '1'
-
-try:
-    runshell = IPShellEmbed([])
-except NameError:
-    pass
+    def runshell():
+        import os
+        os.environ['PYTHONINSPECT'] = '1'
 
 import pycassa, optparse
 from pycassa.system_manager import *

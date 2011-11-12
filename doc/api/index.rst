@@ -17,11 +17,3 @@ Pycassa Modules
    pycassa/util
    pycassa/connection
    pycassa/logging/pycassa_logger
-
-Thrift Generated Modules
-------------------------
-
-.. toctree::
-   :maxdepth: 3
-
-   pycassa/cassandra/ttypes

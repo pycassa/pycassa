@@ -3,6 +3,7 @@ from pycassa.pool import ConnectionPool
 from pycassa.columnfamily import ColumnFamily
 from pycassa.util import *
 from pycassa.system_manager import *
+from pycassa.types import *
 from pycassa.index import *
 
 from nose.tools import (assert_raises, assert_equal, assert_almost_equal,
@@ -36,25 +37,31 @@ class TestCFs(unittest.TestCase):
     @classmethod
     def setup_class(cls):
         sys = SystemManager()
-        sys.create_column_family(TEST_KS, 'StdLong', comparator_type=LONG_TYPE)
-        sys.create_column_family(TEST_KS, 'StdInteger', comparator_type=INT_TYPE)
-        sys.create_column_family(TEST_KS, 'StdTimeUUID', comparator_type=TIME_UUID_TYPE)
-        sys.create_column_family(TEST_KS, 'StdLexicalUUID', comparator_type=LEXICAL_UUID_TYPE)
-        sys.create_column_family(TEST_KS, 'StdAscii', comparator_type=ASCII_TYPE)
-        sys.create_column_family(TEST_KS, 'StdUTF8', comparator_type=UTF8_TYPE)
-        sys.create_column_family(TEST_KS, 'StdBytes', comparator_type=BYTES_TYPE)
+        sys.create_column_family(TEST_KS, 'StdLong', comparator_type=LongType())
+        sys.create_column_family(TEST_KS, 'StdInteger', comparator_type=IntegerType())
+        sys.create_column_family(TEST_KS, 'StdBigInteger', comparator_type=IntegerType())
+        sys.create_column_family(TEST_KS, 'StdTimeUUID', comparator_type=TimeUUIDType())
+        sys.create_column_family(TEST_KS, 'StdLexicalUUID', comparator_type=LexicalUUIDType())
+        sys.create_column_family(TEST_KS, 'StdAscii', comparator_type=AsciiType())
+        sys.create_column_family(TEST_KS, 'StdUTF8', comparator_type=UTF8Type())
+        sys.create_column_family(TEST_KS, 'StdBytes', comparator_type=BytesType())
+        sys.create_column_family(TEST_KS, 'StdComposite',
+                                 comparator_type=CompositeType(LongType(), BytesType()))
         sys.close()
 
         cls.cf_long  = ColumnFamily(pool, 'StdLong')
         cls.cf_int   = ColumnFamily(pool, 'StdInteger')
+        cls.cf_big_int = ColumnFamily(pool, 'StdBigInteger')
         cls.cf_time  = ColumnFamily(pool, 'StdTimeUUID')
         cls.cf_lex   = ColumnFamily(pool, 'StdLexicalUUID')
         cls.cf_ascii = ColumnFamily(pool, 'StdAscii')
         cls.cf_utf8  = ColumnFamily(pool, 'StdUTF8')
         cls.cf_bytes = ColumnFamily(pool, 'StdBytes')
+        cls.cf_composite = ColumnFamily(pool, 'StdComposite')
 
         cls.cfs = [cls.cf_long, cls.cf_int, cls.cf_time, cls.cf_lex,
-                    cls.cf_ascii, cls.cf_utf8, cls.cf_bytes]
+                   cls.cf_ascii, cls.cf_utf8, cls.cf_bytes,
+                   cls.cf_composite]
 
     def tearDown(self):
         for cf in TestCFs.cfs:
@@ -82,6 +89,11 @@ class TestCFs(unittest.TestCase):
         int_cols = [1,2,3]
         type_groups.append(self.make_group(TestCFs.cf_int, int_cols))
 
+        big_int_cols = [1 + int(time.time() * 10 ** 6),
+                        2 + int(time.time() * 10 ** 6),
+                        3 + int(time.time() * 10 ** 6)]
+        type_groups.append(self.make_group(TestCFs.cf_big_int, big_int_cols))
+        
         time_cols = [TIME1, TIME2, TIME3]
         type_groups.append(self.make_group(TestCFs.cf_time, time_cols))
 
@@ -98,6 +110,9 @@ class TestCFs(unittest.TestCase):
 
         bytes_cols = ['aaaa', 'bbbb', 'cccc']
         type_groups.append(self.make_group(TestCFs.cf_bytes, bytes_cols))
+
+        composite_cols = [(1, 'foo'), (2, 'bar'), (3, 'baz')]
+        type_groups.append(self.make_group(TestCFs.cf_composite, composite_cols))
 
         # Begin the actual inserting and getting
         for group in type_groups:
@@ -188,17 +203,19 @@ class TestSuperCFs(unittest.TestCase):
     @classmethod
     def setup_class(cls):
         sys = SystemManager()
-        sys.create_column_family(TEST_KS, 'SuperLong', super=True, comparator_type=LONG_TYPE)
-        sys.create_column_family(TEST_KS, 'SuperInt', super=True, comparator_type=INT_TYPE)
-        sys.create_column_family(TEST_KS, 'SuperTime', super=True, comparator_type=TIME_UUID_TYPE)
-        sys.create_column_family(TEST_KS, 'SuperLex', super=True, comparator_type=LEXICAL_UUID_TYPE)
-        sys.create_column_family(TEST_KS, 'SuperAscii', super=True, comparator_type=ASCII_TYPE)
-        sys.create_column_family(TEST_KS, 'SuperUTF8', super=True, comparator_type=UTF8_TYPE)
-        sys.create_column_family(TEST_KS, 'SuperBytes', super=True, comparator_type=BYTES_TYPE)
+        sys.create_column_family(TEST_KS, 'SuperLong', super=True, comparator_type=LongType())
+        sys.create_column_family(TEST_KS, 'SuperInt', super=True, comparator_type=IntegerType())
+        sys.create_column_family(TEST_KS, 'SuperBigInt', super=True, comparator_type=IntegerType())
+        sys.create_column_family(TEST_KS, 'SuperTime', super=True, comparator_type=TimeUUIDType())
+        sys.create_column_family(TEST_KS, 'SuperLex', super=True, comparator_type=LexicalUUIDType())
+        sys.create_column_family(TEST_KS, 'SuperAscii', super=True, comparator_type=AsciiType())
+        sys.create_column_family(TEST_KS, 'SuperUTF8', super=True, comparator_type=UTF8Type())
+        sys.create_column_family(TEST_KS, 'SuperBytes', super=True, comparator_type=BytesType())
         sys.close()
 
         cls.cf_suplong  = ColumnFamily(pool, 'SuperLong')
         cls.cf_supint   = ColumnFamily(pool, 'SuperInt')
+        cls.cf_supbigint   = ColumnFamily(pool, 'SuperBigInt')
         cls.cf_suptime  = ColumnFamily(pool, 'SuperTime')
         cls.cf_suplex   = ColumnFamily(pool, 'SuperLex')
         cls.cf_supascii = ColumnFamily(pool, 'SuperAscii')
@@ -234,7 +251,12 @@ class TestSuperCFs(unittest.TestCase):
 
         int_cols = [1,2,3]
         type_groups.append(self.make_super_group(TestSuperCFs.cf_supint, int_cols))
-
+        
+        big_int_cols = [1 + int(time.time() * 10 ** 6),
+                        2 + int(time.time() * 10 ** 6),
+                        3 + int(time.time() * 10 ** 6)]
+        type_groups.append(self.make_super_group(TestSuperCFs.cf_supbigint, big_int_cols))
+        
         time_cols = [TIME1, TIME2, TIME3]
         type_groups.append(self.make_super_group(TestSuperCFs.cf_suptime, time_cols))
 
@@ -341,23 +363,26 @@ class TestSuperSubCFs(unittest.TestCase):
     def setup_class(cls):
         sys = SystemManager()
         sys.create_column_family(TEST_KS, 'SuperLongSubLong', super=True,
-                                 comparator_type=LONG_TYPE, subcomparator_type=LONG_TYPE)
+                                 comparator_type=LongType(), subcomparator_type=LongType())
         sys.create_column_family(TEST_KS, 'SuperLongSubInt', super=True,
-                                 comparator_type=LONG_TYPE, subcomparator_type=INT_TYPE)
+                                 comparator_type=LongType(), subcomparator_type=IntegerType())
+        sys.create_column_family(TEST_KS, 'SuperLongSubBigInt', super=True,
+                                 comparator_type=LongType(), subcomparator_type=IntegerType())
         sys.create_column_family(TEST_KS, 'SuperLongSubTime', super=True,
-                                 comparator_type=LONG_TYPE, subcomparator_type=TIME_UUID_TYPE)
+                                 comparator_type=LongType(), subcomparator_type=TimeUUIDType())
         sys.create_column_family(TEST_KS, 'SuperLongSubLex', super=True,
-                                 comparator_type=LONG_TYPE, subcomparator_type=LEXICAL_UUID_TYPE)
+                                 comparator_type=LongType(), subcomparator_type=LexicalUUIDType())
         sys.create_column_family(TEST_KS, 'SuperLongSubAscii', super=True,
-                                 comparator_type=LONG_TYPE, subcomparator_type=ASCII_TYPE)
+                                 comparator_type=LongType(), subcomparator_type=AsciiType())
         sys.create_column_family(TEST_KS, 'SuperLongSubUTF8', super=True,
-                                 comparator_type=LONG_TYPE, subcomparator_type=UTF8_TYPE)
+                                 comparator_type=LongType(), subcomparator_type=UTF8Type())
         sys.create_column_family(TEST_KS, 'SuperLongSubBytes', super=True,
-                                 comparator_type=LONG_TYPE, subcomparator_type=BYTES_TYPE)
+                                 comparator_type=LongType(), subcomparator_type=BytesType())
         sys.close()
 
         cls.cf_suplong_sublong  = ColumnFamily(pool, 'SuperLongSubLong')
         cls.cf_suplong_subint   = ColumnFamily(pool, 'SuperLongSubInt')
+        cls.cf_suplong_subbigint   = ColumnFamily(pool, 'SuperLongSubBigInt')
         cls.cf_suplong_subtime  = ColumnFamily(pool, 'SuperLongSubTime')
         cls.cf_suplong_sublex   = ColumnFamily(pool, 'SuperLongSubLex')
         cls.cf_suplong_subascii = ColumnFamily(pool, 'SuperLongSubAscii')
@@ -394,6 +419,11 @@ class TestSuperSubCFs(unittest.TestCase):
 
         int_cols = [1,2,3]
         type_groups.append(self.make_sub_group(TestSuperSubCFs.cf_suplong_subint, int_cols))
+        
+        big_int_cols = [1 + int(time.time() * 10 ** 6),
+                        2 + int(time.time() * 10 ** 6),
+                        3 + int(time.time() * 10 ** 6)]
+        type_groups.append(self.make_sub_group(TestSuperSubCFs.cf_suplong_subbigint, big_int_cols))
 
         time_cols = [TIME1, TIME2, TIME3]
         type_groups.append(self.make_sub_group(TestSuperSubCFs.cf_suplong_subtime, time_cols))
@@ -499,13 +529,13 @@ class TestValidators(unittest.TestCase):
     def test_validated_columns(self):
         sys = SystemManager()
         sys.create_column_family(TEST_KS, 'Validators',)
-        sys.alter_column(TEST_KS, 'Validators', 'long', LONG_TYPE)
-        sys.alter_column(TEST_KS, 'Validators', 'int', INT_TYPE)
-        sys.alter_column(TEST_KS, 'Validators', 'time', TIME_UUID_TYPE)
-        sys.alter_column(TEST_KS, 'Validators', 'lex', LEXICAL_UUID_TYPE)
-        sys.alter_column(TEST_KS, 'Validators', 'ascii', ASCII_TYPE)
-        sys.alter_column(TEST_KS, 'Validators', 'utf8', UTF8_TYPE)
-        sys.alter_column(TEST_KS, 'Validators', 'bytes', BYTES_TYPE)
+        sys.alter_column(TEST_KS, 'Validators', 'long', LongType())
+        sys.alter_column(TEST_KS, 'Validators', 'int', IntegerType())
+        sys.alter_column(TEST_KS, 'Validators', 'time', TimeUUIDType())
+        sys.alter_column(TEST_KS, 'Validators', 'lex', LexicalUUIDType())
+        sys.alter_column(TEST_KS, 'Validators', 'ascii', AsciiType())
+        sys.alter_column(TEST_KS, 'Validators', 'utf8', UTF8Type())
+        sys.alter_column(TEST_KS, 'Validators', 'bytes', BytesType())
         sys.close()
 
         cf = ColumnFamily(pool, 'Validators')
@@ -546,8 +576,8 @@ class TestDefaultValidators(unittest.TestCase):
 
     def test_default_validated_columns(self):
         sys = SystemManager()
-        sys.create_column_family(TEST_KS, 'DefaultValidator', default_validation_class=LONG_TYPE)
-        sys.alter_column(TEST_KS, 'DefaultValidator', 'subcol', TIME_UUID_TYPE)
+        sys.create_column_family(TEST_KS, 'DefaultValidator', default_validation_class=LongType())
+        sys.alter_column(TEST_KS, 'DefaultValidator', 'subcol', TimeUUIDType())
         sys.close()
 
         cf = ColumnFamily(pool, 'DefaultValidator')
@@ -565,7 +595,6 @@ class TestDefaultValidators(unittest.TestCase):
         assert_equal(cf.get(key), {'aaaaaa': 1L, 'subcol': TIME1})
 
         assert_raises(TypeError, cf.insert, key, col_ncf)
-        assert_raises(TypeError, cf.insert, key, col_ncm)
 
         cf.remove(key)
 
@@ -578,13 +607,13 @@ class TestKeyValidators(unittest.TestCase):
         if not have_key_validators:
             raise SkipTest("Cassandra 0.7 does not have key validators")
 
-        sys.create_column_family(TEST_KS, 'KeyLong', key_validation_class=LONG_TYPE)
-        sys.create_column_family(TEST_KS, 'KeyInteger', key_validation_class=INT_TYPE)
-        sys.create_column_family(TEST_KS, 'KeyTimeUUID', key_validation_class=TIME_UUID_TYPE)
-        sys.create_column_family(TEST_KS, 'KeyLexicalUUID', key_validation_class=LEXICAL_UUID_TYPE)
-        sys.create_column_family(TEST_KS, 'KeyAscii', key_validation_class=ASCII_TYPE)
-        sys.create_column_family(TEST_KS, 'KeyUTF8', key_validation_class=UTF8_TYPE)
-        sys.create_column_family(TEST_KS, 'KeyBytes', key_validation_class=BYTES_TYPE)
+        sys.create_column_family(TEST_KS, 'KeyLong', key_validation_class=LongType())
+        sys.create_column_family(TEST_KS, 'KeyInteger', key_validation_class=IntegerType())
+        sys.create_column_family(TEST_KS, 'KeyTimeUUID', key_validation_class=TimeUUIDType())
+        sys.create_column_family(TEST_KS, 'KeyLexicalUUID', key_validation_class=LexicalUUIDType())
+        sys.create_column_family(TEST_KS, 'KeyAscii', key_validation_class=AsciiType())
+        sys.create_column_family(TEST_KS, 'KeyUTF8', key_validation_class=UTF8Type())
+        sys.create_column_family(TEST_KS, 'KeyBytes', key_validation_class=BytesType())
         sys.close()
 
         cls.cf_long  = ColumnFamily(pool, 'KeyLong')
@@ -693,7 +722,7 @@ class TestKeyValidators(unittest.TestCase):
     def test_get_indexed_slices(self):
         sys = SystemManager()
         for cf, keys in self.type_groups:
-            sys.create_index(TEST_KS, cf.column_family, 'birthdate', LONG_TYPE)
+            sys.create_index(TEST_KS, cf.column_family, 'birthdate', LongType())
             cf = ColumnFamily(pool, cf.column_family)
             for key in keys:
                 cf.insert(key, {'birthdate': 1})
@@ -718,7 +747,7 @@ class TestKeyValidators(unittest.TestCase):
         if sys._conn.version == CASSANDRA_07:
             raise SkipTest("Cassandra 0.7 does not have key validators")
 
-        sys.create_column_family(TEST_KS, 'KeyLongCounter', key_validation_class=LONG_TYPE,
+        sys.create_column_family(TEST_KS, 'KeyLongCounter', key_validation_class=LongType(),
                                  default_validation_class=COUNTER_COLUMN_TYPE)
         sys.close()
         cf_long  = ColumnFamily(pool, 'KeyLongCounter')
@@ -731,12 +760,70 @@ class TestKeyValidators(unittest.TestCase):
         time.sleep(0.1)
         assert_raises(NotFoundException, cf_long.get, key)
 
+class TestComposites(unittest.TestCase):
+
+    def test_static_composite(cls):
+        sys = SystemManager()
+        have_composites = sys._conn.version != CASSANDRA_07
+        if not have_composites:
+            raise SkipTest("Cassandra < 0.8 does not composite types")
+
+        sys.create_column_family(TEST_KS, 'StaticComposite',
+                                 comparator_type=CompositeType(LongType(),
+                                                               IntegerType(),
+                                                               TimeUUIDType(reversed=True),
+                                                               LexicalUUIDType(reversed=False),
+                                                               AsciiType(),
+                                                               UTF8Type(),
+                                                               BytesType()))
+
+        cf = ColumnFamily(pool, 'StaticComposite')
+        colname = (127312831239123123, 1, uuid.uuid1(), uuid.uuid4(), 'foo', u'ba\u0254r', 'baz')
+        cf.insert('key', {colname: 'val'})
+        assert_equal(cf.get('key'), {colname: 'val'})
+
+
+        u1 = uuid.uuid1()
+        u4 = uuid.uuid4()
+        col0 = (0, 1, u1, u4, '', '', '')
+        col1 = (1, 1, u1, u4, '', '', '')
+        col2 = (1, 2, u1, u4, '', '', '')
+        col3 = (1, 3, u1, u4, '', '', '')
+        col4 = (2, 1, u1, u4, '', '', '')
+        cf.insert('key2', {col0: '', col1: '', col2: '', col3: '', col4: ''})
+
+        result = cf.get('key2', column_start=((1, True),), column_finish=((1, True),))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        result = cf.get('key2', column_start=(1,), column_finish=((2, False), ))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        result = cf.get('key2', column_start=((1, True),), column_finish=((2, False), ))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        result = cf.get('key2', column_start=(1, ), column_finish=((2, False), ))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        result = cf.get('key2', column_start=((0, False), ), column_finish=((2, False), ))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        result = cf.get('key2', column_start=(1, 1), column_finish=(1, 3))
+        assert_equal(result, {col1: '', col2: ''})
+
+        result = cf.get('key2', column_start=(1, 1), column_finish=(1, (3, True)))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        result = cf.get('key2', column_start=(1, (1, True)), column_finish=((2, False), ))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        sys.drop_column_family(TEST_KS, 'StaticComposite')
+
 class TestBigInt(unittest.TestCase):
 
     @classmethod
     def setup_class(cls):
         sys = SystemManager()
-        sys.create_column_family(TEST_KS, 'StdInteger', comparator_type=INT_TYPE)
+        sys.create_column_family(TEST_KS, 'StdInteger', comparator_type=IntegerType())
 
     @classmethod
     def teardown_class(cls):
@@ -761,74 +848,81 @@ class TestBigInt(unittest.TestCase):
 
 class TestTimeUUIDs(unittest.TestCase):
 
-    def setUp(self):
-        self.cf_time = ColumnFamily(pool, 'StdTimeUUID')
-
-    def tearDown(self):
-        self.cf_time.remove('key1')
+    @classmethod
+    def setup_class(cls):
+        sys = SystemManager()
+        sys.create_column_family(TEST_KS, 'TestTimeUUIDs', comparator_type=TimeUUIDType())
+        sys.close()
+        cls.cf_time = ColumnFamily(pool, 'TestTimeUUIDs')
 
     def test_datetime_to_uuid(self):
+        cf_time = TestTimeUUIDs.cf_time
         key = 'key1'
         timeline = []
 
         timeline.append(datetime.now())
         time1 = uuid1()
         col1 = {time1:'0'}
-        self.cf_time.insert(key, col1)
+        cf_time.insert(key, col1)
         time.sleep(1)
 
         timeline.append(datetime.now())
         time2 = uuid1()
         col2 = {time2:'1'}
-        self.cf_time.insert(key, col2)
+        cf_time.insert(key, col2)
         time.sleep(1)
 
         timeline.append(datetime.now())
 
         cols = {time1:'0', time2:'1'}
 
-        assert_equal(self.cf_time.get(key, column_start=timeline[0])                            , cols)
-        assert_equal(self.cf_time.get(key,                           column_finish=timeline[2]) , cols)
-        assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
-        assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
-        assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[1]) , col1)
-        assert_equal(self.cf_time.get(key, column_start=timeline[1], column_finish=timeline[2]) , col2)
+        assert_equal(cf_time.get(key, column_start=timeline[0])                            , cols)
+        assert_equal(cf_time.get(key,                           column_finish=timeline[2]) , cols)
+        assert_equal(cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
+        assert_equal(cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
+        assert_equal(cf_time.get(key, column_start=timeline[0], column_finish=timeline[1]) , col1)
+        assert_equal(cf_time.get(key, column_start=timeline[1], column_finish=timeline[2]) , col2)
+        cf_time.remove(key)
 
     def test_time_to_uuid(self):
+        cf_time = TestTimeUUIDs.cf_time
         key = 'key1'
         timeline = []
 
         timeline.append(time.time())
         time1 = uuid1()
         col1 = {time1:'0'}
-        self.cf_time.insert(key, col1)
+        cf_time.insert(key, col1)
         time.sleep(0.1)
 
         timeline.append(time.time())
         time2 = uuid1()
         col2 = {time2:'1'}
-        self.cf_time.insert(key, col2)
+        cf_time.insert(key, col2)
         time.sleep(0.1)
 
         timeline.append(time.time())
 
         cols = {time1:'0', time2:'1'}
 
-        assert_equal(self.cf_time.get(key, column_start=timeline[0])                            , cols)
-        assert_equal(self.cf_time.get(key,                           column_finish=timeline[2]) , cols)
-        assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
-        assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
-        assert_equal(self.cf_time.get(key, column_start=timeline[0], column_finish=timeline[1]) , col1)
-        assert_equal(self.cf_time.get(key, column_start=timeline[1], column_finish=timeline[2]) , col2)
+        assert_equal(cf_time.get(key, column_start=timeline[0])                            , cols)
+        assert_equal(cf_time.get(key,                           column_finish=timeline[2]) , cols)
+        assert_equal(cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
+        assert_equal(cf_time.get(key, column_start=timeline[0], column_finish=timeline[2]) , cols)
+        assert_equal(cf_time.get(key, column_start=timeline[0], column_finish=timeline[1]) , col1)
+        assert_equal(cf_time.get(key, column_start=timeline[1], column_finish=timeline[2]) , col2)
+        cf_time.remove(key)
 
     def test_auto_time_to_uuid1(self):
+        cf_time = TestTimeUUIDs.cf_time
         key = 'key1'
         t = time.time()
         col = {t: 'foo'}
-        self.cf_time.insert(key, col)
-        uuid_res = self.cf_time.get(key).keys()[0]
+        cf_time.insert(key, col)
+        uuid_res = cf_time.get(key).keys()[0]
         timestamp = convert_uuid_to_time(uuid_res)
         assert_almost_equal(timestamp, t, places=3)
+        cf_time.remove(key)
 
 class TestTypeErrors(unittest.TestCase):
 

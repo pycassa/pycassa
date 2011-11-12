@@ -5,29 +5,57 @@ manipulation of data inside Cassandra.
 .. seealso:: :mod:`pycassa.columnfamilymap`
 """
 
+import time
+import struct
+from UserDict import DictMixin
+
 from pycassa.cassandra.ttypes import Column, ColumnOrSuperColumn,\
     ColumnParent, ColumnPath, ConsistencyLevel, NotFoundException,\
     SlicePredicate, SliceRange, SuperColumn, KeyRange,\
-    IndexExpression, IndexClause, CounterColumn
-import pycassa.util as util
-
-import time
-import sys
-import uuid
-import threading
-
-from batch import CfMutator
+    IndexExpression, IndexClause, CounterColumn, Mutation
+import pycassa.marshal as marshal
+import pycassa.types as types
+from pycassa.batch import CfMutator
+try:
+    from collections import OrderedDict
+except ImportError:
+    from pycassa.util import OrderedDict
 
 __all__ = ['gm_timestamp', 'ColumnFamily', 'PooledColumnFamily']
 
-_NON_SLICE = 0
-_SLICE_START = 1
-_SLICE_FINISH = 2
+class ColumnValidatorDict(DictMixin):
+
+    def __init__(self, other_dict={}):
+        self.type_map = {}
+        self.packers = {}
+        self.unpackers = {}
+        for item, value in other_dict.items():
+            self[item] = value
+
+    def __getitem__(self, item):
+        return self.type_map[item]
+
+    def __setitem__(self, item, value):
+        if isinstance(value, types.CassandraType):
+            self.type_map[item] = value
+            self.packers[item] = value.pack
+            self.unpackers[item] = value.unpack
+        else:
+            self.type_map[item] = marshal.extract_type_name(value)
+            self.packers[item] = marshal.packer_for(value)
+            self.unpackers[item] = marshal.unpacker_for(value)
+
+    def __delitem__(self, item):
+        del self.type_map[item]
+        del self.packers[item]
+        del self.unpackers[item]
+
+    def keys(self):
+        return self.type_map.keys()
 
 def gm_timestamp():
     """ Gets the current GMT timestamp in microseconds. """
     return int(time.time() * 1e6)
-
 
 class ColumnFamily(object):
     """ An abstraction of a Cassandra column family or super column family. """
@@ -35,8 +63,9 @@ class ColumnFamily(object):
     buffer_size = 1024
     """ When calling :meth:`get_range()` or :meth:`get_indexed_slices()`,
     the intermediate results need to be buffered if we are fetching many
-    rows, otherwise the Cassandra server will overallocate memory and fail.
-    This is the size of that buffer in number of rows. The default is 1024. """
+    rows, otherwise performance may suffer and the Cassandra server may
+    overallocate memory and fail. This is the size of that buffer in number
+    of rows. The default is 1024. """
 
     read_consistency_level = ConsistencyLevel.ONE
     """ The default consistency level for every read operation, such as 
@@ -55,10 +84,12 @@ class ColumnFamily(object):
     column. This attribute is a function that is used to get
     this timestamp when needed.  The default function is :meth:`gm_timestamp()`."""
 
-    dict_class = util.OrderedDict
-    """ Results are returned as dictionaries. :class:`~pycassa.util.OrderedDict` is
-    used by default so that order is maintained. A different class, such as
-    :class:`dict` may be used setting this. """
+    dict_class = OrderedDict
+    """ Results are returned as dictionaries. By default, python 2.7's
+    :class:`collections.OrderedDict` is used if available, otherwise
+    :class:`~pycassa.util.OrderedDict` is used so that order is maintained.
+    A different class, such as :class:`dict`, may be instead by used setting
+    this. """
 
     autopack_names = True
     """ Controls whether column names are automatically converted to or from
@@ -81,41 +112,130 @@ class ColumnFamily(object):
     By default, this is :const:`True`.
     """
 
-    column_name_class = None
-    """ The data type of column names, which pycassa will use to determine
-    how to pack and unpack them.
+    def _set_column_name_class(self, t):
+        if isinstance(t, types.CassandraType):
+            self._column_name_class = t
+            self._name_packer = t.pack
+            self._name_unpacker = t.unpack
+        else:
+            self._column_name_class = marshal.extract_type_name(t)
+            self._name_packer = marshal.packer_for(t)
+            self._name_unpacker = marshal.unpacker_for(t)
+
+    def _get_column_name_class(self):
+        return self._column_name_class
+
+    column_name_class = property(_get_column_name_class, _set_column_name_class)
+    """ The data type of column names, which pycassa will use
+    to determine how to pack and unpack them.
     
     This is set automatically by inspecting the column family's
     ``comparator_type``, but it may also be set manually if you want
     autopacking behavior without setting a ``comparator_type``. Options
-    include anything in :mod:`~pycassa.system_manager`, such as "LongType". """
+    include an instance of any class in :mod:`pycassa.types`, such as ``LongType()``.
+    """
 
-    super_column_name_class = None
-    """ Like :attr:`column_name_class`, but for super column names. """
+    def _set_super_column_name_class(self, t):
+        if isinstance(t, types.CassandraType):
+            self._super_column_name_class = t
+            self._super_name_packer = t.pack
+            self._super_name_unpacker = t.unpack
+        else:
+            self._super_column_name_class = marshal.extract_type_name(t)
+            self._super_name_packer = marshal.packer_for(t)
+            self._super_name_unpacker = marshal.unpacker_for(t)
 
-    default_validation_class = None
-    """ The default data type of column values, which pycassa will use
-    to determine how to pack and unpack them.
+    def _get_super_column_name_class(self):
+        return self._super_column_name_class
+
+    super_column_name_class = property(_get_super_column_name_class,
+                                       _set_super_column_name_class)
+    """ Like :attr:`column_name_class`, but for
+    super column names. """
+
+    def _set_default_validation_class(self, t):
+        if isinstance(t, types.CassandraType):
+            self._default_validation_class = t
+            self._default_value_packer = t.pack
+            self._default_value_unpacker = t.unpack
+            have_counters = isinstance(t, types.CounterColumnType)
+        else:
+            self._default_validation_class = marshal.extract_type_name(t)
+            self._default_value_packer = marshal.packer_for(t)
+            self._default_value_unpacker = marshal.unpacker_for(t)
+            have_counters = self._default_validation_class == "CounterColumnType"
+        
+        if not self.super:
+            if have_counters:
+                def _make_cosc(name, value, timestamp, ttl):
+                    return ColumnOrSuperColumn(counter_column=CounterColumn(name, value))
+            else:
+                def _make_cosc(name, value, timestamp, ttl):
+                    return ColumnOrSuperColumn(Column(name, value, timestamp, ttl))
+            self._make_cosc = _make_cosc
+        else:
+            if have_counters:
+                def _make_column(name, value, timestamp, ttl):
+                    return CounterColumn(name, value)
+                self._make_column = _make_column
+
+                def _make_cosc(scol_name, subcols):
+                    return ColumnOrSuperColumn(counter_super_column=(SuperColumn(scol_name, subcols)))
+            else:
+                self._make_column = Column
+                def _make_cosc(scol_name, subcols):
+                    return ColumnOrSuperColumn(super_column=(SuperColumn(scol_name, subcols)))
+            self._make_cosc = _make_cosc
+
+    def _get_default_validation_class(self):
+        return self._default_validation_class
+
+    default_validation_class = property(_get_default_validation_class,
+                                        _set_default_validation_class)
+    """ The default data type of column values, which pycassa
+    will use to determine how to pack and unpack them.
     
     This is set automatically by inspecting the column family's
     ``default_validation_class``, but it may also be set manually if you want
     autopacking behavior without setting a ``default_validation_class``. Options
-    include anything in :mod:`~pycassa.system_manager`, such as "LongType". """
+    include an instance of any class in :mod:`pycassa.types`, such as ``LongType()``.
+    """
 
-    column_validators = {}
-    """ Like :attr:`default_validation_class`, but is a :class:`dict` mapping
-    individual columns to types. """
+    def _set_column_validators(self, other_dict):
+        self._column_validators = ColumnValidatorDict(other_dict)
 
-    key_validation_class = None
-    """ The data type of row keys, which pycassa will use to determine how
-    to pack and unpack them.
+    def _get_column_validators(self):
+        return self._column_validators
+
+    column_validators = property(_get_column_validators, _set_column_validators)
+    """ Like :attr:`default_validation_class`, but is a
+    :class:`dict` mapping individual columns to types. """
+
+    def _set_key_validation_class(self, t):
+        if isinstance(t, types.CassandraType):
+            self._key_validation_class = t
+            self._key_packer = t.pack
+            self._key_unpacker = t.unpack
+        else:
+            self._key_validation_class = marshal.extract_type_name(t)
+            self._key_packer = marshal.packer_for(t)
+            self._key_unpacker = marshal.unpacker_for(t)
+
+    def _get_key_validation_class(self):
+        return self._key_validation_class
+
+    key_validation_class = property(_get_key_validation_class,
+                                    _set_key_validation_class)
+    """ The data type of row keys, which pycassa will use
+    to determine how to pack and unpack them.
     
     This is set automatically by inspecting the column family's
     ``key_validation_class`` (which only exists in Cassandra 0.8 or greater),
     but may be set manually if you want the autopacking behavior without
     setting a ``key_validation_class`` or if you are using Cassandra 0.7. 
-    Options include anything in :mod:`~pycassa.system_manager`, such as
-    "LongType"."""
+    Options include an instance of any class in :mod:`pycassa.types`,
+    such as ``LongType()``.
+    """
 
     def __init__(self, pool, column_family, **kwargs):
         """
@@ -131,8 +251,6 @@ class ColumnFamily(object):
         """
 
         self.pool = pool
-        self._tlocal = threading.local()
-        self._tlocal.client = None
         self.column_family = column_family
         self.timestamp = gm_timestamp
         self.load_schema()
@@ -151,17 +269,14 @@ class ColumnFamily(object):
         Cassandra and updates comparator and validation classes if
         neccessary.
         """
+        ksdef = self.pool.execute('get_keyspace_description',
+                                  use_dict_for_col_metadata=True)
         try:
-            try:
-                self._obtain_connection()
-                ksdef = self._tlocal.client.get_keyspace_description(use_dict_for_col_metadata=True)
-                self._cfdef = ksdef[self.column_family]
-            except KeyError:
-                nfe = NotFoundException()
-                nfe.why = 'Column family %s not found.' % self.column_family
-                raise nfe
-        finally:
-            self._release_connection()
+            self._cfdef = ksdef[self.column_family]
+        except KeyError:
+            nfe = NotFoundException()
+            nfe.why = 'Column family %s not found.' % self.column_family
+            raise nfe
 
         self.super = self._cfdef.column_type == 'Super'
         self._load_comparator_classes()
@@ -170,21 +285,21 @@ class ColumnFamily(object):
 
     def _load_comparator_classes(self):
         if not self.super:
-            self.column_name_class = util.extract_type_name(self._cfdef.comparator_type)
+            self.column_name_class = self._cfdef.comparator_type
             self.super_column_name_class = None
         else:
-            self.column_name_class = util.extract_type_name(self._cfdef.subcomparator_type)
-            self.super_column_name_class = util.extract_type_name(self._cfdef.comparator_type)
+            self.column_name_class = self._cfdef.subcomparator_type
+            self.super_column_name_class = self._cfdef.comparator_type
 
     def _load_validation_classes(self):
-        self.default_validation_class = util.extract_type_name(self._cfdef.default_validation_class)
+        self.default_validation_class = self._cfdef.default_validation_class
         self.column_validators = {}
         for name, coldef in self._cfdef.column_metadata.items():
-            self.column_validators[name] = util.extract_type_name(coldef.validation_class)
+            self.column_validators[name] = coldef.validation_class
 
     def _load_key_class(self):
         if hasattr(self._cfdef, "key_validation_class"):
-            self.key_validation_class = util.extract_type_name(self._cfdef.key_validation_class)
+            self.key_validation_class = self._cfdef.key_validation_class
         else:
             self.key_validation_class = 'BytesType'
 
@@ -244,95 +359,123 @@ class ColumnFamily(object):
             if column_start != '':
                 column_start = self._pack_name(column_start,
                                                is_supercol_name=is_supercol_name,
-                                               slice_end=_SLICE_START)
+                                               slice_start=True)
             if column_finish != '':
                 column_finish = self._pack_name(column_finish,
                                                 is_supercol_name=is_supercol_name,
-                                                slice_end=_SLICE_FINISH)
+                                                slice_start=False)
 
             sr = SliceRange(start=column_start, finish=column_finish,
                             reversed=column_reversed, count=column_count)
             return SlicePredicate(slice_range=sr)
 
-    def _pack_name(self, value, is_supercol_name=False, slice_end=_NON_SLICE):
+    def _pack_name(self, value, is_supercol_name=False, slice_start=None):
+        if value is None:
+            return
+
         if not self.autopack_names:
-            if value is not None and not (isinstance(value, str) or isinstance(value, unicode)):
-                raise TypeError("A str or unicode column name was expected, but %s was received instead (%s)"
-                        % (value.__class__.__name__, str(value)))
+            if not isinstance(value, basestring):
+                raise TypeError("A str or unicode column name was expected, " +
+                                "but %s was received instead (%s)"
+                                % (value.__class__.__name__, str(value)))
             return value
-        if value is None: return
 
-        if is_supercol_name:
-            d_type = self.super_column_name_class
-        else:
-            d_type = self.column_name_class
-
-        if d_type == 'TimeUUIDType':
-            if slice_end:
-                value = util.convert_time_to_uuid(value,
-                        lowest_val=(slice_end == _SLICE_START),
-                        randomize=False)
+        try:
+            if is_supercol_name:
+                return self._super_name_packer(value, slice_start)
             else:
-                value = util.convert_time_to_uuid(value,
-                        randomize=True)
-        elif d_type == 'BytesType' and not (isinstance(value, str) or isinstance(value, unicode)):
-            raise TypeError("A str or unicode column name was expected, but %s was received instead (%s)"
-                    % (value.__class__.__name__, str(value)))
+                return self._name_packer(value, slice_start)
+        except struct.error:
+            if is_supercol_name:
+                d_type = self.super_column_name_class
+            else:
+                d_type = self.column_name_class
 
-        return util.pack(value, d_type)
+            raise TypeError("%s is not a compatible type for %s" %
+                            (value.__class__.__name__, d_type))
 
     def _unpack_name(self, b, is_supercol_name=False):
         if not self.autopack_names:
             return b
-        if b is None: return
 
-        if is_supercol_name:
-            d_type = self.super_column_name_class
-        else:
-            d_type = self.column_name_class
+        try:
+            if is_supercol_name:
+                return self._super_name_unpacker(b)
+            else:
+                return self._name_unpacker(b)
+        except struct.error:
+            if is_supercol_name:
+                d_type = self.super_column_name_class
+            else:
+                d_type = self.column_name_class
+            raise TypeError("%s cannot be converted to a type matching %s" %
+                            (b, d_type))
 
-        return util.unpack(b, d_type)
-
-    def _get_data_type_for_col(self, col_name):
-        return self.column_validators.get(col_name, self.default_validation_class)
 
     def _pack_value(self, value, col_name):
+        if value is None:
+            return
+
         if not self.autopack_values:
-            if value is not None and not (isinstance(value, str) or isinstance(value, unicode)):
-                raise TypeError("A str or unicode column value was expected for column '%s', but %s was received instead (%s)"
-                        % (str(col_name), value.__class__.__name__, str(value)))
+            if not isinstance(value, basestring):
+                raise TypeError("A str or unicode column value was expected for " +
+                                "column '%s', but %s was received instead (%s)"
+                                % (str(col_name), value.__class__.__name__, str(value)))
             return value
 
-        d_type = self._get_data_type_for_col(col_name)
-        if d_type == 'BytesType' and not (isinstance(value, str) or isinstance(value, unicode)):
-            raise TypeError("A str or unicode column value was expected for column '%s', but %s was received instead (%s)"
-                    % (str(col_name), value.__class__.__name__, str(value)))
-
-        return util.pack(value, d_type)
+        packer = self._column_validators.packers.get(col_name, self._default_value_packer)
+        try:
+            return packer(value)
+        except struct.error:
+            d_type = self.column_validators.get(col_name, self._default_validation_class)
+            raise TypeError("%s is not a compatible type for %s" %
+                            (value.__class__.__name__, d_type))
 
     def _unpack_value(self, value, col_name):
         if not self.autopack_values:
             return value
-        return util.unpack(value, self._get_data_type_for_col(col_name))
+        unpacker = self._column_validators.unpackers.get(col_name, self._default_value_unpacker)
+        try:
+            return unpacker(value)
+        except struct.error:
+            d_type = self.column_validators.get(col_name, self.default_validation_class)
+            raise TypeError("%s cannot be converted to a type matching %s" %
+                            (value, d_type))
 
     def _pack_key(self, key):
-        if not self.autopack_keys or not key:
+        if not self.autopack_keys or key == '':
             return key
-        return util.pack(key, self.key_validation_class)
+        try:
+            return self._key_packer(key)
+        except struct.error:
+            d_type = self.key_validation_class
+            raise TypeError("%s is not a compatible type for %s" %
+                            (key.__class__.__name__, d_type))
 
     def _unpack_key(self, b):
         if not self.autopack_keys:
             return b
-        return util.unpack(b, self.key_validation_class)
+        try:
+            return self._key_unpacker(b)
+        except struct.error:
+            d_type = self.key_validation_class
+            raise TypeError("%s cannot be converted to a type matching %s" %
+                            (b, d_type))
 
-    def _obtain_connection(self):
-        self._tlocal.client = self.pool.get()
-
-    def _release_connection(self):
-        if hasattr(self._tlocal, 'client'):
-            if self._tlocal.client:
-                self._tlocal.client.return_to_pool()
-                self._tlocal.client = None
+    def _make_mutation_list(self, columns, timestamp, ttl):
+        _pack_name = self._pack_name
+        _pack_value = self._pack_value
+        _validate = lambda _: not isinstance(_[1], types.CassandraType)
+        if not self.super:
+            return map(lambda (c, v): Mutation(self._make_cosc(_pack_name(c), _pack_value(v, c), timestamp, ttl)),
+                       columns.iteritems())
+        else:
+            mut_list = []
+            for super_col, subcs in columns.items():
+                subcols = map(lambda (c, v): self._make_column(_pack_name(c), _pack_value(v, c), timestamp, ttl),
+                              subcs.iteritems())
+                mut_list.append(Mutation(self._make_cosc(_pack_name(super_col, True), subcols)))
+            return mut_list
 
     def get(self, key, columns=None, column_start="", column_finish="",
             column_reversed=False, column_count=100, include_timestamp=False,
@@ -384,26 +527,16 @@ class ColumnFamily(object):
             else:
                 column = columns[0]
             cp = self._column_path(super_column, column)
-            try:
-                self._obtain_connection()
-                col_or_super = self._tlocal.client.get(
-                    packed_key, cp,
+            col_or_super = self.pool.execute('get', packed_key, cp,
                     read_consistency_level or self.read_consistency_level)
-            finally:
-                self._release_connection()
             return self._cosc_to_dict([col_or_super], include_timestamp)
         else:
             cp = self._column_parent(super_column)
             sp = self._slice_predicate(columns, column_start, column_finish,
                                        column_reversed, column_count, super_column)
 
-            try:
-                self._obtain_connection()
-                list_col_or_super = self._tlocal.client.get_slice(
-                    packed_key, cp, sp,
-                    read_consistency_level or self.read_consistency_level)
-            finally:
-                self._release_connection()
+            list_col_or_super = self.pool.execute('get_slice', packed_key, cp, sp,
+                read_consistency_level or self.read_consistency_level)
 
             if len(list_col_or_super) == 0:
                 raise NotFoundException()
@@ -459,12 +592,7 @@ class ColumnFamily(object):
                 buffer_size = min(row_count - count + 1, buffer_size)
             clause.count = buffer_size
             clause.start_key = last_key
-            try:
-                self._obtain_connection()
-                key_slices = self._tlocal.client.get_indexed_slices(
-                    cp, clause, sp, cl)
-            finally:
-                self._release_connection()
+            key_slices = self.pool.execute('get_indexed_slices', cp, clause, sp, cl)
 
             if key_slices is None:
                 return
@@ -515,12 +643,8 @@ class ColumnFamily(object):
         offset = 0
         keymap = {}
         while offset < len(packed_keys):
-            try:
-                self._obtain_connection()
-                new_keymap = self._tlocal.client.multiget_slice(
-                    packed_keys[offset:offset+buffer_size], cp, sp, consistency)
-            finally:
-                self._release_connection()
+            new_keymap = self.pool.execute('multiget_slice',
+                packed_keys[offset:offset+buffer_size], cp, sp, consistency)
             keymap.update(new_keymap)
             offset += buffer_size
 
@@ -573,14 +697,8 @@ class ColumnFamily(object):
         sp = self._slice_predicate(columns, column_start, column_finish,
                                    column_reversed, max_count, super_column)
 
-        try:
-            self._obtain_connection()
-            ret = self._tlocal.client.get_count(
-                packed_key, cp, sp,
+        return self.pool.execute('get_count', packed_key, cp, sp,
                 read_consistency_level or self.read_consistency_level)
-        finally:
-            self._release_connection()
-        return ret
 
     def multiget_count(self, keys, super_column=None,
                        read_consistency_level=None,
@@ -614,12 +732,8 @@ class ColumnFamily(object):
         offset = 0
         keymap = {}
         while offset < len(packed_keys):
-            try:
-                self._obtain_connection()
-                new_keymap = self._tlocal.client.multiget_count(
-                    packed_keys[offset:offset+buffer_size], cp, sp, consistency)
-            finally:
-                self._release_connection()
+            new_keymap = self.pool.execute('multiget_count',
+                packed_keys[offset:offset+buffer_size], cp, sp, consistency)
             keymap.update(new_keymap)
             offset += buffer_size
 
@@ -638,7 +752,7 @@ class ColumnFamily(object):
                   column_finish="", column_reversed=False, column_count=100,
                   row_count=None, include_timestamp=False,
                   super_column=None, read_consistency_level=None,
-                  buffer_size=None):
+                  buffer_size=None, filter_empty=True):
         """
         Get an iterator over rows in a specified key range.
 
@@ -657,6 +771,10 @@ class ColumnFamily(object):
         server will overallocate memory and fail. `buffer_size` is the
         size of that buffer in number of rows. If left as ``None``, the
         ColumnFamily's :attr:`buffer_size` attribute will be used.
+
+        When `filter_empty` is left as ``True``, empty rows (including
+        `range ghosts <http://wiki.apache.org/cassandra/FAQ#range_ghosts>`_)
+        will be skipped and will not count towards `row_count`.
 
         All other parameters are the same as those of :meth:`get()`.
 
@@ -681,12 +799,7 @@ class ColumnFamily(object):
             if row_count is not None:
                 buffer_size = min(row_count - count + 1, buffer_size)
             key_range = KeyRange(start_key=last_key, end_key=finish, count=buffer_size)
-            try:
-                self._obtain_connection()
-                key_slices = self._tlocal.client.get_range_slices(
-                    cp, sp, key_range, cl)
-            finally:
-                self._release_connection()
+            key_slices = self.pool.execute('get_range_slices', cp, sp, key_range, cl)
             # This may happen if nothing was ever inserted
             if key_slices is None:
                 return
@@ -694,6 +807,8 @@ class ColumnFamily(object):
                 # Ignore the first element after the first iteration
                 # because it will be a duplicate.
                 if j == 0 and i != 0:
+                    continue
+                if filter_empty and not key_slice.columns:
                     continue
                 yield (self._unpack_key(key_slice.key),
                        self._cosc_to_dict(key_slice.columns, include_timestamp))
@@ -726,12 +841,13 @@ class ColumnFamily(object):
         The timestamp Cassandra reports as being used for insert is returned.
 
         """
+        if timestamp is None:
+            timestamp = self.timestamp()
+
         packed_key = self._pack_key(key)
+
         if ((not self.super) and len(columns) == 1) or \
            (self.super and len(columns) == 1 and len(columns.values()[0]) == 1):
-
-            if timestamp is None:
-                timestamp = self.timestamp()
 
             if self.super:
                 super_col = columns.keys()[0]
@@ -743,16 +859,13 @@ class ColumnFamily(object):
             colname = self._pack_name(columns.keys()[0], False)
             colval = self._pack_value(columns.values()[0], colname)
             column = Column(colname, colval, timestamp, ttl)
-            try:
-                self._obtain_connection()
-                self._tlocal.client.insert(packed_key, cp, column,
+            return self.pool.execute('insert', packed_key, cp, column,
                     write_consistency_level or self.write_consistency_level)
-            finally:
-                self._release_connection()
-            return timestamp
         else:
-            return self.batch_insert({key: columns}, timestamp=timestamp, ttl=ttl,
-                                     write_consistency_level=write_consistency_level)
+            mut_list = self._make_mutation_list(columns, timestamp, ttl)
+            mutations = {packed_key: {self.column_family: mut_list}}
+            return self.pool.execute('batch_mutate', mutations,
+                    write_consistency_level or self.write_consistency_level)
 
     def batch_insert(self, rows, timestamp=None, ttl=None, write_consistency_level = None):
         """
@@ -767,10 +880,18 @@ class ColumnFamily(object):
 
         if timestamp == None:
             timestamp = self.timestamp()
-        batch = self.batch(write_consistency_level=write_consistency_level)
+
+        cf = self.column_family
+        mutations = {}
         for key, columns in rows.iteritems():
-            batch.insert(key, columns, timestamp=timestamp, ttl=ttl)
-        batch.send()
+            packed_key = self._pack_key(key)
+            mut_list = self._make_mutation_list(columns, timestamp, ttl)
+            mutations[packed_key] = {cf: mut_list}
+
+        if mutations:
+            self.pool.execute('batch_mutate', mutations,
+                    write_consistency_level or self.write_consistency_level)
+
         return timestamp
 
     def add(self, key, column, value=1, super_column=None, write_consistency_level=None):
@@ -792,13 +913,8 @@ class ColumnFamily(object):
         packed_key = self._pack_key(key)
         cp = self._column_parent(super_column)
         column = self._pack_name(column)
-        try:
-            self._obtain_connection()
-            self._tlocal.client.add(packed_key, cp, CounterColumn(column, value),
-                                    write_consistency_level or self.write_consistency_level)
-        finally:
-            self._release_connection()
-
+        self.pool.execute('add', packed_key, cp, CounterColumn(column, value),
+                          write_consistency_level or self.write_consistency_level)
 
     def remove(self, key, columns=None, super_column=None,
                write_consistency_level=None, timestamp=None, counter=None):
@@ -815,8 +931,7 @@ class ColumnFamily(object):
         If `columns` and `super_column` are both ``None``, the entire row is
         removed.
 
-        The timestamp used for remove is returned.
-
+        The timestamp used for the mutation is returned.
         """
 
         if timestamp is None:
@@ -840,12 +955,8 @@ class ColumnFamily(object):
         """
         packed_key = self._pack_key(key)
         cp = self._column_path(super_column, column)
-        consistency = write_consistency_level or self.write_consistency_level
-        try:
-            self._obtain_connection()
-            self._tlocal.client.remove_counter(packed_key, cp, consistency)
-        finally:
-            self._release_connection()
+        self.pool.execute('remove_counter', packed_key, cp,
+                          write_consistency_level or self.write_consistency_level)
 
     def batch(self, queue_size=100, write_consistency_level=None):
         """
@@ -875,10 +986,6 @@ class ColumnFamily(object):
         down.
 
         """
-        try:
-            self._obtain_connection()
-            self._tlocal.client.truncate(self.column_family)
-        finally:
-            self._release_connection()
+        self.pool.execute('truncate', self.column_family)
 
 PooledColumnFamily = ColumnFamily

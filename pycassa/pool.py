@@ -4,10 +4,11 @@ import time
 import threading
 import random
 import socket
+import Queue
+import warnings
 
 from thrift import Thrift
-import connection
-import queue as pool_queue
+from connection import Connection
 from logging.pool_logger import PoolLogger
 from util import as_interface
 from cassandra.ttypes import TimedOutException, UnavailableException
@@ -19,7 +20,7 @@ __all__ = ['QueuePool', 'ConnectionPool', 'PoolListener',
            'MaximumRetryException', 'NoConnectionAvailable',
            'InvalidRequestError']
 
-class ConnectionWrapper(connection.Connection):
+class ConnectionWrapper(Connection):
     """
     A wrapper class for :class:`Connection`s that adds pooling functionality.
 
@@ -60,11 +61,11 @@ class ConnectionWrapper(connection.Connection):
         """
         Returns this to the pool.
 
-        This has the same effect as calling :meth:`ConnectionPool.return_conn()`
+        This has the same effect as calling :meth:`ConnectionPool.put()`
         on the wrapper.
 
         """
-        self._pool.return_conn(self)
+        self._pool.put(self)
 
     def _checkin(self):
         if self._state == ConnectionWrapper._IN_QUEUE:
@@ -109,30 +110,34 @@ class ConnectionWrapper(connection.Connection):
         self._state = ConnectionWrapper._CHECKED_OUT
         self._should_fail = new_conn_wrapper._should_fail
 
-    def _retry(f):
+    @classmethod
+    def _retry(cls, f):
         def new_f(self, *args, **kwargs):
             self.operation_count += 1
             try:
                 if kwargs.pop('reset', False):
                     self._pool._replace_wrapper() # puts a new wrapper in the queue
                     self._replace(self._pool.get()) # swaps out transport
-                result = getattr(super(ConnectionWrapper, self), f.__name__)(*args, **kwargs)
+                result = f(self, *args, **kwargs)
                 self._retry_count = 0 # reset the count after a success
                 return result
             except Thrift.TApplicationException, app_exc:
+                self.close()
+                self._pool._decrement_overflow()
+                self._pool._clear_current()
                 raise app_exc
             except (TimedOutException, UnavailableException, Thrift.TException,
                     socket.error, IOError, EOFError), exc:
                 self._pool._notify_on_failure(exc, server=self.server, connection=self)
 
-                self._retry_count += 1
                 self.close()
                 self._pool._decrement_overflow()
                 self._pool._clear_current()
 
+                self._retry_count += 1
                 if self.max_retries != -1 and self._retry_count > self.max_retries:
-                    raise MaximumRetryException('Retried %d times. Last failure was %s' %
-                                                (self._retry_count, exc))
+                    raise MaximumRetryException('Retried %d times. Last failure was %s: %s' %
+                                                (self._retry_count, exc.__class__.__name__, exc))
                 # Exponential backoff
                 time.sleep(_BASE_BACKOFF * (2 ** self._retry_count))
 
@@ -148,63 +153,6 @@ class ConnectionWrapper(connection.Connection):
             raise TimedOutException
         else:
             return self._original_meth(*args, **kwargs)
-
-    @_retry
-    def get(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def get_slice(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def multiget_slice(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def get_count(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def multiget_count(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def get_range_slices(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def get_indexed_slices(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def batch_mutate(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def add(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def insert(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def remove(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def remove_counter(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def truncate(self, *args, **kwargs):
-        pass
-
-    @_retry
-    def describe_keyspace(self, *args, **kwargs):
-        pass
-
 
     def get_keyspace_description(self, keyspace=None, use_dict_for_col_metadata=False):
         """
@@ -230,6 +178,13 @@ class ConnectionWrapper(connection.Connection):
                     new_metadata[datum.name] = datum
                 cf_def.column_metadata = new_metadata
         return cf_defs
+
+retryable = ('get', 'get_slice', 'multiget_slice', 'get_count', 'multiget_count',
+             'get_range_slices', 'get_indexed_slices', 'batch_mutate', 'add',
+             'insert', 'remove', 'remove_counter', 'truncate', 'describe_keyspace')
+for fname in retryable:
+    new_f = ConnectionWrapper._retry(getattr(Connection, fname))
+    setattr(ConnectionWrapper, fname, new_f)
 
 class ConnectionPool(object):
     """A pool that maintains a queue of open connections."""
@@ -358,7 +313,7 @@ class ConnectionPool(object):
             self._tlocal = threading.local()
 
         self._pool_size = pool_size
-        self._q = pool_queue.Queue(pool_size)
+        self._q = Queue.Queue(pool_size)
         self._pool_lock = threading.Lock()
         self._current_conns = 0
 
@@ -443,18 +398,23 @@ class ConnectionPool(object):
             except (Thrift.TException, socket.error, IOError, EOFError), exc:
                 self._notify_on_failure(exc, server)
                 failure_count += 1
-        raise AllServersUnavailable('An attempt was made to connect to each of the servers '
-                'twice, but none of the attempts succeeded.')
+        raise AllServersUnavailable('An attempt was made to connect to each of the servers ' +
+                                    'twice, but none of the attempts succeeded. The last failure was %s: %s' %
+                                    (exc.__class__.__name__, exc))
 
     def fill(self):
         """
         Adds connections to the pool until at least ``pool_size`` connections
         exist, whether they are currently checked out from the pool or not.
+
+        .. versionadded:: 1.2.0
         """
         try:
             self._pool_lock.acquire()
             while self._current_conns < self._pool_size:
-                self._q.put(self._create_connection(), False)
+                conn = self._create_connection()
+                conn._checkin()
+                self._q.put(conn, False)
                 self._current_conns += 1
         finally:
             self._pool_lock.release()
@@ -463,8 +423,11 @@ class ConnectionPool(object):
         """
         Returns a new instance with idential creation arguments. This method
         does *not* affect the object it is called on.
+
+        .. deprecated:: 1.2.0
         """
-        raise DeprecationWarning("ConnectionPool.recreate() has been deprecated.")
+        msg = "ConnectionPool.recreate() has been deprecated."
+        warnings.warn(msg, DeprecationWarning)
 
         self._notify_on_pool_recreate()
         return ConnectionPool(pool_size=self._q.maxsize,
@@ -492,9 +455,11 @@ class ConnectionPool(object):
         """Try to replace the connection."""
         if not self._q.full():
             try:
-                self._q.put(self._create_connection(), False)
+                conn = self._create_connection()
+                conn._checkin()
+                self._q.put(conn, False)
                 self._current_conns += 1
-            except pool_queue.Full:
+            except Queue.Full:
                 pass
 
     def _clear_current(self):
@@ -502,7 +467,7 @@ class ConnectionPool(object):
         if self._pool_threadlocal:
             self._tlocal.current = None
 
-    def return_conn(self, conn):
+    def put(self, conn):
         """ Returns a connection to the pool. """
         if self._pool_threadlocal:
             if hasattr(self._tlocal, 'current') and self._tlocal.current:
@@ -517,10 +482,11 @@ class ConnectionPool(object):
                     raise InvalidRequestError("Connection was already checked in or disposed")
                 conn = self._put_conn(conn)
                 self._notify_on_checkin(conn)
-            except pool_queue.Full:
+            except Queue.Full:
                 self._notify_on_checkin(conn)
                 conn._dispose_wrapper(reason="pool is already full")
                 self._decrement_overflow()
+    return_conn = put
 
     def _decrement_overflow(self):
         self._pool_lock.acquire()
@@ -536,11 +502,10 @@ class ConnectionPool(object):
             new_conn = self._create_connection()
             self._notify_on_recycle(conn, new_conn)
             conn._dispose_wrapper(reason="recyling connection")
-            self._q.put_nowait(new_conn)
-            return new_conn
-        else:
-            self._q.put_nowait(conn)
-            return conn
+            conn = new_conn
+        conn._checkin()
+        self._q.put_nowait(conn)
+        return conn
 
     def get(self):
         """ Gets a connection from the pool. """
@@ -574,7 +539,8 @@ class ConnectionPool(object):
                         block = self._current_conns >= self._max_conns
 
                     conn = self._q.get(block, timeout)
-                except pool_queue.Empty:
+                    conn._checkout()
+                except Queue.Empty:
                     if self._current_conns < self._max_conns:
                         conn = self._create_connection()
                         self._current_conns += 1
@@ -594,6 +560,20 @@ class ConnectionPool(object):
         self._notify_on_checkout(conn)
         return conn
 
+    def execute(self, f, *args, **kwargs):
+        """
+        Get a connection from the pool, execute
+        `f` on it with `*args` and `**kwargs`, return the
+        connection to the pool, and return the result of `f`.
+        """
+        conn = None
+        try:
+            conn = self.get()
+            return getattr(conn, f)(*args, **kwargs)
+        finally:
+            if conn:
+                self.put(conn)
+
     def dispose(self):
         """ Closes all checked in connections in the pool. """
         while True:
@@ -601,14 +581,23 @@ class ConnectionPool(object):
                 conn = self._q.get(False)
                 conn._dispose_wrapper(
                         reason="Pool %s is being disposed" % id(self))
-            except pool_queue.Empty:
+            except Queue.Empty:
                 break
 
         self._overflow = 0 - self.size()
         self._notify_on_pool_dispose()
 
     def status(self):
-        """ Returns the status of the pool. """
+        """
+        Returns the status of the pool.
+
+        .. deprecated:: 1.2.0
+        """
+        msg ="ConnectionPool.status() is deprecated, use " +\
+             "ConnectionPool.size(), checkedin(), overflow(), " +\
+             "and checkedout() instead."
+        warnings.warn(msg, DeprecationWarning)
+
         return "Pool size: %d, connections in pool: %d, "\
                "current overflow: %d, current checked out "\
                "connections: %d" % (self.size(),
@@ -693,16 +682,13 @@ class ConnectionPool(object):
             for l in self._on_pool_max:
                 l.pool_at_max(dic)
 
-    def _notify_on_dispose(self, conn_record, msg="", error=None):
+    def _notify_on_dispose(self, conn_record, msg=""):
         if self._on_dispose:
             dic = {'pool_id': self.logging_name,
                    'level': 'debug',
                    'connection': conn_record}
             if msg:
                 dic['message'] = msg
-            if error:
-                dic['error'] = error
-                dic['level'] = 'warn'
             for l in self._on_dispose:
                 l.connection_disposed(dic)
 
@@ -793,178 +779,90 @@ class PoolListener(object):
     efficiency and function call overhead, you're much better off only
     providing implementations for the hooks you'll be using.
 
+    Each of the :class:`PoolListener` methods wil be called with a
+    :class:`dict` as the single parameter. This :class:`dict` may
+    contain the following fields:
+
+        * `connection`: The :class:`ConnectionWrapper` object that persistently
+          manages the connection
+
+        * `message`: The reason this event happened
+
+        * `error`: The :class:`Exception` that caused this event
+
+        * `pool_id`: The id of the :class:`ConnectionPool` that this event came from
+
+        * `level`: The prescribed logging level for this event.  Can be 'debug', 'info',
+          'warn', 'error', or 'critical'
+
+    Entries in the :class:`dict` that are specific to only one event type are
+    detailed with each method.
+
+
     """
 
     def connection_created(self, dic):
         """Called once for each new Cassandra connection.
 
-        dic['connection']
-          The :class:`ConnectionWrapper` that persistently manages the connection
-
-        dic['message']
-            A reason for closing the connection, if any.
-
-        dic['error']
-            An error that occured while closing the connection, if any.
-
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
-
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
+        Fields: `pool_id`, `level`, and `connection`.
         """
 
     def connection_checked_out(self, dic):
         """Called when a connection is retrieved from the Pool.
 
-        dic['connection']
-          The :class:`ConnectionWrapper` that persistently manages the connection
-
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
-
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
+        Fields: `pool_id`, `level`, and `connection`.
         """
 
     def connection_checked_in(self, dic):
         """Called when a connection returns to the pool.
 
-        Note that the connection may be None if the connection has been closed.
-
-        dic['connection']
-          The :class:`ConnectionWrapper` that persistently manages the connection
-
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
-
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
+        Fields: `pool_id`, `level`, and `connection`.
         """
 
     def connection_disposed(self, dic):
         """Called when a connection is closed.
 
-        dic['connection']
-            The :class:`ConnectionWrapper` that persistently manages the connection
+        ``dic['message']``: A reason for closing the connection, if any.
 
-        dic['message']
-            A reason for closing the connection, if any.
-
-        dic['error']
-            An error that occured while closing the connection, if any.
-
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
-
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
+        Fields: `pool_id`, `level`, `connection`, and `message`.
         """
 
     def connection_recycled(self, dic):
         """Called when a connection is recycled.
 
-        dic['old_conn']
-            The :class:`ConnectionWrapper` that is being recycled
+        ``dic['old_conn']``: The :class:`ConnectionWrapper` that is being recycled
 
-        dic['new_conn']
-            The :class:`ConnectionWrapper` that is replacing it
+        ``dic['new_conn']``: The :class:`ConnectionWrapper` that is replacing it
 
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
-
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
+        Fields: `pool_id`, `level`, `old_conn`, and `new_conn`.
         """
 
     def connection_failed(self, dic):
         """Called when a connection to a single server fails.
 
-        dic['error']
-          The connection error (Exception).
+        ``dic['server']``: The server the connection was made to.
 
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
-
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
+        Fields: `pool_id`, `level`, `error`, `server`, and `connection`.
         """
     def server_list_obtained(self, dic):
         """Called when the pool finalizes its server list.
 
-        dic['server_list']
-            The randomly permuted list of servers.
+        ``dic['server_list']``: The randomly permuted list of servers that the
+        pool will choose from.
 
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
-
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
-       """
+        Fields: `pool_id`, `level`, and `server_list`.
+        """
 
     def pool_recreated(self, dic):
         """Called when a pool is recreated.
 
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
-
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
+        Fields: `pool_id`, and `level`.
         """
 
     def pool_disposed(self, dic):
-        """Called when a pool is recreated.
+        """Called when a pool is disposed.
 
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
-
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
+        Fields: `pool_id`, and `level`.
         """
 
     def pool_at_max(self, dic):
@@ -972,16 +870,10 @@ class PoolListener(object):
         Called when an attempt is made to get a new connection from the
         pool, but the pool is already at its max size.
 
-        dic['pool_type']
-          The type of pool the connection was created in; e.g. :class:`ConnectionPool`
+        ``dic['pool_max']``: The max number of connections the pool will
+        keep open at one time.
 
-        dic['pool_id']
-          The logging name of the connection's pool (defaults to id(pool))
-
-        dic['level']
-          The prescribed logging level for this event.  Can be 'debug', 'info',
-          'warn', 'error', or 'critical'.
-
+        Fields: `pool_id`, `pool_max`, and `level`.
         """
 
 
@@ -996,7 +888,6 @@ class MaximumRetryException(Exception):
     Raised when a :class:`ConnectionWrapper` has retried the maximum
     allowed times before being returned to the pool; note that all of
     the retries do not have to be on the same operation.
-
     """
 
 class InvalidRequestError(Exception):
@@ -1004,5 +895,4 @@ class InvalidRequestError(Exception):
     Pycassa was asked to do something it can't do.
 
     This error generally corresponds to runtime state errors.
-
     """

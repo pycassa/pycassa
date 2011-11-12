@@ -63,10 +63,7 @@ Calls to :meth:`insert` and :meth:`remove` can also be chained:
 """
 
 import threading
-from pycassa.cassandra.ttypes import (Column, ColumnOrSuperColumn,
-                                      CounterColumn, CounterSuperColumn,
-                                      ConsistencyLevel, Deletion, Mutation,
-                                      SlicePredicate, SuperColumn)
+from pycassa.cassandra.ttypes import (ConsistencyLevel, Deletion, Mutation, SlicePredicate)
 
 __all__ = ['Mutator', 'CfMutator']
 
@@ -134,38 +131,6 @@ class Mutator(object):
                 conn.return_to_pool()
             self._lock.release()
 
-    def _make_mutations_insert(self, column_family, columns, timestamp, ttl):
-        _pack_name = column_family._pack_name
-        _pack_value = column_family._pack_value
-        _get_type = column_family._get_data_type_for_col
-        if column_family.super:
-            for c, v in columns.iteritems():
-                cos = ColumnOrSuperColumn()
-                dtype = _get_type(c)
-                if dtype == 'CounterColumnType':
-                    subc = [CounterColumn(_pack_name(subname), subvalue)
-                            for subname, subvalue in v.iteritems()]
-                    cos.counter_super_column = CounterSuperColumn(name=_pack_name(c, True),
-                                                                  columns=subc)
-                else:
-                    subc = [Column(name=_pack_name(subname),
-                                   value=_pack_value(subvalue, subname),
-                                   timestamp=timestamp, ttl=ttl)
-                                for subname, subvalue in v.iteritems()]
-                    cos.super_column = SuperColumn(name=_pack_name(c, True),
-                                                   columns=subc)
-                yield Mutation(column_or_supercolumn=cos)
-        else:
-            for c, v in columns.iteritems():
-                cos = ColumnOrSuperColumn()
-                dtype = _get_type(c)
-                if dtype == 'CounterColumnType':
-                    cos.counter_column = CounterColumn(_pack_name(c), v)
-                else:
-                    cos.column = Column(name=_pack_name(c), value=_pack_value(v, c),
-                                        timestamp=timestamp, ttl=ttl)
-                yield Mutation(column_or_supercolumn=cos)
-
     def insert(self, column_family, key, columns, timestamp=None, ttl=None):
         """
         Adds a single row insert to the batch.
@@ -175,12 +140,11 @@ class Mutator(object):
 
         """
         if columns:
-            if timestamp == None:
+            if timestamp is None:
                 timestamp = column_family.timestamp()
             packed_key = column_family._pack_key(key)
-            mutations = self._make_mutations_insert(column_family, columns,
-                                                    timestamp, ttl)
-            self._enqueue(packed_key, column_family, mutations)
+            mut_list = column_family._make_mutation_list(columns, timestamp, ttl)
+            self._enqueue(packed_key, column_family, mut_list)
         return self
 
     def remove(self, column_family, key, columns=None, super_column=None, timestamp=None):
@@ -198,8 +162,8 @@ class Mutator(object):
         if super_column:
             deletion.super_column = _pack_name(super_column, True)
         if columns:
-            packed_cols = [_pack_name(col, column_family.super and not super_column)
-                           for col in columns]
+            is_super = column_family.super and not super_column
+            packed_cols = [_pack_name(col, is_super) for col in columns]
             deletion.predicate = SlicePredicate(column_names=packed_cols)
         mutation = Mutation(deletion=deletion)
         packed_key = column_family._pack_key(key)

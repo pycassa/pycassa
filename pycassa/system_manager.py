@@ -6,6 +6,8 @@ from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef,\
                                      InvalidRequestException
 from pycassa.cassandra.constants import *
 import pycassa.util as util
+import pycassa.marshal as marshal
+import pycassa.types as types
 from logging.pycassa_logger import *
 
 _DEFAULT_TIMEOUT = 30
@@ -23,26 +25,21 @@ Original replication strategy for putting a number of replicas in each datacente
 This was originally called 'RackAwareStrategy'.
 """
 
-BYTES_TYPE = 'BytesType'
-""" Stores data as a byte array """
-LONG_TYPE = 'LongType'
-""" Stores data as an 8 byte integer """
-INT_TYPE = 'IntegerType'
-""" Stores data as an 4 byte integer """
-ASCII_TYPE = 'AsciiType'
-""" Stores data as ASCII text """
-UTF8_TYPE = 'UTF8Type'
-""" Stores data as UTF8 encoded text """
-TIME_UUID_TYPE = 'TimeUUIDType'
-""" Stores data as a version 1 UUID """
-LEXICAL_UUID_TYPE = 'LexicalUUIDType'
-""" Stores data as a non-version 1 UUID """
-COUNTER_COLUMN_TYPE = 'CounterColumnType'
-""" A 64bit counter column """
-
 KEYS_INDEX = IndexType.KEYS
 """ A secondary index type where each indexed value receives its own row """
 
+BYTES_TYPE = types.BytesType()
+LONG_TYPE = types.LongType()
+INT_TYPE = types.IntegerType()
+ASCII_TYPE = types.AsciiType()
+UTF8_TYPE = types.UTF8Type()
+TIME_UUID_TYPE = types.TimeUUIDType()
+LEXICAL_UUID_TYPE = types.LexicalUUIDType()
+COUNTER_COLUMN_TYPE = types.CounterColumnType()
+DOUBLE_TYPE = types.DoubleType()
+FLOAT_TYPE = types.FloatType()
+BOOLEAN_TYPE = types.BooleanType()
+DATE_TYPE = types.DateType()
 
 class SystemManager(object):
     """
@@ -62,7 +59,7 @@ class SystemManager(object):
 
         >>> from pycassa.system_manager import *
         >>> sys = SystemManager('192.168.10.2:9160')
-        >>> sys.create_keyspace('TestKeyspace', replication_factor=1)
+        >>> sys.create_keyspace('TestKeyspace', SIMPLE_STRATEGY, {'replication_factor': '1'})
         >>> sys.create_column_family('TestKeyspace', 'TestCF', column_type='Standard',
         ...                          comparator_type=LONG_TYPE)
         >>> sys.alter_column_family('TestKeyspace', 'TestCF', key_cache_size=42, gc_grace_seconds=1000)
@@ -109,15 +106,14 @@ class SystemManager(object):
         """
         Gets a keyspace's properties.
 
-        Returns a :class:`dict` with 'replication_factor', 'strategy_class',
-        and 'strategy_options' as keys.
+        Returns a :class:`dict` with 'strategy_class' and 
+        'strategy_options' as keys.
         """
         if keyspace is None:
             keyspace = self._keyspace
 
         ks_def = self._conn.describe_keyspace(keyspace)
-        return {'replication_factor': ks_def.replication_factor,
-                'replication_strategy': ks_def.strategy_class,
+        return {'replication_strategy': ks_def.strategy_class,
                 'strategy_options': ks_def.strategy_options}
 
 
@@ -161,35 +157,25 @@ class SystemManager(object):
         self._wait_for_agreement()
         return schema_version
 
-    def create_keyspace(self, name, replication_factor=None,
+    def create_keyspace(self, name,
                         replication_strategy=SIMPLE_STRATEGY,
-                        strategy_options=None):
+                        strategy_options=None, durable_writes=True):
 
         """
         Creates a new keyspace.  Column families may be added to this keyspace
         after it is created using :meth:`create_column_family()`.
 
-        `replication_factor` determines how many nodes hold a copy of a given
-        row. Note that for Cassandra 0.8, `replication_factor` should be an entry
-        in the strategy_options :class:`dict`. For example:
-
-        .. code-block:: python
-
-            >>> sys.create_keyspace('KS', None, SIMPLE_STRATEGY, {'replication_factor': '1'})
-
-        However, pycassa will copy the value from `replication_factor` or `strategy_options`
-        to the other as needed, depending on the version of Cassandra.
-
         `replication_strategy` determines how replicas are chosen for this keyspace.
         The strategies that Cassandra provides by default
         are available as :const:`SIMPLE_STRATEGY`, :const:`NETWORK_TOPOLOGY_STRATEGY`,
-        and :const:`OLD_NETWORK_TOPOLOGY_STRATEGY`.  `NETWORK_TOPOLOGY_STRATEGY` requires
-        `strategy_options` to be present.
+        and :const:`OLD_NETWORK_TOPOLOGY_STRATEGY`.
 
-        `strategy_options` is an optional dictionary of strategy options. By default, these
-        are only used by NetworkTopologyStrategy; in this case, the dictionary should
-        look like: ``{'Datacenter1': '2', 'Datacenter2': '1'}``.  This maps each
+        `strategy_options` is a dictionary of strategy options. For
+        NetworkTopologyStrategy, the dictionary should look like
+        ``{'Datacenter1': '2', 'Datacenter2': '1'}``. This maps each
         datacenter (as defined in a Cassandra property file) to a replica count.
+        For SimpleStrategy, you can specify the replication factor as follows:
+        ``{'replication_factor': '1'}``.
 
         Example Usage:
 
@@ -198,9 +184,9 @@ class SystemManager(object):
             >>> from pycassa.system_manager import *
             >>> sys = SystemManager('192.168.10.2:9160')
             >>> # Create a SimpleStrategy keyspace
-            >>> sys.create_keyspace('SimpleKS', 1)
+            >>> sys.create_keyspace('SimpleKS', SIMPLE_STRATEGY, {'replication_factor': '1'})
             >>> # Create a NetworkTopologyStrategy keyspace
-            >>> sys.create_keyspace('NTS_KS', 3, NETWORK_TOPOLOGY_STRATEGY, {'DC1': '2', 'DC2': '1'})
+            >>> sys.create_keyspace('NTS_KS', NETWORK_TOPOLOGY_STRATEGY, {'DC1': '2', 'DC2': '1'})
             >>> sys.close()
 
         """
@@ -209,16 +195,14 @@ class SystemManager(object):
             strategy_class = 'org.apache.cassandra.locator.%s' % replication_strategy
         else:
             strategy_class = replication_strategy
-        ksdef = KsDef(name, strategy_class, strategy_options, replication_factor, [])
-        if self._conn.version == CASSANDRA_08:
-            ksdef = ksdef.to08()
-        else:
-            ksdef = ksdef.to07()
+        ksdef = KsDef(name, strategy_class=strategy_class,
+                      strategy_options=strategy_options,
+                      cf_defs=[],
+                      durable_writes=durable_writes)
         self._system_add_keyspace(ksdef)
 
-    def alter_keyspace(self, keyspace, replication_factor=None,
-                       replication_strategy=None,
-                       strategy_options=None):
+    def alter_keyspace(self, keyspace, replication_strategy=None,
+                       strategy_options=None, durable_writes=None):
 
         """
         Alters an existing keyspace.
@@ -230,11 +214,12 @@ class SystemManager(object):
         """
 
         old_ksdef = self._conn.describe_keyspace(keyspace)
+        old_durable = getattr(old_ksdef, 'durable_writes', True)
         ksdef = KsDef(name=old_ksdef.name,
                       strategy_class=old_ksdef.strategy_class,
                       strategy_options=old_ksdef.strategy_options,
-                      replication_factor=old_ksdef.replication_factor,
-                      cf_defs=[])
+                      cf_defs=[],
+                      durable_writes=old_durable)
 
         if replication_strategy is not None:
             if replication_strategy.find('.') == -1:
@@ -243,12 +228,8 @@ class SystemManager(object):
                 ksdef.strategy_class = replication_strategy
         if strategy_options is not None:
             ksdef.strategy_options = strategy_options
-        if replication_factor is not None:
-            ksdef.replication_factor = replication_factor
-        if self._conn.version == CASSANDRA_08:
-            ksdef = ksdef.to08()
-        else:
-            ksdef = ksdef.to07()
+        if durable_writes is not None:
+            ksdef.durable_writes = durable_writes
 
         self._system_update_keyspace(ksdef)
 
@@ -266,6 +247,17 @@ class SystemManager(object):
         self._wait_for_agreement()
         return schema_version
 
+    def _qualify_type_class(self, classname):
+        if classname:
+            s = str(classname)
+            print s
+            if s.find('.') == -1:
+                return 'org.apache.cassandra.db.marshal.%s' % s
+            else:
+                return s
+        else:
+            return None
+
     def create_column_family(self, keyspace, name, super=False,
                              comparator_type=None,
                              subcomparator_type=None,
@@ -279,13 +271,14 @@ class SystemManager(object):
                              max_compaction_threshold=None,
                              key_cache_save_period_in_seconds=None,
                              row_cache_save_period_in_seconds=None,
-                             memtable_flush_after_mins=None,
-                             memtable_throughput_in_mb=None,
-                             memtable_operations_in_millions=None,
                              replicate_on_write=None,
                              merge_shards_chance=None,
                              row_cache_provider=None,
                              key_alias=None,
+                             compaction_strategy=None,
+                             compaction_strategy_options=None,
+                             row_cache_keys_to_save=None,
+                             compression_options=None,
                              comment=None):
 
         """
@@ -340,14 +333,6 @@ class SystemManager(object):
         :param int row_cache_save_period_in_seconds: How often the row cache should
           be saved; this helps to avoid a cold cache on restart
 
-        :param int memtable_flush_after_mins: Memtables are flushed when they reach this age
-
-        :param int memtable_throughput_in_mb: Memtables are flushed when this many MBs have
-          been written to them
-
-        :param int memtable_operations_in_millions: Memtables are flushed when this many million
-          operations have been performed on them
-
         :param bool replicate_on_write: Whether counter operations are replicated at write-time.
           This should almost always be True.
 
@@ -358,6 +343,20 @@ class SystemManager(object):
 
         :param key_alias: A "column name" to be used for the row key. This currently only
           matters for CQL. The default is "KEY".
+
+        :param compaction_strategy: The name of the compaction strategy. Choices include
+          TieredCompactionStrategy and LeveledCompactionStrategy.
+
+        :param compaction_strategy_options: A ``dict`` of options for the compaction
+          strategy.
+
+        :param row_cache_keys_to_save: A list of keys to be saved in the row cache. The
+          default of ``None`` allows any row to be cached.
+
+        :param compression_options: A ``dict`` of options for compression. Available
+          keys include "sstable_compression", which may be ``None`` for no compression,
+          "SnappyCompressor", "DeflateCompressor", or a custom compressor, and
+          "chunk_length_kb", which must be a power of 2.
 
         :param str comment: A human readable description
 
@@ -371,15 +370,10 @@ class SystemManager(object):
         if super:
             cfdef.column_type = 'Super'
 
-        def qualify_class(classname):
-            if classname and classname.find('.') == -1:
-                classname = 'org.apache.cassandra.db.marshal.%s' % classname
-            return classname
-
-        cfdef.comparator_type = qualify_class(comparator_type)
-        cfdef.subcomparator_type = qualify_class(subcomparator_type)
-        cfdef.default_validation_class = qualify_class(default_validation_class)
-        cfdef.key_validation_class = qualify_class(key_validation_class)
+        cfdef.comparator_type = self._qualify_type_class(comparator_type)
+        cfdef.subcomparator_type = self._qualify_type_class(subcomparator_type)
+        cfdef.default_validation_class = self._qualify_type_class(default_validation_class)
+        cfdef.key_validation_class = self._qualify_type_class(key_validation_class)
 
         cfdef.replicate_on_write = replicate_on_write
         cfdef.comment = comment
@@ -395,11 +389,11 @@ class SystemManager(object):
         self._cfdef_assign(max_compaction_threshold, cfdef, 'max_compaction_threshold')
         self._cfdef_assign(key_cache_save_period_in_seconds, cfdef, 'key_cache_save_period_in_seconds')
         self._cfdef_assign(row_cache_save_period_in_seconds, cfdef, 'row_cache_save_period_in_seconds')
-        self._cfdef_assign(memtable_flush_after_mins, cfdef, 'memtable_flush_after_mins')
-        self._cfdef_assign(memtable_throughput_in_mb, cfdef, 'memtable_throughput_in_mb')
-        self._cfdef_assign(memtable_operations_in_millions, cfdef, 'memtable_operations_in_millions')
         self._cfdef_assign(merge_shards_chance, cfdef, 'merge_shards_chance')
-
+        self._cfdef_assign(compaction_strategy, cfdef, 'compaction_strategy')
+        self._cfdef_assign(compaction_strategy_options, cfdef, 'compaction_strategy_options')
+        self._cfdef_assign(row_cache_keys_to_save, cfdef, 'row_cache_keys_to_save')
+        self._cfdef_assign(compression_options, cfdef, 'compression_options')
         self._system_add_column_family(cfdef)
 
     def _cfdef_assign(self, attr, cfdef, attr_name):
@@ -429,13 +423,14 @@ class SystemManager(object):
                             max_compaction_threshold=None,
                             key_cache_save_period_in_seconds=None,
                             row_cache_save_period_in_seconds=None,
-                            memtable_flush_after_mins=None,
-                            memtable_throughput_in_mb=None,
-                            memtable_operations_in_millions=None,
                             replicate_on_write=None,
                             merge_shards_chance=None,
                             row_cache_provider=None,
                             key_alias=None,
+                            compaction_strategy=None,
+                            compaction_strategy_options=None,
+                            row_cache_keys_to_save=None,
+                            compression_options=None,
                             comment=None):
 
         """
@@ -458,9 +453,10 @@ class SystemManager(object):
         self._cfdef_assign(max_compaction_threshold, cfdef, 'max_compaction_threshold')
         self._cfdef_assign(key_cache_save_period_in_seconds, cfdef, 'key_cache_save_period_in_seconds')
         self._cfdef_assign(row_cache_save_period_in_seconds, cfdef, 'row_cache_save_period_in_seconds')
-        self._cfdef_assign(memtable_flush_after_mins, cfdef, 'memtable_flush_after_mins')
-        self._cfdef_assign(memtable_throughput_in_mb, cfdef, 'memtable_throughput_in_mb')
-        self._cfdef_assign(memtable_operations_in_millions, cfdef, 'memtable_operations_in_millions')
+        self._cfdef_assign(compaction_strategy, cfdef, 'compaction_strategy')
+        self._cfdef_assign(compaction_strategy_options, cfdef, 'compaction_strategy_options')
+        self._cfdef_assign(row_cache_keys_to_save, cfdef, 'row_cache_keys_to_save')
+        self._cfdef_assign(compression_options, cfdef, 'compression_options')
         self._cfdef_assign(merge_shards_chance, cfdef, 'merge_shards_chance')
 
         cfdef.replicate_on_write = replicate_on_write
@@ -501,14 +497,13 @@ class SystemManager(object):
         cfdef = self.get_keyspace_column_families(keyspace)[column_family]
 
         if cfdef.column_type == 'Super':
-            col_name_data_type = util.extract_type_name(cfdef.subcomparator_type)
+            packer = marshal.packer_for(cfdef.subcomparator_type)
         else:
-            col_name_data_type = util.extract_type_name(cfdef.comparator_type)
+            packer = marshal.packer_for(cfdef.comparator_type)
 
-        packed_column = util.pack(column, col_name_data_type)
+        packed_column = packer(column)
 
-        if value_type.find('.') == -1:
-            value_type = 'org.apache.cassandra.db.marshal.%s' % value_type
+        value_type = self._qualify_type_class(value_type)
 
         matched = False
         for c in cfdef.column_metadata:
@@ -550,11 +545,10 @@ class SystemManager(object):
         self._conn.set_keyspace(keyspace)
         cfdef = self.get_keyspace_column_families(keyspace)[column_family]
 
-        col_name_data_type = util.extract_type_name(cfdef.comparator_type)
-        packed_column = util.pack(column, col_name_data_type)
+        packer = marshal.packer_for(cfdef.comparator_type)
+        packed_column = packer(column)
 
-        if value_type.find('.') == -1:
-            value_type = 'org.apache.cassandra.db.marshal.%s' % value_type
+        value_type = self._qualify_type_class(value_type)
 
         coldef = ColumnDef(packed_column, value_type, index_type, index_name)
 

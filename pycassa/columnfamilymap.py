@@ -3,8 +3,8 @@ Provides a means for mapping an existing class to a column family.
 
 .. seealso:: :mod:`pycassa.types`
 
-In addition to the default :class:`~pycassa.types.Column` classes,
-you may also define your own types for the mapper. For example, the
+In addition to the default classes in :class:`~pycassa.types`,
+you may also define your own types for the mapper. For example,
 IntString may be defined as:
 
 .. code-block:: python
@@ -20,8 +20,10 @@ IntString may be defined as:
 
 import warnings
 
-from pycassa.types import Column
+from pycassa.types import CassandraType
 from pycassa.cassandra.ttypes import IndexExpression, IndexClause
+from pycassa.columnfamily import ColumnFamily
+import pycassa.util as util
 
 __all__ = ['ColumnFamilyMap']
 
@@ -30,10 +32,10 @@ def create_instance(cls, **kwargs):
     instance.__dict__.update(kwargs)
     return instance
 
-class ColumnFamilyMap(object):
+class ColumnFamilyMap(ColumnFamily):
     """ Maps an existing class to a column family. """
 
-    def __init__(self, cls, column_family, columns=None, raw_columns=False):
+    def __init__(self, cls, pool, column_family, columns=None, raw_columns=False, **kwargs):
         """
         Maps an existing class to a column family.  Class fields become columns,
         and instances of that class can be represented as rows in standard column
@@ -41,40 +43,40 @@ class ColumnFamilyMap(object):
 
         Instances of `cls` are returned from :meth:`get()`, :meth:`multiget()`,
         :meth:`get_range()` and :meth:`get_indexed_slices()`.
+        
+        `pool` is a :class:`~pycassa.pool.ConnectionPool` that will be used
+        in the same way a :class:`~.ColumnFamily` uses one.
 
-        `column_family` is a :class:`~.ColumnFamily` to tie to `cls`.
+        `column_family` is the name of a column family to tie to `cls`.
 
         If `raw_columns` is ``True``, all columns will be fetched into the
         `raw_columns` field in requests.
 
         """
+        ColumnFamily.__init__(self, pool, column_family, **kwargs)
+
         self.cls = cls
-        self.column_family = column_family
-        self.column_family.autopack_names = False
-        self.column_family.autopack_values = False
+        self.autopack_names = False
 
         self.raw_columns = raw_columns
-        self.dict_class = self.column_family.dict_class
-        self.columns = self.dict_class()
-
-        for name, column in self.cls.__dict__.iteritems():
-            if not isinstance(column, Column):
-                continue
-
-            self.columns[name] = column
+        self.dict_class = util.OrderedDict
+        self.defaults = {}
+        self.fields = []
+        for name, val_type in self.cls.__dict__.iteritems():
+            if isinstance(val_type, CassandraType):
+                self.fields.append(name)
+                self.column_validators[name] = val_type
+                self.defaults[name] = val_type.default
 
     def combine_columns(self, columns):
-        combined_columns = self.dict_class()
+        combined_columns = columns
+
         if self.raw_columns:
-            combined_columns['raw_columns'] = self.dict_class()
-        for column, type in self.columns.iteritems():
-            combined_columns[column] = type.default
-        for column, value in columns.iteritems():
-            col_cls = self.columns.get(column, None)
-            if col_cls is not None:
-                combined_columns[column] = col_cls.unpack(value)
-            if self.raw_columns:
-                combined_columns['raw_columns'][column] = value
+            combined_columns['raw_columns'] = columns
+
+        for column, default in self.defaults.items():
+            combined_columns.setdefault(column, default)
+
         return combined_columns
 
     def get(self, key, *args, **kwargs):
@@ -95,12 +97,12 @@ class ColumnFamilyMap(object):
         All other parameters behave the same as in :meth:`.ColumnFamily.get()`.
 
         """
-        if 'columns' not in kwargs and not self.column_family.super and not self.raw_columns:
-            kwargs['columns'] = self.columns.keys()
+        if 'columns' not in kwargs and not self.super and not self.raw_columns:
+            kwargs['columns'] = self.fields
 
-        columns = self.column_family.get(key, *args, **kwargs)
+        columns = ColumnFamily.get(self, key, *args, **kwargs)
 
-        if self.column_family.super:
+        if self.super:
             if 'super_column' not in kwargs:
                 vals = self.dict_class()
                 for super_column, subcols in columns.iteritems():
@@ -127,12 +129,13 @@ class ColumnFamilyMap(object):
         if :meth:`get()` were called on that individual key.
 
         """
-        if 'columns' not in kwargs and not self.column_family.super and not self.raw_columns:
-            kwargs['columns'] = self.columns.keys()
-        kcmap = self.column_family.multiget(*args, **kwargs)
+        if 'columns' not in kwargs and not self.super and not self.raw_columns:
+            kwargs['columns'] = self.fields
+
+        kcmap = ColumnFamily.multiget(self, *args, **kwargs)
         ret = self.dict_class()
         for key, columns in kcmap.iteritems():
-            if self.column_family.super:
+            if self.super:
                 if 'super_column' not in kwargs:
                     vals = self.dict_class()
                     for super_column, subcols in columns.iteritems():
@@ -172,10 +175,11 @@ class ColumnFamilyMap(object):
             Winston Smith 42
 
         """
-        if 'columns' not in kwargs and not self.column_family.super and not self.raw_columns:
-            kwargs['columns'] = self.columns.keys()
-        for key, columns in self.column_family.get_range(*args, **kwargs):
-            if self.column_family.super:
+        if 'columns' not in kwargs and not self.super and not self.raw_columns:
+            kwargs['columns'] = self.fields
+
+        for key, columns in ColumnFamily.get_range(self, *args, **kwargs):
+            if self.super:
                 if 'super_column' not in kwargs:
                     vals = self.dict_class()
                     for super_column, subcols in columns.iteritems():
@@ -199,31 +203,18 @@ class ColumnFamilyMap(object):
 
         """
 
-        assert not self.column_family.super, "get_indexed_slices() is not " \
+        assert not self.super, "get_indexed_slices() is not " \
                 "supported by super column families"
 
         if 'columns' not in kwargs and not self.raw_columns:
-            kwargs['columns'] = self.columns.keys()
+            kwargs['columns'] = self.fields
 
-        # Autopack the index clause's values
-        new_exprs = []
-        for expr in kwargs['index_clause'].expressions:
-            packed_val = self.columns[expr.column_name].pack(expr.value)
-            new_expr = IndexExpression(expr.column_name, expr.op, value=packed_val)
-            new_exprs.append(new_expr)
-        old_clause = kwargs['index_clause']
-        new_clause = IndexClause(new_exprs, old_clause.start_key, old_clause.count)
-        kwargs['index_clause'] = new_clause
-
-        keyslice_map = self.column_family.get_indexed_slices(*args, **kwargs)
-
-        ret = self.dict_class()
-        for key, columns in keyslice_map:
+        for key, columns in ColumnFamily.get_indexed_slices(self, *args, **kwargs):
             combined = self.combine_columns(columns)
-            ret[key] = create_instance(self.cls, key=key, **combined)
-        return ret
+            yield create_instance(self.cls, key=key, **combined)
 
-    def insert(self, instance, columns=None, write_consistency_level=None):
+    def insert(self, instance, columns=None, timestamp=None, ttl=None,
+               write_consistency_level=None):
         """
         Insert or update stored instances.
 
@@ -232,21 +223,25 @@ class ColumnFamilyMap(object):
         The `columns` parameter allows to you specify which attributes of
         `instance` should be inserted or updated. If left as ``None``, all
         attributes will be inserted.
-
         """
-        insert_dict = {}
+
         if columns is None:
-            columns = self.columns.keys()
+            fields = self.fields
+        else:
+            fields = columns
 
-        for column in columns:
-            if instance.__dict__.has_key(column) and instance.__dict__[column] is not None:
-                insert_dict[column] = self.columns[column].pack(instance.__dict__[column])
+        insert_dict = {}
+        for field in fields:
+            val = getattr(instance, field, None)
+            if val is not None and not isinstance(val, CassandraType):
+                insert_dict[field] = val
 
-        if self.column_family.super:
+        if self.super:
             insert_dict = {instance.super_column: insert_dict}
 
-        return self.column_family.insert(instance.key, insert_dict,
-                                         write_consistency_level=write_consistency_level)
+        return ColumnFamily.insert(self, instance.key, insert_dict,
+                                   timestamp=timestamp, ttl=ttl,
+                                   write_consistency_level=write_consistency_level)
 
     def remove(self, instance, columns=None, write_consistency_level=None):
         """
@@ -257,11 +252,11 @@ class ColumnFamilyMap(object):
         instance will be removed.
 
         """
-        if self.column_family.super:
-            return self.column_family.remove(instance.key,
-                                             super_column=instance.super_column,
-                                             columns=columns,
-                                             write_consistency_level=write_consistency_level)
+        if self.super:
+            return ColumnFamily.remove(self, instance.key,
+                                       super_column=instance.super_column,
+                                       columns=columns,
+                                       write_consistency_level=write_consistency_level)
         else:
-            return self.column_family.remove(instance.key, columns,
-                                             write_consistency_level=write_consistency_level)
+            return ColumnFamily.remove(self, instance.key, columns,
+                                       write_consistency_level=write_consistency_level)

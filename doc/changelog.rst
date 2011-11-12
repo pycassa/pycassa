@@ -1,6 +1,123 @@
 Changelog
 =========
 
+Changes in Version 1.3.0
+------------------------
+This release adds full compatibility with Cassandra 1.0 and
+removes support for schema manipulation in Cassandra 0.7.
+
+In this release, schema manipulation should work with Cassandra 0.8
+and 1.0, but not 0.7.  The data API should continue to work with all
+three versions.
+
+Bug Fixes
+~~~~~~~~~
+- Don't ignore `columns` parameter in :meth:`.ColumnFamilyMap.insert()`
+- Handle empty instance fields in :meth:`.ColumnFamilyMap.insert()`
+- Use the same default for `timeout` in :meth:`pycassa.connect()` as
+  :class:`~.ConnectionPool` uses
+- Fix typo which caused a different exception to be thrown when an
+  :exc:`.AllServersUnavailable` exception was raised
+- IPython 0.11 compatibility in pycassaShell
+- Correct dependency declaration in :file:`setup.py`
+- Add UUIDType to supported types
+
+Features
+~~~~~~~~
+- The `filter_empty` parameter was added to
+  :meth:`~.ColumnFamily.get_range()` with a default of ``True``; this
+  allows empty rows to be kept if desired
+
+Deprecated
+~~~~~~~~~~
+- :meth:`pycassa.connect()`
+- :meth:`pycassa.connect_thread_local()`
+
+
+Changes in Version 1.2.1
+------------------------
+This is strictly a bug-fix release addressing a few
+issues created in 1.2.0.
+
+Bug Fixes
+~~~~~~~~~
+- Correctly check for Counters in :class:`.ColumnFamily`
+  when setting `default_validation_class`
+- Pass kwargs in :class:`.ColumnFamilyMap` to
+  :class:`.ColumnFamily`
+- Avoid potential UnboundLocal in :meth:`.ConnectionPool.execute`
+  when :meth:`~.ConnectionPool.get` fails
+- Fix ez_setup dependency/bundling so that package installations
+  using easy_install or pip don't fail without ez_setup installed
+
+Changes in Version 1.2.0
+------------------------
+This should be a fairly smooth upgrade from pycassa 1.1. The
+primary changes that may introduce minor incompatibilities are
+the changes to :class:`.ColumnFamilyMap` and the automatic
+skipping of "ghost ranges" in :meth:`.ColumnFamily.get_range()`.
+
+Features
+~~~~~~~~
+- Add :meth:`.ConnectionPool.fill()`
+- Add :class:`~.FloatType`, :class:`~.DoubleType`, 
+  :class:`~.DateType`, and :class:`~.BooleanType` support.
+- Add :class:`~.CompositeType` support for static composites.
+  See :ref:`composite-types` for more details.
+- Add `timestamp`, `ttl` to :meth:`.ColumnFamilyMap.insert()`
+  params 
+- Support variable-length integers with :class:`~.IntegerType`.
+  This allows more space-efficient small integers as well as
+  integers that exceed the size of a long.
+- Make :class:`~.ColumnFamilyMap` a subclass of
+  :class:`~.ColumnFamily` instead of using one as a component.
+  This allows all of the normal adjustments normally done
+  to a :class:`~.ColumnFamily` to be done to a :class:`~.ColumnFamilyMap`
+  instead. See :ref:`column-family-map` for examples of
+  using the new version.
+- Expose the following :class:`~.ConnectionPool` attributes,
+  allowing them to be altered after creation: 
+  :attr:`~.ConnectionPool.max_overflow`, :attr:`~.ConnectionPool.pool_timeout`,
+  :attr:`~.ConnectionPool.recycle`, :attr:`~.ConnectionPool.max_retries`,
+  and :attr:`~.ConnectionPool.logging_name`.
+  Previously, these were all supplied as constructor arguments.
+  Now, the preferred way to set them is to alter the attributes
+  after creation. (However, they may still be set in the
+  constructor by using keyword arguments.)
+- Automatically skip "ghost ranges" in :meth:`ColumnFamily.get_range()`.
+  Rows without any columns will not be returned by the generator,
+  and these rows will not count towards the supplied `row_count`.
+
+Bug Fixes
+~~~~~~~~~
+- Add connections to :class:`~.ConnectionPool` more readily
+  when `prefill` is ``False``.
+  Before this change, if the ConnectionPool was created with
+  ``prefill=False``, connections would only be added to the pool
+  when there was concurrent demand for connections.
+  After this change, if ``prefill=False`` and ``pool_size=N``, the
+  first `N` operations will each result in a new connection
+  being added to the pool.
+- Close connection and adjust the :class:`~.ConnectionPool`'s
+  connection count after a :exc:`.TApplicationException`. This
+  exception generally indicates programmer error, so it's not
+  extremely common.
+- Handle typed keys that evaluate to ``False``
+
+Deprecated
+~~~~~~~~~~
+- :meth:`.ConnectionPool.recreate()`
+- :meth:`.ConnectionPool.status()`
+
+Miscellaneous
+~~~~~~~~~~~~~
+- Better failure messages for :class:`~.ConnectionPool` failures
+- More efficient packing and unpacking
+- More efficient multi-column inserts in :meth:`.ColumnFamily.insert()`
+  and :meth:`.ColumnFamily.batch_insert()`
+- Prefer Python 2.7's :class:`collections.OrderedDict` over the
+  bundled version when available
+
 Changes in Version 1.1.1
 ------------------------
 
