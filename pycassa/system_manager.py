@@ -250,7 +250,6 @@ class SystemManager(object):
     def _qualify_type_class(self, classname):
         if classname:
             s = str(classname)
-            print s
             if s.find('.') == -1:
                 return 'org.apache.cassandra.db.marshal.%s' % s
             else:
