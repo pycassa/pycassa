@@ -257,7 +257,7 @@ an OrderedDict is used, the rows will have the same order as <cite>keys</cite>.<
 
 <dl class="method">
 <dt id="pycassa.columnfamily.ColumnFamily.get_count">
-<tt class="descname">get_count</tt><big>(</big><em>key[, super_column][, columns][, column_start][, column_finish][, super_column][, read_consistency_level]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.get_count" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_count</tt><big>(</big><em>key[, super_column][, columns][, column_start][, column_finish][, super_column][, read_consistency_level][, column_reversed][, max_count]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.get_count" title="Permalink to this definition">¶</a></dt>
 <dd><p>Count the number of columns in the row with key <cite>key</cite>.</p>
 <p>You may limit the columns or super columns counted to those in <cite>columns</cite>.
 Additionally, you may limit the columns or super columns counted to
@@ -271,7 +271,7 @@ set <cite>max_count</cite>.</p>
 
 <dl class="method">
 <dt id="pycassa.columnfamily.ColumnFamily.multiget_count">
-<tt class="descname">multiget_count</tt><big>(</big><em>key[, super_column][, columns][, column_start][, column_finish][, super_column][, read_consistency_level]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.multiget_count" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">multiget_count</tt><big>(</big><em>key[, super_column][, columns][, column_start][, column_finish][, super_column][, read_consistency_level][, buffer_size][, column_reversed][, max_count]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.multiget_count" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform a column count in parallel on a set of rows.</p>
 <p>The parameters are the same as for <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.multiget" title="pycassa.columnfamily.ColumnFamily.multiget"><tt class="xref py py-meth docutils literal"><span class="pre">multiget()</span></tt></a>, except that a list
 of keys may be used. A dictionary of the form <tt class="docutils literal"><span class="pre">{key:</span> <span class="pre">int}</span></tt> is
@@ -284,7 +284,7 @@ set <cite>max_count</cite>.</p>
 
 <dl class="method">
 <dt id="pycassa.columnfamily.ColumnFamily.get_range">
-<tt class="descname">get_range</tt><big>(</big><em>[start][, finish][, columns][, column_start][, column_finish][, column_reversed][, column_count][, row_count][, include_timestamp][, super_column][, read_consistency_level][, buffer_size]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.get_range" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_range</tt><big>(</big><em>[start][, finish][, columns][, column_start][, column_finish][, column_reversed][, column_count][, row_count][, include_timestamp][, super_column][, read_consistency_level][, buffer_size][, filter_empty]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.get_range" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get an iterator over rows in a specified key range.</p>
 <p>The key range begins with <cite>start</cite> and ends with <cite>finish</cite>. If left
 as empty strings, these extend to the beginning and end, respectively.
