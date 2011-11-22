@@ -39,11 +39,11 @@
 
         .. automethod:: multiget(keys[, columns][, column_start][, column_finish][, column_count][, column_reversed][, include_timestamp][, super_column][, read_consistency_level])
 
-        .. automethod:: get_count(key[, super_column][, columns][, column_start][, column_finish][, super_column][, read_consistency_level])
+        .. automethod:: get_count(key[, super_column][, columns][, column_start][, column_finish][, super_column][, read_consistency_level][, column_reversed][, max_count])
 
-        .. automethod:: multiget_count(key[, super_column][, columns][, column_start][, column_finish][, super_column][, read_consistency_level])
+        .. automethod:: multiget_count(key[, super_column][, columns][, column_start][, column_finish][, super_column][, read_consistency_level][, buffer_size][, column_reversed][, max_count])
 
-        .. automethod:: get_range([start][, finish][, columns][, column_start][, column_finish][, column_reversed][, column_count][, row_count][, include_timestamp][, super_column][, read_consistency_level][, buffer_size])
+        .. automethod:: get_range([start][, finish][, columns][, column_start][, column_finish][, column_reversed][, column_count][, row_count][, include_timestamp][, super_column][, read_consistency_level][, buffer_size][, filter_empty])
 
         .. automethod:: get_indexed_slices(index_clause[, columns][, column_start][, column_finish][, column_reversed][, column_count][, include_timestamp][, read_consistency_level][, buffer_size])
 
