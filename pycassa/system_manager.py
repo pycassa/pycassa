@@ -249,7 +249,16 @@ class SystemManager(object):
 
     def _qualify_type_class(self, classname):
         if classname:
-            s = str(classname)
+            if isinstance(classname, types.CassandraType):
+                s = str(classname)
+            elif isinstance(classname, basestring):
+                s = classname
+            else:
+                raise TypeError(
+                        "Column family validators and comparators " \
+                        "must be specified as instances of " \
+                        "pycassa.types.CassandraType subclasses or strings.")
+
             if s.find('.') == -1:
                 return 'org.apache.cassandra.db.marshal.%s' % s
             else:
