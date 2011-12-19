@@ -60,7 +60,7 @@ class SystemManager(object):
         >>> from pycassa.system_manager import *
         >>> sys = SystemManager('192.168.10.2:9160')
         >>> sys.create_keyspace('TestKeyspace', SIMPLE_STRATEGY, {'replication_factor': '1'})
-        >>> sys.create_column_family('TestKeyspace', 'TestCF', column_type='Standard',
+        >>> sys.create_column_family('TestKeyspace', 'TestCF', super=False,
         ...                          comparator_type=LONG_TYPE)
         >>> sys.alter_column_family('TestKeyspace', 'TestCF', key_cache_size=42, gc_grace_seconds=1000)
         >>> sys.drop_keyspace('TestKeyspace')
