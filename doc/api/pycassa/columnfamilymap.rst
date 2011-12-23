@@ -3,7 +3,7 @@
 
 .. automodule:: pycassa.columnfamilymap
 
-    .. autoclass:: pycassa.columnfamilymap.ColumnFamilyMap(cls, column_family[, columns][, raw_columns])
+    .. autoclass:: pycassa.columnfamilymap.ColumnFamilyMap(cls, pool, column_family[, raw_columns])
 
         .. automethod:: get(key[, columns][, column_start][, column_finish][, column_count][, column_reversed][, super_column][, read_consistency_level])
 

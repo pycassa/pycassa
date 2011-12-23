@@ -9,19 +9,14 @@ IntString may be defined as:
 
 .. code-block:: python
 
-    >>> class IntString(pycassa.Column):
-    ...     def pack(self, val):
-    ...         return str(val)
-    ...     def unpack(self, val):
-    ...         return int(val)
-    ... 
+    >>> class IntString(pycassa.types.CassandraType):
+    ...     def __init__(self, *args, **kwargs):
+    ...         self.pack = lambda val: return str(val)
+    ...         self.unpack = lambda intstr: return int(intstr)
 
 """
 
-import warnings
-
 from pycassa.types import CassandraType
-from pycassa.cassandra.ttypes import IndexExpression, IndexClause
 from pycassa.columnfamily import ColumnFamily
 import pycassa.util as util
 
@@ -35,7 +30,7 @@ def create_instance(cls, **kwargs):
 class ColumnFamilyMap(ColumnFamily):
     """ Maps an existing class to a column family. """
 
-    def __init__(self, cls, pool, column_family, columns=None, raw_columns=False, **kwargs):
+    def __init__(self, cls, pool, column_family, raw_columns=False, **kwargs):
         """
         Maps an existing class to a column family.  Class fields become columns,
         and instances of that class can be represented as rows in standard column
@@ -43,7 +38,7 @@ class ColumnFamilyMap(ColumnFamily):
 
         Instances of `cls` are returned from :meth:`get()`, :meth:`multiget()`,
         :meth:`get_range()` and :meth:`get_indexed_slices()`.
-        
+
         `pool` is a :class:`~pycassa.pool.ConnectionPool` that will be used
         in the same way a :class:`~.ColumnFamily` uses one.
 
