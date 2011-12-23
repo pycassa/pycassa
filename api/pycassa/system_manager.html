@@ -95,7 +95,7 @@ the modification.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pycassa.system_manager</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span> <span class="o">=</span> <span class="n">SystemManager</span><span class="p">(</span><span class="s">&#39;192.168.10.2:9160&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">create_keyspace</span><span class="p">(</span><span class="s">&#39;TestKeyspace&#39;</span><span class="p">,</span> <span class="n">SIMPLE_STRATEGY</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;replication_factor&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">})</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">create_column_family</span><span class="p">(</span><span class="s">&#39;TestKeyspace&#39;</span><span class="p">,</span> <span class="s">&#39;TestCF&#39;</span><span class="p">,</span> <span class="n">column_type</span><span class="o">=</span><span class="s">&#39;Standard&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">create_column_family</span><span class="p">(</span><span class="s">&#39;TestKeyspace&#39;</span><span class="p">,</span> <span class="s">&#39;TestCF&#39;</span><span class="p">,</span> <span class="nb">super</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
 <span class="gp">... </span>                         <span class="n">comparator_type</span><span class="o">=</span><span class="n">LONG_TYPE</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">alter_column_family</span><span class="p">(</span><span class="s">&#39;TestKeyspace&#39;</span><span class="p">,</span> <span class="s">&#39;TestCF&#39;</span><span class="p">,</span> <span class="n">key_cache_size</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">gc_grace_seconds</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">drop_keyspace</span><span class="p">(</span><span class="s">&#39;TestKeyspace&#39;</span><span class="p">)</span>
@@ -352,7 +352,7 @@ for the index.</p>
                         title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.columnfamilymap</span></tt> &#8211; Maps Classes to Column Families</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="index.html"
-                        title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.index</span></tt> &#8211; Secondary Index Tools</a></p>
+                        title="next chapter"><tt class="docutils literal"><span class="pre">pycassa.index</span></tt> &#8211; Secondary Index Tools</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../sources/api/pycassa/system_manager.txt"

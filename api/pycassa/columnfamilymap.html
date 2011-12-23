@@ -64,17 +64,15 @@
 <p>In addition to the default classes in <a class="reference internal" href="types.html#module-pycassa.types" title="pycassa.types"><tt class="xref py py-class docutils literal"><span class="pre">types</span></tt></a>,
 you may also define your own types for the mapper. For example,
 IntString may be defined as:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">IntString</span><span class="p">(</span><span class="n">pycassa</span><span class="o">.</span><span class="n">Column</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">pack</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">unpack</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
-<span class="gp">... </span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">IntString</span><span class="p">(</span><span class="n">pycassa</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">CassandraType</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">pack</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">val</span><span class="p">:</span> <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">unpack</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">intstr</span><span class="p">:</span> <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">intstr</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="class">
 <dt id="pycassa.columnfamilymap.ColumnFamilyMap">
-<em class="property">class </em><tt class="descclassname">pycassa.columnfamilymap.</tt><tt class="descname">ColumnFamilyMap</tt><big>(</big><em>cls, column_family[, columns][, raw_columns]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">pycassa.columnfamilymap.</tt><tt class="descname">ColumnFamilyMap</tt><big>(</big><em>cls</em>, <em>pool</em>, <em>column_family</em><span class="optional">[</span>, <em>raw_columns</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#pycassa.columnfamilymap.ColumnFamilyMap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Maps an existing class to a column family.  Class fields become columns,
 and instances of that class can be represented as rows in standard column
 families or super columns in super column families.</p>
