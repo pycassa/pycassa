@@ -589,6 +589,11 @@ class SystemManager(object):
     def _wait_for_agreement(self):
         while True:
             versions = self._conn.describe_schema_versions()
-            if len(versions) == 1:
-                break
+            for key, _nodes in versions.items():
+                try:
+                    uuid.UUID(key)
+                except:
+                    continue
+                else:
+                    return True
             time.sleep(_SAMPLE_PERIOD)
