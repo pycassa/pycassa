@@ -1,5 +1,6 @@
 import time
 import warnings
+import uuid
 
 from pycassa.connection import Connection
 from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef,\
