@@ -589,6 +589,11 @@ class SystemManager(object):
     def _wait_for_agreement(self):
         while True:
             versions = self._conn.describe_schema_versions()
-            if len(versions) == 1:
-                break
-            time.sleep(_SAMPLE_PERIOD)
+
+            # ignore unreachable nodes
+            live_versions = [key for key in versions.keys() if key != 'UNREACHABLE']
+
+            if len(live_versions) == 1:
+               break
+            else:
+                time.sleep(_SAMPLE_PERIOD)
