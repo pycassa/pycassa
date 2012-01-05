@@ -526,6 +526,29 @@ class TestSuperSubCFs(unittest.TestCase):
 
 class TestValidators(unittest.TestCase):
 
+    def test_validation_with_packed_names(self):
+        """
+        Make sure that validated columns are packed correctly when the
+        column names themselves must be packed
+        """
+        sys = SystemManager()
+        sys.create_column_family(TEST_KS, 'Validators2',
+                comparator_type=LongType(), default_validation_class=LongType())
+        sys.alter_column(TEST_KS, 'Validators2', 1, TimeUUIDType())
+        sys.close()
+
+        my_uuid = uuid.uuid1()
+        cf = ColumnFamily(pool, 'Validators2')
+
+        cf.insert('key', {0: 0})
+        assert_equal(cf.get('key'), {0: 0})
+
+        cf.insert('key', {1: my_uuid})
+        assert_equal(cf.get('key'), {0: 0, 1: my_uuid})
+
+        cf.insert('key', {0: 0, 1: my_uuid})
+        assert_equal(cf.get('key'), {0: 0, 1: my_uuid})
+
     def test_validated_columns(self):
         sys = SystemManager()
         sys.create_column_family(TEST_KS, 'Validators',)
@@ -592,6 +615,11 @@ class TestDefaultValidators(unittest.TestCase):
         #  longs and cm for 'subcol' allows TIMEUUIDs.
         cf.insert(key, col_cf)
         cf.insert(key, col_cm)
+        assert_equal(cf.get(key), {'aaaaaa': 1L, 'subcol': TIME1})
+
+        # Insert multiple columns at once
+        col_cf.update(col_cm)
+        cf.insert(key, col_cf)
         assert_equal(cf.get(key), {'aaaaaa': 1L, 'subcol': TIME1})
 
         assert_raises(TypeError, cf.insert, key, col_ncf)

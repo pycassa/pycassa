@@ -423,7 +423,8 @@ class ColumnFamily(object):
                                 % (str(col_name), value.__class__.__name__, str(value)))
             return value
 
-        packer = self._column_validators.packers.get(col_name, self._default_value_packer)
+        packed_col_name = self._pack_name(col_name, False)
+        packer = self._column_validators.packers.get(packed_col_name, self._default_value_packer)
         try:
             return packer(value)
         except struct.error:
@@ -465,7 +466,6 @@ class ColumnFamily(object):
     def _make_mutation_list(self, columns, timestamp, ttl):
         _pack_name = self._pack_name
         _pack_value = self._pack_value
-        _validate = lambda _: not isinstance(_[1], types.CassandraType)
         if not self.super:
             return map(lambda (c, v): Mutation(self._make_cosc(_pack_name(c), _pack_value(v, c), timestamp, ttl)),
                        columns.iteritems())
@@ -572,8 +572,8 @@ class ColumnFamily(object):
         new_exprs = []
         # Pack the values in the index clause expressions
         for expr in index_clause.expressions:
+            value = self._pack_value(expr.value, expr.column_name)
             name = self._pack_name(expr.column_name)
-            value = self._pack_value(expr.value, name)
             new_exprs.append(IndexExpression(name, expr.op, value))
 
         packed_start_key = self._pack_key(index_clause.start_key)
@@ -856,9 +856,11 @@ class ColumnFamily(object):
             else:
                 cp = self._column_path()
 
-            colname = self._pack_name(columns.keys()[0], False)
+            colname = columns.keys()[0]
             colval = self._pack_value(columns.values()[0], colname)
+            colname = self._pack_name(colname, False)
             column = Column(colname, colval, timestamp, ttl)
+
             return self.pool.execute('insert', packed_key, cp, column,
                     write_consistency_level or self.write_consistency_level)
         else:
