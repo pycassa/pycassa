@@ -68,13 +68,13 @@ class ColumnFamily(object):
     of rows. The default is 1024. """
 
     read_consistency_level = ConsistencyLevel.ONE
-    """ The default consistency level for every read operation, such as 
+    """ The default consistency level for every read operation, such as
     :meth:`get` or :meth:`get_range`. This may be overridden per-operation. This should be
     an instance of :class:`~pycassa.cassandra.ttypes.ConsistencyLevel`.
     The default level is ``ONE``. """
 
     write_consistency_level = ConsistencyLevel.ONE
-    """ The default consistency level for every write operation, such as 
+    """ The default consistency level for every write operation, such as
     :meth:`insert` or :meth:`remove`. This may be overridden per-operation. This should be
     an instance of :class:`.~pycassa.cassandra.ttypes.ConsistencyLevel`.
     The default level is ``ONE``. """
@@ -95,20 +95,20 @@ class ColumnFamily(object):
     """ Controls whether column names are automatically converted to or from
     their natural type to the binary string format that Cassandra uses.
     The data type used is controlled by :attr:`column_name_class` for
-    column names and :attr:`super_column_name_class` for super column names.  
+    column names and :attr:`super_column_name_class` for super column names.
     By default, this is :const:`True`. """
 
     autopack_values = True
     """ Whether column values are automatically converted to or from
     their natural type to the binary string format that Cassandra uses.
     The data type used is controlled by :attr:`default_validation_class`
-    and :attr:`column_validators`.  
+    and :attr:`column_validators`.
     By default, this is :const:`True`. """
 
     autopack_keys = True
     """ Whether row keys are automatically converted to or from
     their natural type to the binary string format that Cassandra uses.
-    The data type used is controlled by :attr:`key_validation_class`.  
+    The data type used is controlled by :attr:`key_validation_class`.
     By default, this is :const:`True`.
     """
 
@@ -128,7 +128,7 @@ class ColumnFamily(object):
     column_name_class = property(_get_column_name_class, _set_column_name_class)
     """ The data type of column names, which pycassa will use
     to determine how to pack and unpack them.
-    
+
     This is set automatically by inspecting the column family's
     ``comparator_type``, but it may also be set manually if you want
     autopacking behavior without setting a ``comparator_type``. Options
@@ -164,7 +164,7 @@ class ColumnFamily(object):
             self._default_value_packer = marshal.packer_for(t)
             self._default_value_unpacker = marshal.unpacker_for(t)
             have_counters = self._default_validation_class == "CounterColumnType"
-        
+
         if not self.super:
             if have_counters:
                 def _make_cosc(name, value, timestamp, ttl):
@@ -194,7 +194,7 @@ class ColumnFamily(object):
                                         _set_default_validation_class)
     """ The default data type of column values, which pycassa
     will use to determine how to pack and unpack them.
-    
+
     This is set automatically by inspecting the column family's
     ``default_validation_class``, but it may also be set manually if you want
     autopacking behavior without setting a ``default_validation_class``. Options
@@ -228,11 +228,11 @@ class ColumnFamily(object):
                                     _set_key_validation_class)
     """ The data type of row keys, which pycassa will use
     to determine how to pack and unpack them.
-    
+
     This is set automatically by inspecting the column family's
     ``key_validation_class`` (which only exists in Cassandra 0.8 or greater),
     but may be set manually if you want the autopacking behavior without
-    setting a ``key_validation_class`` or if you are using Cassandra 0.7. 
+    setting a ``key_validation_class`` or if you are using Cassandra 0.7.
     Options include an instance of any class in :mod:`pycassa.types`,
     such as ``LongType()``.
     """
@@ -714,7 +714,7 @@ class ColumnFamily(object):
 
         `buffer_size` is the number of rows from the total list to count at a time.
         If left as ``None``, the ColumnFamily's :attr:`buffer_size` will be used.
-        
+
         To put an upper bound on the number of columns that are counted,
         set `max_count`.
 
