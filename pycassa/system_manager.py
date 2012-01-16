@@ -3,7 +3,7 @@ import warnings
 
 from pycassa.connection import Connection
 from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef,\
-                                     InvalidRequestException
+                                     InvalidRequestException, SchemaDisagreementException
 from pycassa.cassandra.constants import *
 import pycassa.util as util
 import pycassa.marshal as marshal
@@ -60,7 +60,7 @@ class SystemManager(object):
         >>> from pycassa.system_manager import *
         >>> sys = SystemManager('192.168.10.2:9160')
         >>> sys.create_keyspace('TestKeyspace', SIMPLE_STRATEGY, {'replication_factor': '1'})
-        >>> sys.create_column_family('TestKeyspace', 'TestCF', column_type='Standard',
+        >>> sys.create_column_family('TestKeyspace', 'TestCF', super=False,
         ...                          comparator_type=LONG_TYPE)
         >>> sys.alter_column_family('TestKeyspace', 'TestCF', key_cache_size=42, gc_grace_seconds=1000)
         >>> sys.drop_keyspace('TestKeyspace')
@@ -148,14 +148,10 @@ class SystemManager(object):
         return snitch[snitch.rfind('.') + 1: ]
 
     def _system_add_keyspace(self, ksdef):
-        schema_version = self._conn.system_add_keyspace(ksdef)
-        self._wait_for_agreement()
-        return schema_version
+        return self._schema_update(self._conn.system_add_keyspace, ksdef)
 
     def _system_update_keyspace(self, ksdef):
-        schema_version = self._conn.system_update_keyspace(ksdef)
-        self._wait_for_agreement()
-        return schema_version
+        return self._schema_update(self._conn.system_update_keyspace, ksdef)
 
     def create_keyspace(self, name,
                         replication_strategy=SIMPLE_STRATEGY,
@@ -238,19 +234,24 @@ class SystemManager(object):
         Drops a keyspace from the cluster.
 
         """
-        schema_version = self._conn.system_drop_keyspace(keyspace)
-        self._wait_for_agreement()
+        self._schema_update(self._conn.system_drop_keyspace, keyspace)
 
     def _system_add_column_family(self, cfdef):
         self._conn.set_keyspace(cfdef.keyspace)
-        schema_version = self._conn.system_add_column_family(cfdef)
-        self._wait_for_agreement()
-        return schema_version
+        return self._schema_update(self._conn.system_add_column_family, cfdef)
 
     def _qualify_type_class(self, classname):
         if classname:
-            s = str(classname)
-            print s
+            if isinstance(classname, types.CassandraType):
+                s = str(classname)
+            elif isinstance(classname, basestring):
+                s = classname
+            else:
+                raise TypeError(
+                        "Column family validators and comparators " \
+                        "must be specified as instances of " \
+                        "pycassa.types.CassandraType subclasses or strings.")
+
             if s.find('.') == -1:
                 return 'org.apache.cassandra.db.marshal.%s' % s
             else:
@@ -409,9 +410,7 @@ class SystemManager(object):
         raise ire
 
     def _system_update_column_family(self, cfdef):
-        schema_version = self._conn.system_update_column_family(cfdef)
-        self._wait_for_agreement()
-        return schema_version
+        return self._schema_update(self._conn.system_update_column_family, cfdef)
 
     def alter_column_family(self, keyspace, column_family,
                             key_cache_size=None,
@@ -473,8 +472,7 @@ class SystemManager(object):
 
         """
         self._conn.set_keyspace(keyspace)
-        schema_version = self._conn.system_drop_column_family(column_family)
-        self._wait_for_agreement()
+        self._schema_update(self._conn.system_drop_column_family, column_family)
 
     def alter_column(self, keyspace, column_family, column, value_type):
         """
@@ -581,6 +579,26 @@ class SystemManager(object):
     def _wait_for_agreement(self):
         while True:
             versions = self._conn.describe_schema_versions()
-            if len(versions) == 1:
+
+            # ignore unreachable nodes
+            live_versions = [key for key in versions.keys() if key != 'UNREACHABLE']
+
+            if len(live_versions) == 1:
+               break
+            else:
+                time.sleep(_SAMPLE_PERIOD)
+
+    def _schema_update(self, schema_func, *args):
+        """
+        Call schema updates functions and properly 
+        waits for agreement if needed.
+        """
+        while True:
+            try:
+                schema_version = schema_func(*args)
+            except SchemaDisagreementException:
+                self._wait_for_agreement()
+            else:
                 break
-            time.sleep(_SAMPLE_PERIOD)
+        return schema_version
+

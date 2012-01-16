@@ -1,11 +1,12 @@
 import unittest
 
-from nose.tools import assert_equal
+from nose.tools import assert_equal, assert_raises
 
 from pycassa.pool import ConnectionPool
 from pycassa.columnfamily import ColumnFamily
 from pycassa.system_manager import *
 from pycassa.cassandra.ttypes import InvalidRequestException
+from pycassa.types import LongType
 
 TEST_KS = 'PycassaTestKeyspace'
 
@@ -38,6 +39,13 @@ class SystemManagerTest(unittest.TestCase):
         sys.describe_schema_versions()
         sys.list_keyspaces()
 
+        sys.drop_keyspace('TestKeyspace')
+
+    def test_bad_comparator(self):
+        sys.create_keyspace('TestKeyspace', SIMPLE_STRATEGY, {'replication_factor': '3'})
+        for comparator in [types.LongType, 123]:
+            assert_raises(TypeError, sys.create_column_family,
+                    'TestKeyspace', 'TestBadCF', comparator_type=comparator)
         sys.drop_keyspace('TestKeyspace')
 
     def test_alter_column_non_bytes_type(self):
