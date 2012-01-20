@@ -51,7 +51,8 @@ class TestColumnFamily(unittest.TestCase):
         key = 'TestColumnFamily.test_insert_get'
         columns = {'1': 'val1', '2': 'val2'}
         assert_raises(NotFoundException, cf.get, key)
-        cf.insert(key, columns)
+        ts = cf.insert(key, columns)
+        assert_true(isinstance(ts, int))
         assert_equal(cf.get(key), columns)
 
     def test_insert_multiget(self):

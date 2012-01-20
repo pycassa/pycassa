@@ -861,13 +861,15 @@ class ColumnFamily(object):
             colname = self._pack_name(colname, False)
             column = Column(colname, colval, timestamp, ttl)
 
-            return self.pool.execute('insert', packed_key, cp, column,
+            self.pool.execute('insert', packed_key, cp, column,
                     write_consistency_level or self.write_consistency_level)
         else:
             mut_list = self._make_mutation_list(columns, timestamp, ttl)
             mutations = {packed_key: {self.column_family: mut_list}}
-            return self.pool.execute('batch_mutate', mutations,
+            self.pool.execute('batch_mutate', mutations,
                     write_consistency_level or self.write_consistency_level)
+
+        return timestamp
 
     def batch_insert(self, rows, timestamp=None, ttl=None, write_consistency_level = None):
         """
