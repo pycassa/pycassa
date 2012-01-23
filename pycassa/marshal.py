@@ -117,7 +117,9 @@ def get_composite_unpacker(typestr):
         #   <len>   <value>   <eoc>
         # 2 bytes | ? bytes | 1 byte
         components = []
-        for unpacker in unpackers:
+        i = iter(unpackers)
+        while bytestr:
+            unpacker = i.next()
             length = len_unpacker(bytestr[:2])
             components.append(unpacker(bytestr[2:2+length]))
             bytestr = bytestr[3+length:]

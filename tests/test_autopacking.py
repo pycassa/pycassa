@@ -791,7 +791,8 @@ class TestKeyValidators(unittest.TestCase):
 
 class TestComposites(unittest.TestCase):
 
-    def test_static_composite(cls):
+    @classmethod
+    def setup_class(cls):
         sys = SystemManager()
         have_composites = sys._conn.version != CASSANDRA_07
         if not have_composites:
@@ -806,12 +807,19 @@ class TestComposites(unittest.TestCase):
                                                                UTF8Type(),
                                                                BytesType()))
 
+    @classmethod
+    def teardown_class(cls):
+        sys = SystemManager()
+        sys.drop_column_family(TEST_KS, 'StaticComposite')
+
+    def test_static_composite_basic(self):
         cf = ColumnFamily(pool, 'StaticComposite')
         colname = (127312831239123123, 1, uuid.uuid1(), uuid.uuid4(), 'foo', u'ba\u0254r', 'baz')
         cf.insert('key', {colname: 'val'})
         assert_equal(cf.get('key'), {colname: 'val'})
 
-
+    def test_static_composite_slicing(self):
+        cf = ColumnFamily(pool, 'StaticComposite')
         u1 = uuid.uuid1()
         u4 = uuid.uuid4()
         col0 = (0, 1, u1, u4, '', '', '')
@@ -845,7 +853,10 @@ class TestComposites(unittest.TestCase):
         result = cf.get('key2', column_start=(1, (1, True)), column_finish=((2, False), ))
         assert_equal(result, {col1: '', col2: '', col3: ''})
 
-        sys.drop_column_family(TEST_KS, 'StaticComposite')
+    def test_static_composite_get_partial_composite(self):
+        cf = ColumnFamily(pool, 'StaticComposite')
+        cf.insert('key3', {(123123, 1): 'val'})
+        assert_equal(cf.get('key3'), {(123123, 1): 'val'})
 
 class TestBigInt(unittest.TestCase):
 
