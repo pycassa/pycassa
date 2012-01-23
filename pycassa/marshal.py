@@ -3,7 +3,6 @@ Tools for marshalling and unmarshalling data stored
 in Cassandra.
 """
 
-import random
 import uuid
 import time
 import struct
