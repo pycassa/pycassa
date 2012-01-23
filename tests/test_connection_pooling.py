@@ -2,12 +2,9 @@ import threading
 import unittest
 import time
 
-from nose.tools import assert_raises, assert_equal, assert_not_equal
+from nose.tools import assert_raises, assert_equal
 from pycassa import ColumnFamily, ConnectionPool, PoolListener, InvalidRequestError,\
-                    NoConnectionAvailable, MaximumRetryException, AllServersUnavailable
-
-import pycassa.pool
-from pycassa.cassandra.ttypes import TimedOutException
+                    NoConnectionAvailable, MaximumRetryException
 
 _credentials = {'username':'jsmith', 'password':'havebadpass'}
 
@@ -26,7 +23,6 @@ class PoolingCase(unittest.TestCase):
         pool = ConnectionPool('PycassaTestKeyspace', credentials=_credentials)
         cf = ColumnFamily(pool, 'Standard1')
         cf.insert('key1', {'col':'val'})
-        pool.status()
         pool.dispose()
 
     def test_server_list_func(self):
@@ -35,6 +31,7 @@ class PoolingCase(unittest.TestCase):
                          listeners=[listener], prefill=False)
         assert_equal(listener.serv_list, ['foo:bar'])
         assert_equal(listener.list_count, 1)
+        pool.dispose()
 
     def test_queue_pool(self):
         listener = _TestListener()

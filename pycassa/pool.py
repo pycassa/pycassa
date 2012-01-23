@@ -5,7 +5,6 @@ import threading
 import random
 import socket
 import Queue
-import warnings
 
 from thrift import Thrift
 from connection import Connection
@@ -419,31 +418,6 @@ class ConnectionPool(object):
         finally:
             self._pool_lock.release()
 
-    def recreate(self):
-        """
-        Returns a new instance with idential creation arguments. This method
-        does *not* affect the object it is called on.
-
-        .. deprecated:: 1.2.0
-        """
-        msg = "ConnectionPool.recreate() has been deprecated."
-        warnings.warn(msg, DeprecationWarning)
-
-        self._notify_on_pool_recreate()
-        return ConnectionPool(pool_size=self._q.maxsize,
-                         max_overflow=self._max_overflow,
-                         pool_timeout=self.pool_timeout,
-                         keyspace=self.keyspace,
-                         server_list=self.server_list,
-                         credentials=self.credentials,
-                         timeout=self.timeout,
-                         recycle=self.recycle,
-                         max_retries=self.max_retries,
-                         prefill=self._prefill,
-                         logging_name=self.logging_name,
-                         use_threadlocal=self._pool_threadlocal,
-                         listeners=self.listeners)
-
     def _get_new_wrapper(self, server):
         return ConnectionWrapper(self, self.max_retries,
                                  self.keyspace, server,
@@ -586,24 +560,6 @@ class ConnectionPool(object):
 
         self._overflow = 0 - self.size()
         self._notify_on_pool_dispose()
-
-    def status(self):
-        """
-        Returns the status of the pool.
-
-        .. deprecated:: 1.2.0
-        """
-        msg ="ConnectionPool.status() is deprecated, use " +\
-             "ConnectionPool.size(), checkedin(), overflow(), " +\
-             "and checkedout() instead."
-        warnings.warn(msg, DeprecationWarning)
-
-        return "Pool size: %d, connections in pool: %d, "\
-               "current overflow: %d, current checked out "\
-               "connections: %d" % (self.size(),
-                                    self.checkedin(),
-                                    self.overflow(),
-                                    self.checkedout())
 
     def size(self):
         """ Returns the capacity of the pool. """
