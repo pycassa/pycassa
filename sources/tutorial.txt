@@ -229,7 +229,7 @@ The first is to specify them by name using
 .. code-block:: python
 
   >>> col_fam.multiget(['row1', 'row2'])
-  {'row1': {'name1': 'val1', 'name2': 'val2'}, 'row_key2': {'foo': 'bar'}}
+  {'row1': {'name1': 'val1', 'name2': 'val2'}, 'row2': {'foo': 'bar'}}
 
 Another way is to get a range of keys at once by using
 :meth:`~pycassa.columnfamily.ColumnFamily.get_range()`. The parameter
