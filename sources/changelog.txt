@@ -1,6 +1,40 @@
 Changelog
 =========
 
+Changes in Version 1.4.0
+------------------------
+This release is primarily a bugfix release with a couple
+of minor features and removed deprecated items.
+
+Features
+~~~~~~~~
+- Accept column_validation_classes when creating or altering
+  column families with SystemManager
+- Ignore UNREACHABLE nodes when waiting for schema version
+  agreement
+
+Bug Fixes
+~~~~~~~~~
+- Remove accidental print statement in SystemManager
+- Raise TypeError when unexpected types are used for
+  comparator or validator types when creating or altering
+  a Column Family
+- Fix packing of column values using column-specific validators
+  during batch inserts when the column name is changed by packing
+- Always return timestamps from inserts
+- Fix NameError when timestamps are used where a DateType is
+  expected
+- Fix NameError in python 2.4 when unpacking DateType objects
+- Upgrade ez_setup.py to fix broken setuptools link
+
+Removed Deprecated Items
+~~~~~~~~~~~~~~~~~~~~~~~~
+- :meth:`pycassa.connect()`
+- :meth:`pycassa.connect_thread_local()`
+- :meth:`.ConnectionPool.status()`
+- :meth:`.ConnectionPool.recreate()`
+
+
 Changes in Version 1.3.0
 ------------------------
 This release adds full compatibility with Cassandra 1.0 and

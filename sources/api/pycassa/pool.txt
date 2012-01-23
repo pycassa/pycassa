@@ -27,8 +27,6 @@
 
         .. automethod:: set_server_list
 
-        .. automethod:: status
-
         .. automethod:: size
 
         .. automethod:: overflow

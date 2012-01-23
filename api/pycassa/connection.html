@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.connection – Low Level Connections &mdash; pycassa v1.3.0 documentation</title>
+    <title>pycassa.connection – Low Level Connections &mdash; pycassa v1.4.0 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.3.0',
+        VERSION:     '1.4.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
     <link rel="shortcut icon" href="../../static/favicon.ico"/>
-    <link rel="top" title="pycassa v1.3.0 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v1.4.0 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.logging.pycassa_logger – Pycassa Logging" href="logging/pycassa_logger.html" />
     <link rel="prev" title="pycassa.util – Utilities" href="util.html" /> 
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="util.html" title="pycassa.util – Utilities"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.3.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.4.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -56,22 +56,10 @@
             
   <div class="section" id="module-pycassa.connection">
 <span id="pycassa-connection-low-level-connections"></span><h1><a class="reference internal" href="#module-pycassa.connection" title="pycassa.connection"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.connection</span></tt></a> &#8211; Low Level Connections<a class="headerlink" href="#module-pycassa.connection" title="Permalink to this headline">¶</a></h1>
-<dl class="function">
-<dt id="pycassa.connection.connect">
-<tt class="descclassname">pycassa.connection.</tt><tt class="descname">connect</tt><big>(</big><em>keyspace</em>, <em>servers=None</em>, <em>framed_transport=True</em>, <em>timeout=0.5</em>, <em>credentials=None</em>, <em>retry_time=60</em>, <em>recycle=None</em>, <em>use_threadlocal=True</em><big>)</big><a class="headerlink" href="#pycassa.connection.connect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Constructs a <a class="reference internal" href="pool.html#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a>. This is primarily available
-for reasons of backwards-compatibility; creating a ConnectionPool directly
-provides more options.  All of the parameters here correspond directly
-with parameters of the same name in
-<tt class="xref py py-meth docutils literal"><span class="pre">pycassa.pool.ConnectionPool.__init__()</span></tt></p>
-<p class="deprecated">
-<span class="versionmodified">Deprecated since version 1.2.2.</span></p>
-</dd></dl>
-
-<dl class="function">
-<dt id="pycassa.connection.connect_thread_local">
-<tt class="descclassname">pycassa.connection.</tt><tt class="descname">connect_thread_local</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pycassa.connection.connect_thread_local" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias of <a class="reference internal" href="#pycassa.connection.connect" title="pycassa.connection.connect"><tt class="xref py py-meth docutils literal"><span class="pre">connect()</span></tt></a></p>
+<dl class="class">
+<dt id="pycassa.connection.Connection">
+<em class="property">class </em><tt class="descclassname">pycassa.connection.</tt><tt class="descname">Connection</tt><big>(</big><em>keyspace</em>, <em>server</em>, <em>framed_transport=True</em>, <em>timeout=None</em>, <em>credentials=None</em>, <em>api_version=None</em><big>)</big><a class="headerlink" href="#pycassa.connection.Connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Encapsulation of a client session.</p>
 </dd></dl>
 
 </div>
@@ -87,7 +75,7 @@ with parameters of the same name in
                         title="previous chapter"><tt class="docutils literal"><span class="pre">pycassa.util</span></tt> &#8211; Utilities</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="logging/pycassa_logger.html"
-                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">pycassa.logging.pycassa_logger</span></tt> &#8211; Pycassa Logging</a></p>
+                        title="next chapter"><tt class="docutils literal"><span class="pre">pycassa.logging.pycassa_logger</span></tt> &#8211; Pycassa Logging</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../sources/api/pycassa/connection.txt"
@@ -125,7 +113,7 @@ with parameters of the same name in
         <li class="right" >
           <a href="util.html" title="pycassa.util – Utilities"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.3.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.4.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

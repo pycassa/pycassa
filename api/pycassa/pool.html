@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.pool – Connection Pooling &mdash; pycassa v1.3.0 documentation</title>
+    <title>pycassa.pool – Connection Pooling &mdash; pycassa v1.4.0 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.3.0',
+        VERSION:     '1.4.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="../../static/underscore.js"></script>
     <script type="text/javascript" src="../../static/doctools.js"></script>
     <link rel="shortcut icon" href="../../static/favicon.ico"/>
-    <link rel="top" title="pycassa v1.3.0 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v1.4.0 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.columnfamily – Column Family" href="columnfamily.html" />
     <link rel="prev" title="API Documentation" href="../index.html" /> 
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="../index.html" title="API Documentation"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.3.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.4.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -197,14 +197,6 @@ sequence of servers.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pycassa.pool.ConnectionPool.status">
-<tt class="descname">status</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool.status" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the status of the pool.</p>
-<p class="deprecated">
-<span class="versionmodified">Deprecated since version 1.2.0.</span></p>
-</dd></dl>
-
-<dl class="method">
 <dt id="pycassa.pool.ConnectionPool.size">
 <tt class="descname">size</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool.size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the capacity of the pool.</p>
@@ -269,7 +261,7 @@ the retries do not have to be on the same operation.</p>
 <dl class="class">
 <dt id="pycassa.pool.ConnectionWrapper">
 <em class="property">class </em><tt class="descclassname">pycassa.pool.</tt><tt class="descname">ConnectionWrapper</tt><big>(</big><em>pool</em>, <em>max_retries</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionWrapper" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a wrapper for a <tt class="xref py py-class docutils literal"><span class="pre">Connection</span></tt>
+<dd><p>Creates a wrapper for a <a class="reference internal" href="connection.html#pycassa.connection.Connection" title="pycassa.connection.Connection"><tt class="xref py py-class docutils literal"><span class="pre">Connection</span></tt></a>
 object, adding pooling related functionality while still allowing
 access to the thrift API calls.</p>
 <p>These should not be created directly, only obtained through
@@ -469,7 +461,7 @@ pool will choose from.</p>
         <li class="right" >
           <a href="../index.html" title="API Documentation"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.3.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.4.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>
