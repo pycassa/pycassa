@@ -242,7 +242,7 @@ def unpacker_for(typestr):
         if _have_struct:
             return lambda v: datetime.fromtimestamp(_long_packer.unpack(v)[0] / 1e6)
         else:
-            return lambda v: datetime.fromtimestamp(_struct.unpack('>q', v)[0] / 1e6)
+            return lambda v: datetime.fromtimestamp(struct.unpack('>q', v)[0] / 1e6)
 
     elif data_type == 'BooleanType':
         if _have_struct:
