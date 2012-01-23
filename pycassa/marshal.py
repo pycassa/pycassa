@@ -71,7 +71,7 @@ def _to_timestamp(v):
         if type(v) not in _number_types:
             raise TypeError('DateType arguments must be a datetime or timestamp')
 
-        converted = value * 1e6
+        converted = v * 1e6
     return converted
 
 def get_composite_packer(typestr):
