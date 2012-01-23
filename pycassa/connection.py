@@ -1,20 +1,11 @@
-from exceptions import Exception
-import socket
-import time
-import warnings
-
-from thrift import Thrift
 from thrift.transport import TTransport
 from thrift.transport import TSocket
 from thrift.protocol import TBinaryProtocol
 
 from pycassa.cassandra.c10 import Cassandra
-from pycassa.cassandra.constants import *
+from pycassa.cassandra.constants import (CASSANDRA_07, CASSANDRA_08, CASSANDRA_10)
 from pycassa.cassandra.ttypes import AuthenticationRequest
 from pycassa.util import compatible
-import pool
-
-__all__ = ['connect', 'connect_thread_local']
 
 DEFAULT_SERVER = 'localhost:9160'
 DEFAULT_PORT = 9160
@@ -75,31 +66,3 @@ class Connection(Cassandra.Client):
 
     def close(self):
         self.transport.close()
-
-
-def connect(keyspace, servers=None, framed_transport=True, timeout=0.5,
-            credentials=None, retry_time=60, recycle=None, use_threadlocal=True):
-    """
-    Constructs a :class:`~pycassa.pool.ConnectionPool`. This is primarily available
-    for reasons of backwards-compatibility; creating a ConnectionPool directly
-    provides more options.  All of the parameters here correspond directly
-    with parameters of the same name in
-    :meth:`pycassa.pool.ConnectionPool.__init__()`
-
-    .. deprecated:: 1.2.2
-
-    """
-    msg = "pycassa.connect() has been deprecated. Create a ConnectionPool " +\
-          "instance directly instead."
-    warnings.warn(msg, DeprecationWarning)
-    if servers is None:
-        servers = [DEFAULT_SERVER]
-    return pool.ConnectionPool(keyspace=keyspace, server_list=servers,
-                               credentials=credentials, timeout=timeout,
-                               use_threadlocal=use_threadlocal, prefill=False,
-                               pool_size=len(servers), max_overflow=len(servers),
-                               max_retries=len(servers))
-
-def connect_thread_local(*args, **kwargs):
-    """ Alias of :meth:`connect` """
-    return connect(*args, **kwargs)
