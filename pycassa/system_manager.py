@@ -395,7 +395,8 @@ class SystemManager(object):
         self._cfdef_assign(compaction_strategy_options, cfdef, 'compaction_strategy_options')
         self._cfdef_assign(row_cache_keys_to_save, cfdef, 'row_cache_keys_to_save')
         self._cfdef_assign(compression_options, cfdef, 'compression_options')
-        self._system_add_column_family(cfdef)
+
+        self._system_add_column_family(cfdef) 
 
     def _cfdef_assign(self, attr, cfdef, attr_name):
         if attr is not None:
@@ -418,6 +419,7 @@ class SystemManager(object):
                             gc_grace_seconds=None,
                             read_repair_chance=None,
                             default_validation_class=None,
+                            column_validation_classes={},
                             min_compaction_threshold=None,
                             max_compaction_threshold=None,
                             key_cache_save_period_in_seconds=None,
@@ -437,7 +439,12 @@ class SystemManager(object):
 
         Parameter meanings are the same as for :meth:`create_column_family`,
         but column family attributes which may not be modified are not
-        included here.
+        included here. There is an additional optional parameter:
+
+        :param dict column_validation_classes: keys are column names, values are
+          comparator_type. The effect is like calling alter_column for each key as column,
+          with each value as value_type
+
 
         """
 
@@ -464,6 +471,9 @@ class SystemManager(object):
         if row_cache_provider:
             cfdef.row_cache_provider = row_cache_provider
 
+        for (columnName, value_type) in column_validation_classes.items():
+            cfdef = self._alter_column_cfdef(cfdef, columnName, value_type)
+
         self._system_update_column_family(cfdef)
 
     def drop_column_family(self, keyspace, column_family):
@@ -473,6 +483,27 @@ class SystemManager(object):
         """
         self._conn.set_keyspace(keyspace)
         self._schema_update(self._conn.system_drop_column_family, column_family)
+
+    def _alter_column_cfdef(self, cfdef, column, value_type):
+        if cfdef.column_type == 'Super':
+            packer = marshal.packer_for(cfdef.subcomparator_type)
+        else:
+            packer = marshal.packer_for(cfdef.comparator_type)
+
+        packed_column = packer(column)
+
+        value_type = self._qualify_type_class(value_type)
+
+        matched = False
+        for c in cfdef.column_metadata:
+            if c.name == packed_column:
+                c.validation_class = value_type
+                matched = True
+                break
+        if not matched:
+            cfdef.column_metadata.append(ColumnDef(packed_column, value_type, None, None))
+        
+        return cfdef
 
     def alter_column(self, keyspace, column_family, column, value_type):
         """
@@ -493,25 +524,7 @@ class SystemManager(object):
 
         self._conn.set_keyspace(keyspace)
         cfdef = self.get_keyspace_column_families(keyspace)[column_family]
-
-        if cfdef.column_type == 'Super':
-            packer = marshal.packer_for(cfdef.subcomparator_type)
-        else:
-            packer = marshal.packer_for(cfdef.comparator_type)
-
-        packed_column = packer(column)
-
-        value_type = self._qualify_type_class(value_type)
-
-        matched = False
-        for c in cfdef.column_metadata:
-            if c.name == packed_column:
-                c.validation_class = value_type
-                matched = True
-                break
-        if not matched:
-            cfdef.column_metadata.append(ColumnDef(packed_column, value_type, None, None))
-        self._system_update_column_family(cfdef)
+        self._system_update_column_family(self._alter_column_cfdef(cfdef, column, value_type))
 
     def create_index(self, keyspace, column_family, column, value_type,
                      index_type=KEYS_INDEX, index_name=None):
