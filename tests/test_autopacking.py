@@ -5,6 +5,7 @@ from pycassa.util import *
 from pycassa.system_manager import *
 from pycassa.types import *
 from pycassa.index import *
+from pycassa.cassandra.constants import *
 
 from nose.tools import (assert_raises, assert_equal, assert_almost_equal,
                         assert_true)

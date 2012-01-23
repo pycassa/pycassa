@@ -258,6 +258,7 @@ class SystemManager(object):
     def create_column_family(self, keyspace, name, super=False,
                              comparator_type=None,
                              subcomparator_type=None,
+                             column_validation_classes=None,
                              key_cache_size=None,
                              row_cache_size=None,
                              gc_grace_seconds=None,
@@ -299,6 +300,10 @@ class SystemManager(object):
 
         :param str subcomparator_type: Like `comparator_type`, but if the column family
           is a super column family, this applies to the type of the subcolumn names
+
+        :param dict column_validation_classes: keys are column names, values are
+          types. The effect is like calling alter_column for each key as column,
+          with each value as value_type
 
         :param key_cache_size: The size of the key cache, either in a percentage of
           total keys (0.15, for example) or in an absolute number of
@@ -357,6 +362,9 @@ class SystemManager(object):
 
         :param str comment: A human readable description
 
+        .. versionadded:: 1.4.0
+            The `column_validation_classes` parameter.
+
         """
 
         self._conn.set_keyspace(keyspace)
@@ -371,6 +379,10 @@ class SystemManager(object):
         cfdef.subcomparator_type = self._qualify_type_class(subcomparator_type)
         cfdef.default_validation_class = self._qualify_type_class(default_validation_class)
         cfdef.key_validation_class = self._qualify_type_class(key_validation_class)
+
+        if column_validation_classes:
+            for (columnName, value_type) in column_validation_classes.items():
+                cfdef = self._alter_column_cfdef(cfdef, columnName, value_type)
 
         cfdef.replicate_on_write = replicate_on_write
         cfdef.comment = comment
@@ -415,7 +427,7 @@ class SystemManager(object):
                             gc_grace_seconds=None,
                             read_repair_chance=None,
                             default_validation_class=None,
-                            column_validation_classes={},
+                            column_validation_classes=None,
                             min_compaction_threshold=None,
                             max_compaction_threshold=None,
                             key_cache_save_period_in_seconds=None,
@@ -435,13 +447,7 @@ class SystemManager(object):
 
         Parameter meanings are the same as for :meth:`create_column_family`,
         but column family attributes which may not be modified are not
-        included here. There is an additional optional parameter:
-
-        :param dict column_validation_classes: keys are column names, values are
-          comparator_type. The effect is like calling alter_column for each key as column,
-          with each value as value_type
-
-
+        included here.
         """
 
         self._conn.set_keyspace(keyspace)
@@ -467,8 +473,9 @@ class SystemManager(object):
         if row_cache_provider:
             cfdef.row_cache_provider = row_cache_provider
 
-        for (columnName, value_type) in column_validation_classes.items():
-            cfdef = self._alter_column_cfdef(cfdef, columnName, value_type)
+        if column_validation_classes:
+            for (columnName, value_type) in column_validation_classes.items():
+                cfdef = self._alter_column_cfdef(cfdef, columnName, value_type)
 
         self._system_update_column_family(cfdef)
 
@@ -490,6 +497,7 @@ class SystemManager(object):
 
         value_type = self._qualify_type_class(value_type)
 
+        cfdef.column_metadata = cfdef.column_metadata or []
         matched = False
         for c in cfdef.column_metadata:
             if c.name == packed_column:
@@ -498,7 +506,7 @@ class SystemManager(object):
                 break
         if not matched:
             cfdef.column_metadata.append(ColumnDef(packed_column, value_type, None, None))
-        
+
         return cfdef
 
     def alter_column(self, keyspace, column_family, column, value_type):
