@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 #
 
-import sys
 import os
 
 try:
@@ -24,7 +23,7 @@ except ImportError:
 
 from distutils.cmd import Command
 
-version_tuple = (1, 3, 0)
+version_tuple = (1, 4, 0)
 __version__ = '.'.join(map(str, version_tuple))
 
 long_description = """pycassa is a python client library for Apache Cassandra with the following features:
