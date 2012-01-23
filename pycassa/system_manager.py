@@ -1,14 +1,10 @@
 import time
-import warnings
 
 from pycassa.connection import Connection
 from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef,\
                                      InvalidRequestException, SchemaDisagreementException
-from pycassa.cassandra.constants import *
-import pycassa.util as util
 import pycassa.marshal as marshal
 import pycassa.types as types
-from logging.pycassa_logger import *
 
 _DEFAULT_TIMEOUT = 30
 _SAMPLE_PERIOD = 0.25
