@@ -25,6 +25,7 @@ Bug Fixes
 - Fix NameError when timestamps are used where a DateType is
   expected
 - Fix NameError in python 2.4 when unpacking DateType objects
+- Handle reading composites with trailing components missing
 - Upgrade ez_setup.py to fix broken setuptools link
 
 Removed Deprecated Items
