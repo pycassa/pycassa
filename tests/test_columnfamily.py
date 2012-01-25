@@ -334,6 +334,10 @@ class TestColumnFamily(unittest.TestCase):
         columns = {'1': 'val1', '2': 'val2'}
         cf.insert(key, columns)
 
+        # An empty list for columns shouldn't delete anything
+        cf.remove(key, columns=[])
+        assert_equal(cf.get(key), columns)
+
         cf.remove(key, columns=['2'])
         del columns['2']
         assert_equal(cf.get(key), {'1': 'val1'})

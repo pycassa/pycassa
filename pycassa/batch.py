@@ -155,13 +155,13 @@ class Mutator(object):
         that the remove will be executed on.
 
         """
-        if timestamp == None:
+        if timestamp is None:
             timestamp = column_family.timestamp()
         deletion = Deletion(timestamp=timestamp)
         _pack_name = column_family._pack_name
         if super_column:
             deletion.super_column = _pack_name(super_column, True)
-        if columns:
+        if columns is not None:
             is_super = column_family.super and not super_column
             packed_cols = [_pack_name(col, is_super) for col in columns]
             deletion.predicate = SlicePredicate(column_names=packed_cols)
