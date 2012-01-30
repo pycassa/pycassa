@@ -439,6 +439,28 @@ class PoolingCase(unittest.TestCase):
 
         pool.dispose()
 
+    def test_queue_failure_with_no_retries(self):
+        listener = _TestListener()
+        pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
+                         prefill=True, max_retries=3, # allow 3 retries
+                         keyspace='PycassaTestKeyspace', credentials=_credentials,
+                         listeners=[listener], use_threadlocal=False,
+                         server_list=['localhost:9160', 'localhost:9160'])
+
+        # Corrupt all of the connections
+        for i in range(5):
+            conn = pool.get()
+            setattr(conn, 'send_batch_mutate', conn._fail_once)
+            conn._should_fail = True
+            conn.return_to_pool()
+
+        cf = ColumnFamily(pool, 'Counter1')
+        assert_raises(MaximumRetryException, cf.insert, 'key', {'col': 2, 'col2': 2})
+        assert_equal(listener.failure_count, 1)  # didn't retry at all
+
+        pool.dispose()
+
+
 class _TestListener(PoolListener):
 
     def __init__(self):
