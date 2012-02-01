@@ -112,6 +112,12 @@ class ColumnFamily(object):
     By default, this is :const:`True`.
     """
 
+    retry_counter_mutations = False
+    """ Whether to retry failed counter mutations. Counter mutations are
+    not idempotent so retrying could result in double counting.
+    By default, this is :const:`False`.
+    """
+
     def _set_column_name_class(self, t):
         if isinstance(t, types.CassandraType):
             self._column_name_class = t
@@ -158,15 +164,15 @@ class ColumnFamily(object):
             self._default_validation_class = t
             self._default_value_packer = t.pack
             self._default_value_unpacker = t.unpack
-            have_counters = isinstance(t, types.CounterColumnType)
+            self._have_counters = isinstance(t, types.CounterColumnType)
         else:
             self._default_validation_class = marshal.extract_type_name(t)
             self._default_value_packer = marshal.packer_for(t)
             self._default_value_unpacker = marshal.unpacker_for(t)
-            have_counters = self._default_validation_class == "CounterColumnType"
+            self._have_counters = self._default_validation_class == "CounterColumnType"
 
         if not self.super:
-            if have_counters:
+            if self._have_counters:
                 def _make_cosc(name, value, timestamp, ttl):
                     return ColumnOrSuperColumn(counter_column=CounterColumn(name, value))
             else:
@@ -174,7 +180,7 @@ class ColumnFamily(object):
                     return ColumnOrSuperColumn(Column(name, value, timestamp, ttl))
             self._make_cosc = _make_cosc
         else:
-            if have_counters:
+            if self._have_counters:
                 def _make_column(name, value, timestamp, ttl):
                     return CounterColumn(name, value)
                 self._make_column = _make_column
@@ -200,6 +206,10 @@ class ColumnFamily(object):
     autopacking behavior without setting a ``default_validation_class``. Options
     include an instance of any class in :mod:`pycassa.types`, such as ``LongType()``.
     """
+
+    @property
+    def _allow_retries(self):
+        return not self._have_counters or self.retry_counter_mutations
 
     def _set_column_validators(self, other_dict):
         self._column_validators = ColumnValidatorDict(other_dict)
@@ -258,7 +268,8 @@ class ColumnFamily(object):
         recognized_kwargs = ["buffer_size", "read_consistency_level",
                              "write_consistency_level", "timestamp",
                              "dict_class", "buffer_size", "autopack_names",
-                             "autopack_values", "autopack_keys"]
+                             "autopack_values", "autopack_keys",
+                             "retry_counter_mutations"]
         for kw in recognized_kwargs:
             if kw in kwargs:
                 setattr(self, kw, kwargs[kw])
@@ -862,12 +873,14 @@ class ColumnFamily(object):
             column = Column(colname, colval, timestamp, ttl)
 
             self.pool.execute('insert', packed_key, cp, column,
-                    write_consistency_level or self.write_consistency_level)
+                    write_consistency_level or self.write_consistency_level,
+                    allow_retries=self._allow_retries)
         else:
             mut_list = self._make_mutation_list(columns, timestamp, ttl)
             mutations = {packed_key: {self.column_family: mut_list}}
             self.pool.execute('batch_mutate', mutations,
-                    write_consistency_level or self.write_consistency_level)
+                    write_consistency_level or self.write_consistency_level,
+                    allow_retries=self._allow_retries)
 
         return timestamp
 
@@ -894,7 +907,8 @@ class ColumnFamily(object):
 
         if mutations:
             self.pool.execute('batch_mutate', mutations,
-                    write_consistency_level or self.write_consistency_level)
+                    write_consistency_level or self.write_consistency_level,
+                    allow_retries=self._allow_retries)
 
         return timestamp
 
@@ -905,11 +919,6 @@ class ColumnFamily(object):
         `value` should be an integer, either positive or negative, to be added
         to a counter column. By default, `value` is 1.
 
-        .. note:: This method is not idempotent. Retrying a failed add may result
-                  in a double count. You should consider using a separate
-                  ConnectionPool with retries disabled for column families
-                  with counters.
-
         .. versionadded:: 1.1.0
             Available in Cassandra 0.8.0 and later.
 
@@ -918,7 +927,8 @@ class ColumnFamily(object):
         cp = self._column_parent(super_column)
         column = self._pack_name(column)
         self.pool.execute('add', packed_key, cp, CounterColumn(column, value),
-                          write_consistency_level or self.write_consistency_level)
+                          write_consistency_level or self.write_consistency_level,
+                          allow_retries=self._allow_retries)
 
     def remove(self, key, columns=None, super_column=None,
                write_consistency_level=None, timestamp=None, counter=None):
@@ -974,7 +984,8 @@ class ColumnFamily(object):
         """
 
         return CfMutator(self, queue_size,
-                         write_consistency_level or self.write_consistency_level)
+                         write_consistency_level or self.write_consistency_level,
+                         allow_retries=self._allow_retries)
 
     def truncate(self):
         """

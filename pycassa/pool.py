@@ -114,6 +114,7 @@ class ConnectionWrapper(Connection):
         def new_f(self, *args, **kwargs):
             self.operation_count += 1
             try:
+                allow_retries = kwargs.pop('allow_retries', True)
                 if kwargs.pop('reset', False):
                     self._pool._replace_wrapper() # puts a new wrapper in the queue
                     self._replace(self._pool.get()) # swaps out transport
@@ -134,7 +135,8 @@ class ConnectionWrapper(Connection):
                 self._pool._clear_current()
 
                 self._retry_count += 1
-                if self.max_retries != -1 and self._retry_count > self.max_retries:
+                if (not allow_retries or
+                    (self.max_retries != -1 and self._retry_count > self.max_retries)):
                     raise MaximumRetryException('Retried %d times. Last failure was %s: %s' %
                                                 (self._retry_count, exc.__class__.__name__, exc))
                 # Exponential backoff

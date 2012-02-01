@@ -76,7 +76,7 @@ class Mutator(object):
 
     """
 
-    def __init__(self, pool, queue_size=100, write_consistency_level=None):
+    def __init__(self, pool, queue_size=100, write_consistency_level=None, allow_retries=True):
         """Creates a new Mutator object.
 
         `pool` is the :class:`~pycassa.pool.ConnectionPool` that will be used
@@ -90,6 +90,7 @@ class Mutator(object):
         self._lock = threading.RLock()
         self.pool = pool
         self.limit = queue_size
+        self.allow_retries = allow_retries
         if write_consistency_level is None:
             self.write_consistency_level = ConsistencyLevel.ONE
         else:
@@ -124,7 +125,8 @@ class Mutator(object):
                 mutations.setdefault(key, {}).setdefault(column_family, []).extend(cols)
             if mutations:
                 conn = self.pool.get()
-                conn.batch_mutate(mutations, write_consistency_level)
+                conn.batch_mutate(mutations, write_consistency_level,
+                                  allow_retries=self.allow_retries)
             self._buffer = []
         finally:
             if conn:
@@ -177,7 +179,8 @@ class CfMutator(Mutator):
 
     """
 
-    def __init__(self, column_family, queue_size=100, write_consistency_level=None):
+    def __init__(self, column_family, queue_size=100, write_consistency_level=None,
+                 allow_retries=True):
         """ A :class:`~pycassa.batch.Mutator` that deals only with one column family.
 
         `column_family` is the :class:`~pycassa.columnfamily.ColumnFamily`
@@ -186,6 +189,7 @@ class CfMutator(Mutator):
         """
         wcl = write_consistency_level or column_family.write_consistency_level
         super(CfMutator, self).__init__(column_family.pool, queue_size=queue_size,
+                                        allow_retries=allow_retries,
                                         write_consistency_level=wcl)
         self._column_family = column_family
 
