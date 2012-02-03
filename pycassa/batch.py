@@ -161,10 +161,10 @@ class Mutator(object):
             timestamp = column_family.timestamp()
         deletion = Deletion(timestamp=timestamp)
         _pack_name = column_family._pack_name
-        if super_column:
+        if super_column is not None:
             deletion.super_column = _pack_name(super_column, True)
         if columns is not None:
-            is_super = column_family.super and not super_column
+            is_super = column_family.super and super_column is None
             packed_cols = [_pack_name(col, is_super) for col in columns]
             deletion.predicate = SlicePredicate(column_names=packed_cols)
         mutation = Mutation(deletion=deletion)
