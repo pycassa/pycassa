@@ -58,10 +58,13 @@ class ColumnFamilyMap(ColumnFamily):
         self.defaults = {}
         self.fields = []
         for name, val_type in self.cls.__dict__.iteritems():
-            if isinstance(val_type, CassandraType):
+            if name != 'key' and isinstance(val_type, CassandraType):
                 self.fields.append(name)
                 self.column_validators[name] = val_type
                 self.defaults[name] = val_type.default
+
+        if hasattr(self.cls, 'key') and isinstance(self.cls.key, CassandraType):
+            self.key_validation_class = self.cls.key
 
     def combine_columns(self, columns):
         combined_columns = columns
