@@ -56,19 +56,15 @@
             
   <div class="section" id="module-pycassa.columnfamilymap">
 <span id="pycassa-columnfamilymap-maps-classes-to-column-families"></span><h1><a class="reference internal" href="#module-pycassa.columnfamilymap" title="pycassa.columnfamilymap"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.columnfamilymap</span></tt></a> &#8211; Maps Classes to Column Families<a class="headerlink" href="#module-pycassa.columnfamilymap" title="Permalink to this headline">¶</a></h1>
-<p>Provides a means for mapping an existing class to a column family.</p>
+<p>Provides a way to map an existing class of objects to a column family.</p>
+<p>This can help to cut down boilerplate code related to converting
+objects to a row format and back again.  ColumnFamilyMap is primarily
+useful when you have one &#8220;object&#8221; per row.</p>
 <div class="admonition-see-also admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="types.html#module-pycassa.types" title="pycassa.types"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.types</span></tt></a></p>
-</div>
-<p>In addition to the default classes in <a class="reference internal" href="types.html#module-pycassa.types" title="pycassa.types"><tt class="xref py py-class docutils literal"><span class="pre">types</span></tt></a>,
-you may also define your own types for the mapper. For example,
-IntString may be defined as:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">IntString</span><span class="p">(</span><span class="n">pycassa</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">CassandraType</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">pack</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">val</span><span class="p">:</span> <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">unpack</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">intstr</span><span class="p">:</span> <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">intstr</span><span class="p">)</span>
-</pre></div>
+<p class="last"><a class="reference internal" href="types.html#module-pycassa.types" title="pycassa.types"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.types</span></tt></a> for selecting data types for object
+attributes and infomation about creating custom data
+types.</p>
 </div>
 <dl class="class">
 <dt id="pycassa.columnfamilymap.ColumnFamilyMap">

@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.types – Column Types for ColumnFamilyMaps &mdash; pycassa v1.4.0 documentation</title>
+    <title>pycassa.types – Data Type Descriptions &mdash; pycassa v1.4.0 documentation</title>
     <link rel="stylesheet" href="../../static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -55,53 +55,103 @@
           <div class="body">
             
   <div class="section" id="module-pycassa.types">
-<span id="pycassa-types-column-types-for-columnfamilymaps"></span><h1><a class="reference internal" href="#module-pycassa.types" title="pycassa.types"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.types</span></tt></a> &#8211; Column Types for ColumnFamilyMaps<a class="headerlink" href="#module-pycassa.types" title="Permalink to this headline">¶</a></h1>
+<span id="pycassa-types-data-type-descriptions"></span><h1><a class="reference internal" href="#module-pycassa.types" title="pycassa.types"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.types</span></tt></a> &#8211; Data Type Descriptions<a class="headerlink" href="#module-pycassa.types" title="Permalink to this headline">¶</a></h1>
+<p>Data type definitions that are used when converting data to and from
+the binary format that the data will be stored in.</p>
+<p>In addition to the default classes included here, you may also define
+custom types by creating a new class that extends <a class="reference internal" href="#pycassa.types.CassandraType" title="pycassa.types.CassandraType"><tt class="xref py py-class docutils literal"><span class="pre">CassandraType</span></tt></a>.
+For example, IntString, which stores an arbitrary integer as a string, may
+be defined as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">IntString</span><span class="p">(</span><span class="n">pycassa</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">CassandraType</span><span class="p">):</span>
+<span class="gp">...</span>
+<span class="gp">... </span>   <span class="nd">@staticmethod</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="nf">pack</span><span class="p">(</span><span class="n">intval</span><span class="p">):</span>
+<span class="gp">... </span>       <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">intval</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">... </span>   <span class="nd">@staticmethod</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="nf">unpack</span><span class="p">(</span><span class="n">strval</span><span class="p">):</span>
+<span class="gp">... </span>       <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">strval</span><span class="p">)</span>
+</pre></div>
+</div>
 <dl class="class">
-<dt id="pycassa.types.AsciiType">
-<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">AsciiType</tt><big>(</big><em>reversed=False</em>, <em>default=None</em><big>)</big><a class="headerlink" href="#pycassa.types.AsciiType" title="Permalink to this definition">¶</a></dt>
+<dt id="pycassa.types.CassandraType">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">CassandraType</tt><big>(</big><em>reversed=False</em>, <em>default=None</em><big>)</big><a class="headerlink" href="#pycassa.types.CassandraType" title="Permalink to this definition">¶</a></dt>
 <dd><p>A data type that Cassandra is aware of and knows
-how to validate and sort.</p>
+how to validate and sort. All of the other classes in this
+module are subclasses of this class.</p>
 <p>If <cite>reversed</cite> is true and this is used as a column comparator,
 the columns will be sorted in reverse order.</p>
-<p>This is also used to specify fields to be persisted when
-a class is used with <a class="reference internal" href="columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</p>
 <p>The <cite>default</cite> parameter only applies to use of this
 with ColumnFamilyMap, where <cite>default</cite> is used if a row
 does not contain a column corresponding to this item.</p>
-<p class="versionadded">
-<span class="versionmodified">New in version 1.2.0.</span></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="pycassa.types.BooleanType">
-<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">BooleanType</tt><big>(</big><em>reversed=False</em>, <em>default=None</em><big>)</big><a class="headerlink" href="#pycassa.types.BooleanType" title="Permalink to this definition">¶</a></dt>
-<dd><p>A data type that Cassandra is aware of and knows
-how to validate and sort.</p>
-<p>If <cite>reversed</cite> is true and this is used as a column comparator,
-the columns will be sorted in reverse order.</p>
-<p>This is also used to specify fields to be persisted when
-a class is used with <a class="reference internal" href="columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</p>
-<p>The <cite>default</cite> parameter only applies to use of this
-with ColumnFamilyMap, where <cite>default</cite> is used if a row
-does not contain a column corresponding to this item.</p>
-<p class="versionadded">
-<span class="versionmodified">New in version 1.2.0.</span></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="pycassa.types.BytesType">
-<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">BytesType</tt><big>(</big><em>reversed=False</em>, <em>default=None</em><big>)</big><a class="headerlink" href="#pycassa.types.BytesType" title="Permalink to this definition">¶</a></dt>
-<dd><p>A data type that Cassandra is aware of and knows
-how to validate and sort.</p>
-<p>If <cite>reversed</cite> is true and this is used as a column comparator,
-the columns will be sorted in reverse order.</p>
-<p>This is also used to specify fields to be persisted when
-a class is used with <a class="reference internal" href="columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</p>
-<p>The <cite>default</cite> parameter only applies to use of this
-with ColumnFamilyMap, where <cite>default</cite> is used if a row
-does not contain a column corresponding to this item.</p>
-<p class="versionadded">
-<span class="versionmodified">New in version 1.2.0.</span></p>
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">BytesType</tt><a class="headerlink" href="#pycassa.types.BytesType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores data as a byte array</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.types.AsciiType">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">AsciiType</tt><a class="headerlink" href="#pycassa.types.AsciiType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores data as ASCII text</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.types.UTF8Type">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">UTF8Type</tt><a class="headerlink" href="#pycassa.types.UTF8Type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores data as UTF8 encoded text</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.types.LongType">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">LongType</tt><a class="headerlink" href="#pycassa.types.LongType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores data as an 8 byte integer</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.types.IntegerType">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">IntegerType</tt><a class="headerlink" href="#pycassa.types.IntegerType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores data as a variable-length integer. This
+is a more compact format for storing small integers
+than <a class="reference internal" href="#pycassa.types.LongType" title="pycassa.types.LongType"><tt class="xref py py-class docutils literal"><span class="pre">LongType</span></tt></a>, and the limits
+on the size of the integer are much higher.</p>
+<p class="versionchanged">
+<span class="versionmodified">Changed in version 1.2.0: </span>Prior to 1.2.0, this was always stored as a 4 byte
+integer.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.types.DoubleType">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">DoubleType</tt><a class="headerlink" href="#pycassa.types.DoubleType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores data as an 8 byte double</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.types.FloatType">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">FloatType</tt><a class="headerlink" href="#pycassa.types.FloatType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores data as an 4 byte float</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.types.DateType">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">DateType</tt><a class="headerlink" href="#pycassa.types.DateType" title="Permalink to this definition">¶</a></dt>
+<dd><p>An 8 byte timestamp. This will be returned
+as a <tt class="xref py py-class docutils literal"><span class="pre">datetime.datetime</span></tt> instance by pycassa. Either
+<tt class="xref py py-class docutils literal"><span class="pre">datetime</span></tt> instances or timestamps will be accepted.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.types.TimeUUIDType">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">TimeUUIDType</tt><a class="headerlink" href="#pycassa.types.TimeUUIDType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores data as a version 1 UUID</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.types.LexicalUUIDType">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">LexicalUUIDType</tt><a class="headerlink" href="#pycassa.types.LexicalUUIDType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores data as a non-version 1 UUID</p>
 </dd></dl>
 
 <dl class="class">
@@ -112,157 +162,11 @@ which have their own type.  When sorted, items are
 primarily sorted by their first component, secondarily
 by their second component, and so on.</p>
 <p>Each of <cite>*components</cite> should be an instance of
-a subclass of <tt class="xref py py-class docutils literal"><span class="pre">CassandraType</span></tt>.</p>
+a subclass of <a class="reference internal" href="#pycassa.types.CassandraType" title="pycassa.types.CassandraType"><tt class="xref py py-class docutils literal"><span class="pre">CassandraType</span></tt></a>.</p>
 <div class="admonition-see-also admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference internal" href="../../assorted/composite_types.html#composite-types"><em>Composite Types</em></a></p>
 </div>
-<p class="versionadded">
-<span class="versionmodified">New in version 1.2.0.</span></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="pycassa.types.CounterColumnType">
-<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">CounterColumnType</tt><big>(</big><em>reversed=False</em>, <em>default=None</em><big>)</big><a class="headerlink" href="#pycassa.types.CounterColumnType" title="Permalink to this definition">¶</a></dt>
-<dd><p>A data type that Cassandra is aware of and knows
-how to validate and sort.</p>
-<p>If <cite>reversed</cite> is true and this is used as a column comparator,
-the columns will be sorted in reverse order.</p>
-<p>This is also used to specify fields to be persisted when
-a class is used with <a class="reference internal" href="columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</p>
-<p>The <cite>default</cite> parameter only applies to use of this
-with ColumnFamilyMap, where <cite>default</cite> is used if a row
-does not contain a column corresponding to this item.</p>
-<p class="versionadded">
-<span class="versionmodified">New in version 1.2.0.</span></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="pycassa.types.DateType">
-<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">DateType</tt><big>(</big><em>reversed=False</em>, <em>default=None</em><big>)</big><a class="headerlink" href="#pycassa.types.DateType" title="Permalink to this definition">¶</a></dt>
-<dd><p>A data type that Cassandra is aware of and knows
-how to validate and sort.</p>
-<p>If <cite>reversed</cite> is true and this is used as a column comparator,
-the columns will be sorted in reverse order.</p>
-<p>This is also used to specify fields to be persisted when
-a class is used with <a class="reference internal" href="columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</p>
-<p>The <cite>default</cite> parameter only applies to use of this
-with ColumnFamilyMap, where <cite>default</cite> is used if a row
-does not contain a column corresponding to this item.</p>
-<p class="versionadded">
-<span class="versionmodified">New in version 1.2.0.</span></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="pycassa.types.DoubleType">
-<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">DoubleType</tt><big>(</big><em>reversed=False</em>, <em>default=None</em><big>)</big><a class="headerlink" href="#pycassa.types.DoubleType" title="Permalink to this definition">¶</a></dt>
-<dd><p>A data type that Cassandra is aware of and knows
-how to validate and sort.</p>
-<p>If <cite>reversed</cite> is true and this is used as a column comparator,
-the columns will be sorted in reverse order.</p>
-<p>This is also used to specify fields to be persisted when
-a class is used with <a class="reference internal" href="columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</p>
-<p>The <cite>default</cite> parameter only applies to use of this
-with ColumnFamilyMap, where <cite>default</cite> is used if a row
-does not contain a column corresponding to this item.</p>
-<p class="versionadded">
-<span class="versionmodified">New in version 1.2.0.</span></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="pycassa.types.FloatType">
-<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">FloatType</tt><big>(</big><em>reversed=False</em>, <em>default=None</em><big>)</big><a class="headerlink" href="#pycassa.types.FloatType" title="Permalink to this definition">¶</a></dt>
-<dd><p>A data type that Cassandra is aware of and knows
-how to validate and sort.</p>
-<p>If <cite>reversed</cite> is true and this is used as a column comparator,
-the columns will be sorted in reverse order.</p>
-<p>This is also used to specify fields to be persisted when
-a class is used with <a class="reference internal" href="columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</p>
-<p>The <cite>default</cite> parameter only applies to use of this
-with ColumnFamilyMap, where <cite>default</cite> is used if a row
-does not contain a column corresponding to this item.</p>
-<p class="versionadded">
-<span class="versionmodified">New in version 1.2.0.</span></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="pycassa.types.IntegerType">
-<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">IntegerType</tt><big>(</big><em>reversed=False</em>, <em>default=None</em><big>)</big><a class="headerlink" href="#pycassa.types.IntegerType" title="Permalink to this definition">¶</a></dt>
-<dd><p>A data type that Cassandra is aware of and knows
-how to validate and sort.</p>
-<p>If <cite>reversed</cite> is true and this is used as a column comparator,
-the columns will be sorted in reverse order.</p>
-<p>This is also used to specify fields to be persisted when
-a class is used with <a class="reference internal" href="columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</p>
-<p>The <cite>default</cite> parameter only applies to use of this
-with ColumnFamilyMap, where <cite>default</cite> is used if a row
-does not contain a column corresponding to this item.</p>
-<p class="versionadded">
-<span class="versionmodified">New in version 1.2.0.</span></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="pycassa.types.LexicalUUIDType">
-<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">LexicalUUIDType</tt><big>(</big><em>reversed=False</em>, <em>default=None</em><big>)</big><a class="headerlink" href="#pycassa.types.LexicalUUIDType" title="Permalink to this definition">¶</a></dt>
-<dd><p>A data type that Cassandra is aware of and knows
-how to validate and sort.</p>
-<p>If <cite>reversed</cite> is true and this is used as a column comparator,
-the columns will be sorted in reverse order.</p>
-<p>This is also used to specify fields to be persisted when
-a class is used with <a class="reference internal" href="columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</p>
-<p>The <cite>default</cite> parameter only applies to use of this
-with ColumnFamilyMap, where <cite>default</cite> is used if a row
-does not contain a column corresponding to this item.</p>
-<p class="versionadded">
-<span class="versionmodified">New in version 1.2.0.</span></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="pycassa.types.LongType">
-<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">LongType</tt><big>(</big><em>reversed=False</em>, <em>default=None</em><big>)</big><a class="headerlink" href="#pycassa.types.LongType" title="Permalink to this definition">¶</a></dt>
-<dd><p>A data type that Cassandra is aware of and knows
-how to validate and sort.</p>
-<p>If <cite>reversed</cite> is true and this is used as a column comparator,
-the columns will be sorted in reverse order.</p>
-<p>This is also used to specify fields to be persisted when
-a class is used with <a class="reference internal" href="columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</p>
-<p>The <cite>default</cite> parameter only applies to use of this
-with ColumnFamilyMap, where <cite>default</cite> is used if a row
-does not contain a column corresponding to this item.</p>
-<p class="versionadded">
-<span class="versionmodified">New in version 1.2.0.</span></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="pycassa.types.TimeUUIDType">
-<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">TimeUUIDType</tt><big>(</big><em>reversed=False</em>, <em>default=None</em><big>)</big><a class="headerlink" href="#pycassa.types.TimeUUIDType" title="Permalink to this definition">¶</a></dt>
-<dd><p>A data type that Cassandra is aware of and knows
-how to validate and sort.</p>
-<p>If <cite>reversed</cite> is true and this is used as a column comparator,
-the columns will be sorted in reverse order.</p>
-<p>This is also used to specify fields to be persisted when
-a class is used with <a class="reference internal" href="columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</p>
-<p>The <cite>default</cite> parameter only applies to use of this
-with ColumnFamilyMap, where <cite>default</cite> is used if a row
-does not contain a column corresponding to this item.</p>
-<p class="versionadded">
-<span class="versionmodified">New in version 1.2.0.</span></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="pycassa.types.UTF8Type">
-<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">UTF8Type</tt><big>(</big><em>reversed=False</em>, <em>default=None</em><big>)</big><a class="headerlink" href="#pycassa.types.UTF8Type" title="Permalink to this definition">¶</a></dt>
-<dd><p>A data type that Cassandra is aware of and knows
-how to validate and sort.</p>
-<p>If <cite>reversed</cite> is true and this is used as a column comparator,
-the columns will be sorted in reverse order.</p>
-<p>This is also used to specify fields to be persisted when
-a class is used with <a class="reference internal" href="columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a>.</p>
-<p>The <cite>default</cite> parameter only applies to use of this
-with ColumnFamilyMap, where <cite>default</cite> is used if a row
-does not contain a column corresponding to this item.</p>
-<p class="versionadded">
-<span class="versionmodified">New in version 1.2.0.</span></p>
 </dd></dl>
 
 </div>

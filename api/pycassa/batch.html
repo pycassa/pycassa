@@ -25,7 +25,7 @@
     <link rel="shortcut icon" href="../../static/favicon.ico"/>
     <link rel="top" title="pycassa v1.4.0 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
-    <link rel="next" title="pycassa.types – Column Types for ColumnFamilyMaps" href="types.html" />
+    <link rel="next" title="pycassa.types – Data Type Descriptions" href="types.html" />
     <link rel="prev" title="pycassa.index – Secondary Index Tools" href="index.html" /> 
   </head>
   <body>
@@ -39,7 +39,7 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="types.html" title="pycassa.types – Column Types for ColumnFamilyMaps"
+          <a href="types.html" title="pycassa.types – Data Type Descriptions"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="index.html" title="pycassa.index – Secondary Index Tools"
@@ -111,8 +111,10 @@ column family only.</p>
 </div>
 <dl class="class">
 <dt id="pycassa.batch.Mutator">
-<em class="property">class </em><tt class="descclassname">pycassa.batch.</tt><tt class="descname">Mutator</tt><big>(</big><em>pool</em>, <em>queue_size=100</em>, <em>write_consistency_level=None</em><big>)</big><a class="headerlink" href="#pycassa.batch.Mutator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a new Mutator object.</p>
+<em class="property">class </em><tt class="descclassname">pycassa.batch.</tt><tt class="descname">Mutator</tt><big>(</big><em>pool</em>, <em>queue_size=100</em>, <em>write_consistency_level=None</em>, <em>allow_retries=True</em><big>)</big><a class="headerlink" href="#pycassa.batch.Mutator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Batch update convenience mechanism.</p>
+<p>Queues insert/update/remove operations and executes them when the queue
+is full or <cite>send</cite> is called explicitly.</p>
 <p><cite>pool</cite> is the <a class="reference internal" href="pool.html#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a> that will be used
 for operations.</p>
 <p>After <cite>queue_size</cite> operations, <a class="reference internal" href="#pycassa.batch.Mutator.send" title="pycassa.batch.Mutator.send"><tt class="xref py py-meth docutils literal"><span class="pre">send()</span></tt></a> will be executed
@@ -143,7 +145,7 @@ that the remove will be executed on.</p>
 
 <dl class="class">
 <dt id="pycassa.batch.CfMutator">
-<em class="property">class </em><tt class="descclassname">pycassa.batch.</tt><tt class="descname">CfMutator</tt><big>(</big><em>column_family</em>, <em>queue_size=100</em>, <em>write_consistency_level=None</em><big>)</big><a class="headerlink" href="#pycassa.batch.CfMutator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">pycassa.batch.</tt><tt class="descname">CfMutator</tt><big>(</big><em>column_family</em>, <em>queue_size=100</em>, <em>write_consistency_level=None</em>, <em>allow_retries=True</em><big>)</big><a class="headerlink" href="#pycassa.batch.CfMutator" title="Permalink to this definition">¶</a></dt>
 <dd><p>A <a class="reference internal" href="#pycassa.batch.Mutator" title="pycassa.batch.Mutator"><tt class="xref py py-class docutils literal"><span class="pre">Mutator</span></tt></a> that deals only with one column family.</p>
 <p><cite>column_family</cite> is the <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>
 that all operations will be executed on.</p>
@@ -174,7 +176,7 @@ that all operations will be executed on.</p>
                         title="previous chapter"><tt class="docutils literal"><span class="pre">pycassa.index</span></tt> &#8211; Secondary Index Tools</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="types.html"
-                        title="next chapter"><tt class="docutils literal"><span class="pre">pycassa.types</span></tt> &#8211; Column Types for ColumnFamilyMaps</a></p>
+                        title="next chapter"><tt class="docutils literal"><span class="pre">pycassa.types</span></tt> &#8211; Data Type Descriptions</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../sources/api/pycassa/batch.txt"
@@ -207,7 +209,7 @@ that all operations will be executed on.</p>
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="types.html" title="pycassa.types – Column Types for ColumnFamilyMaps"
+          <a href="types.html" title="pycassa.types – Data Type Descriptions"
              >next</a> |</li>
         <li class="right" >
           <a href="index.html" title="pycassa.index – Secondary Index Tools"

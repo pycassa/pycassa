@@ -60,7 +60,7 @@
 <dl class="class">
 <dt id="pycassa.pool.ConnectionPool">
 <em class="property">class </em><tt class="descclassname">pycassa.pool.</tt><tt class="descname">ConnectionPool</tt><big>(</big><em>keyspace, server_list=['localhost:9160'], credentials=None, timeout=0.5, use_threadlocal=True, pool_size=5, prefill=True, **kwargs</em><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool" title="Permalink to this definition">¶</a></dt>
-<dd><p>Constructs a pool that maintains a queue of open connections.</p>
+<dd><p>A pool that maintains a queue of open connections.</p>
 <p>All connections in the pool will be opened to <cite>keyspace</cite>.</p>
 <p><cite>server_list</cite> is a sequence of servers in the form <tt class="docutils literal"><span class="pre">&quot;host:port&quot;</span></tt> that
 the pool will connect to. The port defaults to 9160 if excluded.
@@ -261,7 +261,7 @@ the retries do not have to be on the same operation.</p>
 <dl class="class">
 <dt id="pycassa.pool.ConnectionWrapper">
 <em class="property">class </em><tt class="descclassname">pycassa.pool.</tt><tt class="descname">ConnectionWrapper</tt><big>(</big><em>pool</em>, <em>max_retries</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionWrapper" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a wrapper for a <a class="reference internal" href="connection.html#pycassa.connection.Connection" title="pycassa.connection.Connection"><tt class="xref py py-class docutils literal"><span class="pre">Connection</span></tt></a>
+<dd><p>Creates a wrapper for a <tt class="xref py py-class docutils literal"><span class="pre">Connection</span></tt>
 object, adding pooling related functionality while still allowing
 access to the thrift API calls.</p>
 <p>These should not be created directly, only obtained through

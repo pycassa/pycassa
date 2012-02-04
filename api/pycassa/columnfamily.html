@@ -73,12 +73,13 @@ manipulation of data inside Cassandra.</p>
 <em class="property">class </em><tt class="descclassname">pycassa.columnfamily.</tt><tt class="descname">ColumnFamily</tt><big>(</big><em>pool</em>, <em>column_family</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily" title="Permalink to this definition">¶</a></dt>
 <dd><p>An abstraction of a Cassandra column family or super column family.
 Operations on this, such as <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.get" title="pycassa.columnfamily.ColumnFamily.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a> or <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.insert" title="pycassa.columnfamily.ColumnFamily.insert"><tt class="xref py py-meth docutils literal"><span class="pre">insert()</span></tt></a> will get data from or
-insert data into the corresponding Cassandra column family with
-name <cite>column_family</cite>.</p>
+insert data into the corresponding Cassandra column family.</p>
 <p><cite>pool</cite> is a <a class="reference internal" href="pool.html#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a> that the column
-family will use for all operations.  A connection is drawn from the
-pool before each operations and is returned afterwards.  Note that
-the keyspace to be used is determined by the pool.</p>
+family will use for all operations. A connection is drawn from the
+pool before each operations and is returned afterwards.</p>
+<p><cite>column_family</cite> should be the name of the column family that you
+want to use in Cassandra. Note that the keyspace to be used is
+determined by the pool.</p>
 <dl class="attribute">
 <dt id="pycassa.columnfamily.ColumnFamily.read_consistency_level">
 <tt class="descname">read_consistency_level</tt><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.read_consistency_level" title="Permalink to this definition">¶</a></dt>
@@ -358,13 +359,6 @@ column family.</p>
 <dd><p>Increment or decrement a counter.</p>
 <p><cite>value</cite> should be an integer, either positive or negative, to be added
 to a counter column. By default, <cite>value</cite> is 1.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">This method is not idempotent. Retrying a failed add may result
-in a double count. You should consider using a separate
-ConnectionPool with retries disabled for column families
-with counters.</p>
-</div>
 <p class="versionadded">
 <span class="versionmodified">New in version 1.1.0: </span>Available in Cassandra 0.8.0 and later.</p>
 </dd></dl>
