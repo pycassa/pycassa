@@ -94,7 +94,7 @@ class TestCFs(unittest.TestCase):
                         2 + int(time.time() * 10 ** 6),
                         3 + int(time.time() * 10 ** 6)]
         type_groups.append(self.make_group(TestCFs.cf_big_int, big_int_cols))
-        
+
         time_cols = [TIME1, TIME2, TIME3]
         type_groups.append(self.make_group(TestCFs.cf_time, time_cols))
 
@@ -981,3 +981,33 @@ class TestTypeErrors(unittest.TestCase):
         assert_raises(TypeError, self.cf.insert, args=('key', {'col': 123}))
         assert_raises(TypeError, self.cf.insert, args=('key', {123: 123}))
         self.cf.remove('key')
+
+class TestCustomTypes(unittest.TestCase):
+
+    class IntString(types.CassandraType):
+
+        @staticmethod
+        def pack(intval):
+            return str(intval)
+
+        @staticmethod
+        def unpack(strval):
+            return int(strval)
+
+    class IntString2(types.CassandraType):
+
+        def __init__(self, *args, **kwargs):
+            self.pack = lambda val: str(val)
+            self.unpack = lambda val: int(val)
+
+    def test_staticmethod_funcs(self):
+        self.cf = ColumnFamily(pool, 'Standard1')
+        self.cf.key_validation_class = TestCustomTypes.IntString()
+        self.cf.insert(1234, {'col': 'val'})
+        assert_equal(self.cf.get(1234), {'col': 'val'})
+
+    def test_constructor_lambdas(self):
+        self.cf = ColumnFamily(pool, 'Standard1')
+        self.cf.key_validation_class = TestCustomTypes.IntString2()
+        self.cf.insert(1234, {'col': 'val'})
+        assert_equal(self.cf.get(1234), {'col': 'val'})

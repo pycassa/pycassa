@@ -1,3 +1,26 @@
+"""
+Data type definitions that are used when converting data to and from
+the binary format that the data will be stored in.
+
+In addition to the default classes included here, you may also define
+custom types by creating a new class that extends :class:`~.CassandraType`.
+For example, IntString, which stores an arbitrary integer as a string, may
+be defined as follows:
+
+.. code-block:: python
+
+    >>> class IntString(pycassa.types.CassandraType):
+    ...
+    ...     @staticmethod
+    ...     def pack(intval):
+    ...         return str(intval)
+    ...
+    ...     @staticmethod
+    ...     def unpack(strval):
+    ...         return int(strval)
+
+"""
+
 import pycassa.marshal as marshal
 
 class CassandraType(object):
@@ -22,8 +45,10 @@ class CassandraType(object):
         """
         self.reversed = reversed
         self.default = default
-        self.pack = marshal.packer_for(self.__class__.__name__)
-        self.unpack = marshal.unpacker_for(self.__class__.__name__)
+        if not hasattr(self.__class__, 'pack'):
+            self.pack = marshal.packer_for(self.__class__.__name__)
+        if not hasattr(self.__class__, 'unpack'):
+            self.unpack = marshal.unpacker_for(self.__class__.__name__)
 
     def __str__(self):
         return self.__class__.__name__ + "(reversed=" + str(self.reversed).lower() + ")"

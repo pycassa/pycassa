@@ -1,18 +1,13 @@
 """
-Provides a means for mapping an existing class to a column family.
+Provides a way to map an existing class of objects to a column family.
 
-.. seealso:: :mod:`pycassa.types`
+This can help to cut down boilerplate code related to converting
+objects to a row format and back again.  ColumnFamilyMap is primarily
+useful when you have one "object" per row.
 
-In addition to the default classes in :class:`~pycassa.types`,
-you may also define your own types for the mapper. For example,
-IntString may be defined as:
-
-.. code-block:: python
-
-    >>> class IntString(pycassa.types.CassandraType):
-    ...     def __init__(self, *args, **kwargs):
-    ...         self.pack = lambda val: return str(val)
-    ...         self.unpack = lambda intstr: return int(intstr)
+.. seealso:: :mod:`pycassa.types` for selecting data types for object
+             attributes and infomation about creating custom data
+             types.
 
 """
 
