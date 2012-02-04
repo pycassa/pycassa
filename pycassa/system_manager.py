@@ -284,83 +284,82 @@ class SystemManager(object):
         supplied for any of optional parameters, Cassandra will use a reasonable
         default value.
 
-        :param str keyspace: what keyspace the column family will be created in
+        `keyspace` should be the name of the keyspace the column family will
+        be created in. `name` gives the name of the column family.
 
-        :param str name: the name of the column family
+        Column family options follow:
 
-        :param bool super: Whether or not this column family is a super column family
-
-        :param str comparator_type: What type the column names will be, which affects
-          their sort order.  By default, :const:`LONG_TYPE`, :const:`INT_TYPE`,
-          :const:`ASCII_TYPE`, :const:`UTF8_TYPE`, :const:`TIME_UUID_TYPE`,
-          :const:`LEXICAL_UUID_TYPE` and :const:`BYTES_TYPE` are provided.  Custom
-          types may be used as well by providing the class name; if the custom
-          comparator class is not in ``org.apache.cassandra.db.marshal``, the fully
-          qualified class name must be given.
-
-        :param str subcomparator_type: Like `comparator_type`, but if the column family
-          is a super column family, this applies to the type of the subcolumn names
-
-        :param dict column_validation_classes: keys are column names, values are
-          types. The effect is like calling alter_column for each key as column,
-          with each value as value_type
-
-        :param key_cache_size: The size of the key cache, either in a percentage of
-          total keys (0.15, for example) or in an absolute number of
-          keys (20000, for example).
-
-        :param float row_cache_size: Same as `key_cache_size`, but for the row cache
-
-        :param int gc_grace_seconds: Number of seconds before tombstones are removed
-
-        :param float read_repair_chance: probability of a read repair occuring
-
-        :param str default_validation_class: the data type for all column values in the CF.
-          The choices for this are the same as for `comparator_type`.
-
-        :param str key_validation_class: the data type for row keys in the CF. The choices
-          for this are the same as for `comparator_type`.
-
-        :param int min_compaction_threshold: Number of similarly sized SSTables that must
-          be present before a minor compaction is scheduled. Setting to 0 disables minor
-          compactions.
-
-        :param int max_compaction_threshold: Number of similarly sized SSTables that must
-          be present before a minor compaction is performed immediately. Setting to 0
-          disables minor compactions.
-
-        :param int key_cache_save_period_in_seconds: How often the key cache should
-          be saved; this helps to avoid a cold cache on restart
-
-        :param int row_cache_save_period_in_seconds: How often the row cache should
-          be saved; this helps to avoid a cold cache on restart
-
-        :param bool replicate_on_write: Whether counter operations are replicated at write-time.
-          This should almost always be True.
-
-        :param float merge_shards_chance: The probability that counter shards will be merged.
-
-        :param str row_cache_provider: The class that will be used to store the row cache.
-          Defaults to ``org.apache.cassandra.cache.ConcurrentLinkedHashCacheProvider``.
-
-        :param key_alias: A "column name" to be used for the row key. This currently only
-          matters for CQL. The default is "KEY".
-
-        :param compaction_strategy: The name of the compaction strategy. Choices include
-          TieredCompactionStrategy and LeveledCompactionStrategy.
-
-        :param compaction_strategy_options: A ``dict`` of options for the compaction
-          strategy.
-
-        :param row_cache_keys_to_save: A list of keys to be saved in the row cache. The
-          default of ``None`` allows any row to be cached.
-
-        :param compression_options: A ``dict`` of options for compression. Available
-          keys include "sstable_compression", which may be ``None`` for no compression,
-          "SnappyCompressor", "DeflateCompressor", or a custom compressor, and
-          "chunk_length_kb", which must be a power of 2.
-
-        :param str comment: A human readable description
+        ================================ =====================================
+        Name                             Description
+        ================================ =====================================
+        super                            Whether or not this column family is
+                                         a super column family
+        comparator_type                  What type the column names will be,
+                                         which affects their sort order. This
+                                         should be an instance of
+                                         :class:`~.types.CassandraType`
+        subcomparator_type               Like `comparator_type`, but if this
+                                         is a super column family, this
+                                         applies to the subcolumn names
+        column_validation_classes        A dictionary mapping column names to
+                                         column value types. The types should
+                                         be expressed as instances of
+                                         :class:`~.types.CassandraType`
+        default_validation_class         The data type for all column values
+                                         in the column family
+        key_validation_class             The data type for row keys
+        key_cache_size                   The size of the key cache, either in
+                                         a percentage of total keys (0.15, for
+                                         example) or an absolute number of
+                                         keys (2000, for example)
+        row_cache_size                   Like `key_cache_size`, but for the
+                                         row cache
+        gc_grace_seconds                 Number of seconds before tombstones
+                                         are removed during compactions
+        read_repair_chance               Probability (as a float from 0 to 1)
+                                         of read repair occurring
+        min_compaction_threshold         Number of similarly sized SSTables
+                                         that must be present for a compaction
+                                         to occur. Does not apply to
+                                         ``LeveledCompactionStrategy``.
+        max_compaction_threshold         The maximum number of SSTables that
+                                         may be included in a single
+                                         compaction. Does not apply to
+                                         ``LeveledCompactionStrategy``.
+        key_cache_save_period_in_seconds How often the key cache should be
+                                         saved. This helps to avoid high
+                                         latency reads from a cold cache
+                                         after restarts.
+        row_cache_save_period_in_seconds Same as the above, but for row cache
+        replicate_on_write               Whether counter operations are
+                                         replicated at write-time
+        merge_shards_chance              The probability that counter shards
+                                         will be merged
+        row_cache_provider               The class that will be used to store
+                                         the row cache
+        key_alias                        A "column name" to be used for the
+                                         key. This currently only matters for
+                                         CQL.
+        compaction_strategy              The name of the compaction
+                                         strategy class. Current choices are
+                                         ``SizeTieredCompactoinStrategy`` and
+                                         ``LeveledCompactionStrategy``.
+        compaction_strategy_options      A ``dict`` of options for the
+                                         compaction strategy
+        row_cache_keys_to_save           A list of keys to be saved in the row
+                                         cache; :const:`None` allows any row
+                                         to be cached
+        compression_options              A dict of options for compression.
+                                         Available keys include
+                                         ``sstable_compression``, which may be
+                                         :const:`None` for no compression,
+                                         ``SnappyCompressor``,
+                                         ``DefaultCompressor``, or a custom
+                                         compressor, and ``chunk_length_kb``,
+                                         which must be a power of 2.
+        comment                          A human readable comment describing
+                                         the column family
+        ================================ =====================================
 
         .. versionadded:: 1.4.0
             The `column_validation_classes` parameter.
