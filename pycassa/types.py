@@ -11,38 +11,34 @@ be defined as follows:
 
     >>> class IntString(pycassa.types.CassandraType):
     ...
-    ...     @staticmethod
-    ...     def pack(intval):
-    ...         return str(intval)
+    ...    @staticmethod
+    ...    def pack(intval):
+    ...        return str(intval)
     ...
-    ...     @staticmethod
-    ...     def unpack(strval):
-    ...         return int(strval)
+    ...    @staticmethod
+    ...    def unpack(strval):
+    ...        return int(strval)
 
 """
 
 import pycassa.marshal as marshal
 
 class CassandraType(object):
+    """
+    A data type that Cassandra is aware of and knows
+    how to validate and sort. All of the other classes in this
+    module are subclasses of this class.
+
+    If `reversed` is true and this is used as a column comparator,
+    the columns will be sorted in reverse order.
+
+
+    The `default` parameter only applies to use of this
+    with ColumnFamilyMap, where `default` is used if a row
+    does not contain a column corresponding to this item.
+    """
 
     def __init__(self, reversed=False, default=None):
-        """
-        A data type that Cassandra is aware of and knows
-        how to validate and sort.
-
-        If `reversed` is true and this is used as a column comparator,
-        the columns will be sorted in reverse order.
-
-        This is also used to specify fields to be persisted when
-        a class is used with :class:`~.ColumnFamilyMap`.
-
-        The `default` parameter only applies to use of this
-        with ColumnFamilyMap, where `default` is used if a row
-        does not contain a column corresponding to this item.
-
-        .. versionadded:: 1.2.0
-
-        """
         self.reversed = reversed
         self.default = default
         if not hasattr(self.__class__, 'pack'):
@@ -96,30 +92,15 @@ class CounterColumnType(CassandraType):
     pass
 
 class DoubleType(CassandraType):
-    """
-    Stores data as an 8 byte double.
-
-    .. versionadded:: 1.2.0
-
-    """
+    """ Stores data as an 8 byte double """
     pass
 
 class FloatType(CassandraType):
-    """
-    Stores data as an 4 byte float.
-
-    .. versionadded:: 1.2.0
-
-    """
+    """ Stores data as an 4 byte float """
     pass
 
 class BooleanType(CassandraType):
-    """
-    Stores data as a 1 byte boolean.
-
-    .. versionadded:: 1.2.0
-
-    """
+    """ Stores data as a 1 byte boolean """
     pass
 
 class DateType(CassandraType):
@@ -127,9 +108,6 @@ class DateType(CassandraType):
     An 8 byte timestamp. This will be returned
     as a :class:`datetime.datetime` instance by pycassa. Either
     :class:`datetime` instances or timestamps will be accepted.
-
-    .. versionadded:: 1.2.0
-
     """
     pass
 
@@ -144,8 +122,6 @@ class CompositeType(CassandraType):
     a subclass of :class:`CassandraType`.
 
     .. seealso:: :ref:`composite-types`
-
-    .. versionadded:: 1.2.0
 
     """
 

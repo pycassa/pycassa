@@ -1,7 +1,6 @@
 pycassa |release| Documentation
 ===============================
-
-**pycassa** is a Python client for
+pycassa is a Python client for
 `Apache Cassandra <http://cassandra.apache.org>`_.
 The latest release of pycassa is fully compatible with Cassandra 0.8 and
 1.0, and is compatible with the data API of Cassandra 0.7.
@@ -63,13 +62,6 @@ following command from the root directory of pycassa:
 .. code-block:: bash
 
   $ python setup.py doc
-
-Indices and tables
-------------------
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 
 .. toctree::
    :hidden:

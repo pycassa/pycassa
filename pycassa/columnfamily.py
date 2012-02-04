@@ -58,7 +58,11 @@ def gm_timestamp():
     return int(time.time() * 1e6)
 
 class ColumnFamily(object):
-    """ An abstraction of a Cassandra column family or super column family. """
+    """
+    An abstraction of a Cassandra column family or super column family.
+    Operations on this, such as :meth:`get` or :meth:`insert` will get data from or
+    insert data into the corresponding Cassandra column family.
+    """
 
     buffer_size = 1024
     """ When calling :meth:`get_range()` or :meth:`get_indexed_slices()`,
@@ -116,6 +120,9 @@ class ColumnFamily(object):
     """ Whether to retry failed counter mutations. Counter mutations are
     not idempotent so retrying could result in double counting.
     By default, this is :const:`False`.
+
+    .. versionadded:: 1.5.0
+
     """
 
     def _set_column_name_class(self, t):
@@ -249,15 +256,13 @@ class ColumnFamily(object):
 
     def __init__(self, pool, column_family, **kwargs):
         """
-        An abstraction of a Cassandra column family or super column family.
-        Operations on this, such as :meth:`get` or :meth:`insert` will get data from or
-        insert data into the corresponding Cassandra column family with
-        name `column_family`.
-
         `pool` is a :class:`~pycassa.pool.ConnectionPool` that the column
-        family will use for all operations.  A connection is drawn from the
-        pool before each operations and is returned afterwards.  Note that
-        the keyspace to be used is determined by the pool.
+        family will use for all operations. A connection is drawn from the
+        pool before each operations and is returned afterwards.
+
+        `column_family` should be the name of the column family that you
+        want to use in Cassandra. Note that the keyspace to be used is
+        determined by the pool.
         """
 
         self.pool = pool

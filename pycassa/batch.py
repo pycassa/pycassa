@@ -73,18 +73,15 @@ class Mutator(object):
 
     Queues insert/update/remove operations and executes them when the queue
     is full or `send` is called explicitly.
-
     """
 
     def __init__(self, pool, queue_size=100, write_consistency_level=None, allow_retries=True):
-        """Creates a new Mutator object.
-
+        """
         `pool` is the :class:`~pycassa.pool.ConnectionPool` that will be used
         for operations.
 
         After `queue_size` operations, :meth:`send()` will be executed
         automatically.  Use 0 to disable automatic sends.
-
         """
         self._buffer = []
         self._lock = threading.RLock()
@@ -176,16 +173,13 @@ class Mutator(object):
 class CfMutator(Mutator):
     """
     A :class:`~pycassa.batch.Mutator` that deals only with one column family.
-
     """
 
     def __init__(self, column_family, queue_size=100, write_consistency_level=None,
                  allow_retries=True):
-        """ A :class:`~pycassa.batch.Mutator` that deals only with one column family.
-
+        """
         `column_family` is the :class:`~pycassa.columnfamily.ColumnFamily`
         that all operations will be executed on.
-
         """
         wcl = write_consistency_level or column_family.write_consistency_level
         super(CfMutator, self).__init__(column_family.pool, queue_size=queue_size,

@@ -23,14 +23,14 @@ def create_instance(cls, **kwargs):
     return instance
 
 class ColumnFamilyMap(ColumnFamily):
-    """ Maps an existing class to a column family. """
+    """
+    Maps an existing class to a column family.  Class fields become columns,
+    and instances of that class can be represented as rows in standard column
+    families or super columns in super column families.
+    """
 
     def __init__(self, cls, pool, column_family, raw_columns=False, **kwargs):
         """
-        Maps an existing class to a column family.  Class fields become columns,
-        and instances of that class can be represented as rows in standard column
-        families or super columns in super column families.
-
         Instances of `cls` are returned from :meth:`get()`, :meth:`multiget()`,
         :meth:`get_range()` and :meth:`get_indexed_slices()`.
 
@@ -41,7 +41,6 @@ class ColumnFamilyMap(ColumnFamily):
 
         If `raw_columns` is ``True``, all columns will be fetched into the
         `raw_columns` field in requests.
-
         """
         ColumnFamily.__init__(self, pool, column_family, **kwargs)
 

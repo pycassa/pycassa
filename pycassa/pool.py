@@ -21,8 +21,12 @@ __all__ = ['QueuePool', 'ConnectionPool', 'PoolListener',
 
 class ConnectionWrapper(Connection):
     """
-    A wrapper class for :class:`Connection`s that adds pooling functionality.
+    Creates a wrapper for a :class:`~.pycassa.connection.Connection`
+    object, adding pooling related functionality while still allowing
+    access to the thrift API calls.
 
+    These should not be created directly, only obtained through
+    Pool's :meth:`~.ConnectionPool.get()` method.
     """
 
     # These mark the state of the connection so that we can
@@ -33,15 +37,6 @@ class ConnectionWrapper(Connection):
     _DISPOSED = 2
 
     def __init__(self, pool, max_retries, *args, **kwargs):
-        """
-        Creates a wrapper for a :class:`~.pycassa.connection.Connection`
-        object, adding pooling related functionality while still allowing
-        access to the thrift API calls.
-
-        These should not be created directly, only obtained through
-        Pool's :meth:`~.ConnectionPool.get()` method.
-
-        """
         self._pool = pool
         self._retry_count = 0
         self.max_retries = max_retries
@@ -252,8 +247,6 @@ class ConnectionPool(object):
                  prefill=True,
                  **kwargs):
         """
-        Constructs a pool that maintains a queue of open connections.
-
         All connections in the pool will be opened to `keyspace`.
 
         `server_list` is a sequence of servers in the form ``"host:port"`` that
