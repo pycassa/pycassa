@@ -218,66 +218,132 @@ For SimpleStrategy, you can specify the replication factor as follows:
 <dd><p>Creates a new column family in a given keyspace.  If a value is not
 supplied for any of optional parameters, Cassandra will use a reasonable
 default value.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
+<p><cite>keyspace</cite> should be the name of the keyspace the column family will
+be created in. <cite>name</cite> gives the name of the column family.</p>
+<p>Column family options follow:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="46%" />
+<col width="54%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>keyspace</strong> (<em>str</em>) &#8211; what keyspace the column family will be created in</li>
-<li><strong>name</strong> (<em>str</em>) &#8211; the name of the column family</li>
-<li><strong>super</strong> (<em>bool</em>) &#8211; Whether or not this column family is a super column family</li>
-<li><strong>comparator_type</strong> (<em>str</em>) &#8211; What type the column names will be, which affects
-their sort order.  By default, <tt class="xref py py-const docutils literal"><span class="pre">LONG_TYPE</span></tt>, <tt class="xref py py-const docutils literal"><span class="pre">INT_TYPE</span></tt>,
-<tt class="xref py py-const docutils literal"><span class="pre">ASCII_TYPE</span></tt>, <tt class="xref py py-const docutils literal"><span class="pre">UTF8_TYPE</span></tt>, <tt class="xref py py-const docutils literal"><span class="pre">TIME_UUID_TYPE</span></tt>,
-<tt class="xref py py-const docutils literal"><span class="pre">LEXICAL_UUID_TYPE</span></tt> and <tt class="xref py py-const docutils literal"><span class="pre">BYTES_TYPE</span></tt> are provided.  Custom
-types may be used as well by providing the class name; if the custom
-comparator class is not in <tt class="docutils literal"><span class="pre">org.apache.cassandra.db.marshal</span></tt>, the fully
-qualified class name must be given.</li>
-<li><strong>subcomparator_type</strong> (<em>str</em>) &#8211; Like <cite>comparator_type</cite>, but if the column family
-is a super column family, this applies to the type of the subcolumn names</li>
-<li><strong>column_validation_classes</strong> (<em>dict</em>) &#8211; keys are column names, values are
-types. The effect is like calling alter_column for each key as column,
-with each value as value_type</li>
-<li><strong>key_cache_size</strong> &#8211; The size of the key cache, either in a percentage of
-total keys (0.15, for example) or in an absolute number of
-keys (20000, for example).</li>
-<li><strong>row_cache_size</strong> (<em>float</em>) &#8211; Same as <cite>key_cache_size</cite>, but for the row cache</li>
-<li><strong>gc_grace_seconds</strong> (<em>int</em>) &#8211; Number of seconds before tombstones are removed</li>
-<li><strong>read_repair_chance</strong> (<em>float</em>) &#8211; probability of a read repair occuring</li>
-<li><strong>default_validation_class</strong> (<em>str</em>) &#8211; the data type for all column values in the CF.
-The choices for this are the same as for <cite>comparator_type</cite>.</li>
-<li><strong>key_validation_class</strong> (<em>str</em>) &#8211; the data type for row keys in the CF. The choices
-for this are the same as for <cite>comparator_type</cite>.</li>
-<li><strong>min_compaction_threshold</strong> (<em>int</em>) &#8211; Number of similarly sized SSTables that must
-be present before a minor compaction is scheduled. Setting to 0 disables minor
-compactions.</li>
-<li><strong>max_compaction_threshold</strong> (<em>int</em>) &#8211; Number of similarly sized SSTables that must
-be present before a minor compaction is performed immediately. Setting to 0
-disables minor compactions.</li>
-<li><strong>key_cache_save_period_in_seconds</strong> (<em>int</em>) &#8211; How often the key cache should
-be saved; this helps to avoid a cold cache on restart</li>
-<li><strong>row_cache_save_period_in_seconds</strong> (<em>int</em>) &#8211; How often the row cache should
-be saved; this helps to avoid a cold cache on restart</li>
-<li><strong>replicate_on_write</strong> (<em>bool</em>) &#8211; Whether counter operations are replicated at write-time.
-This should almost always be True.</li>
-<li><strong>merge_shards_chance</strong> (<em>float</em>) &#8211; The probability that counter shards will be merged.</li>
-<li><strong>row_cache_provider</strong> (<em>str</em>) &#8211; The class that will be used to store the row cache.
-Defaults to <tt class="docutils literal"><span class="pre">org.apache.cassandra.cache.ConcurrentLinkedHashCacheProvider</span></tt>.</li>
-<li><strong>key_alias</strong> &#8211; A &#8220;column name&#8221; to be used for the row key. This currently only
-matters for CQL. The default is &#8220;KEY&#8221;.</li>
-<li><strong>compaction_strategy</strong> &#8211; The name of the compaction strategy. Choices include
-TieredCompactionStrategy and LeveledCompactionStrategy.</li>
-<li><strong>compaction_strategy_options</strong> &#8211; A <tt class="docutils literal"><span class="pre">dict</span></tt> of options for the compaction
-strategy.</li>
-<li><strong>row_cache_keys_to_save</strong> &#8211; A list of keys to be saved in the row cache. The
-default of <tt class="xref docutils literal"><span class="pre">None</span></tt> allows any row to be cached.</li>
-<li><strong>compression_options</strong> &#8211; A <tt class="docutils literal"><span class="pre">dict</span></tt> of options for compression. Available
-keys include &#8220;sstable_compression&#8221;, which may be <tt class="xref docutils literal"><span class="pre">None</span></tt> for no compression,
-&#8220;SnappyCompressor&#8221;, &#8220;DeflateCompressor&#8221;, or a custom compressor, and
-&#8220;chunk_length_kb&#8221;, which must be a power of 2.</li>
-<li><strong>comment</strong> (<em>str</em>) &#8211; A human readable description</li>
-</ul>
-</td>
+<tr><td>super</td>
+<td>Whether or not this column family is
+a super column family</td>
+</tr>
+<tr><td>comparator_type</td>
+<td>What type the column names will be,
+which affects their sort order. This
+should be an instance of
+<a class="reference internal" href="types.html#pycassa.types.CassandraType" title="pycassa.types.CassandraType"><tt class="xref py py-class docutils literal"><span class="pre">CassandraType</span></tt></a></td>
+</tr>
+<tr><td>subcomparator_type</td>
+<td>Like <cite>comparator_type</cite>, but if this
+is a super column family, this
+applies to the subcolumn names</td>
+</tr>
+<tr><td>column_validation_classes</td>
+<td>A dictionary mapping column names to
+column value types. The types should
+be expressed as instances of
+<a class="reference internal" href="types.html#pycassa.types.CassandraType" title="pycassa.types.CassandraType"><tt class="xref py py-class docutils literal"><span class="pre">CassandraType</span></tt></a></td>
+</tr>
+<tr><td>default_validation_class</td>
+<td>The data type for all column values
+in the column family</td>
+</tr>
+<tr><td>key_validation_class</td>
+<td>The data type for row keys</td>
+</tr>
+<tr><td>key_cache_size</td>
+<td>The size of the key cache, either in
+a percentage of total keys (0.15, for
+example) or an absolute number of
+keys (2000, for example)</td>
+</tr>
+<tr><td>row_cache_size</td>
+<td>Like <cite>key_cache_size</cite>, but for the
+row cache</td>
+</tr>
+<tr><td>gc_grace_seconds</td>
+<td>Number of seconds before tombstones
+are removed during compactions</td>
+</tr>
+<tr><td>read_repair_chance</td>
+<td>Probability (as a float from 0 to 1)
+of read repair occurring</td>
+</tr>
+<tr><td>min_compaction_threshold</td>
+<td>Number of similarly sized SSTables
+that must be present for a compaction
+to occur. Does not apply to
+<tt class="docutils literal"><span class="pre">LeveledCompactionStrategy</span></tt>.</td>
+</tr>
+<tr><td>max_compaction_threshold</td>
+<td>The maximum number of SSTables that
+may be included in a single
+compaction. Does not apply to
+<tt class="docutils literal"><span class="pre">LeveledCompactionStrategy</span></tt>.</td>
+</tr>
+<tr><td>key_cache_save_period_in_seconds</td>
+<td>How often the key cache should be
+saved. This helps to avoid high
+latency reads from a cold cache
+after restarts.</td>
+</tr>
+<tr><td>row_cache_save_period_in_seconds</td>
+<td>Same as the above, but for row cache</td>
+</tr>
+<tr><td>replicate_on_write</td>
+<td>Whether counter operations are
+replicated at write-time</td>
+</tr>
+<tr><td>merge_shards_chance</td>
+<td>The probability that counter shards
+will be merged</td>
+</tr>
+<tr><td>row_cache_provider</td>
+<td>The class that will be used to store
+the row cache</td>
+</tr>
+<tr><td>key_alias</td>
+<td>A &#8220;column name&#8221; to be used for the
+key. This currently only matters for
+CQL.</td>
+</tr>
+<tr><td>compaction_strategy</td>
+<td>The name of the compaction
+strategy class. Current choices are
+<tt class="docutils literal"><span class="pre">SizeTieredCompactoinStrategy</span></tt> and
+<tt class="docutils literal"><span class="pre">LeveledCompactionStrategy</span></tt>.</td>
+</tr>
+<tr><td>compaction_strategy_options</td>
+<td>A <tt class="docutils literal"><span class="pre">dict</span></tt> of options for the
+compaction strategy</td>
+</tr>
+<tr><td>row_cache_keys_to_save</td>
+<td>A list of keys to be saved in the row
+cache; <tt class="xref py py-const xref docutils literal"><span class="pre">None</span></tt> allows any row
+to be cached</td>
+</tr>
+<tr><td>compression_options</td>
+<td>A dict of options for compression.
+Available keys include
+<tt class="docutils literal"><span class="pre">sstable_compression</span></tt>, which may be
+<tt class="xref py py-const xref docutils literal"><span class="pre">None</span></tt> for no compression,
+<tt class="docutils literal"><span class="pre">SnappyCompressor</span></tt>,
+<tt class="docutils literal"><span class="pre">DefaultCompressor</span></tt>, or a custom
+compressor, and <tt class="docutils literal"><span class="pre">chunk_length_kb</span></tt>,
+which must be a power of 2.</td>
+</tr>
+<tr><td>comment</td>
+<td>A human readable comment describing
+the column family</td>
 </tr>
 </tbody>
 </table>
@@ -354,10 +420,10 @@ for the index.</p>
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="columnfamilymap.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.columnfamilymap</span></tt> &#8211; Maps Classes to Column Families</a></p>
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">pycassa.columnfamilymap</span></tt> &#8211; Maps Classes to Column Families</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="index.html"
-                        title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.index</span></tt> &#8211; Secondary Index Tools</a></p>
+                        title="next chapter"><tt class="docutils literal"><span class="pre">pycassa.index</span></tt> &#8211; Secondary Index Tools</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../sources/api/pycassa/system_manager.txt"
