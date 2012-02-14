@@ -176,6 +176,9 @@ class ConnectionWrapper(Connection):
                 cf_def.column_metadata = new_metadata
         return cf_defs
 
+    def __str__(self):
+        return "<ConnectionWrapper %s@%s>" % (self.keyspace, self.server)
+
 retryable = ('get', 'get_slice', 'multiget_slice', 'get_count', 'multiget_count',
              'get_range_slices', 'get_indexed_slices', 'batch_mutate', 'add',
              'insert', 'remove', 'remove_counter', 'truncate', 'describe_keyspace')
