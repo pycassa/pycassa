@@ -320,7 +320,6 @@ class ConnectionPool(object):
         self._on_recycle = []
         self._on_failure = []
         self._on_server_list = []
-        self._on_pool_recreate = []
         self._on_pool_dispose = []
         self._on_pool_max = []
 
@@ -586,8 +585,8 @@ class ConnectionPool(object):
             methods=('connection_created', 'connection_checked_out',
                      'connection_checked_in', 'connection_disposed',
                      'connection_recycled', 'connection_failed',
-                     'obtained_server_list', 'pool_recreated',
-                     'pool_disposed', 'pool_at_max'))
+                     'obtained_server_list', 'pool_disposed',
+                     'pool_at_max'))
 
         self.listeners.append(listener)
         if hasattr(listener, 'connection_created'):
@@ -604,19 +603,10 @@ class ConnectionPool(object):
             self._on_failure.append(listener)
         if hasattr(listener, 'obtained_server_list'):
             self._on_server_list.append(listener)
-        if hasattr(listener, 'pool_recreated'):
-            self._on_pool_recreate.append(listener)
         if hasattr(listener, 'pool_disposed'):
             self._on_pool_dispose.append(listener)
         if hasattr(listener, 'pool_at_max'):
             self._on_pool_max.append(listener)
-
-    def _notify_on_pool_recreate(self):
-        if self._on_pool_recreate:
-            dic = {'pool_id': self.logging_name,
-                   'level': 'info'}
-            for l in self._on_pool_recreate:
-                l.pool_recreated(dic)
 
     def _notify_on_pool_dispose(self):
         if self._on_pool_dispose:
@@ -802,12 +792,6 @@ class PoolListener(object):
         pool will choose from.
 
         Fields: `pool_id`, `level`, and `server_list`.
-        """
-
-    def pool_recreated(self, dic):
-        """Called when a pool is recreated.
-
-        Fields: `pool_id`, and `level`.
         """
 
     def pool_disposed(self, dic):
