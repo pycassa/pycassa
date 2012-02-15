@@ -605,7 +605,11 @@ class ColumnFamily(object):
         last_key = clause.start_key
         while True:
             if row_count is not None:
-                buffer_size = min(row_count - count + 1, buffer_size)
+                if i == 0 and row_count <= buffer_size:
+                    # We don't need to chunk, grab exactly the number of rows
+                    buffer_size = row_count
+                else:
+                    buffer_size = min(row_count - count + 1, buffer_size)
             clause.count = buffer_size
             clause.start_key = last_key
             key_slices = self.pool.execute('get_indexed_slices', cp, clause, sp, cl)
@@ -813,7 +817,12 @@ class ColumnFamily(object):
             buffer_size = self.buffer_size
         while True:
             if row_count is not None:
-                buffer_size = min(row_count - count + 1, buffer_size)
+                if i == 0 and row_count <= buffer_size:
+                    # We don't need to chunk, grab exactly the number of rows
+                    buffer_size = row_count
+                else:
+                    buffer_size = min(row_count - count + 1, buffer_size)
+
             key_range = KeyRange(start_key=last_key, end_key=finish, count=buffer_size)
             key_slices = self.pool.execute('get_range_slices', cp, sp, key_range, cl)
             # This may happen if nothing was ever inserted
