@@ -95,6 +95,7 @@ class ConnectionWrapper(Connection):
         with its contents.
 
         """
+        self.server = new_conn_wrapper.server
         self.transport = new_conn_wrapper.transport
         self._iprot = new_conn_wrapper._iprot
         self._oprot = new_conn_wrapper._oprot
