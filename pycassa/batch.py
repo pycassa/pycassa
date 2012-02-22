@@ -182,19 +182,14 @@ class CfMutator(Mutator):
         that all operations will be executed on.
         """
         wcl = write_consistency_level or column_family.write_consistency_level
-        super(CfMutator, self).__init__(column_family.pool, queue_size=queue_size,
-                                        allow_retries=allow_retries,
-                                        write_consistency_level=wcl)
+        Mutator.__init__(self, column_family.pool, queue_size, wcl, allow_retries)
         self._column_family = column_family
 
     def insert(self, key, cols, timestamp=None, ttl=None):
         """ Adds a single row insert to the batch. """
-        return super(CfMutator, self).insert(self._column_family, key, cols,
-                                             timestamp=timestamp, ttl=ttl)
+        return Mutator.insert(self, self._column_family, key, cols, timestamp, ttl)
 
     def remove(self, key, columns=None, super_column=None, timestamp=None):
         """ Adds a single row remove to the batch. """
-        return super(CfMutator, self).remove(self._column_family, key,
-                                             columns=columns,
-                                             super_column=super_column,
-                                             timestamp=timestamp)
+        return Mutator.remove(self, self._column_family, key,
+                              columns, super_column, timestamp)

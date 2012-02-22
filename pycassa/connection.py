@@ -35,7 +35,7 @@ class Connection(Cassandra.Client):
         else:
             self.transport = TTransport.TBufferedTransport(socket)
         protocol = TBinaryProtocol.TBinaryProtocolAccelerated(self.transport)
-        super(Connection, self).__init__(protocol)
+        Cassandra.Client.__init__(self, protocol)
         self.transport.open()
 
         if api_version is None:
@@ -61,7 +61,7 @@ class Connection(Cassandra.Client):
 
     def set_keyspace(self, keyspace):
         if keyspace != self.keyspace:
-            super(Connection, self).set_keyspace(keyspace)
+            Cassandra.Client.set_keyspace(self, keyspace)
             self.keyspace = keyspace
 
     def close(self):

@@ -44,7 +44,7 @@ class ConnectionWrapper(Connection):
         self.starttime = time.time()
         self.operation_count = 0
         self._state = ConnectionWrapper._CHECKED_OUT
-        super(ConnectionWrapper, self).__init__(*args, **kwargs)
+        Connection.__init__(self, *args, **kwargs)
         self._pool._notify_on_connect(self)
 
         # For testing purposes only
