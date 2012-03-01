@@ -1,3 +1,29 @@
+Changes in Version 1.5.0
+
+  The main change to be aware of for this release is the new no-retry behavior
+  for counter operations. If you have been maintaining a separate connection
+  pool with retries disabled for usage with counters, you may discontinue that
+  practice after upgrading.
+
+  Features
+
+    By default, counter operations will not be retried automatically. This
+    makes it easier to use a single connection pool without worrying about
+    overcounting.
+
+  Bug Fixes
+
+    * Don’t remove entire row when an empty list is supplied for the columns
+      parameter of remove() or the batch remove methods.
+    * Add python-setuptools to debian build dependencies
+    * Batch remove() was not removing subcolumns when the specified supercolumn
+      was 0 or other “falsey” values
+    * Don’t request an extra row when reading fewer than buffer_size rows with
+      get_range() or get_indexed_slices().
+    * Remove pool_type from logs, which showed up as None in recent versions
+    * Logs were erroneously showing the same server for retries of failed
+      operations even when the actual server being queried had changed
+
 Changes in Version 1.4.0
 
   This release is primarily a bugfix release with a couple
