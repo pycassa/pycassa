@@ -982,6 +982,31 @@ class TestTypeErrors(unittest.TestCase):
         assert_raises(TypeError, self.cf.insert, args=('key', {123: 123}))
         self.cf.remove('key')
 
+class TestDateTypes(unittest.TestCase):
+
+    def _compare_dates(self, d1, d2):
+        self.assertEquals(d1.timetuple(), d2.timetuple())
+        self.assertEquals(int(d1.microsecond/1e3), int(d2.microsecond/1e3))
+
+    def test_compatibility(self):
+        self.cf = ColumnFamily(pool, 'Standard1')
+        self.cf.column_validators['date'] = OldPycassaDateType()
+
+        d = datetime.now()
+        self.cf.insert('key1', {'date': d})
+        self._compare_dates(self.cf.get('key1')['date'], d)
+
+        self.cf.column_validators['date'] = IntermediateDateType()
+        self._compare_dates(self.cf.get('key1')['date'], d)
+        self.cf.insert('key1', {'date': d})
+        self._compare_dates(self.cf.get('key1')['date'], d)
+
+        self.cf.column_validators['date'] = DateType()
+        self._compare_dates(self.cf.get('key1')['date'], d)
+        self.cf.insert('key1', {'date': d})
+        self._compare_dates(self.cf.get('key1')['date'], d)
+        self.cf.remove('key1')
+
 class TestCustomTypes(unittest.TestCase):
 
     class IntString(types.CassandraType):

@@ -21,6 +21,10 @@ be defined as follows:
 
 """
 
+import time
+import struct
+from datetime import datetime
+
 import pycassa.marshal as marshal
 
 class CassandraType(object):
@@ -110,6 +114,93 @@ class DateType(CassandraType):
     :class:`datetime` instances or timestamps will be accepted.
     """
     pass
+
+def _to_timestamp(v, use_micros=False):
+    # Expects Value to be either date or datetime
+    scale = 1e6 if use_micros else 1e3
+    micro_scale = 1.0 if use_micros else 1e3
+    try:
+        converted = time.mktime(v.timetuple())
+        converted = (converted * scale) + \
+                    (getattr(v, 'microsecond', 0) / micro_scale)
+    except AttributeError:
+        # Ints and floats are valid timestamps too
+        if type(v) not in marshal._number_types:
+            raise TypeError('DateType arguments must be a datetime or timestamp')
+
+        converted = v * scale
+    return long(converted)
+
+class OldPycassaDateType(CassandraType):
+    """
+    This class can only read and write the DateType format
+    used by pycassa versions 1.2.0 to 1.5.0.
+
+    This formats store the number of microseconds since the
+    unix epoch, rather than the number of milliseconds, which
+    is what cassandra-cli and other clients supporting DateType
+    use.
+    """
+
+    @staticmethod
+    def pack(v, *args, **kwargs):
+        ts = _to_timestamp(v, use_micros=True)
+        print "packing (old): %10.10f" % ts
+        if marshal._have_struct:
+            return marshal._long_packer.pack(ts)
+        else:
+            return struct.pack('>q', ts)
+
+    @staticmethod
+    def unpack(v):
+        if marshal._have_struct:
+            ts = marshal._long_packer.unpack(v)[0] / 1e6
+        else:
+            ts = struct.unpack('>q', v)[0] / 1e6
+        print "unpacking (old): %10.10f" % ts
+        return datetime.fromtimestamp(ts)
+
+class IntermediateDateType(CassandraType):
+    """
+    This class is capable of reading either the DateType
+    format by pycassa versions 1.2.0 to 1.5.0 or the correct
+    format used in pycassa 1.5.1+.  It will only write the
+    new, correct format.
+
+    This type is a good choice when you are using DateType
+    as the validator for non-indexed column values and you are
+    in the process of converting from thee old format to
+    the new format.
+
+    It almost certainly *should not be used* for row keys,
+    column names (if you care about the sorting), or column
+    values that have a secondary index on them.
+    """
+
+    @staticmethod
+    def pack(v, *args, **kwargs):
+        ts = _to_timestamp(v, use_micros=False)
+        print "packing (intermediate): %10.10f" % ts
+        if marshal._have_struct:
+            return marshal._long_packer.pack(ts)
+        else:
+            return struct.pack('>q', ts)
+
+    @staticmethod
+    def unpack(v):
+        if marshal._have_struct:
+            raw_ts = marshal._long_packer.unpack(v)[0] / 1e3
+        else:
+            raw_ts = struct.unpack('>q', v)[0] / 1e3
+
+        print "raw: %10.10f" % raw_ts
+        try:
+            return datetime.fromtimestamp(raw_ts)
+        except ValueError:
+            # convert from bad microsecond format to millis
+            corrected_ts = raw_ts / 1e3
+            print "corrected: %10.10f" % corrected_ts
+            return datetime.fromtimestamp(corrected_ts)
 
 class CompositeType(CassandraType):
     """

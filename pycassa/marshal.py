@@ -65,14 +65,14 @@ def _to_timestamp(v):
     # Expects Value to be either date or datetime
     try:
         converted = time.mktime(v.timetuple())
-        converted = converted * 1e6 + getattr(v, 'microsecond', 0)
+        converted = converted * 1e3 + getattr(v, 'microsecond', 0)/1e3
     except AttributeError:
         # Ints and floats are valid timestamps too
         if type(v) not in _number_types:
             raise TypeError('DateType arguments must be a datetime or timestamp')
 
-        converted = v * 1e6
-    return converted
+        converted = v * 1e3
+    return long(converted)
 
 def get_composite_packer(typestr):
     packers = map(packer_for, _get_inner_types(typestr))
@@ -242,9 +242,11 @@ def unpacker_for(typestr):
 
     elif data_type == 'DateType':
         if _have_struct:
-            return lambda v: datetime.fromtimestamp(_long_packer.unpack(v)[0] / 1e6)
+            return lambda v: datetime.fromtimestamp(
+                    _long_packer.unpack(v)[0] / 1e3)
         else:
-            return lambda v: datetime.fromtimestamp(struct.unpack('>q', v)[0] / 1e6)
+            return lambda v: datetime.fromtimestamp(
+                    struct.unpack('>q', v)[0] / 1e3)
 
     elif data_type == 'BooleanType':
         if _have_struct:
