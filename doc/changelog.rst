@@ -1,6 +1,82 @@
 Changelog
 =========
 
+Changes in Version 1.5.1
+------------------------
+This release only affects those of you using DateType data,
+which has been supported since pycassa 1.2.0.  If you are
+using DateType, it is **very** important that you read this
+closely.
+
+DateType data is internally stored as an 8 byte integer timestamp.
+Since version 1.2.0 of pycassa, the timestamp stored has counted
+the number of *microseconds* since the unix epoch.  The actual
+format that Cassandra standardizes on is *milliseconds* since the
+epoch.
+
+If you are only using pycassa, you probably won't have noticed any
+problems with this. However, if you try to use cassandra-cli,
+sstable2json, Hector, or any other client that supports DateType,
+DateType data written by pycassa will appear to be far in the future.
+Similarly, DateType data written by other clients will appear to
+be in the past when loaded by pycassa.
+
+This release changes the default DateType behavior to comply with
+the standard, millisecond-based format.  **If you use DateType,
+and you upgrade to this release without making any modifications,
+you will have problems.**  Unfortunately, this is a bit of a tricky
+situation to resolve, but the appropriate actions to take are detailed
+below.
+
+To temporarily continue using the old behavior, a new class
+has been created: :class:`pycassa.types.OldPycassaDateType`.
+This will read and write DateType data exactly the same as
+pycassa 1.2.0 to 1.5.0 did.
+
+If you want to convert your data to the new format, the other
+new class, :class:`pycassa.types.IntermediateDateType`, may be useful.
+It can read either the new or old format correctly (unless you have
+used dates close to 1970 with the new format) and will write only
+the new format. The best case for using this is if you have DateType
+validated columns that don't have a secondary index on them.
+
+To tell pycassa to use :class:`~.types.OldPycassaDateType` or
+:class:`~.types.IntermediateDateType`, use the :class:`~.ColumnFamily`
+attributes that control types: :attr:`~.ColumnFamily.column_name_class`,
+:attr:`~.ColumnFamily.key_validation_class`,
+:attr:`~.ColumnFamily.column_validators`, and so on.  Here's an example:
+
+.. code-block:: python
+
+    from pycassa.types import OldPycassaDateType, IntermediateDateType
+    from pycassa.column_family import ColumnFamily
+    from pycassa.pool import ConnectionPool
+
+    pool = ConnectionPool('MyKeyspace', ['192.168.1.1'])
+
+    # Our tweet timeline has a comparator_type of DateType
+    tweet_timeline_cf = ColumnFamily(pool, 'tweets')
+    tweet_timeline_cf.column_name_class = OldPycassaDateType()
+
+    # Our tweet timeline has a comparator_type of DateType
+    users_cf = ColumnFamily(pool, 'users')
+    users_cf.column_validators['join_date'] = IntermediateDateType()
+
+If you're using DateType for the `key_validation_class`, column names,
+column values with a secondary index on them, or are using the DateType
+validated column as a non-indexed part of an index clause with
+`get_indexed_slices()` (eg. "where state = 'TX' and join_date > 2012"),
+you need to be more careful about the conversion process, and
+:class:`~.types.IntermediateDateType` probably isn't a good choice.
+
+In most of cases, if you want to switch to the new date format,
+a manual migration script to convert all existing DateType
+data to the new format will be needed. In particular, if you
+convert keys, column names, or indexed columns on a live data set,
+be very careful how you go about it. If you need any assistance or
+suggestions at all with migrating your data, please feel free to
+send an email to tyler@datastax.com; I would be glad to help.
+
 Changes in Version 1.5.0
 ------------------------
 The main change to be aware of for this release is the
