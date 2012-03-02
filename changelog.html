@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Changelog &mdash; pycassa v1.5.0 documentation</title>
+    <title>Changelog &mdash; pycassa v1.5.1 documentation</title>
     <link rel="stylesheet" href="static/default.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.5.0',
+        VERSION:     '1.5.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
     <link rel="shortcut icon" href="static/favicon.ico"/>
-    <link rel="top" title="pycassa v1.5.0 documentation" href="index.html" />
+    <link rel="top" title="pycassa v1.5.1 documentation" href="index.html" />
     <link rel="next" title="Assorted Cassandra and pycassa Functionality" href="assorted/index.html" />
     <link rel="prev" title="pycassa.logging.pycassa_logger – Pycassa Logging" href="api/pycassa/logging/pycassa_logger.html" /> 
   </head>
@@ -43,7 +43,7 @@
         <li class="right" >
           <a href="api/pycassa/logging/pycassa_logger.html" title="pycassa.logging.pycassa_logger – Pycassa Logging"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">pycassa v1.5.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v1.5.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -54,6 +54,73 @@
             
   <div class="section" id="changelog">
 <h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="changes-in-version-1-5-1">
+<h2>Changes in Version 1.5.1<a class="headerlink" href="#changes-in-version-1-5-1" title="Permalink to this headline">¶</a></h2>
+<p>This release only affects those of you using DateType data,
+which has been supported since pycassa 1.2.0.  If you are
+using DateType, it is <strong>very</strong> important that you read this
+closely.</p>
+<p>DateType data is internally stored as an 8 byte integer timestamp.
+Since version 1.2.0 of pycassa, the timestamp stored has counted
+the number of <em>microseconds</em> since the unix epoch.  The actual
+format that Cassandra standardizes on is <em>milliseconds</em> since the
+epoch.</p>
+<p>If you are only using pycassa, you probably won&#8217;t have noticed any
+problems with this. However, if you try to use cassandra-cli,
+sstable2json, Hector, or any other client that supports DateType,
+DateType data written by pycassa will appear to be far in the future.
+Similarly, DateType data written by other clients will appear to
+be in the past when loaded by pycassa.</p>
+<p>This release changes the default DateType behavior to comply with
+the standard, millisecond-based format.  <strong>If you use DateType,
+and you upgrade to this release without making any modifications,
+you will have problems.</strong>  Unfortunately, this is a bit of a tricky
+situation to resolve, but the appropriate actions to take are detailed
+below.</p>
+<p>To temporarily continue using the old behavior, a new class
+has been created: <a class="reference internal" href="api/pycassa/types.html#pycassa.types.OldPycassaDateType" title="pycassa.types.OldPycassaDateType"><tt class="xref py py-class docutils literal"><span class="pre">pycassa.types.OldPycassaDateType</span></tt></a>.
+This will read and write DateType data exactly the same as
+pycassa 1.2.0 to 1.5.0 did.</p>
+<p>If you want to convert your data to the new format, the other
+new class, <a class="reference internal" href="api/pycassa/types.html#pycassa.types.IntermediateDateType" title="pycassa.types.IntermediateDateType"><tt class="xref py py-class docutils literal"><span class="pre">pycassa.types.IntermediateDateType</span></tt></a>, may be useful.
+It can read either the new or old format correctly (unless you have
+used dates close to 1970 with the new format) and will write only
+the new format. The best case for using this is if you have DateType
+validated columns that don&#8217;t have a secondary index on them.</p>
+<p>To tell pycassa to use <a class="reference internal" href="api/pycassa/types.html#pycassa.types.OldPycassaDateType" title="pycassa.types.OldPycassaDateType"><tt class="xref py py-class docutils literal"><span class="pre">OldPycassaDateType</span></tt></a> or
+<a class="reference internal" href="api/pycassa/types.html#pycassa.types.IntermediateDateType" title="pycassa.types.IntermediateDateType"><tt class="xref py py-class docutils literal"><span class="pre">IntermediateDateType</span></tt></a>, use the <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>
+attributes that control types: <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.column_name_class" title="pycassa.columnfamily.ColumnFamily.column_name_class"><tt class="xref py py-attr docutils literal"><span class="pre">column_name_class</span></tt></a>,
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.key_validation_class" title="pycassa.columnfamily.ColumnFamily.key_validation_class"><tt class="xref py py-attr docutils literal"><span class="pre">key_validation_class</span></tt></a>,
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.column_validators" title="pycassa.columnfamily.ColumnFamily.column_validators"><tt class="xref py py-attr docutils literal"><span class="pre">column_validators</span></tt></a>, and so on.  Here&#8217;s an example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pycassa.types</span> <span class="kn">import</span> <span class="n">OldPycassaDateType</span><span class="p">,</span> <span class="n">IntermediateDateType</span>
+<span class="kn">from</span> <span class="nn">pycassa.column_family</span> <span class="kn">import</span> <span class="n">ColumnFamily</span>
+<span class="kn">from</span> <span class="nn">pycassa.pool</span> <span class="kn">import</span> <span class="n">ConnectionPool</span>
+
+<span class="n">pool</span> <span class="o">=</span> <span class="n">ConnectionPool</span><span class="p">(</span><span class="s">&#39;MyKeyspace&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;192.168.1.1&#39;</span><span class="p">])</span>
+
+<span class="c"># Our tweet timeline has a comparator_type of DateType</span>
+<span class="n">tweet_timeline_cf</span> <span class="o">=</span> <span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;tweets&#39;</span><span class="p">)</span>
+<span class="n">tweet_timeline_cf</span><span class="o">.</span><span class="n">column_name_class</span> <span class="o">=</span> <span class="n">OldPycassaDateType</span><span class="p">()</span>
+
+<span class="c"># Our tweet timeline has a comparator_type of DateType</span>
+<span class="n">users_cf</span> <span class="o">=</span> <span class="n">ColumnFamily</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="s">&#39;users&#39;</span><span class="p">)</span>
+<span class="n">users_cf</span><span class="o">.</span><span class="n">column_validators</span><span class="p">[</span><span class="s">&#39;join_date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">IntermediateDateType</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>If you&#8217;re using DateType for the <cite>key_validation_class</cite>, column names,
+column values with a secondary index on them, or are using the DateType
+validated column as a non-indexed part of an index clause with
+<cite>get_indexed_slices()</cite> (eg. &#8220;where state = &#8216;TX&#8217; and join_date &gt; 2012&#8221;),
+you need to be more careful about the conversion process, and
+<a class="reference internal" href="api/pycassa/types.html#pycassa.types.IntermediateDateType" title="pycassa.types.IntermediateDateType"><tt class="xref py py-class docutils literal"><span class="pre">IntermediateDateType</span></tt></a> probably isn&#8217;t a good choice.</p>
+<p>In most of cases, if you want to switch to the new date format,
+a manual migration script to convert all existing DateType
+data to the new format will be needed. In particular, if you
+convert keys, column names, or indexed columns on a live data set,
+be very careful how you go about it. If you need any assistance or
+suggestions at all with migrating your data, please feel free to
+send an email to <a class="reference external" href="mailto:tyler&#37;&#52;&#48;datastax&#46;com">tyler<span>&#64;</span>datastax<span>&#46;</span>com</a>; I would be glad to help.</p>
+</div>
 <div class="section" id="changes-in-version-1-5-0">
 <h2>Changes in Version 1.5.0<a class="headerlink" href="#changes-in-version-1-5-0" title="Permalink to this headline">¶</a></h2>
 <p>The main change to be aware of for this release is the
@@ -642,6 +709,7 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Changelog</a><ul>
+<li><a class="reference internal" href="#changes-in-version-1-5-1">Changes in Version 1.5.1</a></li>
 <li><a class="reference internal" href="#changes-in-version-1-5-0">Changes in Version 1.5.0</a><ul>
 <li><a class="reference internal" href="#features">Features</a></li>
 <li><a class="reference internal" href="#bug-fixes">Bug Fixes</a></li>
@@ -720,7 +788,7 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="api/pycassa/logging/pycassa_logger.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.logging.pycassa_logger</span></tt> &#8211; Pycassa Logging</a></p>
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">pycassa.logging.pycassa_logger</span></tt> &#8211; Pycassa Logging</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="assorted/index.html"
                         title="next chapter">Assorted Cassandra and pycassa Functionality</a></p>
@@ -761,7 +829,7 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
         <li class="right" >
           <a href="api/pycassa/logging/pycassa_logger.html" title="pycassa.logging.pycassa_logger – Pycassa Logging"
              >previous</a> |</li>
-        <li><a href="index.html">pycassa v1.5.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v1.5.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

@@ -14,4 +14,6 @@
 .. autoclass:: pycassa.types.DateType()
 .. autoclass:: pycassa.types.TimeUUIDType()
 .. autoclass:: pycassa.types.LexicalUUIDType()
+.. autoclass:: pycassa.types.OldPycassaDateType()
+.. autoclass:: pycassa.types.IntermediateDateType()
 .. autoclass:: pycassa.types.CompositeType(*components)
