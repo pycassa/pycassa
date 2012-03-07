@@ -117,8 +117,13 @@ class DateType(CassandraType):
 
 def _to_timestamp(v, use_micros=False):
     # Expects Value to be either date or datetime
-    scale = 1e6 if use_micros else 1e3
-    micro_scale = 1.0 if use_micros else 1e3
+    if use_micros:
+        scale = 1e6
+        micro_scale = 1.0
+    else:
+        scale = 1e3
+        micro_scale = 1e3
+
     try:
         converted = time.mktime(v.timetuple())
         converted = (converted * scale) + \
