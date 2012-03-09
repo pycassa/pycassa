@@ -383,6 +383,8 @@ class ConnectionPool(object):
     def _create_connection(self):
         """Creates a ConnectionWrapper, which opens a
         pycassa.connection.Connection."""
+        if not self.server_list:
+            raise AllServersUnavailable('Cannot connect to any servers as server list is empty!')
         failure_count = 0
         while failure_count < 2 * len(self.server_list):
             try:
