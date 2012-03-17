@@ -4,7 +4,7 @@ import time
 
 from nose.tools import assert_raises, assert_equal
 from pycassa import ColumnFamily, ConnectionPool, PoolListener, InvalidRequestError,\
-                    NoConnectionAvailable, MaximumRetryException
+                    NoConnectionAvailable, MaximumRetryException, AllServersUnavailable
 
 _credentials = {'username':'jsmith', 'password':'havebadpass'}
 
@@ -24,6 +24,9 @@ class PoolingCase(unittest.TestCase):
         cf = ColumnFamily(pool, 'Standard1')
         cf.insert('key1', {'col':'val'})
         pool.dispose()
+
+    def test_empty_list(self):
+        assert_raises(AllServersUnavailable, ConnectionPool, 'PycassaTestKeyspace', server_list=[])
 
     def test_server_list_func(self):
         listener = _TestListener()
