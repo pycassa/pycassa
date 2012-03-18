@@ -1,12 +1,14 @@
-from pycassa import index, ColumnFamily, ConsistencyLevel, ConnectionPool,\
+from pycassa import index, ColumnFamily, ConnectionPool,\
                     NotFoundException, SystemManager
-from pycassa.cassandra.constants import *
+from pycassa.cassandra.constants import CASSANDRA_07
 from pycassa.util import OrderedDict
 
 from nose.tools import assert_raises, assert_equal, assert_true
-from nose.plugins.skip import *
+from nose.plugins.skip import SkipTest
 
 import unittest
+
+pool = cf = scf = indexed_cf = counter_cf = counter_scf = sys_man = have_counters = None
 
 def setup_module():
     global pool, cf, scf, indexed_cf, counter_cf, counter_scf, sys_man, have_counters
@@ -362,6 +364,40 @@ class TestColumnFamily(unittest.TestCase):
         cf.insert(key, {'1': 'val1'})
         assert isinstance(cf.get(key), TestDict)
 
+    def test_xget(self):
+        key = "test_xget_batching"
+        cf.insert(key, dict((str(i), str(i)) for i in range(100, 300)))
+
+        combos = [(100, 10),
+                  (100, 1000),
+                  (100, 199),
+                  (100, 200),
+                  (100, 201),
+                  (100, 7),
+                  (100, 2)]
+
+        for count, bufsz in combos:
+            res = list(cf.xget(key, column_count=count, buffer_size=bufsz))
+            assert_equal(len(res), count)
+            assert_equal(res, [(str(i), str(i)) for i in range(100, 200)])
+
+        combos = [(10000, 2),
+                  (10000, 7),
+                  (10000, 199),
+                  (10000, 200),
+                  (10000, 201),
+                  (10000, 10000)]
+
+        for count, bufsz in combos:
+            res = list(cf.xget(key, column_count=count, buffer_size=bufsz))
+            assert_equal(len(res), 200)
+            assert_equal(res, [(str(i), str(i)) for i in range(100, 300)])
+
+        for bufsz in [2, 77, 199, 200, 201, 10000]:
+            res = list(cf.xget(key, column_count=None, buffer_size=bufsz))
+            assert_equal(len(res), 200)
+            assert_equal(res, [(str(i), str(i)) for i in range(100, 300)])
+
 class TestSuperColumnFamily(unittest.TestCase):
 
     def tearDown(self):
@@ -584,4 +620,3 @@ class TestSuperColumnFamily(unittest.TestCase):
 
         counter_scf.remove_counter(key, 'col', super_column='scol')
         assert_raises(NotFoundException, scf.get, key)
-

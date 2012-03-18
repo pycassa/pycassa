@@ -71,6 +71,8 @@ class ColumnFamily(object):
     overallocate memory and fail. This is the size of that buffer in number
     of rows. The default is 1024. """
 
+    column_buffer_size = 1024
+
     read_consistency_level = ConsistencyLevel.ONE
     """ The default consistency level for every read operation, such as
     :meth:`get` or :meth:`get_range`. This may be overridden per-operation. This should be
@@ -492,6 +494,58 @@ class ColumnFamily(object):
                               subcs.iteritems())
                 mut_list.append(Mutation(self._make_cosc(_pack_name(super_col, True), subcols)))
             return mut_list
+
+    def xget(self, key, column_start="", column_finish="", column_reversed=False,
+             column_count=None, include_timestamp=False, read_consistency_level=None,
+             buffer_size=None):
+
+        packed_key = self._pack_key(key)
+        cp = self._column_parent(None)
+        rcl = read_consistency_level or self.read_consistency_level
+
+        if buffer_size is None:
+            buffer_size = self.column_buffer_size
+
+        count = i = 0
+        last_name = self._pack_name(column_start) if column_start != "" else ""
+        finish = self._pack_name(column_finish) if column_finish != "" else ""
+        while True:
+            if column_count is not None:
+                if i == 0 and column_count <= buffer_size:
+                    buffer_size = column_count
+                else:
+                    buffer_size = min(column_count - count + 1, buffer_size)
+
+            sp = self._slice_predicate(None, last_name, finish,
+                                       column_reversed, buffer_size, None)
+            list_cosc = self.pool.execute('get_slice', packed_key, cp, sp, rcl)
+
+            if not list_cosc:
+                return
+
+            for j, cosc in enumerate(list_cosc):
+                if j == 0 and i != 0:
+                    continue
+
+                if self.super:
+                    scol = cosc.super_column
+                    yield (self._unpack_name(scol.name, True), self._scol_to_dict(scol, include_timestamp))
+                else:
+                    col = cosc.column
+                    yield (self._unpack_name(col.name, False), self._col_to_dict(col, include_timestamp))
+
+                count += 1
+                if column_count is not None and count >= column_count:
+                    return
+
+            if len(list_cosc) != buffer_size:
+                return
+
+            if self.super:
+                last_name = list_cosc[-1].super_column.name
+            else:
+                last_name = list_cosc[-1].column.name
+            i += 1
 
     def get(self, key, columns=None, column_start="", column_finish="",
             column_reversed=False, column_count=100, include_timestamp=False,
