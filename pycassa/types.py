@@ -27,6 +27,12 @@ from datetime import datetime
 
 import pycassa.marshal as marshal
 
+__all__ = ('CassandraType', 'BytesType', 'LongType', 'IntegerType',
+           'AsciiType', 'UTF8Type', 'TimeUUIDType', 'LexicalUUIDType',
+           'CounterColumnType', 'DoubleType', 'FloatType',
+           'BooleanType', 'DateType', 'OldPycassaDateType',
+           'IntermediateDateType', 'CompositeType')
+
 class CassandraType(object):
     """
     A data type that Cassandra is aware of and knows
