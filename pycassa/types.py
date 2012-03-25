@@ -150,7 +150,6 @@ class OldPycassaDateType(CassandraType):
     @staticmethod
     def pack(v, *args, **kwargs):
         ts = _to_timestamp(v, use_micros=True)
-        print "packing (old): %10.10f" % ts
         if marshal._have_struct:
             return marshal._long_packer.pack(ts)
         else:
@@ -162,7 +161,6 @@ class OldPycassaDateType(CassandraType):
             ts = marshal._long_packer.unpack(v)[0] / 1e6
         else:
             ts = struct.unpack('>q', v)[0] / 1e6
-        print "unpacking (old): %10.10f" % ts
         return datetime.fromtimestamp(ts)
 
 class IntermediateDateType(CassandraType):
@@ -185,7 +183,6 @@ class IntermediateDateType(CassandraType):
     @staticmethod
     def pack(v, *args, **kwargs):
         ts = _to_timestamp(v, use_micros=False)
-        print "packing (intermediate): %10.10f" % ts
         if marshal._have_struct:
             return marshal._long_packer.pack(ts)
         else:
@@ -198,13 +195,11 @@ class IntermediateDateType(CassandraType):
         else:
             raw_ts = struct.unpack('>q', v)[0] / 1e3
 
-        print "raw: %10.10f" % raw_ts
         try:
             return datetime.fromtimestamp(raw_ts)
         except ValueError:
             # convert from bad microsecond format to millis
             corrected_ts = raw_ts / 1e3
-            print "corrected: %10.10f" % corrected_ts
             return datetime.fromtimestamp(corrected_ts)
 
 class CompositeType(CassandraType):
