@@ -221,3 +221,11 @@ class CompositeType(CassandraType):
 
     def __str__(self):
         return "CompositeType(" + ", ".join(map(str, self.components)) + ")"
+
+    @property
+    def pack(self):
+        return marshal.get_composite_packer(composite_type=self)
+
+    @property
+    def unpack(self):
+        return marshal.get_composite_unpacker(composite_type=self)
