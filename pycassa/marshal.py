@@ -74,8 +74,13 @@ def _to_timestamp(v):
         converted = v * 1e3
     return long(converted)
 
-def get_composite_packer(typestr):
-    packers = map(packer_for, _get_inner_types(typestr))
+def get_composite_packer(typestr=None, composite_type=None):
+    assert (typestr or composite_type), "Must provide typestr or " + \
+            "CompositeType instance"
+    if typestr:
+        packers = map(packer_for, _get_inner_types(typestr))
+    elif composite_type:
+        packers = [c.pack for c in composite_type.components] 
 
     if _have_struct:
         len_packer = _short_packer.pack
@@ -104,8 +109,13 @@ def get_composite_packer(typestr):
 
     return pack_composite
 
-def get_composite_unpacker(typestr):
-    unpackers = map(unpacker_for, _get_inner_types(typestr))
+def get_composite_unpacker(typestr=None, composite_type=None):
+    assert (typestr or composite_type), "Must provide typestr or " + \
+            "CompositeType instance"
+    if typestr:
+        unpackers = map(unpacker_for, _get_inner_types(typestr))
+    elif composite_type:
+        unpackers = [c.unpack for c in composite_type.components]
 
     if _have_struct:
         len_unpacker = lambda v: _short_packer.unpack(v)[0]
