@@ -5,6 +5,8 @@ import time
 from nose.tools import assert_raises, assert_equal
 from pycassa import ColumnFamily, ConnectionPool, PoolListener, InvalidRequestError,\
                     NoConnectionAvailable, MaximumRetryException, AllServersUnavailable
+from pycassa.cassandra.c10.ttypes import ColumnPath
+from pycassa.pool import ConnectionWrapper
 
 _credentials = {'username':'jsmith', 'password':'havebadpass'}
 
@@ -463,6 +465,28 @@ class PoolingCase(unittest.TestCase):
 
         pool.dispose()
 
+    def test_queue_failure_connection_info(self):
+        totest = {}
+        listener = _TestListenerRequestInfo(totest)
+        pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
+                              prefill=True, max_retries=None,
+                              keyspace='PycassaTestKeyspace', credentials=_credentials,
+                              listeners=[listener], use_threadlocal=False,
+                              server_list=['localhost:9160'])
+
+        connection_wrapper = ConnectionWrapper(pool, None, 'PycassaTestKeyspace', 'localhost:9160')
+        #close it to force the error
+        connection_wrapper.close()
+
+        cp = ColumnPath('Standard1', column='1')
+
+        try:
+            connection_wrapper.get('greunt', cp, 1)
+        except MaximumRetryException:
+            pass
+        print totest
+        self.assertTrue('request' in totest['dic']['connection'].info)
+
 
 class _TestListener(PoolListener):
 
@@ -512,3 +536,16 @@ class _TestListener(PoolListener):
 
     def pool_at_max(self, dic):
         self.max_count += 1
+
+
+class _TestListenerRequestInfo(_TestListener):
+    """"""
+
+    def __init__(self, totest):
+        """Constructor for _TestListenerRequestInfo"""
+        super(_TestListenerRequestInfo, self).__init__()
+        self.totest = totest
+
+    def connection_failed(self, dic):
+        super(_TestListenerRequestInfo, self).connection_failed(dic)
+        self.totest['dic'] = dic

@@ -109,6 +109,7 @@ class ConnectionWrapper(Connection):
     def _retry(cls, f):
         def new_f(self, *args, **kwargs):
             self.operation_count += 1
+            self.info['request'] = {'method':'f', 'args':args, 'kwargs':kwargs}
             try:
                 allow_retries = kwargs.pop('allow_retries', True)
                 if kwargs.pop('reset', False):
