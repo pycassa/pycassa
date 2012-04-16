@@ -79,16 +79,26 @@ def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
         clock_seq_hi_variant = (rand_bits & 0xff00L) / 0x100 # 8 bits, 8 offset
         node = (rand_bits & 0xffffffffffff0000L) / 0x10000L # 48 bits, 16 offset
     else:
+        # In the event of a timestamp tie, Cassandra compares the two
+        # byte arrays directly. This is a *signed* comparison of each byte
+        # in the two arrays.  So, we have to make each byte -128 or +127 for
+        # this to work correctly.
+        #
+        # For the clock_seq_hi_variant, we don't get to pick the two most
+        # significant bits (they're always 01), so we are dealing with a
+        # positive byte range for this particular byte.
         if lowest_val:
             # Make the lowest value UUID with the same timestamp
-            clock_seq_low = 0 & 0xffL
-            clock_seq_hi_variant = 0 & 0x3fL
-            node = 0 & 0xffffffffffffL # 48 bits
+            clock_seq_low = 0x80L
+            clock_seq_hi_variant = 0 & 0x3fL # The two most significant bits
+                                             # will be 0 and 1, no matter what
+            node = 0x808080808080L # 48 bits
         else:
             # Make the highest value UUID with the same timestamp
-            clock_seq_low = 0xffL
-            clock_seq_hi_variant = 0x3fL
-            node = 0xffffffffffffL # 48 bits
+            clock_seq_low = 0x7fL
+            clock_seq_hi_variant = 0x3fL # The two most significant bits will
+                                         # 0 and 1, no matter what
+            node = 0x7f7f7f7f7f7fL # 48 bits
     return uuid.UUID(fields=(time_low, time_mid, time_hi_version,
                         clock_seq_hi_variant, clock_seq_low, node), version=1)
 
