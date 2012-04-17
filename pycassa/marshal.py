@@ -26,7 +26,7 @@ else:
 _BASIC_TYPES = ['BytesType', 'LongType', 'IntegerType', 'UTF8Type',
                 'AsciiType', 'LexicalUUIDType', 'TimeUUIDType',
                 'CounterColumnType', 'FloatType', 'DoubleType',
-                'DateType', 'BooleanType', 'UUIDType']
+                'DateType', 'BooleanType', 'UUIDType', 'Int32Type']
 
 def extract_type_name(typestr):
     if typestr is None:
@@ -194,6 +194,15 @@ def packer_for(typestr):
                 return struct.pack('>q', v)
         return pack_long
 
+    elif data_type == 'Int32Type':
+        if _have_struct:
+            def pack_int32(v, _=None):
+                return _int_packer.pack(v)
+        else:
+            def pack_int32(v, _=None):
+                return struct.pack('>i', v)
+        return pack_int32
+
     elif data_type == 'IntegerType':
         return encode_int
 
@@ -281,6 +290,12 @@ def unpacker_for(typestr):
             return lambda v: _long_packer.unpack(v)[0]
         else:
             return lambda v: struct.unpack('>q', v)[0]
+
+    elif data_type == 'Int32Type':
+        if _have_struct:
+            return lambda v: _int_packer.unpack(v)[0]
+        else:
+            return lambda v: struct.unpack('>i', v)[0]
 
     elif data_type == 'IntegerType':
         return decode_int

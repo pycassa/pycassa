@@ -81,6 +81,10 @@ class IntegerType(CassandraType):
     """
     pass
 
+class Int32Type(CassandraType):
+    """ Stores data as a 4 byte integer """
+    pass
+
 class AsciiType(CassandraType):
     """ Stores data as ASCII text """
     pass
