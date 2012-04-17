@@ -56,9 +56,6 @@ def describe_keyspace(keyspace):
     if ks['strategy_options']:
         _print_line("Strategy Options", ks['strategy_options'])
 
-    _print_line("Replication Factor", str(ks['replication_factor']))
-    print
-
     cfs = SYSTEM_MANAGER.get_keyspace_column_families(keyspace).keys()
     cfs.sort()
     print "Column Families:"
