@@ -4,10 +4,11 @@ import time
 import threading
 import random
 import socket
+import sys
 
-try:
+if 'gevent.monkey' in sys.modules:
     from gevent import queue as Queue
-except ImportError:
+else:
     import Queue
 
 from thrift import Thrift
