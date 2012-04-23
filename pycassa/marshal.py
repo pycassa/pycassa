@@ -26,7 +26,7 @@ else:
 _BASIC_TYPES = ['BytesType', 'LongType', 'IntegerType', 'UTF8Type',
                 'AsciiType', 'LexicalUUIDType', 'TimeUUIDType',
                 'CounterColumnType', 'FloatType', 'DoubleType',
-                'DateType', 'BooleanType', 'UUIDType']
+                'DateType', 'BooleanType', 'UUIDType', 'Int32Type']
 
 def extract_type_name(typestr):
     if typestr is None:
@@ -74,8 +74,13 @@ def _to_timestamp(v):
         converted = v * 1e3
     return long(converted)
 
-def get_composite_packer(typestr):
-    packers = map(packer_for, _get_inner_types(typestr))
+def get_composite_packer(typestr=None, composite_type=None):
+    assert (typestr or composite_type), "Must provide typestr or " + \
+            "CompositeType instance"
+    if typestr:
+        packers = map(packer_for, _get_inner_types(typestr))
+    elif composite_type:
+        packers = [c.pack for c in composite_type.components] 
 
     if _have_struct:
         len_packer = _short_packer.pack
@@ -104,8 +109,13 @@ def get_composite_packer(typestr):
 
     return pack_composite
 
-def get_composite_unpacker(typestr):
-    unpackers = map(unpacker_for, _get_inner_types(typestr))
+def get_composite_unpacker(typestr=None, composite_type=None):
+    assert (typestr or composite_type), "Must provide typestr or " + \
+            "CompositeType instance"
+    if typestr:
+        unpackers = map(unpacker_for, _get_inner_types(typestr))
+    elif composite_type:
+        unpackers = [c.unpack for c in composite_type.components]
 
     if _have_struct:
         len_unpacker = lambda v: _short_packer.unpack(v)[0]
@@ -183,6 +193,15 @@ def packer_for(typestr):
             def pack_long(v, _=None):
                 return struct.pack('>q', v)
         return pack_long
+
+    elif data_type == 'Int32Type':
+        if _have_struct:
+            def pack_int32(v, _=None):
+                return _int_packer.pack(v)
+        else:
+            def pack_int32(v, _=None):
+                return struct.pack('>i', v)
+        return pack_int32
 
     elif data_type == 'IntegerType':
         return encode_int
@@ -271,6 +290,12 @@ def unpacker_for(typestr):
             return lambda v: _long_packer.unpack(v)[0]
         else:
             return lambda v: struct.unpack('>q', v)[0]
+
+    elif data_type == 'Int32Type':
+        if _have_struct:
+            return lambda v: _int_packer.unpack(v)[0]
+        else:
+            return lambda v: struct.unpack('>i', v)[0]
 
     elif data_type == 'IntegerType':
         return decode_int

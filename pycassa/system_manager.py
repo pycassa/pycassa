@@ -465,9 +465,9 @@ class SystemManager(object):
         self._cfdef_assign(row_cache_keys_to_save, cfdef, 'row_cache_keys_to_save')
         self._cfdef_assign(compression_options, cfdef, 'compression_options')
         self._cfdef_assign(merge_shards_chance, cfdef, 'merge_shards_chance')
+        self._cfdef_assign(comment, cfdef, 'comment')
 
         cfdef.replicate_on_write = replicate_on_write
-        cfdef.comment = comment
         cfdef.key_alias = key_alias
         if row_cache_provider:
             cfdef.row_cache_provider = row_cache_provider

@@ -109,6 +109,7 @@ class ConnectionWrapper(Connection):
     def _retry(cls, f):
         def new_f(self, *args, **kwargs):
             self.operation_count += 1
+            self.info['request'] = {'method': f.__name__, 'args': args, 'kwargs': kwargs}
             try:
                 allow_retries = kwargs.pop('allow_retries', True)
                 if kwargs.pop('reset', False):
@@ -386,6 +387,8 @@ class ConnectionPool(object):
     def _create_connection(self):
         """Creates a ConnectionWrapper, which opens a
         pycassa.connection.Connection."""
+        if not self.server_list:
+            raise AllServersUnavailable('Cannot connect to any servers as server list is empty!')
         failure_count = 0
         while failure_count < 2 * len(self.server_list):
             try:
