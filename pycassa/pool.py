@@ -4,7 +4,11 @@ import time
 import threading
 import random
 import socket
-import Queue
+
+try:
+    from gevent import queue as Queue
+except ImportError:
+    import Queue
 
 from thrift import Thrift
 from connection import Connection
