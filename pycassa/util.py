@@ -54,20 +54,18 @@ def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
     if isinstance(time_arg, uuid.UUID):
         return time_arg
 
-    nanoseconds = 0
     if hasattr(time_arg, 'timetuple'):
         seconds = int(time.mktime(time_arg.timetuple()))
         microseconds = (seconds * 1e6) + time_arg.time().microsecond
-        nanoseconds = microseconds * 1e3
     elif type(time_arg) in _number_types:
-        nanoseconds = int(time_arg * 1e9)
+        microseconds = int(time_arg * 1e6)
     else:
         raise ValueError('Argument for a v1 UUID column name or value was ' +
                 'neither a UUID, a datetime, or a number')
 
     # 0x01b21dd213814000 is the number of 100-ns intervals between the
     # UUID epoch 1582-10-15 00:00:00 and the Unix epoch 1970-01-01 00:00:00.
-    timestamp = int(nanoseconds/100) + 0x01b21dd213814000L
+    timestamp = int(microseconds * 10) + 0x01b21dd213814000L
 
     time_low = timestamp & 0xffffffffL
     time_mid = (timestamp >> 32L) & 0xffffL
