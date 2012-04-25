@@ -13,6 +13,12 @@ __all__ = ['convert_time_to_uuid', 'convert_uuid_to_time', 'OrderedDict']
 
 _number_types = frozenset((int, long, float))
 
+LOWEST_TIME_UUID = uuid.UUID('00000000-0000-1000-8080-808080808080')
+""" The lowest possible TimeUUID, as sorted by Cassandra. """
+
+HIGHEST_TIME_UUID = uuid.UUID('ffffffff-ffff-1fff-bf7f-7f7f7f7f7f7f')
+""" The highest possible TimeUUID, as sorted by Cassandra. """
+
 def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
     """
     Converts a datetime or timestamp to a type 1 :class:`uuid.UUID`.
