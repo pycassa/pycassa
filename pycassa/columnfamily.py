@@ -507,8 +507,11 @@ class ColumnFamily(object):
             buffer_size = self.column_buffer_size
 
         count = i = 0
-        last_name = self._pack_name(column_start) if column_start != "" else ""
-        finish = self._pack_name(column_finish) if column_finish != "" else ""
+        last_name = finish = ""
+        if column_start != "":
+            last_name = self._pack_name(column_start)
+        if column_finish != "":
+            finish = self._pack_name(column_finish)
         while True:
             if column_count is not None:
                 if i == 0 and column_count <= buffer_size:
