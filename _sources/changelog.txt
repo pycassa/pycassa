@@ -1,6 +1,45 @@
 Changelog
 =========
 
+Changes in Version 1.6.0
+------------------------
+This release adds a few minor features and several important bug fixes.
+
+The most important change to take note of if you are using composite
+comparators is the change to the default inclusive/exclusive behavior
+for slice ends.
+
+Other than that, this should be a smooth upgrade from 1.5.x.
+
+Features
+~~~~~~~~
+- New script for easily building RPM packages
+- Add request and parameter information to PoolListener callback
+- Add :meth:`.ColumnFamily.xget()`, a generator version of
+  :meth:`~.ColumnFamily.get()` that automatically pages over columns
+  in reasonably sized chunks
+- Add support for Int32Type, a 4-byte signed integer format
+- Add constants for the highest and lowest possible TimeUUID values
+  to :mod:`pycassa.util`
+
+Bug Fixes
+~~~~~~~~~
+- Various 2.4 syntax errors
+- Raise :exc:`~.AllServersUnavailable` if ``server_list`` is empty
+- Handle custom types inside of composites
+- Don't erase ``comment`` when updating column families
+- Match Cassandra's sorting of TimeUUIDType values when the timestamps
+  tie.  This could result in some columns being erroneously left off of
+  the end of column slices when datetime objects or timestamps were used
+  for ``column_start`` or ``column_finish``
+- Use gevent's queue in place of the stdlib version when gevent monkeypatching
+  has been applied
+- Avoid sub-microsecond loss of precision with TimeUUID timestamps when using
+  :func:`pycassa.util.convert_time_to_uuid`
+- Make default slice ends inclusive when using ``CompositeType`` comparator
+  Previously, the end of the slice was exclusive by default (as was the start
+  of the slice when ``column_reversed`` was ``True``)
+
 Changes in Version 1.5.1
 ------------------------
 This release only affects those of you using DateType data,
