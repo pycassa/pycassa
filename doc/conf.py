@@ -4,16 +4,15 @@
 #
 # This file is execfile()d with the current directory set to its containing dir.
 
-import sys, os
+import sys
+import os
 sys.path.append(os.path.abspath('..'))
-
-import pycassa
 
 # -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.todo', 'doc.sphinxtogithub']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.todo']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
