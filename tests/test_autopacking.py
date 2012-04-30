@@ -1020,6 +1020,11 @@ class TestPackerOverride(unittest.TestCase):
                 comparator_type=CompositeType(AsciiType(), AsciiType()),
                 default_validation_class=AsciiType())
 
+    @classmethod
+    def teardown_class(cls):
+        sys = SystemManager()
+        sys.drop_column_family(TEST_KS, 'CompositeOverrideCF')
+
     def test_column_validator(self):
         cf = ColumnFamily(pool, 'CompositeOverrideCF')
         cf.column_validators[('a', 'b')] = BooleanType()
