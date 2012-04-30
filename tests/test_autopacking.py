@@ -858,6 +858,21 @@ class TestComposites(unittest.TestCase):
         cf.insert('key3', {(123123, 1): 'val'})
         assert_equal(cf.get('key3'), {(123123, 1): 'val'})
 
+    def test_uuid_composites(self):
+        sys = SystemManager()
+        if sys._conn.version == CASSANDRA_07:
+            raise SkipTest("Cassandra < 0.8 does not composite types")
+        sys.create_column_family(TEST_KS, 'UUIDComposite',
+                comparator_type=CompositeType(IntegerType(reversed=True), TimeUUIDType()),
+                key_validation_class=TimeUUIDType(),
+                default_validation_class=UTF8Type())
+
+        key, u1, u2 = uuid.uuid1(), uuid.uuid1(), uuid.uuid1()
+        cf = ColumnFamily(pool, 'UUIDComposite')
+        cf.insert(key, {(123123, u1): 'foo'})
+        cf.insert(key, {(123123, u1): 'foo', (-1, u2): 'bar', (-123123123, u1): 'baz'})
+        assert_equal(cf.get(key), {(123123, u1): 'foo', (-1, u2): 'bar', (-123123123, u1): 'baz'})
+
 class TestBigInt(unittest.TestCase):
 
     @classmethod
