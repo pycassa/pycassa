@@ -25,33 +25,40 @@ __all__ = ['gm_timestamp', 'ColumnFamily', 'PooledColumnFamily']
 
 class ColumnValidatorDict(DictMixin):
 
-    def __init__(self, other_dict={}):
+    def __init__(self, other_dict={}, name_packer=None, name_unpacker=None):
+        self.name_packer = name_packer or (lambda x: x)
+        self.name_unpacker = name_unpacker or (lambda x: x)
+
         self.type_map = {}
         self.packers = {}
         self.unpackers = {}
         for item, value in other_dict.items():
-            self[item] = value
+            packed_item = self.name_packer(item)
+            self[packed_item] = value
 
     def __getitem__(self, item):
-        return self.type_map[item]
+        packed_item = self.name_packer(item)
+        return self.type_map[packed_item]
 
     def __setitem__(self, item, value):
+        packed_item = self.name_packer(item)
         if isinstance(value, types.CassandraType):
-            self.type_map[item] = value
-            self.packers[item] = value.pack
-            self.unpackers[item] = value.unpack
+            self.type_map[packed_item] = value
+            self.packers[packed_item] = value.pack
+            self.unpackers[packed_item] = value.unpack
         else:
-            self.type_map[item] = marshal.extract_type_name(value)
-            self.packers[item] = marshal.packer_for(value)
-            self.unpackers[item] = marshal.unpacker_for(value)
+            self.type_map[packed_item] = marshal.extract_type_name(value)
+            self.packers[packed_item] = marshal.packer_for(value)
+            self.unpackers[packed_item] = marshal.unpacker_for(value)
 
     def __delitem__(self, item):
-        del self.type_map[item]
-        del self.packers[item]
-        del self.unpackers[item]
+        packed_item = self.name_packer(item)
+        del self.type_map[packed_item]
+        del self.packers[packed_item]
+        del self.unpackers[packed_item]
 
     def keys(self):
-        return self.type_map.keys()
+        return map(self.name_unpacker, self.type_map.keys())
 
 def gm_timestamp():
     """ Gets the current GMT timestamp in microseconds. """
@@ -198,8 +205,10 @@ class ColumnFamily(object):
                     return ColumnOrSuperColumn(counter_super_column=(SuperColumn(scol_name, subcols)))
             else:
                 self._make_column = Column
+
                 def _make_cosc(scol_name, subcols):
                     return ColumnOrSuperColumn(super_column=(SuperColumn(scol_name, subcols)))
+
             self._make_cosc = _make_cosc
 
     def _get_default_validation_class(self):
@@ -221,7 +230,7 @@ class ColumnFamily(object):
         return not self._have_counters or self.retry_counter_mutations
 
     def _set_column_validators(self, other_dict):
-        self._column_validators = ColumnValidatorDict(other_dict)
+        self._column_validators = ColumnValidatorDict(other_dict, self._pack_name, self._unpack_name)
 
     def _get_column_validators(self):
         return self._column_validators
@@ -313,7 +322,8 @@ class ColumnFamily(object):
         self.default_validation_class = self._cfdef.default_validation_class
         self.column_validators = {}
         for name, coldef in self._cfdef.column_metadata.items():
-            self.column_validators[name] = coldef.validation_class
+            unpacked_name = self._unpack_name(name)
+            self.column_validators[unpacked_name] = coldef.validation_class
 
     def _load_key_class(self):
         if hasattr(self._cfdef, "key_validation_class"):
@@ -428,7 +438,6 @@ class ColumnFamily(object):
                 d_type = self.column_name_class
             raise TypeError("%s cannot be converted to a type matching %s" %
                             (b, d_type))
-
 
     def _pack_value(self, value, col_name):
         if value is None:
@@ -593,7 +602,6 @@ class ColumnFamily(object):
         single_column = columns is not None and len(columns) == 1
         if (not self.super and single_column) or \
            (self.super and super_column is not None and single_column):
-            super_col_orig = super_column is not None
             column = None
             if self.super and super_column is None:
                 super_column = columns[0]

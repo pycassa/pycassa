@@ -1007,6 +1007,33 @@ class TestDateTypes(unittest.TestCase):
         self._compare_dates(self.cf.get('key1')['date'], d)
         self.cf.remove('key1')
 
+class TestPackerOverride(unittest.TestCase):
+
+    @classmethod
+    def setup_class(cls):
+        sys = SystemManager()
+        have_composites = sys._conn.version != CASSANDRA_07
+        if not have_composites:
+            raise SkipTest("Cassandra < 0.8 does not composite types")
+
+        sys.create_column_family(TEST_KS, 'CompositeOverrideCF',
+                comparator_type=CompositeType(AsciiType(), AsciiType()),
+                default_validation_class=AsciiType())
+
+    def test_column_validator(self):
+        cf = ColumnFamily(pool, 'CompositeOverrideCF')
+        cf.column_validators[('a', 'b')] = BooleanType()
+        cf.insert('key', {('a', 'a'): 'foo', ('a', 'b'): True})
+        assert_equal(cf.get('key'), {('a', 'a'): 'foo', ('a', 'b'): True})
+
+        assert_equal(cf.column_validators[('a', 'b')].__class__, BooleanType)
+
+        keys = cf.column_validators.keys()
+        assert_equal(keys, [('a', 'b')])
+
+        del cf.column_validators[('a', 'b')]
+        assert_raises(KeyError, cf.column_validators.__getitem__, ('a', 'b'))
+
 class TestCustomTypes(unittest.TestCase):
 
     class IntString(types.CassandraType):
