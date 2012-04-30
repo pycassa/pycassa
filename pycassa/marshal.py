@@ -88,9 +88,9 @@ def get_composite_packer(typestr=None, composite_type=None):
         len_packer = lambda v: struct.pack('>H', v)
 
     def pack_composite(items, slice_start=None):
+        last_index = len(items) - 1
         s = ''
-        for item, packer in zip(items, packers):
-            eoc = '\x00'
+        for i, (item, packer) in enumerate(zip(items, packers)):
             if isinstance(item, tuple):
                 item, inclusive = item
                 if inclusive:
@@ -103,6 +103,14 @@ def get_composite_packer(typestr=None, composite_type=None):
                         eoc = '\x01'
                     elif slice_start is False:
                         eoc = '\xff'
+            elif i == last_index:
+                if slice_start:
+                    eoc = '\xff'
+                elif slice_start is False:
+                    eoc = '\x01'
+            else:
+                eoc = '\x00'
+
             packed = packer(item)
             s += ''.join((len_packer(len(packed)), packed, eoc))
         return s

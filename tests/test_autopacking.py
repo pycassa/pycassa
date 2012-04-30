@@ -845,7 +845,7 @@ class TestComposites(unittest.TestCase):
         assert_equal(result, {col1: '', col2: '', col3: ''})
 
         result = cf.get('key2', column_start=(1, 1), column_finish=(1, 3))
-        assert_equal(result, {col1: '', col2: ''})
+        assert_equal(result, {col1: '', col2: '', col3: ''})
 
         result = cf.get('key2', column_start=(1, 1), column_finish=(1, (3, True)))
         assert_equal(result, {col1: '', col2: '', col3: ''})
@@ -1150,42 +1150,31 @@ class TestCustomComposite(unittest.TestCase):
 
         cf_std.insert('key2', {col0: '', col1: '', col2: '', col3: '', col4: ''})
 
-        result = cf_cust.get('key2',
-                             column_start=((dt1, True),),
-                             column_finish=((dt1, True),))
-        assert_equal(result, {col1_cust: '', col2_cust: '', col3_cust: ''})
+        def check(column_start, column_finish, col_reversed=False):
+            result = cf_cust.get('key2', column_start=column_start,
+                    column_finish=column_finish, column_reversed=col_reversed)
 
-        result = cf_cust.get('key2',
-                             column_start=(dt1,),
-                             column_finish=((dt2, False), ))
-        assert_equal(result, {col1_cust: '', col2_cust: '', col3_cust: ''})
+            assert_equal(result, {col1_cust: '', col2_cust: '', col3_cust: ''})
 
-        result = cf_cust.get('key2',
-                             column_start=((dt1, True),),
-                             column_finish=((dt2, False), ))
-        assert_equal(result, {col1_cust: '', col2_cust: '', col3_cust: ''})
+        # Defaults should be inclusive on both ends
+        check((dt1,), (dt1,))
+        check((dt1,), (dt1,), True)
 
-        result = cf_cust.get('key2',
-                             column_start=(dt1, ),
-                             column_finish=((dt2, False), ))
-        assert_equal(result, {col1_cust: '', col2_cust: '', col3_cust: ''})
+        check(((dt1, True),), ((dt1, True),))
+        check((dt1,), ((dt2, False),))
+        check(((dt1, True),), ((dt2, False),))
+        check(((dt0, False),), ((dt2, False),))
 
-        result = cf_cust.get('key2',
-                             column_start=((dt0, False), ),
-                             column_finish=((dt2, False), ))
-        assert_equal(result, {col1_cust: '', col2_cust: '', col3_cust: ''})
+        check((dt1, 123), (dt1, 789))
+        check((dt1, 123), (dt1, (789, True)))
+        check((dt1, (123, True)), ((dt2, False),))
 
-        result = cf_cust.get('key2',
-                             column_start=(dt1, 123),
-                             column_finish=(dt1, 789))
-        assert_equal(result, {col1_cust: '', col2_cust: '', col3_cust: ''})
+        # Test inclusive ends for reversed
+        check(((dt1, True),), ((dt1, True),), True)
+        check( (dt1,),        ((dt1, True),), True)
+        check(((dt1, True),),  (dt1,),        True)
 
-        result = cf_cust.get('key2',
-                             column_start=(dt1, 123),
-                             column_finish=(dt1, (789, True)))
-        assert_equal(result, {col1_cust: '', col2_cust: '', col3_cust: ''})
-
-        result = cf_cust.get('key2',
-                             column_start=(dt1, (123, True)),
-                             column_finish=((dt2, False), ))
-        assert_equal(result, {col1_cust: '', col2_cust: '', col3_cust: ''})
+        # Test exclusive ends for reversed
+        check(((dt2, False),), ((dt0, False),), True)
+        check(((dt2, False),),  (dt1,),         True)
+        check((dt1,),          ((dt0, False),), True)

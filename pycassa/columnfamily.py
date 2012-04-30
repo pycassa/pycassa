@@ -377,11 +377,11 @@ class ColumnFamily(object):
             if column_start != '':
                 column_start = self._pack_name(column_start,
                                                is_supercol_name=is_supercol_name,
-                                               slice_start=True)
+                                               slice_start=(not column_reversed))
             if column_finish != '':
                 column_finish = self._pack_name(column_finish,
                                                 is_supercol_name=is_supercol_name,
-                                                slice_start=False)
+                                                slice_start=column_reversed)
 
             sr = SliceRange(start=column_start, finish=column_finish,
                             reversed=column_reversed, count=column_count)
