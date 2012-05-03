@@ -2,12 +2,10 @@ import threading
 import unittest
 import time
 
-from nose.tools import assert_raises, assert_equal, assert_not_equal
+from nose.tools import assert_raises, assert_equal, assert_true
 from pycassa import ColumnFamily, ConnectionPool, PoolListener, InvalidRequestError,\
                     NoConnectionAvailable, MaximumRetryException, AllServersUnavailable
-
-import pycassa.pool
-from pycassa.cassandra.ttypes import TimedOutException
+from pycassa.cassandra.c10.ttypes import ColumnPath
 
 _credentials = {'username':'jsmith', 'password':'havebadpass'}
 
@@ -26,8 +24,10 @@ class PoolingCase(unittest.TestCase):
         pool = ConnectionPool('PycassaTestKeyspace', credentials=_credentials)
         cf = ColumnFamily(pool, 'Standard1')
         cf.insert('key1', {'col':'val'})
-        pool.status()
         pool.dispose()
+
+    def test_empty_list(self):
+        assert_raises(AllServersUnavailable, ConnectionPool, 'PycassaTestKeyspace', server_list=[])
 
     def test_server_list_func(self):
         listener = _TestListener()
@@ -35,6 +35,7 @@ class PoolingCase(unittest.TestCase):
                          listeners=[listener], prefill=False)
         assert_equal(listener.serv_list, ['foo:bar'])
         assert_equal(listener.list_count, 1)
+        pool.dispose()
 
     def test_queue_pool(self):
         listener = _TestListener()
@@ -442,6 +443,49 @@ class PoolingCase(unittest.TestCase):
 
         pool.dispose()
 
+    def test_queue_failure_with_no_retries(self):
+        listener = _TestListener()
+        pool = ConnectionPool(pool_size=5, max_overflow=5, recycle=10000,
+                         prefill=True, max_retries=3, # allow 3 retries
+                         keyspace='PycassaTestKeyspace', credentials=_credentials,
+                         listeners=[listener], use_threadlocal=False,
+                         server_list=['localhost:9160', 'localhost:9160'])
+
+        # Corrupt all of the connections
+        for i in range(5):
+            conn = pool.get()
+            setattr(conn, 'send_batch_mutate', conn._fail_once)
+            conn._should_fail = True
+            conn.return_to_pool()
+
+        cf = ColumnFamily(pool, 'Counter1')
+        assert_raises(MaximumRetryException, cf.insert, 'key', {'col': 2, 'col2': 2})
+        assert_equal(listener.failure_count, 1)  # didn't retry at all
+
+        pool.dispose()
+
+    def test_failure_connection_info(self):
+        listener = _TestListenerRequestInfo()
+        pool = ConnectionPool(pool_size=1, max_overflow=0, recycle=10000,
+                              prefill=True, max_retries=0,
+                              keyspace='PycassaTestKeyspace', credentials=_credentials,
+                              listeners=[listener], use_threadlocal=True,
+                              server_list=['localhost:9160'])
+        cf = ColumnFamily(pool, 'Counter1')
+
+        # Corrupt the connection
+        conn = pool.get()
+        setattr(conn, 'send_get', conn._fail_once)
+        conn._should_fail = True
+        conn.return_to_pool()
+
+        assert_raises(MaximumRetryException, cf.get, 'greunt', columns=['col'])
+        assert_true('request' in listener.failure_dict['connection'].info)
+        request = listener.failure_dict['connection'].info['request']
+        assert_equal(request['method'], 'get')
+        assert_equal(request['args'], ('greunt', ColumnPath('Counter1', None, 'col'), 1))
+        assert_equal(request['kwargs'], {})
+
 class _TestListener(PoolListener):
 
     def __init__(self):
@@ -490,3 +534,10 @@ class _TestListener(PoolListener):
 
     def pool_at_max(self, dic):
         self.max_count += 1
+
+
+class _TestListenerRequestInfo(_TestListener):
+
+    def connection_failed(self, dic):
+        _TestListener.connection_failed(self, dic)
+        self.failure_dict = dic

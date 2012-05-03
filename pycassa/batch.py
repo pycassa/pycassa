@@ -73,23 +73,21 @@ class Mutator(object):
 
     Queues insert/update/remove operations and executes them when the queue
     is full or `send` is called explicitly.
-
     """
 
-    def __init__(self, pool, queue_size=100, write_consistency_level=None):
-        """Creates a new Mutator object.
-
+    def __init__(self, pool, queue_size=100, write_consistency_level=None, allow_retries=True):
+        """
         `pool` is the :class:`~pycassa.pool.ConnectionPool` that will be used
         for operations.
 
         After `queue_size` operations, :meth:`send()` will be executed
         automatically.  Use 0 to disable automatic sends.
-
         """
         self._buffer = []
         self._lock = threading.RLock()
         self.pool = pool
         self.limit = queue_size
+        self.allow_retries = allow_retries
         if write_consistency_level is None:
             self.write_consistency_level = ConsistencyLevel.ONE
         else:
@@ -124,7 +122,8 @@ class Mutator(object):
                 mutations.setdefault(key, {}).setdefault(column_family, []).extend(cols)
             if mutations:
                 conn = self.pool.get()
-                conn.batch_mutate(mutations, write_consistency_level)
+                conn.batch_mutate(mutations, write_consistency_level,
+                                  allow_retries=self.allow_retries)
             self._buffer = []
         finally:
             if conn:
@@ -155,14 +154,14 @@ class Mutator(object):
         that the remove will be executed on.
 
         """
-        if timestamp == None:
+        if timestamp is None:
             timestamp = column_family.timestamp()
         deletion = Deletion(timestamp=timestamp)
         _pack_name = column_family._pack_name
-        if super_column:
+        if super_column is not None:
             deletion.super_column = _pack_name(super_column, True)
-        if columns:
-            is_super = column_family.super and not super_column
+        if columns is not None:
+            is_super = column_family.super and super_column is None
             packed_cols = [_pack_name(col, is_super) for col in columns]
             deletion.predicate = SlicePredicate(column_names=packed_cols)
         mutation = Mutation(deletion=deletion)
@@ -174,29 +173,23 @@ class Mutator(object):
 class CfMutator(Mutator):
     """
     A :class:`~pycassa.batch.Mutator` that deals only with one column family.
-
     """
 
-    def __init__(self, column_family, queue_size=100, write_consistency_level=None):
-        """ A :class:`~pycassa.batch.Mutator` that deals only with one column family.
-
+    def __init__(self, column_family, queue_size=100, write_consistency_level=None,
+                 allow_retries=True):
+        """
         `column_family` is the :class:`~pycassa.columnfamily.ColumnFamily`
         that all operations will be executed on.
-
         """
         wcl = write_consistency_level or column_family.write_consistency_level
-        super(CfMutator, self).__init__(column_family.pool, queue_size=queue_size,
-                                        write_consistency_level=wcl)
+        Mutator.__init__(self, column_family.pool, queue_size, wcl, allow_retries)
         self._column_family = column_family
 
     def insert(self, key, cols, timestamp=None, ttl=None):
         """ Adds a single row insert to the batch. """
-        return super(CfMutator, self).insert(self._column_family, key, cols,
-                                             timestamp=timestamp, ttl=ttl)
+        return Mutator.insert(self, self._column_family, key, cols, timestamp, ttl)
 
     def remove(self, key, columns=None, super_column=None, timestamp=None):
         """ Adds a single row remove to the batch. """
-        return super(CfMutator, self).remove(self._column_family, key,
-                                             columns=columns,
-                                             super_column=super_column,
-                                             timestamp=timestamp)
+        return Mutator.remove(self, self._column_family, key,
+                              columns, super_column, timestamp)

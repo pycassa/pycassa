@@ -1,6 +1,187 @@
 Changelog
 =========
 
+Changes in Version 1.6.0
+------------------------
+This release adds a few minor features and several important bug fixes.
+
+The most important change to take note of if you are using composite
+comparators is the change to the default inclusive/exclusive behavior
+for slice ends.
+
+Other than that, this should be a smooth upgrade from 1.5.x.
+
+Features
+~~~~~~~~
+- New script for easily building RPM packages
+- Add request and parameter information to PoolListener callback
+- Add :meth:`.ColumnFamily.xget()`, a generator version of
+  :meth:`~.ColumnFamily.get()` that automatically pages over columns
+  in reasonably sized chunks
+- Add support for Int32Type, a 4-byte signed integer format
+- Add constants for the highest and lowest possible TimeUUID values
+  to :mod:`pycassa.util`
+
+Bug Fixes
+~~~~~~~~~
+- Various 2.4 syntax errors
+- Raise :exc:`~.AllServersUnavailable` if ``server_list`` is empty
+- Handle custom types inside of composites
+- Don't erase ``comment`` when updating column families
+- Match Cassandra's sorting of TimeUUIDType values when the timestamps
+  tie.  This could result in some columns being erroneously left off of
+  the end of column slices when datetime objects or timestamps were used
+  for ``column_start`` or ``column_finish``
+- Use gevent's queue in place of the stdlib version when gevent monkeypatching
+  has been applied
+- Avoid sub-microsecond loss of precision with TimeUUID timestamps when using
+  :func:`pycassa.util.convert_time_to_uuid`
+- Make default slice ends inclusive when using ``CompositeType`` comparator
+  Previously, the end of the slice was exclusive by default (as was the start
+  of the slice when ``column_reversed`` was ``True``)
+
+Changes in Version 1.5.1
+------------------------
+This release only affects those of you using DateType data,
+which has been supported since pycassa 1.2.0.  If you are
+using DateType, it is **very** important that you read this
+closely.
+
+DateType data is internally stored as an 8 byte integer timestamp.
+Since version 1.2.0 of pycassa, the timestamp stored has counted
+the number of *microseconds* since the unix epoch.  The actual
+format that Cassandra standardizes on is *milliseconds* since the
+epoch.
+
+If you are only using pycassa, you probably won't have noticed any
+problems with this. However, if you try to use cassandra-cli,
+sstable2json, Hector, or any other client that supports DateType,
+DateType data written by pycassa will appear to be far in the future.
+Similarly, DateType data written by other clients will appear to
+be in the past when loaded by pycassa.
+
+This release changes the default DateType behavior to comply with
+the standard, millisecond-based format.  **If you use DateType,
+and you upgrade to this release without making any modifications,
+you will have problems.**  Unfortunately, this is a bit of a tricky
+situation to resolve, but the appropriate actions to take are detailed
+below.
+
+To temporarily continue using the old behavior, a new class
+has been created: :class:`pycassa.types.OldPycassaDateType`.
+This will read and write DateType data exactly the same as
+pycassa 1.2.0 to 1.5.0 did.
+
+If you want to convert your data to the new format, the other
+new class, :class:`pycassa.types.IntermediateDateType`, may be useful.
+It can read either the new or old format correctly (unless you have
+used dates close to 1970 with the new format) and will write only
+the new format. The best case for using this is if you have DateType
+validated columns that don't have a secondary index on them.
+
+To tell pycassa to use :class:`~.types.OldPycassaDateType` or
+:class:`~.types.IntermediateDateType`, use the :class:`~.ColumnFamily`
+attributes that control types: :attr:`~.ColumnFamily.column_name_class`,
+:attr:`~.ColumnFamily.key_validation_class`,
+:attr:`~.ColumnFamily.column_validators`, and so on.  Here's an example:
+
+.. code-block:: python
+
+    from pycassa.types import OldPycassaDateType, IntermediateDateType
+    from pycassa.column_family import ColumnFamily
+    from pycassa.pool import ConnectionPool
+
+    pool = ConnectionPool('MyKeyspace', ['192.168.1.1'])
+
+    # Our tweet timeline has a comparator_type of DateType
+    tweet_timeline_cf = ColumnFamily(pool, 'tweets')
+    tweet_timeline_cf.column_name_class = OldPycassaDateType()
+
+    # Our tweet timeline has a comparator_type of DateType
+    users_cf = ColumnFamily(pool, 'users')
+    users_cf.column_validators['join_date'] = IntermediateDateType()
+
+If you're using DateType for the `key_validation_class`, column names,
+column values with a secondary index on them, or are using the DateType
+validated column as a non-indexed part of an index clause with
+`get_indexed_slices()` (eg. "where state = 'TX' and join_date > 2012"),
+you need to be more careful about the conversion process, and
+:class:`~.types.IntermediateDateType` probably isn't a good choice.
+
+In most of cases, if you want to switch to the new date format,
+a manual migration script to convert all existing DateType
+data to the new format will be needed. In particular, if you
+convert keys, column names, or indexed columns on a live data set,
+be very careful how you go about it. If you need any assistance or
+suggestions at all with migrating your data, please feel free to
+send an email to tyler@datastax.com; I would be glad to help.
+
+Changes in Version 1.5.0
+------------------------
+The main change to be aware of for this release is the
+new no-retry behavior for counter operations.  If you have been
+maintaining a separate connection pool with retries disabled
+for usage with counters, you may discontinue that practice
+after upgrading.
+
+Features
+~~~~~~~~
+- By default, counter operations will not be retried
+  automatically. This makes it easier to use a single
+  connection pool without worrying about overcounting.
+
+Bug Fixes
+~~~~~~~~~
+- Don't remove entire row when an empty list is supplied for the
+  `columns` parameter of :meth:`~ColumnFamily.remove()` or the
+  batch remove methods.
+- Add python-setuptools to debian build dependencies
+- Batch :meth:`~.Mutator.remove()` was not removing subcolumns
+  when the specified supercolumn was 0 or other "falsey" values
+- Don't request an extra row when reading fewer than `buffer_size`
+  rows with :meth:`~.ColumnFamily.get_range()` or
+  :meth:`~.ColumnFamily.get_indexed_slices()`.
+- Remove `pool_type` from logs, which showed up as ``None`` in
+  recent versions
+- Logs were erroneously showing the same server for retries
+  of failed operations even when the actual server being
+  queried had changed
+
+Changes in Version 1.4.0
+------------------------
+This release is primarily a bugfix release with a couple
+of minor features and removed deprecated items.
+
+Features
+~~~~~~~~
+- Accept column_validation_classes when creating or altering
+  column families with SystemManager
+- Ignore UNREACHABLE nodes when waiting for schema version
+  agreement
+
+Bug Fixes
+~~~~~~~~~
+- Remove accidental print statement in SystemManager
+- Raise TypeError when unexpected types are used for
+  comparator or validator types when creating or altering
+  a Column Family
+- Fix packing of column values using column-specific validators
+  during batch inserts when the column name is changed by packing
+- Always return timestamps from inserts
+- Fix NameError when timestamps are used where a DateType is
+  expected
+- Fix NameError in python 2.4 when unpacking DateType objects
+- Handle reading composites with trailing components missing
+- Upgrade ez_setup.py to fix broken setuptools link
+
+Removed Deprecated Items
+~~~~~~~~~~~~~~~~~~~~~~~~
+- :meth:`pycassa.connect()`
+- :meth:`pycassa.connect_thread_local()`
+- :meth:`.ConnectionPool.status()`
+- :meth:`.ConnectionPool.recreate()`
+
+
 Changes in Version 1.3.0
 ------------------------
 This release adds full compatibility with Cassandra 1.0 and

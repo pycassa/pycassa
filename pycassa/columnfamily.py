@@ -25,40 +25,51 @@ __all__ = ['gm_timestamp', 'ColumnFamily', 'PooledColumnFamily']
 
 class ColumnValidatorDict(DictMixin):
 
-    def __init__(self, other_dict={}):
+    def __init__(self, other_dict={}, name_packer=None, name_unpacker=None):
+        self.name_packer = name_packer or (lambda x: x)
+        self.name_unpacker = name_unpacker or (lambda x: x)
+
         self.type_map = {}
         self.packers = {}
         self.unpackers = {}
         for item, value in other_dict.items():
-            self[item] = value
+            packed_item = self.name_packer(item)
+            self[packed_item] = value
 
     def __getitem__(self, item):
-        return self.type_map[item]
+        packed_item = self.name_packer(item)
+        return self.type_map[packed_item]
 
     def __setitem__(self, item, value):
+        packed_item = self.name_packer(item)
         if isinstance(value, types.CassandraType):
-            self.type_map[item] = value
-            self.packers[item] = value.pack
-            self.unpackers[item] = value.unpack
+            self.type_map[packed_item] = value
+            self.packers[packed_item] = value.pack
+            self.unpackers[packed_item] = value.unpack
         else:
-            self.type_map[item] = marshal.extract_type_name(value)
-            self.packers[item] = marshal.packer_for(value)
-            self.unpackers[item] = marshal.unpacker_for(value)
+            self.type_map[packed_item] = marshal.extract_type_name(value)
+            self.packers[packed_item] = marshal.packer_for(value)
+            self.unpackers[packed_item] = marshal.unpacker_for(value)
 
     def __delitem__(self, item):
-        del self.type_map[item]
-        del self.packers[item]
-        del self.unpackers[item]
+        packed_item = self.name_packer(item)
+        del self.type_map[packed_item]
+        del self.packers[packed_item]
+        del self.unpackers[packed_item]
 
     def keys(self):
-        return self.type_map.keys()
+        return map(self.name_unpacker, self.type_map.keys())
 
 def gm_timestamp():
     """ Gets the current GMT timestamp in microseconds. """
     return int(time.time() * 1e6)
 
 class ColumnFamily(object):
-    """ An abstraction of a Cassandra column family or super column family. """
+    """
+    An abstraction of a Cassandra column family or super column family.
+    Operations on this, such as :meth:`get` or :meth:`insert` will get data from or
+    insert data into the corresponding Cassandra column family.
+    """
 
     buffer_size = 1024
     """ When calling :meth:`get_range()` or :meth:`get_indexed_slices()`,
@@ -66,6 +77,8 @@ class ColumnFamily(object):
     rows, otherwise performance may suffer and the Cassandra server may
     overallocate memory and fail. This is the size of that buffer in number
     of rows. The default is 1024. """
+
+    column_buffer_size = 1024
 
     read_consistency_level = ConsistencyLevel.ONE
     """ The default consistency level for every read operation, such as
@@ -110,6 +123,15 @@ class ColumnFamily(object):
     their natural type to the binary string format that Cassandra uses.
     The data type used is controlled by :attr:`key_validation_class`.
     By default, this is :const:`True`.
+    """
+
+    retry_counter_mutations = False
+    """ Whether to retry failed counter mutations. Counter mutations are
+    not idempotent so retrying could result in double counting.
+    By default, this is :const:`False`.
+
+    .. versionadded:: 1.5.0
+
     """
 
     def _set_column_name_class(self, t):
@@ -158,15 +180,15 @@ class ColumnFamily(object):
             self._default_validation_class = t
             self._default_value_packer = t.pack
             self._default_value_unpacker = t.unpack
-            have_counters = isinstance(t, types.CounterColumnType)
+            self._have_counters = isinstance(t, types.CounterColumnType)
         else:
             self._default_validation_class = marshal.extract_type_name(t)
             self._default_value_packer = marshal.packer_for(t)
             self._default_value_unpacker = marshal.unpacker_for(t)
-            have_counters = self._default_validation_class == "CounterColumnType"
+            self._have_counters = self._default_validation_class == "CounterColumnType"
 
         if not self.super:
-            if have_counters:
+            if self._have_counters:
                 def _make_cosc(name, value, timestamp, ttl):
                     return ColumnOrSuperColumn(counter_column=CounterColumn(name, value))
             else:
@@ -174,7 +196,7 @@ class ColumnFamily(object):
                     return ColumnOrSuperColumn(Column(name, value, timestamp, ttl))
             self._make_cosc = _make_cosc
         else:
-            if have_counters:
+            if self._have_counters:
                 def _make_column(name, value, timestamp, ttl):
                     return CounterColumn(name, value)
                 self._make_column = _make_column
@@ -183,8 +205,10 @@ class ColumnFamily(object):
                     return ColumnOrSuperColumn(counter_super_column=(SuperColumn(scol_name, subcols)))
             else:
                 self._make_column = Column
+
                 def _make_cosc(scol_name, subcols):
                     return ColumnOrSuperColumn(super_column=(SuperColumn(scol_name, subcols)))
+
             self._make_cosc = _make_cosc
 
     def _get_default_validation_class(self):
@@ -201,8 +225,12 @@ class ColumnFamily(object):
     include an instance of any class in :mod:`pycassa.types`, such as ``LongType()``.
     """
 
+    @property
+    def _allow_retries(self):
+        return not self._have_counters or self.retry_counter_mutations
+
     def _set_column_validators(self, other_dict):
-        self._column_validators = ColumnValidatorDict(other_dict)
+        self._column_validators = ColumnValidatorDict(other_dict, self._pack_name, self._unpack_name)
 
     def _get_column_validators(self):
         return self._column_validators
@@ -239,15 +267,13 @@ class ColumnFamily(object):
 
     def __init__(self, pool, column_family, **kwargs):
         """
-        An abstraction of a Cassandra column family or super column family.
-        Operations on this, such as :meth:`get` or :meth:`insert` will get data from or
-        insert data into the corresponding Cassandra column family with
-        name `column_family`.
-
         `pool` is a :class:`~pycassa.pool.ConnectionPool` that the column
-        family will use for all operations.  A connection is drawn from the
-        pool before each operations and is returned afterwards.  Note that
-        the keyspace to be used is determined by the pool.
+        family will use for all operations. A connection is drawn from the
+        pool before each operations and is returned afterwards.
+
+        `column_family` should be the name of the column family that you
+        want to use in Cassandra. Note that the keyspace to be used is
+        determined by the pool.
         """
 
         self.pool = pool
@@ -258,7 +284,8 @@ class ColumnFamily(object):
         recognized_kwargs = ["buffer_size", "read_consistency_level",
                              "write_consistency_level", "timestamp",
                              "dict_class", "buffer_size", "autopack_names",
-                             "autopack_values", "autopack_keys"]
+                             "autopack_values", "autopack_keys",
+                             "retry_counter_mutations"]
         for kw in recognized_kwargs:
             if kw in kwargs:
                 setattr(self, kw, kwargs[kw])
@@ -295,7 +322,8 @@ class ColumnFamily(object):
         self.default_validation_class = self._cfdef.default_validation_class
         self.column_validators = {}
         for name, coldef in self._cfdef.column_metadata.items():
-            self.column_validators[name] = coldef.validation_class
+            unpacked_name = self._unpack_name(name)
+            self.column_validators[unpacked_name] = coldef.validation_class
 
     def _load_key_class(self):
         if hasattr(self._cfdef, "key_validation_class"):
@@ -359,11 +387,11 @@ class ColumnFamily(object):
             if column_start != '':
                 column_start = self._pack_name(column_start,
                                                is_supercol_name=is_supercol_name,
-                                               slice_start=True)
+                                               slice_start=(not column_reversed))
             if column_finish != '':
                 column_finish = self._pack_name(column_finish,
                                                 is_supercol_name=is_supercol_name,
-                                                slice_start=False)
+                                                slice_start=column_reversed)
 
             sr = SliceRange(start=column_start, finish=column_finish,
                             reversed=column_reversed, count=column_count)
@@ -410,7 +438,6 @@ class ColumnFamily(object):
                 d_type = self.column_name_class
             raise TypeError("%s cannot be converted to a type matching %s" %
                             (b, d_type))
-
 
     def _pack_value(self, value, col_name):
         if value is None:
@@ -477,6 +504,61 @@ class ColumnFamily(object):
                 mut_list.append(Mutation(self._make_cosc(_pack_name(super_col, True), subcols)))
             return mut_list
 
+    def xget(self, key, column_start="", column_finish="", column_reversed=False,
+             column_count=None, include_timestamp=False, read_consistency_level=None,
+             buffer_size=None):
+
+        packed_key = self._pack_key(key)
+        cp = self._column_parent(None)
+        rcl = read_consistency_level or self.read_consistency_level
+
+        if buffer_size is None:
+            buffer_size = self.column_buffer_size
+
+        count = i = 0
+        last_name = finish = ""
+        if column_start != "":
+            last_name = self._pack_name(column_start)
+        if column_finish != "":
+            finish = self._pack_name(column_finish)
+        while True:
+            if column_count is not None:
+                if i == 0 and column_count <= buffer_size:
+                    buffer_size = column_count
+                else:
+                    buffer_size = min(column_count - count + 1, buffer_size)
+
+            sp = self._slice_predicate(None, last_name, finish,
+                                       column_reversed, buffer_size, None)
+            list_cosc = self.pool.execute('get_slice', packed_key, cp, sp, rcl)
+
+            if not list_cosc:
+                return
+
+            for j, cosc in enumerate(list_cosc):
+                if j == 0 and i != 0:
+                    continue
+
+                if self.super:
+                    scol = cosc.super_column
+                    yield (self._unpack_name(scol.name, True), self._scol_to_dict(scol, include_timestamp))
+                else:
+                    col = cosc.column
+                    yield (self._unpack_name(col.name, False), self._col_to_dict(col, include_timestamp))
+
+                count += 1
+                if column_count is not None and count >= column_count:
+                    return
+
+            if len(list_cosc) != buffer_size:
+                return
+
+            if self.super:
+                last_name = list_cosc[-1].super_column.name
+            else:
+                last_name = list_cosc[-1].column.name
+            i += 1
+
     def get(self, key, columns=None, column_start="", column_finish="",
             column_reversed=False, column_count=100, include_timestamp=False,
             super_column=None, read_consistency_level = None):
@@ -520,7 +602,6 @@ class ColumnFamily(object):
         single_column = columns is not None and len(columns) == 1
         if (not self.super and single_column) or \
            (self.super and super_column is not None and single_column):
-            super_col_orig = super_column is not None
             column = None
             if self.super and super_column is None:
                 super_column = columns[0]
@@ -589,7 +670,11 @@ class ColumnFamily(object):
         last_key = clause.start_key
         while True:
             if row_count is not None:
-                buffer_size = min(row_count - count + 1, buffer_size)
+                if i == 0 and row_count <= buffer_size:
+                    # We don't need to chunk, grab exactly the number of rows
+                    buffer_size = row_count
+                else:
+                    buffer_size = min(row_count - count + 1, buffer_size)
             clause.count = buffer_size
             clause.start_key = last_key
             key_slices = self.pool.execute('get_indexed_slices', cp, clause, sp, cl)
@@ -797,7 +882,12 @@ class ColumnFamily(object):
             buffer_size = self.buffer_size
         while True:
             if row_count is not None:
-                buffer_size = min(row_count - count + 1, buffer_size)
+                if i == 0 and row_count <= buffer_size:
+                    # We don't need to chunk, grab exactly the number of rows
+                    buffer_size = row_count
+                else:
+                    buffer_size = min(row_count - count + 1, buffer_size)
+
             key_range = KeyRange(start_key=last_key, end_key=finish, count=buffer_size)
             key_slices = self.pool.execute('get_range_slices', cp, sp, key_range, cl)
             # This may happen if nothing was ever inserted
@@ -861,13 +951,17 @@ class ColumnFamily(object):
             colname = self._pack_name(colname, False)
             column = Column(colname, colval, timestamp, ttl)
 
-            return self.pool.execute('insert', packed_key, cp, column,
-                    write_consistency_level or self.write_consistency_level)
+            self.pool.execute('insert', packed_key, cp, column,
+                    write_consistency_level or self.write_consistency_level,
+                    allow_retries=self._allow_retries)
         else:
             mut_list = self._make_mutation_list(columns, timestamp, ttl)
             mutations = {packed_key: {self.column_family: mut_list}}
-            return self.pool.execute('batch_mutate', mutations,
-                    write_consistency_level or self.write_consistency_level)
+            self.pool.execute('batch_mutate', mutations,
+                    write_consistency_level or self.write_consistency_level,
+                    allow_retries=self._allow_retries)
+
+        return timestamp
 
     def batch_insert(self, rows, timestamp=None, ttl=None, write_consistency_level = None):
         """
@@ -892,7 +986,8 @@ class ColumnFamily(object):
 
         if mutations:
             self.pool.execute('batch_mutate', mutations,
-                    write_consistency_level or self.write_consistency_level)
+                    write_consistency_level or self.write_consistency_level,
+                    allow_retries=self._allow_retries)
 
         return timestamp
 
@@ -903,11 +998,6 @@ class ColumnFamily(object):
         `value` should be an integer, either positive or negative, to be added
         to a counter column. By default, `value` is 1.
 
-        .. note:: This method is not idempotent. Retrying a failed add may result
-                  in a double count. You should consider using a separate
-                  ConnectionPool with retries disabled for column families
-                  with counters.
-
         .. versionadded:: 1.1.0
             Available in Cassandra 0.8.0 and later.
 
@@ -916,7 +1006,8 @@ class ColumnFamily(object):
         cp = self._column_parent(super_column)
         column = self._pack_name(column)
         self.pool.execute('add', packed_key, cp, CounterColumn(column, value),
-                          write_consistency_level or self.write_consistency_level)
+                          write_consistency_level or self.write_consistency_level,
+                          allow_retries=self._allow_retries)
 
     def remove(self, key, columns=None, super_column=None,
                write_consistency_level=None, timestamp=None, counter=None):
@@ -972,7 +1063,8 @@ class ColumnFamily(object):
         """
 
         return CfMutator(self, queue_size,
-                         write_consistency_level or self.write_consistency_level)
+                         write_consistency_level or self.write_consistency_level,
+                         allow_retries=self._allow_retries)
 
     def truncate(self):
         """

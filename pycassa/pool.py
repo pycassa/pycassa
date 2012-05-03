@@ -4,8 +4,12 @@ import time
 import threading
 import random
 import socket
-import Queue
-import warnings
+import sys
+
+if 'gevent.monkey' in sys.modules:
+    from gevent import queue as Queue
+else:
+    import Queue
 
 from thrift import Thrift
 from connection import Connection
@@ -22,8 +26,12 @@ __all__ = ['QueuePool', 'ConnectionPool', 'PoolListener',
 
 class ConnectionWrapper(Connection):
     """
-    A wrapper class for :class:`Connection`s that adds pooling functionality.
+    Creates a wrapper for a :class:`~.pycassa.connection.Connection`
+    object, adding pooling related functionality while still allowing
+    access to the thrift API calls.
 
+    These should not be created directly, only obtained through
+    Pool's :meth:`~.ConnectionPool.get()` method.
     """
 
     # These mark the state of the connection so that we can
@@ -34,15 +42,6 @@ class ConnectionWrapper(Connection):
     _DISPOSED = 2
 
     def __init__(self, pool, max_retries, *args, **kwargs):
-        """
-        Creates a wrapper for a :class:`~.pycassa.connection.Connection`
-        object, adding pooling related functionality while still allowing
-        access to the thrift API calls.
-
-        These should not be created directly, only obtained through
-        Pool's :meth:`~.ConnectionPool.get()` method.
-
-        """
         self._pool = pool
         self._retry_count = 0
         self.max_retries = max_retries
@@ -50,7 +49,7 @@ class ConnectionWrapper(Connection):
         self.starttime = time.time()
         self.operation_count = 0
         self._state = ConnectionWrapper._CHECKED_OUT
-        super(ConnectionWrapper, self).__init__(*args, **kwargs)
+        Connection.__init__(self, *args, **kwargs)
         self._pool._notify_on_connect(self)
 
         # For testing purposes only
@@ -101,6 +100,7 @@ class ConnectionWrapper(Connection):
         with its contents.
 
         """
+        self.server = new_conn_wrapper.server
         self.transport = new_conn_wrapper.transport
         self._iprot = new_conn_wrapper._iprot
         self._oprot = new_conn_wrapper._oprot
@@ -114,7 +114,9 @@ class ConnectionWrapper(Connection):
     def _retry(cls, f):
         def new_f(self, *args, **kwargs):
             self.operation_count += 1
+            self.info['request'] = {'method': f.__name__, 'args': args, 'kwargs': kwargs}
             try:
+                allow_retries = kwargs.pop('allow_retries', True)
                 if kwargs.pop('reset', False):
                     self._pool._replace_wrapper() # puts a new wrapper in the queue
                     self._replace(self._pool.get()) # swaps out transport
@@ -135,7 +137,8 @@ class ConnectionWrapper(Connection):
                 self._pool._clear_current()
 
                 self._retry_count += 1
-                if self.max_retries != -1 and self._retry_count > self.max_retries:
+                if (not allow_retries or
+                    (self.max_retries != -1 and self._retry_count > self.max_retries)):
                     raise MaximumRetryException('Retried %d times. Last failure was %s: %s' %
                                                 (self._retry_count, exc.__class__.__name__, exc))
                 # Exponential backoff
@@ -178,6 +181,9 @@ class ConnectionWrapper(Connection):
                     new_metadata[datum.name] = datum
                 cf_def.column_metadata = new_metadata
         return cf_defs
+
+    def __str__(self):
+        return "<ConnectionWrapper %s@%s>" % (self.keyspace, self.server)
 
 retryable = ('get', 'get_slice', 'multiget_slice', 'get_count', 'multiget_count',
              'get_range_slices', 'get_indexed_slices', 'batch_mutate', 'add',
@@ -251,8 +257,6 @@ class ConnectionPool(object):
                  prefill=True,
                  **kwargs):
         """
-        Constructs a pool that maintains a queue of open connections.
-
         All connections in the pool will be opened to `keyspace`.
 
         `server_list` is a sequence of servers in the form ``"host:port"`` that
@@ -326,7 +330,6 @@ class ConnectionPool(object):
         self._on_recycle = []
         self._on_failure = []
         self._on_server_list = []
-        self._on_pool_recreate = []
         self._on_pool_dispose = []
         self._on_pool_max = []
 
@@ -389,6 +392,8 @@ class ConnectionPool(object):
     def _create_connection(self):
         """Creates a ConnectionWrapper, which opens a
         pycassa.connection.Connection."""
+        if not self.server_list:
+            raise AllServersUnavailable('Cannot connect to any servers as server list is empty!')
         failure_count = 0
         while failure_count < 2 * len(self.server_list):
             try:
@@ -418,31 +423,6 @@ class ConnectionPool(object):
                 self._current_conns += 1
         finally:
             self._pool_lock.release()
-
-    def recreate(self):
-        """
-        Returns a new instance with idential creation arguments. This method
-        does *not* affect the object it is called on.
-
-        .. deprecated:: 1.2.0
-        """
-        msg = "ConnectionPool.recreate() has been deprecated."
-        warnings.warn(msg, DeprecationWarning)
-
-        self._notify_on_pool_recreate()
-        return ConnectionPool(pool_size=self._q.maxsize,
-                         max_overflow=self._max_overflow,
-                         pool_timeout=self.pool_timeout,
-                         keyspace=self.keyspace,
-                         server_list=self.server_list,
-                         credentials=self.credentials,
-                         timeout=self.timeout,
-                         recycle=self.recycle,
-                         max_retries=self.max_retries,
-                         prefill=self._prefill,
-                         logging_name=self.logging_name,
-                         use_threadlocal=self._pool_threadlocal,
-                         listeners=self.listeners)
 
     def _get_new_wrapper(self, server):
         return ConnectionWrapper(self, self.max_retries,
@@ -587,24 +567,6 @@ class ConnectionPool(object):
         self._overflow = 0 - self.size()
         self._notify_on_pool_dispose()
 
-    def status(self):
-        """
-        Returns the status of the pool.
-
-        .. deprecated:: 1.2.0
-        """
-        msg ="ConnectionPool.status() is deprecated, use " +\
-             "ConnectionPool.size(), checkedin(), overflow(), " +\
-             "and checkedout() instead."
-        warnings.warn(msg, DeprecationWarning)
-
-        return "Pool size: %d, connections in pool: %d, "\
-               "current overflow: %d, current checked out "\
-               "connections: %d" % (self.size(),
-                                    self.checkedin(),
-                                    self.overflow(),
-                                    self.checkedout())
-
     def size(self):
         """ Returns the capacity of the pool. """
         return self._pool_size
@@ -635,8 +597,8 @@ class ConnectionPool(object):
             methods=('connection_created', 'connection_checked_out',
                      'connection_checked_in', 'connection_disposed',
                      'connection_recycled', 'connection_failed',
-                     'obtained_server_list', 'pool_recreated',
-                     'pool_disposed', 'pool_at_max'))
+                     'obtained_server_list', 'pool_disposed',
+                     'pool_at_max'))
 
         self.listeners.append(listener)
         if hasattr(listener, 'connection_created'):
@@ -653,19 +615,10 @@ class ConnectionPool(object):
             self._on_failure.append(listener)
         if hasattr(listener, 'obtained_server_list'):
             self._on_server_list.append(listener)
-        if hasattr(listener, 'pool_recreated'):
-            self._on_pool_recreate.append(listener)
         if hasattr(listener, 'pool_disposed'):
             self._on_pool_dispose.append(listener)
         if hasattr(listener, 'pool_at_max'):
             self._on_pool_max.append(listener)
-
-    def _notify_on_pool_recreate(self):
-        if self._on_pool_recreate:
-            dic = {'pool_id': self.logging_name,
-                   'level': 'info'}
-            for l in self._on_pool_recreate:
-                l.pool_recreated(dic)
 
     def _notify_on_pool_dispose(self):
         if self._on_pool_dispose:
@@ -851,12 +804,6 @@ class PoolListener(object):
         pool will choose from.
 
         Fields: `pool_id`, `level`, and `server_list`.
-        """
-
-    def pool_recreated(self, dic):
-        """Called when a pool is recreated.
-
-        Fields: `pool_id`, and `level`.
         """
 
     def pool_disposed(self, dic):

@@ -1,16 +1,19 @@
 from datetime import datetime
 import unittest
+import uuid
 
 import pycassa.types as types
 from pycassa import index, ColumnFamily, ConnectionPool, \
     ColumnFamilyMap, NotFoundException, SystemManager
 from nose.tools import assert_raises, assert_equal, assert_true
-from nose.plugins.skip import *
+from nose.plugins.skip import SkipTest
 
 
 CF = 'Standard1'
 SCF = 'Super1'
 INDEXED_CF = 'Indexed1'
+pool = None
+sys_man = None
 
 def setup_module():
     global pool, sys_man
@@ -23,6 +26,7 @@ def teardown_module():
 
 
 class TestUTF8(object):
+    key = types.LexicalUUIDType()
     strcol = types.AsciiType(default='default')
     intcol = types.LongType(default=0)
     floatcol = types.FloatType(default=0.0)
@@ -65,9 +69,9 @@ class TestColumnFamilyMap(unittest.TestCase):
         for instance in self.indexed_map.get_range():
             self.indexed_map.remove(instance)
 
-    def instance(self, key):
+    def instance(self):
         instance = TestUTF8()
-        instance.key = key
+        instance.key = uuid.uuid4()
         instance.strcol = '1'
         instance.intcol = 2
         instance.floatcol = 3.5
@@ -76,23 +80,24 @@ class TestColumnFamilyMap(unittest.TestCase):
         return instance
 
     def test_empty(self):
-        key = 'TestColumnFamilyMap.test_empty'
+        key = uuid.uuid4()
         assert_raises(NotFoundException, self.map.get, key)
         assert_equal(len(self.map.multiget([key])), 0)
 
     def test_insert_get(self):
-        instance = self.instance('TestColumnFamilyMap.test_insert_get')
+        instance = self.instance()
         assert_raises(NotFoundException, self.map.get, instance.key)
-        self.map.insert(instance)
+        ts = self.map.insert(instance)
+        assert_true(isinstance(ts, int))
         assert_equal(self.map.get(instance.key), instance)
-    
+
     def test_insert_get_omitting_columns(self):
-        r"""
+        """
         When omitting columns, pycassa should not try to insert the CassandraType
         instance on a ColumnFamilyMap object
         """
         instance2 = TestUTF8()
-        instance2.key = 'TestColumnFamilyMap.test_insert_get_2'
+        instance2.key = uuid.uuid4()
         instance2.strcol = 'lol'
         instance2.intcol = 2
         assert_raises(NotFoundException, self.map.get, instance2.key)
@@ -137,9 +142,9 @@ class TestColumnFamilyMap(unittest.TestCase):
         assert_equal(count, 1)
 
     def test_insert_multiget(self):
-        instance1 = self.instance('TestColumnFamilyMap.test_insert_multiget1')
-        instance2 = self.instance('TestColumnFamilyMap.test_insert_multiget2')
-        missing_key = 'TestColumnFamilyMap.test_insert_multiget3'
+        instance1 = self.instance()
+        instance2 = self.instance()
+        missing_key = uuid.uuid4()
 
         self.map.insert(instance1)
         self.map.insert(instance2)
@@ -153,11 +158,8 @@ class TestColumnFamilyMap(unittest.TestCase):
         if sys_man.describe_partitioner() == 'RandomPartitioner':
             raise SkipTest('Cannot use RandomPartitioner for this test')
 
-        instances = []
-        for i in xrange(5):
-            instance = self.instance('TestColumnFamilyMap.test_insert_get_range%s' % i)
-            instances.append(instance)
-
+        instances = [self.instance() for i in range(5)]
+        instances = sorted(instances, key=lambda instance: instance.key)
         for instance in instances:
             self.map.insert(instance)
 
@@ -166,14 +168,14 @@ class TestColumnFamilyMap(unittest.TestCase):
         assert_equal(rows, instances)
 
     def test_remove(self):
-        instance = self.instance('TestColumnFamilyMap.test_remove')
+        instance = self.instance()
 
         self.map.insert(instance)
         self.map.remove(instance)
         assert_raises(NotFoundException, self.map.get, instance.key)
 
     def test_does_not_insert_extra_column(self):
-        instance = self.instance('TestColumnFamilyMap.test_does_not_insert_extra_column')
+        instance = self.instance()
         instance.othercol = 'Test'
 
         self.map.insert(instance)
@@ -186,7 +188,7 @@ class TestColumnFamilyMap(unittest.TestCase):
         assert_raises(AttributeError, getattr, get_instance, 'othercol')
 
     def test_has_defaults(self):
-        key = 'TestColumnFamilyMap.test_has_defaults'
+        key = uuid.uuid4()
         ColumnFamily.insert(self.map, key, {'strcol': '1'})
         instance = self.map.get(key)
 
@@ -204,9 +206,9 @@ class TestSuperColumnFamilyMap(unittest.TestCase):
             for instance in scols.values():
                 self.map.remove(instance)
 
-    def instance(self, key, super_column):
+    def instance(self, super_column):
         instance = TestUTF8()
-        instance.key = key
+        instance.key = uuid.uuid4()
         instance.super_column = super_column
         instance.strcol = '1'
         instance.intcol = 2
@@ -216,7 +218,7 @@ class TestSuperColumnFamilyMap(unittest.TestCase):
         return instance
 
     def test_super(self):
-        instance = self.instance('TestSuperColumnFamilyMap.test_super', 'super1')
+        instance = self.instance('super1')
         assert_raises(NotFoundException, self.map.get, instance.key)
         self.map.insert(instance)
         res = self.map.get(instance.key)[instance.super_column]
@@ -225,11 +227,11 @@ class TestSuperColumnFamilyMap(unittest.TestCase):
         assert_equal(list(self.map.get_range(start=instance.key, finish=instance.key)), [{instance.super_column: instance}])
 
     def test_super_remove(self):
-        instance1 = self.instance('TestSuperColumnFamilyMap.test_super_remove', 'super1')
+        instance1 = self.instance('super1')
         assert_raises(NotFoundException, self.map.get, instance1.key)
         self.map.insert(instance1)
 
-        instance2 = self.instance('TestSuperColumnFamilyMap.test_super_remove', 'super2')
+        instance2 = self.instance('super2')
         self.map.insert(instance2)
 
         self.map.remove(instance2)

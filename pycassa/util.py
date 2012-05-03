@@ -13,6 +13,12 @@ __all__ = ['convert_time_to_uuid', 'convert_uuid_to_time', 'OrderedDict']
 
 _number_types = frozenset((int, long, float))
 
+LOWEST_TIME_UUID = uuid.UUID('00000000-0000-1000-8080-808080808080')
+""" The lowest possible TimeUUID, as sorted by Cassandra. """
+
+HIGHEST_TIME_UUID = uuid.UUID('ffffffff-ffff-1fff-bf7f-7f7f7f7f7f7f')
+""" The highest possible TimeUUID, as sorted by Cassandra. """
+
 def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
     """
     Converts a datetime or timestamp to a type 1 :class:`uuid.UUID`.
@@ -54,20 +60,18 @@ def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
     if isinstance(time_arg, uuid.UUID):
         return time_arg
 
-    nanoseconds = 0
     if hasattr(time_arg, 'timetuple'):
         seconds = int(time.mktime(time_arg.timetuple()))
         microseconds = (seconds * 1e6) + time_arg.time().microsecond
-        nanoseconds = microseconds * 1e3
     elif type(time_arg) in _number_types:
-        nanoseconds = int(time_arg * 1e9)
+        microseconds = int(time_arg * 1e6)
     else:
         raise ValueError('Argument for a v1 UUID column name or value was ' +
                 'neither a UUID, a datetime, or a number')
 
     # 0x01b21dd213814000 is the number of 100-ns intervals between the
     # UUID epoch 1582-10-15 00:00:00 and the Unix epoch 1970-01-01 00:00:00.
-    timestamp = int(nanoseconds/100) + 0x01b21dd213814000L
+    timestamp = int(microseconds * 10) + 0x01b21dd213814000L
 
     time_low = timestamp & 0xffffffffL
     time_mid = (timestamp >> 32L) & 0xffffL
@@ -79,16 +83,26 @@ def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
         clock_seq_hi_variant = (rand_bits & 0xff00L) / 0x100 # 8 bits, 8 offset
         node = (rand_bits & 0xffffffffffff0000L) / 0x10000L # 48 bits, 16 offset
     else:
+        # In the event of a timestamp tie, Cassandra compares the two
+        # byte arrays directly. This is a *signed* comparison of each byte
+        # in the two arrays.  So, we have to make each byte -128 or +127 for
+        # this to work correctly.
+        #
+        # For the clock_seq_hi_variant, we don't get to pick the two most
+        # significant bits (they're always 01), so we are dealing with a
+        # positive byte range for this particular byte.
         if lowest_val:
             # Make the lowest value UUID with the same timestamp
-            clock_seq_low = 0 & 0xffL
-            clock_seq_hi_variant = 0 & 0x3fL
-            node = 0 & 0xffffffffffffL # 48 bits
+            clock_seq_low = 0x80L
+            clock_seq_hi_variant = 0 & 0x3fL # The two most significant bits
+                                             # will be 0 and 1, no matter what
+            node = 0x808080808080L # 48 bits
         else:
             # Make the highest value UUID with the same timestamp
-            clock_seq_low = 0xffL
-            clock_seq_hi_variant = 0x3fL
-            node = 0xffffffffffffL # 48 bits
+            clock_seq_low = 0x7fL
+            clock_seq_hi_variant = 0x3fL # The two most significant bits will
+                                         # 0 and 1, no matter what
+            node = 0x7f7f7f7f7f7fL # 48 bits
     return uuid.UUID(fields=(time_low, time_mid, time_hi_version,
                         clock_seq_hi_variant, clock_seq_low, node), version=1)
 

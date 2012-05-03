@@ -5,11 +5,12 @@ from pycassa.util import *
 from pycassa.system_manager import *
 from pycassa.types import *
 from pycassa.index import *
+from pycassa.cassandra.constants import *
 
 from nose.tools import (assert_raises, assert_equal, assert_almost_equal,
                         assert_true)
 
-from datetime import datetime
+from datetime import date, datetime
 from uuid import uuid1
 import uuid
 import unittest
@@ -93,7 +94,7 @@ class TestCFs(unittest.TestCase):
                         2 + int(time.time() * 10 ** 6),
                         3 + int(time.time() * 10 ** 6)]
         type_groups.append(self.make_group(TestCFs.cf_big_int, big_int_cols))
-        
+
         time_cols = [TIME1, TIME2, TIME3]
         type_groups.append(self.make_group(TestCFs.cf_time, time_cols))
 
@@ -790,7 +791,8 @@ class TestKeyValidators(unittest.TestCase):
 
 class TestComposites(unittest.TestCase):
 
-    def test_static_composite(cls):
+    @classmethod
+    def setup_class(cls):
         sys = SystemManager()
         have_composites = sys._conn.version != CASSANDRA_07
         if not have_composites:
@@ -805,12 +807,19 @@ class TestComposites(unittest.TestCase):
                                                                UTF8Type(),
                                                                BytesType()))
 
+    @classmethod
+    def teardown_class(cls):
+        sys = SystemManager()
+        sys.drop_column_family(TEST_KS, 'StaticComposite')
+
+    def test_static_composite_basic(self):
         cf = ColumnFamily(pool, 'StaticComposite')
         colname = (127312831239123123, 1, uuid.uuid1(), uuid.uuid4(), 'foo', u'ba\u0254r', 'baz')
         cf.insert('key', {colname: 'val'})
         assert_equal(cf.get('key'), {colname: 'val'})
 
-
+    def test_static_composite_slicing(self):
+        cf = ColumnFamily(pool, 'StaticComposite')
         u1 = uuid.uuid1()
         u4 = uuid.uuid4()
         col0 = (0, 1, u1, u4, '', '', '')
@@ -836,7 +845,7 @@ class TestComposites(unittest.TestCase):
         assert_equal(result, {col1: '', col2: '', col3: ''})
 
         result = cf.get('key2', column_start=(1, 1), column_finish=(1, 3))
-        assert_equal(result, {col1: '', col2: ''})
+        assert_equal(result, {col1: '', col2: '', col3: ''})
 
         result = cf.get('key2', column_start=(1, 1), column_finish=(1, (3, True)))
         assert_equal(result, {col1: '', col2: '', col3: ''})
@@ -844,7 +853,25 @@ class TestComposites(unittest.TestCase):
         result = cf.get('key2', column_start=(1, (1, True)), column_finish=((2, False), ))
         assert_equal(result, {col1: '', col2: '', col3: ''})
 
-        sys.drop_column_family(TEST_KS, 'StaticComposite')
+    def test_static_composite_get_partial_composite(self):
+        cf = ColumnFamily(pool, 'StaticComposite')
+        cf.insert('key3', {(123123, 1): 'val'})
+        assert_equal(cf.get('key3'), {(123123, 1): 'val'})
+
+    def test_uuid_composites(self):
+        sys = SystemManager()
+        if sys._conn.version == CASSANDRA_07:
+            raise SkipTest("Cassandra < 0.8 does not composite types")
+        sys.create_column_family(TEST_KS, 'UUIDComposite',
+                comparator_type=CompositeType(IntegerType(reversed=True), TimeUUIDType()),
+                key_validation_class=TimeUUIDType(),
+                default_validation_class=UTF8Type())
+
+        key, u1, u2 = uuid.uuid1(), uuid.uuid1(), uuid.uuid1()
+        cf = ColumnFamily(pool, 'UUIDComposite')
+        cf.insert(key, {(123123, u1): 'foo'})
+        cf.insert(key, {(123123, u1): 'foo', (-1, u2): 'bar', (-123123123, u1): 'baz'})
+        assert_equal(cf.get(key), {(123123, u1): 'foo', (-1, u2): 'bar', (-123123123, u1): 'baz'})
 
 class TestBigInt(unittest.TestCase):
 
@@ -969,3 +996,232 @@ class TestTypeErrors(unittest.TestCase):
         assert_raises(TypeError, self.cf.insert, args=('key', {'col': 123}))
         assert_raises(TypeError, self.cf.insert, args=('key', {123: 123}))
         self.cf.remove('key')
+
+class TestDateTypes(unittest.TestCase):
+
+    def _compare_dates(self, d1, d2):
+        self.assertEquals(d1.timetuple(), d2.timetuple())
+        self.assertEquals(int(d1.microsecond/1e3), int(d2.microsecond/1e3))
+
+    def test_compatibility(self):
+        self.cf = ColumnFamily(pool, 'Standard1')
+        self.cf.column_validators['date'] = OldPycassaDateType()
+
+        d = datetime.now()
+        self.cf.insert('key1', {'date': d})
+        self._compare_dates(self.cf.get('key1')['date'], d)
+
+        self.cf.column_validators['date'] = IntermediateDateType()
+        self._compare_dates(self.cf.get('key1')['date'], d)
+        self.cf.insert('key1', {'date': d})
+        self._compare_dates(self.cf.get('key1')['date'], d)
+
+        self.cf.column_validators['date'] = DateType()
+        self._compare_dates(self.cf.get('key1')['date'], d)
+        self.cf.insert('key1', {'date': d})
+        self._compare_dates(self.cf.get('key1')['date'], d)
+        self.cf.remove('key1')
+
+class TestPackerOverride(unittest.TestCase):
+
+    @classmethod
+    def setup_class(cls):
+        sys = SystemManager()
+        have_composites = sys._conn.version != CASSANDRA_07
+        if not have_composites:
+            raise SkipTest("Cassandra < 0.8 does not composite types")
+
+        sys.create_column_family(TEST_KS, 'CompositeOverrideCF',
+                comparator_type=CompositeType(AsciiType(), AsciiType()),
+                default_validation_class=AsciiType())
+
+    @classmethod
+    def teardown_class(cls):
+        sys = SystemManager()
+        sys.drop_column_family(TEST_KS, 'CompositeOverrideCF')
+
+    def test_column_validator(self):
+        cf = ColumnFamily(pool, 'CompositeOverrideCF')
+        cf.column_validators[('a', 'b')] = BooleanType()
+        cf.insert('key', {('a', 'a'): 'foo', ('a', 'b'): True})
+        assert_equal(cf.get('key'), {('a', 'a'): 'foo', ('a', 'b'): True})
+
+        assert_equal(cf.column_validators[('a', 'b')].__class__, BooleanType)
+
+        keys = cf.column_validators.keys()
+        assert_equal(keys, [('a', 'b')])
+
+        del cf.column_validators[('a', 'b')]
+        assert_raises(KeyError, cf.column_validators.__getitem__, ('a', 'b'))
+
+class TestCustomTypes(unittest.TestCase):
+
+    class IntString(types.CassandraType):
+
+        @staticmethod
+        def pack(intval):
+            return str(intval)
+
+        @staticmethod
+        def unpack(strval):
+            return int(strval)
+
+    class IntString2(types.CassandraType):
+
+        def __init__(self, *args, **kwargs):
+            self.pack = lambda val: str(val)
+            self.unpack = lambda val: int(val)
+
+    def test_staticmethod_funcs(self):
+        self.cf = ColumnFamily(pool, 'Standard1')
+        self.cf.key_validation_class = TestCustomTypes.IntString()
+        self.cf.insert(1234, {'col': 'val'})
+        assert_equal(self.cf.get(1234), {'col': 'val'})
+
+    def test_constructor_lambdas(self):
+        self.cf = ColumnFamily(pool, 'Standard1')
+        self.cf.key_validation_class = TestCustomTypes.IntString2()
+        self.cf.insert(1234, {'col': 'val'})
+        assert_equal(self.cf.get(1234), {'col': 'val'})
+
+class TestCustomComposite(unittest.TestCase):
+    """
+    Test CompositeTypes with custom inner types.
+    """
+
+    # Some contrived scenarios
+    class IntDateType(types.CassandraType):
+        """
+        Represent a date as an integer. E.g.: March 05, 2012 = 20120305
+        """
+        @staticmethod
+        def pack(v, *args, **kwargs):
+            assert type(v) in (datetime, date), "Invalid arg"
+            str_date = v.strftime("%Y%m%d")
+            return marshal.encode_int(int(str_date))
+
+        @staticmethod
+        def unpack(v, *args, **kwargs):
+            int_date = marshal.decode_int(v)
+            return date(*time.strptime(str(int_date), "%Y%m%d")[0:3])
+
+    class IntString(types.CassandraType):
+
+        @staticmethod
+        def pack(intval):
+            return str(intval)
+
+        @staticmethod
+        def unpack(strval):
+            return int(strval)
+
+    class IntString2(types.CassandraType):
+
+        def __init__(self, *args, **kwargs):
+            self.pack = lambda val: str(val)
+            self.unpack = lambda val: int(val)
+
+    @classmethod
+    def setup_class(cls):
+        sys = SystemManager()
+        have_composites = sys._conn.version != CASSANDRA_07
+        if not have_composites:
+            raise SkipTest("Cassandra < 0.8 does not composite types")
+
+        sys.create_column_family(
+            TEST_KS,
+            'CustomComposite1',
+            comparator_type=CompositeType(
+                IntegerType(),
+                UTF8Type()))
+
+    @classmethod
+    def teardown_class(cls):
+        sys = SystemManager()
+        sys.drop_column_family(TEST_KS, 'CustomComposite1')
+
+    def test_static_composite_basic(self):
+        cf = ColumnFamily(pool, 'CustomComposite1')
+        colname = (20120305, '12345')
+        cf.insert('key', {colname: 'val1'})
+        assert_equal(cf.get('key'), {colname: 'val1'})
+
+    def test_insert_with_custom_composite(self):
+        cf_std = ColumnFamily(pool, 'CustomComposite1')
+        cf_cust = ColumnFamily(pool, 'CustomComposite1')
+        cf_cust.column_name_class = CompositeType(
+                TestCustomComposite.IntDateType(),
+                TestCustomComposite.IntString())
+
+        std_col = (20120311, '321')
+        cust_col = (date(2012, 3, 11), 321)
+        cf_cust.insert('cust_insert_key_1', {cust_col: 'cust_insert_val_1'})
+        assert_equal(cf_std.get('cust_insert_key_1'),
+                {std_col: 'cust_insert_val_1'})
+
+    def test_retrieve_with_custom_composite(self):
+        cf_std = ColumnFamily(pool, 'CustomComposite1')
+        cf_cust = ColumnFamily(pool, 'CustomComposite1')
+        cf_cust.column_name_class = CompositeType(
+                TestCustomComposite.IntDateType(),
+                TestCustomComposite.IntString())
+
+        std_col = (20120312, '321')
+        cust_col = (date(2012, 3, 12), 321)
+        cf_std.insert('cust_insert_key_2', {std_col: 'cust_insert_val_2'})
+        assert_equal(cf_cust.get('cust_insert_key_2'),
+                {cust_col: 'cust_insert_val_2'})
+
+    def test_composite_slicing(self):
+        cf_std = ColumnFamily(pool, 'CustomComposite1')
+        cf_cust = ColumnFamily(pool, 'CustomComposite1')
+        cf_cust.column_name_class = CompositeType(
+                TestCustomComposite.IntDateType(),
+                TestCustomComposite.IntString2())
+
+        col0 = (20120101, '123')
+        col1 = (20120102, '123')
+        col2 = (20120102, '456')
+        col3 = (20120102, '789')
+        col4 = (20120103, '123')
+
+        dt0 = date(2012, 1, 1)
+        dt1 = date(2012, 1, 2)
+        dt2 = date(2012, 1, 3)
+
+        col0_cust = (dt0, 123)
+        col1_cust = (dt1, 123)
+        col2_cust = (dt1, 456)
+        col3_cust = (dt1, 789)
+        col4_cust = (dt2, 123)
+
+        cf_std.insert('key2', {col0: '', col1: '', col2: '', col3: '', col4: ''})
+
+        def check(column_start, column_finish, col_reversed=False):
+            result = cf_cust.get('key2', column_start=column_start,
+                    column_finish=column_finish, column_reversed=col_reversed)
+
+            assert_equal(result, {col1_cust: '', col2_cust: '', col3_cust: ''})
+
+        # Defaults should be inclusive on both ends
+        check((dt1,), (dt1,))
+        check((dt1,), (dt1,), True)
+
+        check(((dt1, True),), ((dt1, True),))
+        check((dt1,), ((dt2, False),))
+        check(((dt1, True),), ((dt2, False),))
+        check(((dt0, False),), ((dt2, False),))
+
+        check((dt1, 123), (dt1, 789))
+        check((dt1, 123), (dt1, (789, True)))
+        check((dt1, (123, True)), ((dt2, False),))
+
+        # Test inclusive ends for reversed
+        check(((dt1, True),), ((dt1, True),), True)
+        check( (dt1,),        ((dt1, True),), True)
+        check(((dt1, True),),  (dt1,),        True)
+
+        # Test exclusive ends for reversed
+        check(((dt2, False),), ((dt0, False),), True)
+        check(((dt2, False),),  (dt1,),         True)
+        check((dt1,),          ((dt0, False),), True)

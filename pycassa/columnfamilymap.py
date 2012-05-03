@@ -1,18 +1,13 @@
 """
-Provides a means for mapping an existing class to a column family.
+Provides a way to map an existing class of objects to a column family.
 
-.. seealso:: :mod:`pycassa.types`
+This can help to cut down boilerplate code related to converting
+objects to a row format and back again.  ColumnFamilyMap is primarily
+useful when you have one "object" per row.
 
-In addition to the default classes in :class:`~pycassa.types`,
-you may also define your own types for the mapper. For example,
-IntString may be defined as:
-
-.. code-block:: python
-
-    >>> class IntString(pycassa.types.CassandraType):
-    ...     def __init__(self, *args, **kwargs):
-    ...         self.pack = lambda val: return str(val)
-    ...         self.unpack = lambda intstr: return int(intstr)
+.. seealso:: :mod:`pycassa.types` for selecting data types for object
+             attributes and infomation about creating custom data
+             types.
 
 """
 
@@ -28,14 +23,14 @@ def create_instance(cls, **kwargs):
     return instance
 
 class ColumnFamilyMap(ColumnFamily):
-    """ Maps an existing class to a column family. """
+    """
+    Maps an existing class to a column family.  Class fields become columns,
+    and instances of that class can be represented as rows in standard column
+    families or super columns in super column families.
+    """
 
     def __init__(self, cls, pool, column_family, raw_columns=False, **kwargs):
         """
-        Maps an existing class to a column family.  Class fields become columns,
-        and instances of that class can be represented as rows in standard column
-        families or super columns in super column families.
-
         Instances of `cls` are returned from :meth:`get()`, :meth:`multiget()`,
         :meth:`get_range()` and :meth:`get_indexed_slices()`.
 
@@ -46,7 +41,6 @@ class ColumnFamilyMap(ColumnFamily):
 
         If `raw_columns` is ``True``, all columns will be fetched into the
         `raw_columns` field in requests.
-
         """
         ColumnFamily.__init__(self, pool, column_family, **kwargs)
 
@@ -58,10 +52,13 @@ class ColumnFamilyMap(ColumnFamily):
         self.defaults = {}
         self.fields = []
         for name, val_type in self.cls.__dict__.iteritems():
-            if isinstance(val_type, CassandraType):
+            if name != 'key' and isinstance(val_type, CassandraType):
                 self.fields.append(name)
                 self.column_validators[name] = val_type
                 self.defaults[name] = val_type.default
+
+        if hasattr(self.cls, 'key') and isinstance(self.cls.key, CassandraType):
+            self.key_validation_class = self.cls.key
 
     def combine_columns(self, columns):
         combined_columns = columns

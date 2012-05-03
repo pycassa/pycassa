@@ -31,7 +31,7 @@ and the default value will be used when you get old instances.
   >>> from pycassa.columnfamilymap import ColumnFamilyMap
   >>>
   >>> pool = ConnectionPool('Keyspace1')
-  >>> cfmap = ColumnFamilyMap(pool, User, 'users')
+  >>> cfmap = ColumnFamilyMap(User, pool, 'users')
 
 All the functions are exactly the same as for :class:`ColumnFamily`,
 except that they return instances of the supplied class when possible.

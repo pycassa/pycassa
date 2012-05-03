@@ -4,17 +4,15 @@
 #
 # This file is execfile()d with the current directory set to its containing dir.
 
-import sys, os
+import sys
+import os
 sys.path.append(os.path.abspath('..'))
-
-import pycassa
 
 # -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.coverage',
-              'sphinx.ext.todo', 'doc.sphinxtogithub']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.todo']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -33,9 +31,9 @@ project = 'pycassa'
 # built documents.
 #
 # The short X.Y version.
-version = '1.3'
+version = '1.6'
 # The full version, including alpha/beta/rc tags.
-release = '1.3.0'
+release = '1.6.0'
 
 # List of documents that shouldn't be included in the build.
 unused_docs = []
@@ -62,7 +60,7 @@ pygments_style = 'sphinx'
 #modindex_common_prefix = []
 
 # -- Options for extensions ----------------------------------------------------
-autoclass_content = 'init'
+autoclass_content = 'both'
 
 # -- Options for HTML output ---------------------------------------------------
 

@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 #
 
-import sys
 import os
 
 try:
@@ -24,7 +23,7 @@ except ImportError:
 
 from distutils.cmd import Command
 
-version_tuple = (1, 3, 0)
+version_tuple = (1, 6, 0)
 __version__ = '.'.join(map(str, version_tuple))
 
 long_description = """pycassa is a python client library for Apache Cassandra with the following features:
@@ -34,6 +33,34 @@ long_description = """pycassa is a python client library for Apache Cassandra wi
 3. A batch interface
 4. Simplified version of the Thrift interface
 5. A method to map an existing class to a Cassandra column family
+"""
+
+class rpm(Command):
+
+    description = "builds a RPM package"
+
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        if has_subprocess:
+            status = subprocess.call(["python", "setup.py", "bdist_rpm", "--install-script", "rpm-install-script.sh"])
+
+            if status:
+                raise RuntimeError("RPM build failed")
+
+            print ""
+            print "RPM built"
+        else:
+            print """
+`setup.py rpm` is not supported for this version of Python.
+
+Please ask in the user forums for help.
 """
 
 class doc(Command):
@@ -102,7 +129,7 @@ setup(
       install_requires = ['thrift'],
       py_modules=['ez_setup'],
       scripts=['pycassaShell'],
-      cmdclass={"doc": doc},
+      cmdclass={"doc": doc, "rpm": rpm},
       classifiers=[
           'Development Status :: 5 - Production/Stable',
           'Intended Audience :: Developers',

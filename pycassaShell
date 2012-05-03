@@ -56,9 +56,6 @@ def describe_keyspace(keyspace):
     if ks['strategy_options']:
         _print_line("Strategy Options", ks['strategy_options'])
 
-    _print_line("Replication Factor", str(ks['replication_factor']))
-    print
-
     cfs = SYSTEM_MANAGER.get_keyspace_column_families(keyspace).keys()
     cfs.sort()
     print "Column Families:"
@@ -143,25 +140,28 @@ def describe_column_family(arg1, arg2=None):
         _print_line("  Max", cfdef.max_compaction_threshold)
     print
 
-    print 'Memtable Flush After Thresholds'
-    _print_line("  Throughput", str(cfdef.memtable_throughput_in_mb) + " MiB")
-    s = str(int(cfdef.memtable_operations_in_millions * 1000000))
-    _print_line("  Operations", s + " operations")
-    _print_line("  Time", str(cfdef.memtable_flush_after_mins) + " minutes")
-    print
+    if hasattr(cfdef, 'memtable_throughput_in_mb'):
+        print 'Memtable Flush After Thresholds'
+        _print_line("  Throughput", str(cfdef.memtable_throughput_in_mb) + " MiB")
+        s = str(int(cfdef.memtable_operations_in_millions * 1000000))
+        _print_line("  Operations", s + " operations")
+        _print_line("  Time", str(cfdef.memtable_flush_after_mins) + " minutes")
+        print
 
-    print "Cache Save Periods"
-    if cfdef.row_cache_save_period_in_seconds == 0:
-        s = 'Disabled'
-    else:
-        s = str(cfdef.row_cache_save_period_in_seconds) + ' seconds'
-    _print_line("  Row Cache", s)
+    if getattr(cfdef, 'row_cache_save_period_in_seconds', None) is not None:
+        print "Cache Save Periods"
+        if cfdef.row_cache_save_period_in_seconds == 0:
+            s = 'Disabled'
+        else:
+            s = str(cfdef.row_cache_save_period_in_seconds) + ' seconds'
+        _print_line("  Row Cache", s)
 
-    if cfdef.key_cache_save_period_in_seconds == 0:
-        s = 'Disabled'
-    else:
-        s = str(cfdef.key_cache_save_period_in_seconds) + ' seconds'
-    _print_line("  Key Cache", s)
+    if getattr(cfdef, 'key_cache_save_period_in_seconds', None) is not None:
+        if cfdef.key_cache_save_period_in_seconds == 0:
+            s = 'Disabled'
+        else:
+            s = str(cfdef.key_cache_save_period_in_seconds) + ' seconds'
+        _print_line("  Key Cache", s)
 
     if cfdef.column_metadata:
         print "\nColumn Metadata"

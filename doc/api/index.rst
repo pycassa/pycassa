@@ -15,5 +15,4 @@ Pycassa Modules
    pycassa/batch
    pycassa/types
    pycassa/util
-   pycassa/connection
    pycassa/logging/pycassa_logger
