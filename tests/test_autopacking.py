@@ -70,9 +70,9 @@ class TestCFs(unittest.TestCase):
                 cf.remove(key)
 
     def make_group(self, cf, cols):
-        diction = { cols[0]: VALS[0],
-                    cols[1]: VALS[1],
-                    cols[2]: VALS[2]}
+        diction = OrderedDict([(cols[0], VALS[0]),
+                               (cols[1], VALS[1]),
+                               (cols[2], VALS[2])])
         return { 'cf': cf, 'cols': cols, 'dict': diction}
 
     def test_standard_column_family(self):
@@ -139,6 +139,9 @@ class TestCFs(unittest.TestCase):
                          {gcols[0]: VALS[0]})
 
             assert_equal(cf.get_count(KEYS[0]), 3)
+
+            # Test xget paging
+            assert_equal(list(cf.xget(KEYS[0], buffer_size=2)), gdict.items())
 
             # Test removing rows
             cf.remove(KEYS[0], columns=gcols[:1])
@@ -233,9 +236,9 @@ class TestSuperCFs(unittest.TestCase):
                 cf.remove(key)
 
     def make_super_group(self, cf, cols):
-        diction = { cols[0]: {'bytes': VALS[0]},
-                    cols[1]: {'bytes': VALS[1]},
-                    cols[2]: {'bytes': VALS[2]}}
+        diction = OrderedDict([(cols[0], {'bytes': VALS[0]}),
+                               (cols[1], {'bytes': VALS[1]}),
+                               (cols[2], {'bytes': VALS[2]})])
         return { 'cf': cf, 'cols': cols, 'dict': diction}
 
     def test_super_column_families(self):
@@ -296,6 +299,9 @@ class TestSuperCFs(unittest.TestCase):
             # A start and end that are the same
             assert_equal(cf.get(KEYS[0], column_start=gcols[0], column_finish=gcols[0]),
                          {gcols[0]: {'bytes': VALS[0]}})
+
+            # test xget paging
+            assert_equal(list(cf.xget(KEYS[0], buffer_size=2)), gdict.items())
 
             assert_equal(cf.get_count(KEYS[0]), 3)
 

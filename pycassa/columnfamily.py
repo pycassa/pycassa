@@ -376,7 +376,7 @@ class ColumnFamily(object):
                             super_column=self._pack_name(super_column, is_supercol_name=True))
 
     def _slice_predicate(self, columns, column_start, column_finish,
-                         column_reversed, column_count, super_column=None):
+                         column_reversed, column_count, super_column=None, pack=True):
         is_supercol_name = self.super and super_column is None
         if columns is not None:
             packed_cols = []
@@ -384,11 +384,11 @@ class ColumnFamily(object):
                 packed_cols.append(self._pack_name(col, is_supercol_name=is_supercol_name))
             return SlicePredicate(column_names=packed_cols)
         else:
-            if column_start != '':
+            if column_start != '' and pack:
                 column_start = self._pack_name(column_start,
                                                is_supercol_name=is_supercol_name,
                                                slice_start=(not column_reversed))
-            if column_finish != '':
+            if column_finish != '' and pack:
                 column_finish = self._pack_name(column_finish,
                                                 is_supercol_name=is_supercol_name,
                                                 slice_start=column_reversed)
@@ -521,6 +521,7 @@ class ColumnFamily(object):
             last_name = self._pack_name(column_start)
         if column_finish != "":
             finish = self._pack_name(column_finish)
+
         while True:
             if column_count is not None:
                 if i == 0 and column_count <= buffer_size:
@@ -529,7 +530,7 @@ class ColumnFamily(object):
                     buffer_size = min(column_count - count + 1, buffer_size)
 
             sp = self._slice_predicate(None, last_name, finish,
-                                       column_reversed, buffer_size, None)
+                                       column_reversed, buffer_size, None, pack=False)
             list_cosc = self.pool.execute('get_slice', packed_key, cp, sp, rcl)
 
             if not list_cosc:
