@@ -205,6 +205,17 @@ class ColumnFamilyMap(ColumnFamily):
             combined = self.combine_columns(columns)
             yield create_instance(self.cls, key=key, **combined)
 
+    def _get_instance_as_dict(self, instance, columns=None):
+        fields = columns or self.fields
+        instance_dict = {}
+        for field in fields:
+            val = getattr(instance, field, None)
+            if val is not None and not isinstance(val, CassandraType):
+                instance_dict[field] = val
+        if self.super:
+            instance_dict = {instance.super_column: instance_dict}
+        return instance_dict
+
     def insert(self, instance, columns=None, timestamp=None, ttl=None,
                write_consistency_level=None):
         """
@@ -222,18 +233,25 @@ class ColumnFamilyMap(ColumnFamily):
         else:
             fields = columns
 
-        insert_dict = {}
-        for field in fields:
-            val = getattr(instance, field, None)
-            if val is not None and not isinstance(val, CassandraType):
-                insert_dict[field] = val
-
-        if self.super:
-            insert_dict = {instance.super_column: insert_dict}
-
+        insert_dict = self._get_instance_as_dict(instance, columns=fields)
         return ColumnFamily.insert(self, instance.key, insert_dict,
                                    timestamp=timestamp, ttl=ttl,
                                    write_consistency_level=write_consistency_level)
+
+    def batch_insert(self, instances, timestamp=None, ttl=None,
+            write_consistency_level=None):
+        """
+        Insert or update stored instances.
+
+        `instances` should be a list containing instances of `cls` to store.
+        """
+        insert_dict = dict(
+            [(instance.key, self._get_instance_as_dict(instance))
+                for instance in instances]
+        )
+        return ColumnFamily.batch_insert(self, insert_dict,
+                timestamp=timestamp, ttl=ttl,
+                write_consistency_level=write_consistency_level)
 
     def remove(self, instance, columns=None, write_consistency_level=None):
         """
