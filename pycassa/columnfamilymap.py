@@ -19,7 +19,7 @@ __all__ = ['ColumnFamilyMap']
 
 def create_instance(cls, **kwargs):
     instance = cls()
-    instance.__dict__.update(kwargs)
+    map(lambda (k,v): setattr(instance, k, v), kwargs.iteritems())
     return instance
 
 class ColumnFamilyMap(ColumnFamily):
