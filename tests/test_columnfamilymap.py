@@ -196,6 +196,24 @@ class TestColumnFamilyMap(unittest.TestCase):
         assert_equal(instance.floatcol, TestUTF8.floatcol.default)
         assert_equal(instance.datetimecol, TestUTF8.datetimecol.default)
 
+    def test_batch_insert(self):
+        instances = []
+        for i in range(3):
+            instance = TestUTF8()
+            instance.key = uuid.uuid4()
+            instance.strcol = 'instance%s' % (i + 1)
+            instances.append(instance)
+
+        for i in instances:
+            assert_raises(NotFoundException, self.map.get, i.key)
+
+        self.map.batch_insert(instances)
+
+        for i in instances:
+            get_instance = self.map.get(i.key)
+            assert_equal(get_instance.key, i.key)
+            assert_equal(get_instance.strcol, i.strcol)
+
 class TestSuperColumnFamilyMap(unittest.TestCase):
 
     def setUp(self):
@@ -237,3 +255,23 @@ class TestSuperColumnFamilyMap(unittest.TestCase):
         self.map.remove(instance2)
         assert_equal(len(self.map.get(instance1.key)), 1)
         assert_equal(self.map.get(instance1.key)[instance1.super_column], instance1)
+
+    def test_batch_insert_super(self):
+        instances = []
+        for i in range(3):
+            instance = self.instance('super_batch%s' % (i + 1))
+            instances.append(instance)
+
+        for i in instances:
+            assert_raises(NotFoundException, self.map.get, i.key)
+
+        self.map.batch_insert(instances)
+
+        for i in instances:
+            result = self.map.get(i.key)
+            get_instance = result[i.super_column]
+            assert_equal(len(result), 1)
+            assert_equal(get_instance.key, i.key)
+            assert_equal(get_instance.super_column, i.super_column)
+            assert_equal(get_instance.strcol, i.strcol)
+
