@@ -331,6 +331,18 @@ class TestColumnFamily(unittest.TestCase):
         result = counter_cf.get('key')
         assert_equal(result, {'col': 2, 'col2': 1})
 
+    def test_insert_counters(self):
+        if not have_counters:
+            raise SkipTest('Cassandra 0.7 does not support counters')
+
+        counter_cf.insert('counter_key', {'col1': 1})
+        result = counter_cf.get('counter_key')
+        assert_equal(result['col1'], 1)
+
+        counter_cf.insert('counter_key', {'col1': 1, 'col2': 1})
+        result = counter_cf.get('counter_key')
+        assert_equal(result, {'col1': 2, 'col2': 1})
+
     def test_remove(self):
         key = 'TestColumnFamily.test_remove'
         columns = {'1': 'val1', '2': 'val2'}

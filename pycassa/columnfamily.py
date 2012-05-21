@@ -936,31 +936,11 @@ class ColumnFamily(object):
             timestamp = self.timestamp()
 
         packed_key = self._pack_key(key)
-
-        if ((not self.super) and len(columns) == 1) or \
-           (self.super and len(columns) == 1 and len(columns.values()[0]) == 1):
-
-            if self.super:
-                super_col = columns.keys()[0]
-                cp = self._column_path(super_col)
-                columns = columns.values()[0]
-            else:
-                cp = self._column_path()
-
-            colname = columns.keys()[0]
-            colval = self._pack_value(columns.values()[0], colname)
-            colname = self._pack_name(colname, False)
-            column = Column(colname, colval, timestamp, ttl)
-
-            self.pool.execute('insert', packed_key, cp, column,
-                    write_consistency_level or self.write_consistency_level,
-                    allow_retries=self._allow_retries)
-        else:
-            mut_list = self._make_mutation_list(columns, timestamp, ttl)
-            mutations = {packed_key: {self.column_family: mut_list}}
-            self.pool.execute('batch_mutate', mutations,
-                    write_consistency_level or self.write_consistency_level,
-                    allow_retries=self._allow_retries)
+        mut_list = self._make_mutation_list(columns, timestamp, ttl)
+        mutations = {packed_key: {self.column_family: mut_list}}
+        self.pool.execute('batch_mutate', mutations,
+                write_consistency_level or self.write_consistency_level,
+                allow_retries=self._allow_retries)
 
         return timestamp
 
