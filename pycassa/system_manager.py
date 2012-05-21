@@ -354,7 +354,7 @@ class SystemManager(object):
                                          ``sstable_compression``, which may be
                                          :const:`None` for no compression,
                                          ``SnappyCompressor``,
-                                         ``DefaultCompressor``, or a custom
+                                         ``DeflateCompressor``, or a custom
                                          compressor, and ``chunk_length_kb``,
                                          which must be a power of 2.
         comment                          A human readable comment describing
@@ -600,7 +600,7 @@ class SystemManager(object):
             live_versions = [key for key in versions.keys() if key != 'UNREACHABLE']
 
             if len(live_versions) == 1:
-               break
+                break
             else:
                 time.sleep(_SAMPLE_PERIOD)
 
@@ -617,4 +617,3 @@ class SystemManager(object):
             else:
                 break
         return schema_version
-
