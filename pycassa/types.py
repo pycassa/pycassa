@@ -22,7 +22,6 @@ be defined as follows:
 """
 
 import time
-import struct
 from datetime import datetime
 
 import pycassa.marshal as marshal
@@ -160,17 +159,11 @@ class OldPycassaDateType(CassandraType):
     @staticmethod
     def pack(v, *args, **kwargs):
         ts = _to_timestamp(v, use_micros=True)
-        if marshal._have_struct:
-            return marshal._long_packer.pack(ts)
-        else:
-            return struct.pack('>q', ts)
+        return marshal._long_packer.pack(ts)
 
     @staticmethod
     def unpack(v):
-        if marshal._have_struct:
-            ts = marshal._long_packer.unpack(v)[0] / 1e6
-        else:
-            ts = struct.unpack('>q', v)[0] / 1e6
+        ts = marshal._long_packer.unpack(v)[0] / 1e6
         return datetime.fromtimestamp(ts)
 
 class IntermediateDateType(CassandraType):
@@ -193,17 +186,11 @@ class IntermediateDateType(CassandraType):
     @staticmethod
     def pack(v, *args, **kwargs):
         ts = _to_timestamp(v, use_micros=False)
-        if marshal._have_struct:
-            return marshal._long_packer.pack(ts)
-        else:
-            return struct.pack('>q', ts)
+        return marshal._long_packer.pack(ts)
 
     @staticmethod
     def unpack(v):
-        if marshal._have_struct:
-            raw_ts = marshal._long_packer.unpack(v)[0] / 1e3
-        else:
-            raw_ts = struct.unpack('>q', v)[0] / 1e3
+        raw_ts = marshal._long_packer.unpack(v)[0] / 1e3
 
         try:
             return datetime.fromtimestamp(raw_ts)
