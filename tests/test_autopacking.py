@@ -921,19 +921,19 @@ class TestTimeUUIDs(unittest.TestCase):
         key = 'key1'
         timeline = []
 
-        timeline.append(datetime.now())
+        timeline.append(datetime.utcnow())
         time1 = uuid1()
         col1 = {time1:'0'}
         cf_time.insert(key, col1)
         time.sleep(1)
 
-        timeline.append(datetime.now())
+        timeline.append(datetime.utcnow())
         time2 = uuid1()
         col2 = {time2:'1'}
         cf_time.insert(key, col2)
         time.sleep(1)
 
-        timeline.append(datetime.now())
+        timeline.append(datetime.utcnow())
 
         cols = {time1:'0', time2:'1'}
 
@@ -1013,7 +1013,7 @@ class TestDateTypes(unittest.TestCase):
         self.cf = ColumnFamily(pool, 'Standard1')
         self.cf.column_validators['date'] = OldPycassaDateType()
 
-        d = datetime.now()
+        d = datetime.utcnow()
         self.cf.insert('key1', {'date': d})
         self._compare_dates(self.cf.get('key1')['date'], d)
 

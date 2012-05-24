@@ -4,8 +4,8 @@ in Cassandra.
 """
 
 import uuid
-import time
 import struct
+import calendar
 from datetime import datetime
 
 import pycassa.util as util
@@ -74,7 +74,7 @@ def _get_composite_name(typestr):
 def _to_timestamp(v):
     # Expects Value to be either date or datetime
     try:
-        converted = time.mktime(v.timetuple())
+        converted = calendar.timegm(v.utctimetuple())
         converted = converted * 1e3 + getattr(v, 'microsecond', 0)/1e3
     except AttributeError:
         # Ints and floats are valid timestamps too
@@ -248,7 +248,7 @@ def unpacker_for(typestr):
         return lambda v: v
 
     elif data_type == 'DateType':
-        return lambda v: datetime.fromtimestamp(
+        return lambda v: datetime.utcfromtimestamp(
                 _long_packer.unpack(v)[0] / 1e3)
 
     elif data_type == 'BooleanType':
