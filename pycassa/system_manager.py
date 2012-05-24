@@ -467,6 +467,7 @@ class SystemManager(object):
         self._cfdef_assign(merge_shards_chance, cfdef, 'merge_shards_chance')
         self._cfdef_assign(comment, cfdef, 'comment')
 
+        cfdef.default_validation_class = self._qualify_type_class(default_validation_class)
         cfdef.replicate_on_write = replicate_on_write
         cfdef.key_alias = key_alias
         if row_cache_provider:

@@ -63,6 +63,16 @@ class SystemManagerTest(unittest.TestCase):
         cf = ColumnFamily(pool, 'LongCF')
         cf.insert('key', {2: 2})
         assert_equal(cf.get('key')[2], 2)
+        
+    def test_alter_column_family_default_validation_class(self):
+        sys.create_column_family(TEST_KS, 'AlteredCF', default_validation_class=LONG_TYPE)
+        pool = ConnectionPool(TEST_KS)
+        cf = ColumnFamily(pool, 'AlteredCF')
+        assert_equal(cf.default_validation_class, "LongType")
+
+        sys.alter_column_family(TEST_KS, 'AlteredCF', default_validation_class=UTF8_TYPE)
+        cf = ColumnFamily(pool, 'AlteredCF')
+        assert_equal(cf.default_validation_class, "UTF8Type")
 
     def test_alter_column_super_cf(self):
         sys.create_column_family(TEST_KS, 'SuperCF', super=True,
