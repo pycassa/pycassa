@@ -140,6 +140,11 @@ integer.</p>
 <dd><p>An 8 byte timestamp. This will be returned
 as a <tt class="xref py py-class docutils literal"><span class="pre">datetime.datetime</span></tt> instance by pycassa. Either
 <tt class="xref py py-class docutils literal"><span class="pre">datetime</span></tt> instances or timestamps will be accepted.</p>
+<p class="versionchanged">
+<span class="versionmodified">Changed in version 1.7.0: </span>Prior to 1.7.0, datetime objects were expected to be in
+local time. In 1.7.0 and beyond, naive datetimes are
+assumed to be in UTC and tz-aware objects will be
+automatically converted to UTC for storage in Cassandra.</p>
 </dd></dl>
 
 <dl class="class">
@@ -163,6 +168,11 @@ used by pycassa versions 1.2.0 to 1.5.0.</p>
 unix epoch, rather than the number of milliseconds, which
 is what cassandra-cli and other clients supporting DateType
 use.</p>
+<p class="versionchanged">
+<span class="versionmodified">Changed in version 1.7.0: </span>Prior to 1.7.0, datetime objects were expected to be in
+local time. In 1.7.0 and beyond, naive datetimes are
+assumed to be in UTC and tz-aware objects will be
+automatically converted to UTC for storage in Cassandra.</p>
 </dd></dl>
 
 <dl class="class">
@@ -179,6 +189,11 @@ the new format.</p>
 <p>It almost certainly <em>should not be used</em> for row keys,
 column names (if you care about the sorting), or column
 values that have a secondary index on them.</p>
+<p class="versionchanged">
+<span class="versionmodified">Changed in version 1.7.0: </span>Prior to 1.7.0, datetime objects were expected to be in
+local time. In 1.7.0 and beyond, naive datetimes are
+assumed to be in UTC and tz-aware objects will be
+automatically converted to UTC for storage in Cassandra.</p>
 </dd></dl>
 
 <dl class="class">
@@ -206,10 +221,10 @@ a subclass of <a class="reference internal" href="#pycassa.types.CassandraType" 
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="batch.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.batch</span></tt> &#8211; Batch Operations</a></p>
+                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">pycassa.batch</span></tt> &#8211; Batch Operations</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="util.html"
-                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">pycassa.util</span></tt> &#8211; Utilities</a></p>
+                        title="next chapter"><tt class="docutils literal"><span class="pre">pycassa.util</span></tt> &#8211; Utilities</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../_sources/api/pycassa/types.txt"

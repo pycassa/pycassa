@@ -95,6 +95,11 @@ is true.</li>
 </tr>
 </tbody>
 </table>
+<p class="versionchanged">
+<span class="versionmodified">Changed in version 1.7.0: </span>Prior to 1.7.0, datetime objects were expected to be in
+local time. In 1.7.0 and beyond, naive datetimes are
+assumed to be in UTC and tz-aware objects will be
+automatically converted to UTC.</p>
 </dd></dl>
 
 <dl class="function">
@@ -135,7 +140,7 @@ results of queries returning a v1 <tt class="xref py py-class docutils literal">
                         title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.types</span></tt> &#8211; Data Type Descriptions</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="logging/pycassa_logger.html"
-                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">pycassa.logging.pycassa_logger</span></tt> &#8211; Pycassa Logging</a></p>
+                        title="next chapter"><tt class="docutils literal"><span class="pre">pycassa.logging.pycassa_logger</span></tt> &#8211; Pycassa Logging</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../_sources/api/pycassa/util.txt"

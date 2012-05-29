@@ -125,6 +125,8 @@ automatically.  Use 0 to disable automatic sends.</p>
 <dd><p>Adds a single row insert to the batch.</p>
 <p><cite>column_family</cite> is the <a class="reference internal" href="columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>
 that the insert will be executed on.</p>
+<p>If this is used on a counter column family, integers may be used for
+column values, and they will be taken as counter adjustments.</p>
 </dd></dl>
 
 <dl class="method">

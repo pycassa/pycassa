@@ -335,7 +335,9 @@ for super column families.</p>
 or update.  If this is a standard column family, <cite>columns</cite> should
 look like <tt class="docutils literal"><span class="pre">{column_name:</span> <span class="pre">column_value}</span></tt>.  If this is a super
 column family, <cite>columns</cite> should look like
-<tt class="docutils literal"><span class="pre">{super_column_name:</span> <span class="pre">{sub_column_name:</span> <span class="pre">value}}</span></tt></p>
+<tt class="docutils literal"><span class="pre">{super_column_name:</span> <span class="pre">{sub_column_name:</span> <span class="pre">value}}</span></tt>.  If this is a
+counter column family, you may use integers as values and those will
+be used as counter adjustments.</p>
 <p>A timestamp may be supplied for all inserted columns with <cite>timestamp</cite>.</p>
 <p><cite>ttl</cite> sets the &#8220;time to live&#8221; in number of seconds for the inserted
 columns. After this many seconds, Cassandra will mark the columns as
