@@ -6,8 +6,7 @@ available for use by others working with pycassa.
 
 import random
 import uuid
-import time
-import datetime
+import calendar
 
 __all__ = ['convert_time_to_uuid', 'convert_uuid_to_time', 'OrderedDict']
 
@@ -56,12 +55,18 @@ def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
 
     :rtype: :class:`uuid.UUID`
 
+    .. versionchanged:: 1.7.0
+        Prior to 1.7.0, datetime objects were expected to be in
+        local time. In 1.7.0 and beyond, naive datetimes are
+        assumed to be in UTC and tz-aware objects will be
+        automatically converted to UTC.
+
     """
     if isinstance(time_arg, uuid.UUID):
         return time_arg
 
-    if hasattr(time_arg, 'timetuple'):
-        seconds = int(time.mktime(time_arg.timetuple()))
+    if hasattr(time_arg, 'utctimetuple'):
+        seconds = int(calendar.timegm(time_arg.utctimetuple()))
         microseconds = (seconds * 1e6) + time_arg.time().microsecond
     elif type(time_arg) in _number_types:
         microseconds = int(time_arg * 1e6)

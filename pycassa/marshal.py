@@ -4,8 +4,8 @@ in Cassandra.
 """
 
 import uuid
-import time
 import struct
+import calendar
 from datetime import datetime
 
 import pycassa.util as util
@@ -13,15 +13,25 @@ import pycassa.util as util
 _number_types = frozenset((int, long, float))
 
 if hasattr(struct, 'Struct'): # new in Python 2.5
-    _have_struct = True
-    _bool_packer   = struct.Struct('>B')
-    _float_packer  = struct.Struct('>f')
-    _double_packer = struct.Struct('>d')
-    _long_packer = struct.Struct('>q')
-    _int_packer = struct.Struct('>i')
-    _short_packer = struct.Struct('>H')
+    def make_packer(fmt_string):
+        return struct.Struct(fmt_string)
 else:
-    _have_struct = False
+    def make_packer(fmt_string):
+        class Struct(object):
+            def pack(self, v):
+                return struct.pack(fmt_string, v)
+
+            def unpack(self, v):
+                return struct.unpack(fmt_string, v)
+
+        return Struct()
+
+_bool_packer   = make_packer('>B')
+_float_packer  = make_packer('>f')
+_double_packer = make_packer('>d')
+_long_packer = make_packer('>q')
+_int_packer = make_packer('>i')
+_short_packer = make_packer('>H')
 
 _BASIC_TYPES = ['BytesType', 'LongType', 'IntegerType', 'UTF8Type',
                 'AsciiType', 'LexicalUUIDType', 'TimeUUIDType',
@@ -64,7 +74,7 @@ def _get_composite_name(typestr):
 def _to_timestamp(v):
     # Expects Value to be either date or datetime
     try:
-        converted = time.mktime(v.timetuple())
+        converted = calendar.timegm(v.utctimetuple())
         converted = converted * 1e3 + getattr(v, 'microsecond', 0)/1e3
     except AttributeError:
         # Ints and floats are valid timestamps too
@@ -82,10 +92,7 @@ def get_composite_packer(typestr=None, composite_type=None):
     elif composite_type:
         packers = [c.pack for c in composite_type.components] 
 
-    if _have_struct:
-        len_packer = _short_packer.pack
-    else:
-        len_packer = lambda v: struct.pack('>H', v)
+    len_packer = _short_packer.pack
 
     def pack_composite(items, slice_start=None):
         last_index = len(items) - 1
@@ -125,10 +132,7 @@ def get_composite_unpacker(typestr=None, composite_type=None):
     elif composite_type:
         unpackers = [c.unpack for c in composite_type.components]
 
-    if _have_struct:
-        len_unpacker = lambda v: _short_packer.unpack(v)[0]
-    else:
-        len_unpacker = lambda v: struct.unpack('>H', v)[0]
+    len_unpacker = lambda v: _short_packer.unpack(v)[0]
 
     def unpack_composite(bytestr):
         # The composite format for each component is:
@@ -158,57 +162,33 @@ def packer_for(typestr):
     data_type = extract_type_name(typestr)
 
     if data_type == 'DateType':
-        if _have_struct:
-            def pack_date(v, _=None):
-                return _long_packer.pack(_to_timestamp(v))
-        else:
-            def pack_date(v, _=None):
-                return struct.pack('>q', _to_timestamp(v))
+        def pack_date(v, _=None):
+            return _long_packer.pack(_to_timestamp(v))
         return pack_date
 
     elif data_type == 'BooleanType':
-        if _have_struct:
-            def pack_bool(v, _=None):
-                return _bool_packer.pack(bool(v))
-        else:
-            def pack_bool(v, _=None):
-                return struct.pack('>B', bool(v))
+        def pack_bool(v, _=None):
+            return _bool_packer.pack(bool(v))
         return pack_bool
 
     elif data_type == 'DoubleType':
-        if _have_struct:
-            def pack_double(v, _=None):
-                return _double_packer.pack(v)
-        else:
-            def pack_double(v, _=None):
-                return struct.pack('>d', v)
+        def pack_double(v, _=None):
+            return _double_packer.pack(v)
         return pack_double
 
     elif data_type == 'FloatType':
-        if _have_struct:
-            def pack_float(v, _=None):
-                return _float_packer.pack(v)
-        else:
-            def pack_float(v, _=None):
-                return struct.pack('>f', v)
+        def pack_float(v, _=None):
+            return _float_packer.pack(v)
         return pack_float
 
     elif data_type == 'LongType':
-        if _have_struct:
-            def pack_long(v, _=None):
-                return _long_packer.pack(v)
-        else:
-            def pack_long(v, _=None):
-                return struct.pack('>q', v)
+        def pack_long(v, _=None):
+            return _long_packer.pack(v)
         return pack_long
 
     elif data_type == 'Int32Type':
-        if _have_struct:
-            def pack_int32(v, _=None):
-                return _int_packer.pack(v)
-        else:
-            def pack_int32(v, _=None):
-                return struct.pack('>i', v)
+        def pack_int32(v, _=None):
+            return _int_packer.pack(v)
         return pack_int32
 
     elif data_type == 'IntegerType':
@@ -268,42 +248,23 @@ def unpacker_for(typestr):
         return lambda v: v
 
     elif data_type == 'DateType':
-        if _have_struct:
-            return lambda v: datetime.fromtimestamp(
-                    _long_packer.unpack(v)[0] / 1e3)
-        else:
-            return lambda v: datetime.fromtimestamp(
-                    struct.unpack('>q', v)[0] / 1e3)
+        return lambda v: datetime.utcfromtimestamp(
+                _long_packer.unpack(v)[0] / 1e3)
 
     elif data_type == 'BooleanType':
-        if _have_struct:
-            return lambda v: bool(_bool_packer.unpack(v)[0])
-        else:
-            return lambda v: bool(struct.unpack('>B', v)[0])
+        return lambda v: bool(_bool_packer.unpack(v)[0])
 
     elif data_type == 'DoubleType':
-        if _have_struct:
-            return lambda v: _double_packer.unpack(v)[0]
-        else:
-            return lambda v: struct.unpack('>d', v)[0]
+        return lambda v: _double_packer.unpack(v)[0]
 
     elif data_type == 'FloatType':
-        if _have_struct:
-            return lambda v: _float_packer.unpack(v)[0]
-        else:
-            return lambda v: struct.unpack('>f', v)[0]
+        return lambda v: _float_packer.unpack(v)[0]
 
     elif data_type == 'LongType':
-        if _have_struct:
-            return lambda v: _long_packer.unpack(v)[0]
-        else:
-            return lambda v: struct.unpack('>q', v)[0]
+        return lambda v: _long_packer.unpack(v)[0]
 
     elif data_type == 'Int32Type':
-        if _have_struct:
-            return lambda v: _int_packer.unpack(v)[0]
-        else:
-            return lambda v: struct.unpack('>i', v)[0]
+        return lambda v: _int_packer.unpack(v)[0]
 
     elif data_type == 'IntegerType':
         return decode_int

@@ -21,8 +21,7 @@ be defined as follows:
 
 """
 
-import time
-import struct
+import calendar
 from datetime import datetime
 
 import pycassa.marshal as marshal
@@ -122,6 +121,12 @@ class DateType(CassandraType):
     An 8 byte timestamp. This will be returned
     as a :class:`datetime.datetime` instance by pycassa. Either
     :class:`datetime` instances or timestamps will be accepted.
+
+    .. versionchanged:: 1.7.0
+        Prior to 1.7.0, datetime objects were expected to be in
+        local time. In 1.7.0 and beyond, naive datetimes are
+        assumed to be in UTC and tz-aware objects will be
+        automatically converted to UTC for storage in Cassandra.
     """
     pass
 
@@ -135,7 +140,7 @@ def _to_timestamp(v, use_micros=False):
         micro_scale = 1e3
 
     try:
-        converted = time.mktime(v.timetuple())
+        converted = calendar.timegm(v.utctimetuple())
         converted = (converted * scale) + \
                     (getattr(v, 'microsecond', 0) / micro_scale)
     except AttributeError:
@@ -155,23 +160,23 @@ class OldPycassaDateType(CassandraType):
     unix epoch, rather than the number of milliseconds, which
     is what cassandra-cli and other clients supporting DateType
     use.
+
+    .. versionchanged:: 1.7.0
+        Prior to 1.7.0, datetime objects were expected to be in
+        local time. In 1.7.0 and beyond, naive datetimes are
+        assumed to be in UTC and tz-aware objects will be
+        automatically converted to UTC for storage in Cassandra.
     """
 
     @staticmethod
     def pack(v, *args, **kwargs):
         ts = _to_timestamp(v, use_micros=True)
-        if marshal._have_struct:
-            return marshal._long_packer.pack(ts)
-        else:
-            return struct.pack('>q', ts)
+        return marshal._long_packer.pack(ts)
 
     @staticmethod
     def unpack(v):
-        if marshal._have_struct:
-            ts = marshal._long_packer.unpack(v)[0] / 1e6
-        else:
-            ts = struct.unpack('>q', v)[0] / 1e6
-        return datetime.fromtimestamp(ts)
+        ts = marshal._long_packer.unpack(v)[0] / 1e6
+        return datetime.utcfromtimestamp(ts)
 
 class IntermediateDateType(CassandraType):
     """
@@ -188,29 +193,29 @@ class IntermediateDateType(CassandraType):
     It almost certainly *should not be used* for row keys,
     column names (if you care about the sorting), or column
     values that have a secondary index on them.
+
+    .. versionchanged:: 1.7.0
+        Prior to 1.7.0, datetime objects were expected to be in
+        local time. In 1.7.0 and beyond, naive datetimes are
+        assumed to be in UTC and tz-aware objects will be
+        automatically converted to UTC for storage in Cassandra.
     """
 
     @staticmethod
     def pack(v, *args, **kwargs):
         ts = _to_timestamp(v, use_micros=False)
-        if marshal._have_struct:
-            return marshal._long_packer.pack(ts)
-        else:
-            return struct.pack('>q', ts)
+        return marshal._long_packer.pack(ts)
 
     @staticmethod
     def unpack(v):
-        if marshal._have_struct:
-            raw_ts = marshal._long_packer.unpack(v)[0] / 1e3
-        else:
-            raw_ts = struct.unpack('>q', v)[0] / 1e3
+        raw_ts = marshal._long_packer.unpack(v)[0] / 1e3
 
         try:
-            return datetime.fromtimestamp(raw_ts)
+            return datetime.utcfromtimestamp(raw_ts)
         except ValueError:
             # convert from bad microsecond format to millis
             corrected_ts = raw_ts / 1e3
-            return datetime.fromtimestamp(corrected_ts)
+            return datetime.utcfromtimestamp(corrected_ts)
 
 class CompositeType(CassandraType):
     """
