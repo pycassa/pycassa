@@ -921,7 +921,9 @@ class ColumnFamily(object):
         or update.  If this is a standard column family, `columns` should
         look like ``{column_name: column_value}``.  If this is a super
         column family, `columns` should look like
-        ``{super_column_name: {sub_column_name: value}}``
+        ``{super_column_name: {sub_column_name: value}}``.  If this is a
+        counter column family, you may use integers as values and those will
+        be used as counter adjustments.
 
         A timestamp may be supplied for all inserted columns with `timestamp`.
 

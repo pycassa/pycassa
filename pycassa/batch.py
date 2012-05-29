@@ -137,6 +137,9 @@ class Mutator(object):
         `column_family` is the :class:`~pycassa.columnfamily.ColumnFamily`
         that the insert will be executed on.
 
+        If this is used on a counter column family, integers may be used for
+        column values, and they will be taken as counter adjustments.
+
         """
         if columns:
             if timestamp is None:
