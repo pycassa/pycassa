@@ -410,6 +410,19 @@ class TestColumnFamily(unittest.TestCase):
             assert_equal(len(res), 200)
             assert_equal(res, [(str(i), str(i)) for i in range(100, 300)])
 
+    def test_xget_counter(self):
+        if not have_counters:
+            raise SkipTest('Cassandra 0.7 does not support counters')
+
+        key = 'test_xget_counter'
+        counter_cf.insert(key, {'col1': 1})
+        res = list(counter_cf.xget(key))
+        assert_equal(res, [('col1', 1)])
+
+        counter_cf.insert(key, {'col1': 1, 'col2': 1})
+        res = list(counter_cf.xget(key))
+        assert_equal(res, [('col1', 2), ('col2', 1)])
+
 class TestSuperColumnFamily(unittest.TestCase):
 
     def tearDown(self):
@@ -632,3 +645,16 @@ class TestSuperColumnFamily(unittest.TestCase):
 
         counter_scf.remove_counter(key, 'col', super_column='scol')
         assert_raises(NotFoundException, scf.get, key)
+
+    def test_xget_counter(self):
+        if not have_counters:
+            raise SkipTest('Cassandra 0.7 does not support counters')
+
+        key = 'test_xget_counter'
+        counter_scf.insert(key, {'scol': {'col1': 1}})
+        res = list(counter_scf.xget(key))
+        assert_equal(res, [('scol', {'col1': 1})])
+
+        counter_scf.insert(key, {'scol': {'col1': 1, 'col2': 1}})
+        res = list(counter_scf.xget(key))
+        assert_equal(res, [('scol', {'col1': 2, 'col2': 1})])
