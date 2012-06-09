@@ -541,10 +541,16 @@ class ColumnFamily(object):
                     continue
 
                 if self.super:
-                    scol = cosc.super_column
+                    if self._have_counters:
+                        scol = cosc.counter_super_column
+                    else:
+                        scol = cosc.super_column
                     yield (self._unpack_name(scol.name, True), self._scol_to_dict(scol, include_timestamp))
                 else:
-                    col = cosc.column
+                    if self._have_counters:
+                        col = cosc.counter_column
+                    else:
+                        col = cosc.column
                     yield (self._unpack_name(col.name, False), self._col_to_dict(col, include_timestamp))
 
                 count += 1
@@ -555,9 +561,15 @@ class ColumnFamily(object):
                 return
 
             if self.super:
-                last_name = list_cosc[-1].super_column.name
+                if self._have_counters:
+                    last_name = list_cosc[-1].counter_super_column.name
+                else:
+                    last_name = list_cosc[-1].super_column.name
             else:
-                last_name = list_cosc[-1].column.name
+                if self._have_counters:
+                    last_name = list_cosc[-1].counter_column.name
+                else:
+                    last_name = list_cosc[-1].column.name
             i += 1
 
     def get(self, key, columns=None, column_start="", column_finish="",
