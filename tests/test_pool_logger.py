@@ -1,6 +1,5 @@
 from unittest import TestCase
-from nose.tools import assert_equal
-from numpy.testing.utils import assert_raises
+from nose.tools import assert_equal, assert_raises
 
 from pycassa.logging.pool_stats_logger import StatsLogger
 from pycassa.pool import ConnectionPool, NoConnectionAvailable, InvalidRequestError
