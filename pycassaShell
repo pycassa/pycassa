@@ -59,7 +59,7 @@ def describe_keyspace(keyspace):
     cfs = SYSTEM_MANAGER.get_keyspace_column_families(keyspace).keys()
     cfs.sort()
     print "Column Families:"
-    for cf in cfs:
+    for cf in sorted(cfs, key=lambda cf: cf.name):
         print "  " + cf
 
 def describe_column_family(arg1, arg2=None):
@@ -289,7 +289,7 @@ if options.keyspace:
                               timeout=5)
 
     print "\nAvailable ColumnFamily instances:"
-    for cfname in SYSTEM_MANAGER.get_keyspace_column_families(options.keyspace).keys():
+    for cfname in sorted(SYSTEM_MANAGER.get_keyspace_column_families(options.keyspace).keys()):
         cfinstance = pycassa.ColumnFamily(_pool, cfname)
         exec('%s = cfinstance' % cfname.upper())
         spaces = " " * (25 - len(cfname))
