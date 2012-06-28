@@ -59,7 +59,7 @@ def describe_keyspace(keyspace):
     cfs = SYSTEM_MANAGER.get_keyspace_column_families(keyspace).keys()
     cfs.sort()
     print "Column Families:"
-    for cf in cfs
+    for cf in cfs:
         print "  " + cf
 
 def describe_column_family(arg1, arg2=None):
