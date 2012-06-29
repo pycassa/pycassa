@@ -125,6 +125,7 @@ setup(
                   'pycassa.cassandra.c07',
                   'pycassa.cassandra.c08',
                   'pycassa.cassandra.c10',
+                  'pycassa.cassandra.c11',
                   'pycassa.logging'],
       install_requires = ['thrift'],
       py_modules=['ez_setup'],
