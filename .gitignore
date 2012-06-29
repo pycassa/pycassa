@@ -2,7 +2,11 @@
 *.swp
 *.swo
 *.diff
+bin/
 build/
 doc/_build
 dist/
+include/
+lib/
+man/
 pycassa.egg-info/
