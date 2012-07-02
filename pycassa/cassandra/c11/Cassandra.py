@@ -6,6 +6,9 @@
 #  options string: py:new_style
 #
 
+# Manually add missing import
+from thrift.Thrift import TApplicationException
+
 from thrift.Thrift import TType, TMessageType, TException
 from ttypes import *
 from thrift.Thrift import TProcessor
