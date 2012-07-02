@@ -28,6 +28,9 @@ Contents
 :doc:`changelog`
     The changelog for every version of pycassa.
 
+:doc:`development`
+    Notes for developing pycassa itself.
+
 Help
 ------------
 Mailing Lists
@@ -73,3 +76,4 @@ following command from the root directory of pycassa:
    changelog
    assorted/index
    using_with/index
+   development
