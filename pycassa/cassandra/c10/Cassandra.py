@@ -4,6 +4,9 @@
 # DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
 #
 
+# Manually add missing import
+from thrift.Thrift import TApplicationException
+
 from thrift.Thrift import *
 from ttypes import *
 from thrift.Thrift import TProcessor
