@@ -3441,6 +3441,7 @@ class CqlPreparedResult(object):
    - itemId
    - count
    - variable_types
+   - variable_names
   """
 
   thrift_spec = (
@@ -3448,12 +3449,14 @@ class CqlPreparedResult(object):
     (1, TType.I32, 'itemId', None, None, ), # 1
     (2, TType.I32, 'count', None, None, ), # 2
     (3, TType.LIST, 'variable_types', (TType.STRING,None), None, ), # 3
+    (4, TType.LIST, 'variable_names', (TType.STRING,None), None, ), # 4
   )
 
-  def __init__(self, itemId=None, count=None, variable_types=None,):
+  def __init__(self, itemId=None, count=None, variable_types=None, variable_names=None,):
     self.itemId = itemId
     self.count = count
     self.variable_types = variable_types
+    self.variable_names = variable_names
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -3484,6 +3487,16 @@ class CqlPreparedResult(object):
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.LIST:
+          self.variable_names = []
+          (_etype163, _size160) = iprot.readListBegin()
+          for _i164 in xrange(_size160):
+            _elem165 = iprot.readString();
+            self.variable_names.append(_elem165)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -3505,8 +3518,15 @@ class CqlPreparedResult(object):
     if self.variable_types is not None:
       oprot.writeFieldBegin('variable_types', TType.LIST, 3)
       oprot.writeListBegin(TType.STRING, len(self.variable_types))
-      for iter160 in self.variable_types:
-        oprot.writeString(iter160)
+      for iter166 in self.variable_types:
+        oprot.writeString(iter166)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.variable_names is not None:
+      oprot.writeFieldBegin('variable_names', TType.LIST, 4)
+      oprot.writeListBegin(TType.STRING, len(self.variable_names))
+      for iter167 in self.variable_names:
+        oprot.writeString(iter167)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
