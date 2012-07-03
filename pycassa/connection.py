@@ -2,7 +2,7 @@ from thrift.transport import TTransport
 from thrift.transport import TSocket
 from thrift.protocol import TBinaryProtocol
 
-from pycassa.cassandra.c10 import Cassandra
+from pycassa.cassandra.c11 import Cassandra
 from pycassa.cassandra.constants import (CASSANDRA_07, CASSANDRA_08,
     CASSANDRA_10, CASSANDRA_11)
 from pycassa.cassandra.ttypes import AuthenticationRequest

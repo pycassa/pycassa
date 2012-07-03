@@ -5,7 +5,7 @@ import time
 from nose.tools import assert_raises, assert_equal, assert_true
 from pycassa import ColumnFamily, ConnectionPool, PoolListener, InvalidRequestError,\
                     NoConnectionAvailable, MaximumRetryException, AllServersUnavailable
-from pycassa.cassandra.c10.ttypes import ColumnPath
+from pycassa.cassandra.ttypes import ColumnPath
 
 _credentials = {'username':'jsmith', 'password':'havebadpass'}
 

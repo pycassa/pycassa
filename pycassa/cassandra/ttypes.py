@@ -1,1 +1,1 @@
-from pycassa.cassandra.c10.ttypes import *
+from pycassa.cassandra.c11.ttypes import *

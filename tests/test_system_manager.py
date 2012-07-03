@@ -1,5 +1,6 @@
 import unittest
 
+from nose import SkipTest
 from nose.tools import assert_equal, assert_raises
 
 from pycassa.pool import ConnectionPool
@@ -93,3 +94,27 @@ class SystemManagerTest(unittest.TestCase):
                 column_validation_classes=validators)
         cf.load_schema()
         self.assertEquals(cf.get('key'), {'name': 'John', 'age': 40})
+
+    def test_caching_pre_11(self):
+        version = tuple([int(v) for v in sys._conn.version.split('.')])
+        if version >= (19, 30, 0):
+            raise SkipTest('CF specific caching no longer supported.')
+        sys.create_column_family(TEST_KS, 'CachedCF10',
+            row_cache_size=100, key_cache_size=100,
+            row_cache_save_period_in_seconds=3,
+            key_cache_save_period_in_seconds=3)
+        pool = ConnectionPool(TEST_KS)
+        cf = ColumnFamily(pool, 'CachedCF10')
+        assert_equal(cf._cfdef.row_cache_size, 100)
+        assert_equal(cf._cfdef.key_cache_size, 100)
+        assert_equal(cf._cfdef.row_cache_save_period_in_seconds, 3)
+        assert_equal(cf._cfdef.key_cache_save_period_in_seconds, 3)
+        sys.alter_column_family(TEST_KS, 'CachedCF10',
+            row_cache_size=200, key_cache_size=200,
+            row_cache_save_period_in_seconds=4,
+            key_cache_save_period_in_seconds=4)
+        cf1 = ColumnFamily(pool, 'CachedCF10')
+        assert_equal(cf1._cfdef.row_cache_size, 200)
+        assert_equal(cf1._cfdef.key_cache_size, 200)
+        assert_equal(cf1._cfdef.row_cache_save_period_in_seconds, 4)
+        assert_equal(cf1._cfdef.key_cache_save_period_in_seconds, 4)
