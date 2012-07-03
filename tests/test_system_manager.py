@@ -96,7 +96,8 @@ class SystemManagerTest(unittest.TestCase):
         self.assertEquals(cf.get('key'), {'name': 'John', 'age': 40})
 
     def test_caching_pre_11(self):
-        version = tuple([int(v) for v in sys._conn.version.split('.')])
+        version = tuple(
+            [int(v) for v in sys._conn.describe_version().split('.')])
         if version >= (19, 30, 0):
             raise SkipTest('CF specific caching no longer supported.')
         sys.create_column_family(TEST_KS, 'CachedCF10',
