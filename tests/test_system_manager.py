@@ -119,3 +119,22 @@ class SystemManagerTest(unittest.TestCase):
         assert_equal(cf1._cfdef.key_cache_size, 200)
         assert_equal(cf1._cfdef.row_cache_save_period_in_seconds, 4)
         assert_equal(cf1._cfdef.key_cache_save_period_in_seconds, 4)
+
+    def test_caching_post_11(self):
+        version = tuple(
+            [int(v) for v in sys._conn.describe_version().split('.')])
+        if version < (19, 30, 0):
+            raise SkipTest('CF caching policy not yet supported.')
+        sys.create_column_family(TEST_KS, 'CachedCF11')
+        pool = ConnectionPool(TEST_KS)
+        cf = ColumnFamily(pool, 'CachedCF11')
+        assert_equal(cf._cfdef.caching, 'KEYS_ONLY')
+        sys.alter_column_family(TEST_KS, 'CachedCF11', caching='all')
+        cf = ColumnFamily(pool, 'CachedCF11')
+        assert_equal(cf._cfdef.caching, 'ALL')
+        sys.alter_column_family(TEST_KS, 'CachedCF11', caching='rows_only')
+        cf = ColumnFamily(pool, 'CachedCF11')
+        assert_equal(cf._cfdef.caching, 'ROWS_ONLY')
+        sys.alter_column_family(TEST_KS, 'CachedCF11', caching='none')
+        cf = ColumnFamily(pool, 'CachedCF11')
+        assert_equal(cf._cfdef.caching, 'NONE')

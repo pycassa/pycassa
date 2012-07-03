@@ -277,6 +277,7 @@ class SystemManager(object):
                              compaction_strategy_options=None,
                              row_cache_keys_to_save=None,
                              compression_options=None,
+                             caching=None,
                              comment=None):
 
         """
@@ -357,12 +358,18 @@ class SystemManager(object):
                                          ``DeflateCompressor``, or a custom
                                          compressor, and ``chunk_length_kb``,
                                          which must be a power of 2.
+        caching                          Specify caching policy, one of
+                                         `all`, `keys_only`, `rows_only` or
+                                         `none`, defaults to `keys_only`.
         comment                          A human readable comment describing
                                          the column family
         ================================ =====================================
 
         .. versionadded:: 1.4.0
             The `column_validation_classes` parameter.
+
+        .. versionadded:: 1.7.0
+            The `caching` parameter.
 
         """
 
@@ -402,6 +409,7 @@ class SystemManager(object):
         self._cfdef_assign(compaction_strategy_options, cfdef, 'compaction_strategy_options')
         self._cfdef_assign(row_cache_keys_to_save, cfdef, 'row_cache_keys_to_save')
         self._cfdef_assign(compression_options, cfdef, 'compression_options')
+        self._cfdef_assign(caching, cfdef, 'caching')
 
         self._system_add_column_family(cfdef) 
 
@@ -439,6 +447,7 @@ class SystemManager(object):
                             compaction_strategy_options=None,
                             row_cache_keys_to_save=None,
                             compression_options=None,
+                            caching=None,
                             comment=None):
 
         """
@@ -464,6 +473,7 @@ class SystemManager(object):
         self._cfdef_assign(compaction_strategy_options, cfdef, 'compaction_strategy_options')
         self._cfdef_assign(row_cache_keys_to_save, cfdef, 'row_cache_keys_to_save')
         self._cfdef_assign(compression_options, cfdef, 'compression_options')
+        self._cfdef_assign(caching, cfdef, 'caching')
         self._cfdef_assign(merge_shards_chance, cfdef, 'merge_shards_chance')
         self._cfdef_assign(comment, cfdef, 'comment')
 
