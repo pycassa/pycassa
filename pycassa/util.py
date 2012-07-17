@@ -344,8 +344,3 @@ class OrderedDict(dict, DictMixin):
 
     def __ne__(self, other):
         return not self == other
-
-def compatible(v1, v2):
-    v1 = map(int, v1.split('.', 2)[:2])
-    v2 = map(int, v2.split('.', 2)[:2])
-    return v1[0] == v2[0] and v1[1] <= v2[1]

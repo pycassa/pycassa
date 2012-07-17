@@ -3,17 +3,10 @@ from thrift.transport import TSocket
 from thrift.protocol import TBinaryProtocol
 
 from pycassa.cassandra.c11 import Cassandra
-from pycassa.cassandra.constants import (CASSANDRA_07, CASSANDRA_08,
-    CASSANDRA_10, CASSANDRA_11)
 from pycassa.cassandra.ttypes import AuthenticationRequest
-from pycassa.util import compatible
 
 DEFAULT_SERVER = 'localhost:9160'
 DEFAULT_PORT = 9160
-
-LOWEST_COMPATIBLE_VERSION = 17
-
-class ApiMismatch(Exception): pass
 
 class Connection(Cassandra.Client):
     """Encapsulation of a client session."""
@@ -30,7 +23,7 @@ class Connection(Cassandra.Client):
         host = server[0]
         socket = TSocket.TSocket(host, int(port))
         if timeout is not None:
-            socket.setTimeout(timeout*1000.0)
+            socket.setTimeout(timeout * 1000.0)
         if framed_transport:
             self.transport = TTransport.TFramedTransport(socket)
         else:
@@ -38,24 +31,6 @@ class Connection(Cassandra.Client):
         protocol = TBinaryProtocol.TBinaryProtocolAccelerated(self.transport)
         Cassandra.Client.__init__(self, protocol)
         self.transport.open()
-
-        if api_version is None:
-            server_api_version = self.describe_version()
-            if compatible(CASSANDRA_11, server_api_version):
-                self.version = CASSANDRA_11
-            elif compatible(CASSANDRA_10, server_api_version):
-                self.version = CASSANDRA_10
-            elif compatible(CASSANDRA_08, server_api_version):
-                self.version = CASSANDRA_08
-            elif compatible(CASSANDRA_07, server_api_version):
-                self.version = CASSANDRA_07
-            else:
-                raise ApiMismatch("Thrift API version incompatibility: " \
-                                  "server version %s is not Cassandra 0.7, " \
-                                  "0.8, 1.0 or 1.1" %
-                                  (server_api_version))
-        else:
-            self.version = api_version
 
         self.set_keyspace(keyspace)
 
