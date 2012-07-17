@@ -4,9 +4,13 @@ Development
 New thrift API
 --------------
 
-pycassa includes Cassandra's Python Thrift API in various sub-packages under
-`pycassa.cassandra`. With new versions of Cassandra there's new versions of
-the API and new Python files need to be generated.
+pycassa includes Cassandra's Python Thrift API in `pycassa.cassandra`.
+Since Cassandra 1.1.0, the generated Thrift definitions are fully backwards
+compatible, allowing you to use attributes that have been deprecated or
+removed in recent versions of Cassandra. So, even though the code is
+generated from a Cassandra 1.1.0 definition, you can use the resulting code
+with 0.7 and still have full access to attributes that were removed after
+0.7, such as the memtable flush thresholds.
 
 The following explains the procedure using Mac OS Lion as an example. Other
 Linux and BSD versions should work in similar ways. Of course you need to
@@ -62,10 +66,10 @@ We are only interested in the generated Python modules::
 
     ls thrift/gen-py/cassandra/*.py
 
-These should be copied into a new sub-package under `pycassa/cassandra` like
-`c11`. There's a couple more places that need to be updated in `setup.py`,
-`pycassa/connection.py`, `cassandra/constants.py` and `cassandra/ttypes.py`.
-Don't forget to review the documentation either.
+These should replace the python files in `pycassa/cassandra`, allowing you
+to use the latest Thrift methods and object definitions, such as CfDef (which
+controls what attributes you may set when creating or updating a column
+family). Don't forget to review the documentation.
 
 Make sure you run the tests, especially if adjusting the default protocol
 version or introducing backwards incompatible API changes.
