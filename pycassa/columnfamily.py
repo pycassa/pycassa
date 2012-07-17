@@ -189,27 +189,28 @@ class ColumnFamily(object):
 
         if not self.super:
             if self._have_counters:
-                def _make_cosc(name, value, timestamp, ttl):
+                def _make_counter_cosc(name, value, timestamp, ttl):
                     return ColumnOrSuperColumn(counter_column=CounterColumn(name, value))
+                self._make_cosc = _make_counter_cosc
             else:
-                def _make_cosc(name, value, timestamp, ttl):
+                def _make_normal_cosc(name, value, timestamp, ttl):
                     return ColumnOrSuperColumn(Column(name, value, timestamp, ttl))
-            self._make_cosc = _make_cosc
+                self._make_cosc = _make_normal_cosc
         else:
             if self._have_counters:
                 def _make_column(name, value, timestamp, ttl):
                     return CounterColumn(name, value)
                 self._make_column = _make_column
 
-                def _make_cosc(scol_name, subcols):
+                def _make_counter_super_cosc(scol_name, subcols):
                     return ColumnOrSuperColumn(counter_super_column=(SuperColumn(scol_name, subcols)))
+                self._make_cosc = _make_counter_super_cosc
             else:
                 self._make_column = Column
 
-                def _make_cosc(scol_name, subcols):
+                def _make_super_cosc(scol_name, subcols):
                     return ColumnOrSuperColumn(super_column=(SuperColumn(scol_name, subcols)))
-
-            self._make_cosc = _make_cosc
+                self._make_cosc = _make_super_cosc
 
     def _get_default_validation_class(self):
         return self._default_validation_class
@@ -507,6 +508,15 @@ class ColumnFamily(object):
     def xget(self, key, column_start="", column_finish="", column_reversed=False,
              column_count=None, include_timestamp=False, read_consistency_level=None,
              buffer_size=None):
+        """
+        Like :meth:`get()`, but creates a generator that pages over the columns
+        automatically.
+
+        The number of columns fetched at once can be controlled with the
+        `buffer_size` parameter. The default is :attr:`column_buffer_size`.
+
+        The generator returns `(name, value)` tuples.
+        """
 
         packed_key = self._pack_key(key)
         cp = self._column_parent(None)
@@ -574,7 +584,7 @@ class ColumnFamily(object):
 
     def get(self, key, columns=None, column_start="", column_finish="",
             column_reversed=False, column_count=100, include_timestamp=False,
-            super_column=None, read_consistency_level = None):
+            super_column=None, read_consistency_level=None):
         """
         Fetches all or part of the row with key `key`.
 
@@ -714,7 +724,7 @@ class ColumnFamily(object):
 
     def multiget(self, keys, columns=None, column_start="", column_finish="",
                  column_reversed=False, column_count=100, include_timestamp=False,
-                 super_column=None, read_consistency_level = None, buffer_size=None):
+                 super_column=None, read_consistency_level=None, buffer_size=None):
         """
         Fetch multiple rows from a Cassandra server.
 
@@ -742,7 +752,7 @@ class ColumnFamily(object):
         keymap = {}
         while offset < len(packed_keys):
             new_keymap = self.pool.execute('multiget_slice',
-                packed_keys[offset:offset+buffer_size], cp, sp, consistency)
+                packed_keys[offset:offset + buffer_size], cp, sp, consistency)
             keymap.update(new_keymap)
             offset += buffer_size
 
@@ -768,7 +778,8 @@ class ColumnFamily(object):
 
         return ret
 
-    MAX_COUNT = 2**31-1
+    MAX_COUNT = 2 ** 31 - 1
+
     def get_count(self, key, super_column=None, read_consistency_level=None,
                   columns=None, column_start="", column_finish="",
                   column_reversed=False, max_count=None):
@@ -831,7 +842,7 @@ class ColumnFamily(object):
         keymap = {}
         while offset < len(packed_keys):
             new_keymap = self.pool.execute('multiget_count',
-                packed_keys[offset:offset+buffer_size], cp, sp, consistency)
+                packed_keys[offset:offset + buffer_size], cp, sp, consistency)
             keymap.update(new_keymap)
             offset += buffer_size
 
@@ -958,7 +969,7 @@ class ColumnFamily(object):
 
         return timestamp
 
-    def batch_insert(self, rows, timestamp=None, ttl=None, write_consistency_level = None):
+    def batch_insert(self, rows, timestamp=None, ttl=None, write_consistency_level=None):
         """
         Like :meth:`insert()`, but multiple rows may be inserted at once.
 
