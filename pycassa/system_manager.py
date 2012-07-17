@@ -150,7 +150,7 @@ class SystemManager(object):
 
     def create_keyspace(self, name,
                         replication_strategy=SIMPLE_STRATEGY,
-                        strategy_options=None, durable_writes=True):
+                        strategy_options=None, durable_writes=True, **ks_kwargs):
 
         """
         Creates a new keyspace.  Column families may be added to this keyspace
@@ -186,14 +186,19 @@ class SystemManager(object):
             strategy_class = 'org.apache.cassandra.locator.%s' % replication_strategy
         else:
             strategy_class = replication_strategy
+
         ksdef = KsDef(name, strategy_class=strategy_class,
                       strategy_options=strategy_options,
                       cf_defs=[],
                       durable_writes=durable_writes)
+
+        for k, v in ks_kwargs.iteritems():
+            setattr(ksdef, k, v)
+
         self._system_add_keyspace(ksdef)
 
     def alter_keyspace(self, keyspace, replication_strategy=None,
-                       strategy_options=None, durable_writes=None):
+                       strategy_options=None, durable_writes=None, **ks_kwargs):
 
         """
         Alters an existing keyspace.
@@ -221,6 +226,9 @@ class SystemManager(object):
             ksdef.strategy_options = strategy_options
         if durable_writes is not None:
             ksdef.durable_writes = durable_writes
+
+        for k, v in ks_kwargs.iteritems():
+            setattr(ksdef, k, v)
 
         self._system_update_keyspace(ksdef)
 
