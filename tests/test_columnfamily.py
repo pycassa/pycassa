@@ -1,6 +1,5 @@
 from pycassa import index, ColumnFamily, ConnectionPool,\
                     NotFoundException, SystemManager
-from pycassa.cassandra.constants import CASSANDRA_07
 from pycassa.util import OrderedDict
 
 from nose.tools import assert_raises, assert_equal, assert_true
@@ -8,27 +7,24 @@ from nose.plugins.skip import SkipTest
 
 import unittest
 
-pool = cf = scf = indexed_cf = counter_cf = counter_scf = sys_man = have_counters = None
+pool = cf = scf = indexed_cf = counter_cf = counter_scf = sys_man = None
 
 def setup_module():
-    global pool, cf, scf, indexed_cf, counter_cf, counter_scf, sys_man, have_counters
+    global pool, cf, scf, indexed_cf, counter_cf, counter_scf, sys_man
     credentials = {'username': 'jsmith', 'password': 'havebadpass'}
     pool = ConnectionPool(keyspace='PycassaTestKeyspace', credentials=credentials)
     cf = ColumnFamily(pool, 'Standard1', dict_class=TestDict)
     scf = ColumnFamily(pool, 'Super1', dict_class=dict)
     indexed_cf = ColumnFamily(pool, 'Indexed1')
     sys_man = SystemManager()
-    have_counters = sys_man._conn.version != CASSANDRA_07
-    if have_counters:
-        counter_cf = ColumnFamily(pool, 'Counter1')
-        counter_scf = ColumnFamily(pool, 'SuperCounter1')
+    counter_cf = ColumnFamily(pool, 'Counter1')
+    counter_scf = ColumnFamily(pool, 'SuperCounter1')
 
 def teardown_module():
     cf.truncate()
     indexed_cf.truncate()
-    if have_counters:
-        counter_cf.truncate()
-        counter_scf.truncate()
+    counter_cf.truncate()
+    counter_scf.truncate()
     pool.dispose()
 
 class TestDict(dict):
@@ -86,7 +82,7 @@ class TestColumnFamily(unittest.TestCase):
         assert_equal(cf.get_count(key, column_finish='2'), 2)
         assert_equal(cf.get_count(key, column_start='1', column_finish='2'), 2)
         assert_equal(cf.get_count(key, column_start='1', column_finish='1'), 1)
-        assert_equal(cf.get_count(key, columns=['1','2']), 2)
+        assert_equal(cf.get_count(key, columns=['1', '2']), 2)
         assert_equal(cf.get_count(key, columns=['1']), 1)
         assert_equal(cf.get_count(key, max_count=1), 1)
         assert_equal(cf.get_count(key, max_count=1, column_reversed=True), 1)
@@ -115,7 +111,7 @@ class TestColumnFamily(unittest.TestCase):
         result = cf.multiget_count(keys, column_start='1', column_finish='1')
         assert_equal([result[k] for k in keys], [1 for key in keys])
 
-        result = cf.multiget_count(keys, columns=['1','2'])
+        result = cf.multiget_count(keys, columns=['1', '2'])
         assert_equal([result[k] for k in keys], [2 for key in keys])
 
         result = cf.multiget_count(keys, columns=['1'])
@@ -158,31 +154,31 @@ class TestColumnFamily(unittest.TestCase):
             cf.insert('key%d' % i, columns)
 
         count = 0
-        for (k,v) in cf.get_range(row_count=100, buffer_size=10):
+        for k, v in cf.get_range(row_count=100, buffer_size=10):
             assert_true(k in keys, 'key "%s" should be in keys' % k)
             count += 1
         assert_equal(count, 100)
 
         count = 0
-        for (k,v) in cf.get_range(row_count=100, buffer_size=1000):
+        for k, v in cf.get_range(row_count=100, buffer_size=1000):
             assert_true(k in keys, 'key "%s" should be in keys' % k)
             count += 1
         assert_equal(count, 100)
 
         count = 0
-        for (k,v) in cf.get_range(row_count=100, buffer_size=150):
+        for k, v in cf.get_range(row_count=100, buffer_size=150):
             assert_true(k in keys, 'key "%s" should be in keys' % k)
             count += 1
         assert_equal(count, 100)
 
         count = 0
-        for (k,v) in cf.get_range(row_count=100, buffer_size=7):
+        for k, v in cf.get_range(row_count=100, buffer_size=7):
             assert_true(k in keys, 'key "%s" should be in keys' % k)
             count += 1
         assert_equal(count, 100)
 
         count = 0
-        for (k,v) in cf.get_range(row_count=100, buffer_size=2):
+        for k, v in cf.get_range(row_count=100, buffer_size=2):
             assert_true(k in keys, 'key "%s" should be in keys' % k)
             count += 1
         assert_equal(count, 100)
@@ -192,50 +188,50 @@ class TestColumnFamily(unittest.TestCase):
             keys.append('key%d' % i)
 
         count = 0
-        for (k,v) in cf.get_range(row_count=10000, buffer_size=2):
+        for k, v in cf.get_range(row_count=10000, buffer_size=2):
             assert_true(k in keys, 'key "%s" should be in keys' % k)
             count += 1
         assert_equal(count, 201)
 
         count = 0
-        for (k,v) in cf.get_range(row_count=10000, buffer_size=7):
+        for k, v in cf.get_range(row_count=10000, buffer_size=7):
             assert_true(k in keys, 'key "%s" should be in keys' % k)
             count += 1
         assert_equal(count, 201)
 
         count = 0
-        for (k,v) in cf.get_range(row_count=10000, buffer_size=200):
+        for k, v in cf.get_range(row_count=10000, buffer_size=200):
             assert_true(k in keys, 'key "%s" should be in keys' % k)
             count += 1
         assert_equal(count, 201)
 
         count = 0
-        for (k,v) in cf.get_range(row_count=10000, buffer_size=10000):
+        for k, v in cf.get_range(row_count=10000, buffer_size=10000):
             assert_true(k in keys, 'key "%s" should be in keys' % k)
             count += 1
         assert_equal(count, 201)
 
         # Don't give a row count
         count = 0
-        for (k,v) in cf.get_range(buffer_size=2):
+        for k, v in cf.get_range(buffer_size=2):
             assert_true(k in keys, 'key "%s" should be in keys' % k)
             count += 1
         assert_equal(count, 201)
 
         count = 0
-        for (k,v) in cf.get_range(buffer_size=77):
+        for k, v in cf.get_range(buffer_size=77):
             assert_true(k in keys, 'key "%s" should be in keys' % k)
             count += 1
         assert_equal(count, 201)
 
         count = 0
-        for (k,v) in cf.get_range(buffer_size=200):
+        for k, v in cf.get_range(buffer_size=200):
             assert_true(k in keys, 'key "%s" should be in keys' % k)
             count += 1
         assert_equal(count, 201)
 
         count = 0
-        for (k,v) in cf.get_range(buffer_size=10000):
+        for k, v in cf.get_range(buffer_size=10000):
             assert_true(k in keys, 'key "%s" should be in keys' % k)
             count += 1
         assert_equal(count, 201)
@@ -248,7 +244,7 @@ class TestColumnFamily(unittest.TestCase):
         columns = {'birthdate': 1L}
 
         keys = []
-        for i in range(1,4):
+        for i in range(1, 4):
             indexed_cf.insert('key%d' % i, columns)
             keys.append('key%d')
 
@@ -256,7 +252,7 @@ class TestColumnFamily(unittest.TestCase):
         clause = index.create_index_clause([expr])
 
         count = 0
-        for key,cols in indexed_cf.get_indexed_slices(clause):
+        for key, cols in indexed_cf.get_indexed_slices(clause):
             assert_equal(cols, columns)
             assert key in keys
             count += 1
@@ -316,9 +312,6 @@ class TestColumnFamily(unittest.TestCase):
         assert_equal(cf.multiget(keys, buffer_size=100), expected)
 
     def test_add(self):
-        if not have_counters:
-            raise SkipTest('Cassandra 0.7 does not support counters')
-
         counter_cf.add('key', 'col')
         result = counter_cf.get('key')
         assert_equal(result['col'], 1)
@@ -332,9 +325,6 @@ class TestColumnFamily(unittest.TestCase):
         assert_equal(result, {'col': 2, 'col2': 1})
 
     def test_insert_counters(self):
-        if not have_counters:
-            raise SkipTest('Cassandra 0.7 does not support counters')
-
         counter_cf.insert('counter_key', {'col1': 1})
         result = counter_cf.get('counter_key')
         assert_equal(result['col1'], 1)
@@ -360,9 +350,6 @@ class TestColumnFamily(unittest.TestCase):
         assert_raises(NotFoundException, cf.get, key)
 
     def test_remove_counter(self):
-        if not have_counters:
-            raise SkipTest('Cassandra 0.7 does not support counters')
-
         key = 'test_remove_counter'
         counter_cf.add(key, 'col')
         result = counter_cf.get(key)
@@ -411,9 +398,6 @@ class TestColumnFamily(unittest.TestCase):
             assert_equal(res, [(str(i), str(i)) for i in range(100, 300)])
 
     def test_xget_counter(self):
-        if not have_counters:
-            raise SkipTest('Cassandra 0.7 does not support counters')
-
         key = 'test_xget_counter'
         counter_cf.insert(key, {'col1': 1})
         res = list(counter_cf.xget(key))
@@ -605,9 +589,6 @@ class TestSuperColumnFamily(unittest.TestCase):
         assert_equal(scf.get(key2), columns)
 
     def test_add(self):
-        if not have_counters:
-            raise SkipTest('Cassandra 0.7 does not support counters')
-
         counter_scf.add('key', 'col', super_column='scol')
         result = counter_scf.get('key', super_column='scol')
         assert_equal(result['col'], 1)
@@ -635,9 +616,6 @@ class TestSuperColumnFamily(unittest.TestCase):
         assert_equal(scf.get_count(key, super_column='2'), 1)
 
     def test_remove_counter(self):
-        if not have_counters:
-            raise SkipTest('Cassandra 0.7 does not support counters')
-
         key = 'test_remove_counter'
         counter_scf.add(key, 'col', super_column='scol')
         result = counter_scf.get(key, super_column='scol')
@@ -647,9 +625,6 @@ class TestSuperColumnFamily(unittest.TestCase):
         assert_raises(NotFoundException, scf.get, key)
 
     def test_xget_counter(self):
-        if not have_counters:
-            raise SkipTest('Cassandra 0.7 does not support counters')
-
         key = 'test_xget_counter'
         counter_scf.insert(key, {'scol': {'col1': 1}})
         res = list(counter_scf.xget(key))

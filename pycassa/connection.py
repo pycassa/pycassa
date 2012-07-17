@@ -2,7 +2,7 @@ from thrift.transport import TTransport
 from thrift.transport import TSocket
 from thrift.protocol import TBinaryProtocol
 
-from pycassa.cassandra.c11 import Cassandra
+from pycassa.cassandra import Cassandra
 from pycassa.cassandra.ttypes import AuthenticationRequest
 
 DEFAULT_SERVER = 'localhost:9160'

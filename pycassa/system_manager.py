@@ -255,6 +255,7 @@ class SystemManager(object):
             cf_kwargs.setdefault('column_type', 'Super')
 
         for k, v in cf_kwargs.iteritems():
+            v = self._convert_class_attrs(k, v)
             setattr(cfdef, k, v)
 
         if column_validation_classes:
@@ -277,6 +278,7 @@ class SystemManager(object):
         cfdef = self.get_keyspace_column_families(keyspace)[column_family]
 
         for k, v in cf_kwargs.iteritems():
+            v = self._convert_class_attrs(k, v)
             setattr(cfdef, k, v)
 
         if column_validation_classes:
@@ -293,6 +295,32 @@ class SystemManager(object):
         self._conn.set_keyspace(keyspace)
         self._schema_update(self._conn.system_drop_column_family, column_family)
 
+    def _convert_class_attrs(self, attr, value):
+        if attr in ('comparator_type', 'subcomparator_type',
+                    'key_validation_class', 'default_validation_class'):
+            return self._qualify_type_class(value)
+        else:
+            return value
+
+    def _qualify_type_class(self, classname):
+        if classname:
+            if isinstance(classname, types.CassandraType):
+                s = str(classname)
+            elif isinstance(classname, basestring):
+                s = classname
+            else:
+                raise TypeError(
+                        "Column family validators and comparators " \
+                        "must be specified as instances of " \
+                        "pycassa.types.CassandraType subclasses or strings.")
+
+            if s.find('.') == -1:
+                return 'org.apache.cassandra.db.marshal.%s' % s
+            else:
+                return s
+        else:
+            return None
+
     def _alter_column_cfdef(self, cfdef, column, value_type):
         if cfdef.column_type == 'Super':
             packer = marshal.packer_for(cfdef.subcomparator_type)
@@ -301,6 +329,7 @@ class SystemManager(object):
 
         packed_column = packer(column)
 
+        value_type = self._qualify_type_class(value_type)
         cfdef.column_metadata = cfdef.column_metadata or []
         matched = False
         for c in cfdef.column_metadata:
@@ -367,6 +396,7 @@ class SystemManager(object):
         packer = marshal.packer_for(cfdef.comparator_type)
         packed_column = packer(column)
 
+        value_type = self._qualify_type_class(value_type)
         coldef = ColumnDef(packed_column, value_type, index_type, index_name)
 
         for c in cfdef.column_metadata:

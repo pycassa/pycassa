@@ -2,18 +2,18 @@ from __future__ import with_statement
 
 import sys
 import unittest
-import uuid
 
 from nose import SkipTest
 from nose.tools import assert_raises, assert_equal
-from pycassa import ConnectionPool, ColumnFamily, ConsistencyLevel, NotFoundException
+from pycassa import ConnectionPool, ColumnFamily, NotFoundException
 import pycassa.batch as batch_mod
-from pycassa.system_manager import *
-from pycassa.cassandra.constants import *
+from pycassa.system_manager import SystemManager
 
-ROWS = {'1': {'a': '123', 'b':'123'},
-        '2': {'a': '234', 'b':'234'},
-        '3': {'a': '345', 'b':'345'}}
+ROWS = {'1': {'a': '123', 'b': '123'},
+        '2': {'a': '234', 'b': '234'},
+        '3': {'a': '345', 'b': '345'}}
+
+pool = cf = scf = counter_cf = super_counter_cf = sysman = None
 
 def setup_module():
     global pool, cf, scf, counter_cf, super_counter_cf, sysman
@@ -22,9 +22,8 @@ def setup_module():
     cf = ColumnFamily(pool, 'Standard1')
     scf = ColumnFamily(pool, 'Super1')
     sysman = SystemManager()
-    if sysman._conn.version != CASSANDRA_07:
-        counter_cf = ColumnFamily(pool, 'Counter1')
-        super_counter_cf = ColumnFamily(pool, 'SuperCounter1')
+    counter_cf = ColumnFamily(pool, 'Counter1')
+    super_counter_cf = ColumnFamily(pool, 'SuperCounter1')
 
 def teardown_module():
     pool.dispose()
@@ -56,8 +55,6 @@ class TestMutator(unittest.TestCase):
         assert scf.get('three') == ROWS
 
     def test_insert_counters(self):
-        if sysman._conn.version == CASSANDRA_07:
-            raise SkipTest("Cassandra 0.7 does not have counters.")
         batch = counter_cf.batch()
         batch.insert('one', {'col': 1})
         batch.insert('two', {'col': 2})
@@ -94,10 +91,10 @@ class TestMutator(unittest.TestCase):
 
     def test_remove_columns(self):
         batch = cf.batch()
-        batch.insert('1', {'a':'123', 'b':'123'})
+        batch.insert('1', {'a': '123', 'b': '123'})
         batch.remove('1', ['a'])
         batch.send()
-        assert cf.get('1') == {'b':'123'}
+        assert cf.get('1') == {'b': '123'}
 
     def test_remove_supercolumns(self):
         batch = scf.batch()
@@ -118,7 +115,7 @@ class TestMutator(unittest.TestCase):
         assert cf.get('3') == ROWS['3']
 
     def test_contextmgr(self):
-        if sys.version_info < (2,5):
+        if sys.version_info < (2, 5):
             raise SkipTest("No context managers in Python < 2.5")
         exec """with cf.batch(queue_size=2) as b:
     b.insert('1', ROWS['1'])
