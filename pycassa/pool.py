@@ -12,6 +12,7 @@ else:
     import Queue
 
 from thrift import Thrift
+from thrift.transport.TTransport import TTransportException
 from connection import Connection
 from logging.pool_logger import PoolLogger
 from util import as_interface
@@ -128,7 +129,8 @@ class ConnectionWrapper(Connection):
                 self._pool._decrement_overflow()
                 self._pool._clear_current()
                 raise app_exc
-            except (TimedOutException, UnavailableException, Thrift.TException,
+            except (TimedOutException, UnavailableException,
+                    TTransportException,
                     socket.error, IOError, EOFError), exc:
                 self._pool._notify_on_failure(exc, server=self.server, connection=self)
 
