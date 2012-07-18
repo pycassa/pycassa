@@ -7,6 +7,7 @@ from pycassa import ColumnFamily, ConnectionPool, PoolListener, InvalidRequestEr
                     NoConnectionAvailable, MaximumRetryException, AllServersUnavailable
 from pycassa.cassandra.ttypes import ColumnPath
 from pycassa.cassandra.ttypes import InvalidRequestException
+from pycassa.cassandra.ttypes import NotFoundException
 
 
 _credentials = {'username':'jsmith', 'password':'havebadpass'}
@@ -499,6 +500,7 @@ class PoolingCase(unittest.TestCase):
         cf = ColumnFamily(pool, 'Standard1')
         # Make sure the pool doesn't hide and retries invalid requests
         assert_raises(InvalidRequestException, cf.add, 'key', 'col')
+        assert_raises(NotFoundException, cf.get, 'none')
         pool.dispose()
 
 
