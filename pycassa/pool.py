@@ -402,7 +402,7 @@ class ConnectionPool(object):
                 server = self._get_next_server()
                 wrapper = self._get_new_wrapper(server)
                 return wrapper
-            except (Thrift.TException, socket.error, IOError, EOFError), exc:
+            except (TTransportException, socket.error, IOError, EOFError), exc:
                 self._notify_on_failure(exc, server)
                 failure_count += 1
         raise AllServersUnavailable('An attempt was made to connect to each of the servers ' +
