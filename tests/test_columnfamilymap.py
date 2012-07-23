@@ -88,7 +88,7 @@ class TestColumnFamilyMap(unittest.TestCase):
         instance = self.instance()
         assert_raises(NotFoundException, self.map.get, instance.key)
         ts = self.map.insert(instance)
-        assert_true(isinstance(ts, int))
+        assert_true(isinstance(ts, long))
         assert_equal(self.map.get(instance.key), instance)
 
     def test_insert_get_omitting_columns(self):
@@ -108,7 +108,7 @@ class TestColumnFamilyMap(unittest.TestCase):
         assert_equal(ret_inst.intcol, instance2.intcol)
 
         ## these lines are commented out because, though they should work, wont
-        ## because CassandraTypes are not descriptors when used on a ColumnFamilyMap 
+        ## because CassandraTypes are not descriptors when used on a ColumnFamilyMap
         ## instance, they are merely class attributes that are overwritten at runtime
 
         # assert_equal(ret_inst.floatcol, instance2.floatcol)
@@ -138,7 +138,7 @@ class TestColumnFamilyMap(unittest.TestCase):
         count = 0
         for instance in result:
             assert_equal(instance, instance3)
-            count +=1
+            count += 1
         assert_equal(count, 1)
 
     def test_insert_multiget(self):
@@ -274,4 +274,3 @@ class TestSuperColumnFamilyMap(unittest.TestCase):
             assert_equal(get_instance.key, i.key)
             assert_equal(get_instance.super_column, i.super_column)
             assert_equal(get_instance.strcol, i.strcol)
-
