@@ -282,14 +282,18 @@ class ColumnFamily(object):
         self.timestamp = gm_timestamp
         self.load_schema()
 
-        recognized_kwargs = ["buffer_size", "read_consistency_level",
+        recognized_kwargs = ("buffer_size", "read_consistency_level",
                              "write_consistency_level", "timestamp",
                              "dict_class", "buffer_size", "autopack_names",
                              "autopack_values", "autopack_keys",
-                             "retry_counter_mutations"]
-        for kw in recognized_kwargs:
-            if kw in kwargs:
-                setattr(self, kw, kwargs[kw])
+                             "retry_counter_mutations")
+        for k, v in kwargs.iteritems():
+            if k in recognized_kwargs:
+                setattr(self, k, v)
+            else:
+                raise TypeError(
+                        "ColumnFamily.__init__() got an unexpected keyword "
+                        "argument '%s'" % (k,))
 
     def load_schema(self):
         """

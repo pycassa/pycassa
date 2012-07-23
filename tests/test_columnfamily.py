@@ -38,6 +38,10 @@ class TestColumnFamily(unittest.TestCase):
         for key, columns in indexed_cf.get_range():
             cf.remove(key)
 
+    def test_bad_kwarg(self):
+        assert_raises(TypeError,
+                ColumnFamily.__init__, pool, 'test', bar='foo')
+
     def test_empty(self):
         key = 'TestColumnFamily.test_empty'
         assert_raises(NotFoundException, cf.get, key)
