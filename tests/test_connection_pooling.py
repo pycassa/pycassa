@@ -6,6 +6,9 @@ from nose.tools import assert_raises, assert_equal, assert_true
 from pycassa import ColumnFamily, ConnectionPool, PoolListener, InvalidRequestError,\
                     NoConnectionAvailable, MaximumRetryException, AllServersUnavailable
 from pycassa.cassandra.ttypes import ColumnPath
+from pycassa.cassandra.ttypes import InvalidRequestException
+from pycassa.cassandra.ttypes import NotFoundException
+
 
 _credentials = {'username':'jsmith', 'password':'havebadpass'}
 
@@ -485,6 +488,21 @@ class PoolingCase(unittest.TestCase):
         assert_equal(request['method'], 'get')
         assert_equal(request['args'], ('greunt', ColumnPath('Counter1', None, 'col'), 1))
         assert_equal(request['kwargs'], {})
+
+    def test_pool_invalid_request(self):
+        listener = _TestListener()
+        pool = ConnectionPool(pool_size=1, max_overflow=0, recycle=10000,
+                         prefill=True, max_retries=3,
+                         keyspace='PycassaTestKeyspace',
+                         credentials=_credentials,
+                         listeners=[listener], use_threadlocal=False,
+                         server_list=['localhost:9160'])
+        cf = ColumnFamily(pool, 'Standard1')
+        # Make sure the pool doesn't hide and retries invalid requests
+        assert_raises(InvalidRequestException, cf.add, 'key', 'col')
+        assert_raises(NotFoundException, cf.get, 'none')
+        pool.dispose()
+
 
 class _TestListener(PoolListener):
 
