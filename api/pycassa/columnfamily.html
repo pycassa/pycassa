@@ -197,6 +197,19 @@ of rows. The default is 1024.</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="pycassa.columnfamily.ColumnFamily.column_buffer_size">
+<tt class="descname">column_buffer_size</tt><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.column_buffer_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>int(x[, base]) -&gt; integer</p>
+<p>Convert a string or number to an integer, if possible.  A floating point
+argument will be truncated towards zero (this does not include a string
+representation of a floating point number!)  When converting a string, use
+the optional base.  It is an error to supply a base when converting a
+non-string.  If base is zero, the proper base is guessed based on the
+string content.  If the argument is outside the integer range a
+long object will be returned instead.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="pycassa.columnfamily.ColumnFamily.timestamp">
 <tt class="descname">timestamp</tt><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.timestamp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Each <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.insert" title="pycassa.columnfamily.ColumnFamily.insert"><tt class="xref py py-meth docutils literal"><span class="pre">insert()</span></tt></a> or <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.remove" title="pycassa.columnfamily.ColumnFamily.remove"><tt class="xref py py-meth docutils literal"><span class="pre">remove()</span></tt></a> sends a timestamp with every
@@ -262,7 +275,7 @@ an OrderedDict is used, the rows will have the same order as <cite>keys</cite>.<
 <dd><p>Like <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.get" title="pycassa.columnfamily.ColumnFamily.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a>, but creates a generator that pages over the columns
 automatically.</p>
 <p>The number of columns fetched at once can be controlled with the
-<cite>buffer_size</cite> parameter. The default is <tt class="xref py py-attr docutils literal"><span class="pre">column_buffer_size</span></tt>.</p>
+<cite>buffer_size</cite> parameter. The default is <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.column_buffer_size" title="pycassa.columnfamily.ColumnFamily.column_buffer_size"><tt class="xref py py-attr docutils literal"><span class="pre">column_buffer_size</span></tt></a>.</p>
 <p>The generator returns <cite>(name, value)</cite> tuples.</p>
 </dd></dl>
 
@@ -434,7 +447,7 @@ operations using as few roundtrips as possible.</p>
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="pool.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">pycassa.pool</span></tt> &#8211; Connection Pooling</a></p>
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">pycassa.pool</span></tt> &#8211; Connection Pooling</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="columnfamilymap.html"
                         title="next chapter"><tt class="docutils literal"><span class="pre">pycassa.columnfamilymap</span></tt> &#8211; Maps Classes to Column Families</a></p>
