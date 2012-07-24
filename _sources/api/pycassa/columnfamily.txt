@@ -35,9 +35,11 @@
 
         .. automethod:: load_schema()
 
-        .. automethod:: get(key[, columns][, column_start][, column_finish][, column_count][, column_reversed][, include_timestamp][, super_column][, read_consistency_level])
+        .. automethod:: get(key[, columns][, column_start][, column_finish][, column_reversed][, column_count][, include_timestamp][, super_column][, read_consistency_level])
 
-        .. automethod:: multiget(keys[, columns][, column_start][, column_finish][, column_count][, column_reversed][, include_timestamp][, super_column][, read_consistency_level])
+        .. automethod:: multiget(keys[, columns][, column_start][, column_finish][, column_reversed][, column_count][, include_timestamp][, super_column][, read_consistency_level])
+
+        .. automethod:: xget(key[, column_start][, column_finish][, column_reversed][, column_count][, include_timestamp][, read_consistency_level][, buffer_size])
 
         .. automethod:: get_count(key[, super_column][, columns][, column_start][, column_finish][, super_column][, read_consistency_level][, column_reversed][, max_count])
 

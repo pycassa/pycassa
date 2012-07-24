@@ -7,6 +7,7 @@ Pycassa Modules
 .. toctree::
    :maxdepth: 3
 
+   pycassa
    pycassa/pool
    pycassa/columnfamily
    pycassa/columnfamilymap
@@ -16,3 +17,4 @@ Pycassa Modules
    pycassa/types
    pycassa/util
    pycassa/logging/pycassa_logger
+   pycassa/logging/pool_stats_logger

@@ -15,4 +15,6 @@
 
         .. automethod:: insert(instance[, columns][, write_consistency_level])
 
+        .. automethod:: batch_insert(instances[, timestamp][, ttl][, write_consistency_level])
+
         .. automethod:: remove(instance[, columns][, write_consistency_level])

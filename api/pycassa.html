@@ -1,0 +1,215 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pycassa - Exceptions and Enums &mdash; pycassa v1.7.0 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+    <link rel="top" title="pycassa v1.7.0 documentation" href="../index.html" />
+    <link rel="up" title="API Documentation" href="index.html" />
+    <link rel="next" title="pycassa.pool – Connection Pooling" href="pycassa/pool.html" />
+    <link rel="prev" title="API Documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pycassa/pool.html" title="pycassa.pool – Connection Pooling"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="API Documentation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">pycassa v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-pycassa">
+<span id="pycassa-exceptions-and-enums"></span><h1><a class="reference internal" href="#module-pycassa" title="pycassa"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa</span></tt></a> - Exceptions and Enums<a class="headerlink" href="#module-pycassa" title="Permalink to this headline">¶</a></h1>
+<dl class="exception">
+<dt id="pycassa.AuthenticationException">
+<em class="property">exception </em><tt class="descclassname">pycassa.</tt><tt class="descname">AuthenticationException</tt><a class="headerlink" href="#pycassa.AuthenticationException" title="Permalink to this definition">¶</a></dt>
+<dd><p>The credentials supplied when creating a connection did not validate,
+indicating a bad username or password.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pycassa.AuthorizationException">
+<em class="property">exception </em><tt class="descclassname">pycassa.</tt><tt class="descname">AuthorizationException</tt><a class="headerlink" href="#pycassa.AuthorizationException" title="Permalink to this definition">¶</a></dt>
+<dd><p>The user that is currently logged in for a connection was not permitted
+to perform an action.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pycassa.InvalidRequestException">
+<em class="property">exception </em><tt class="descclassname">pycassa.</tt><tt class="descname">InvalidRequestException</tt><a class="headerlink" href="#pycassa.InvalidRequestException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Something about the request made was invalid or malformed. The request
+should not be repeated without modification. Sometimes checking the server
+logs may help debug what was wrong with the request.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pycassa.NotFoundException">
+<em class="property">exception </em><tt class="descclassname">pycassa.</tt><tt class="descname">NotFoundException</tt><a class="headerlink" href="#pycassa.NotFoundException" title="Permalink to this definition">¶</a></dt>
+<dd><p>The row requested does not exist, or the slice requested was empty.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pycassa.UnavailableException">
+<em class="property">exception </em><tt class="descclassname">pycassa.</tt><tt class="descname">UnavailableException</tt><a class="headerlink" href="#pycassa.UnavailableException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Not enough replicas are up to satisfy the requested consistency level.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pycassa.TimedOutException">
+<em class="property">exception </em><tt class="descclassname">pycassa.</tt><tt class="descname">TimedOutException</tt><a class="headerlink" href="#pycassa.TimedOutException" title="Permalink to this definition">¶</a></dt>
+<dd><p>The replica node did not respond to the coordinator node within
+<tt class="docutils literal"><span class="pre">rpc_timeout_in_ms</span></tt> (as configured in <tt class="file docutils literal"><span class="pre">cassandra.yaml</span></tt>),
+typically indicating that the replica is overloaded or just went
+down.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.pycassa.ConsistencyLevel">
+<em class="property">class </em><tt class="descclassname">pycassa.</tt><tt class="descname">ConsistencyLevel</tt><a class="headerlink" href="#pycassa.pycassa.ConsistencyLevel" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="data">
+<dt id="pycassa.pycassa.ConsistencyLevel.ANY">
+<tt class="descname">ANY</tt><a class="headerlink" href="#pycassa.pycassa.ConsistencyLevel.ANY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Only requires that one replica receives the write <em>or</em> the coordinator
+stores a hint to replay later. Valid only for writes.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pycassa.pycassa.ConsistencyLevel.ONE">
+<tt class="descname">ONE</tt><a class="headerlink" href="#pycassa.pycassa.ConsistencyLevel.ONE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Only one replica needs to respond to consider the operation a success</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pycassa.pycassa.ConsistencyLevel.QUORUM">
+<tt class="descname">QUORUM</tt><a class="headerlink" href="#pycassa.pycassa.ConsistencyLevel.QUORUM" title="Permalink to this definition">¶</a></dt>
+<dd><p><cite>ceil(RF/2)</cite> replicas must respond to consider the operation a success</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pycassa.pycassa.ConsistencyLevel.ALL">
+<tt class="descname">ALL</tt><a class="headerlink" href="#pycassa.pycassa.ConsistencyLevel.ALL" title="Permalink to this definition">¶</a></dt>
+<dd><p>All replicas must respond to consider the operation a success</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pycassa.pycassa.ConsistencyLevel.LOCAL_QUORUM">
+<tt class="descname">LOCAL_QUORUM</tt><a class="headerlink" href="#pycassa.pycassa.ConsistencyLevel.LOCAL_QUORUM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Requres a quorum of replicas in the local datacenter</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pycassa.pycassa.ConsistencyLevel.EACH_QUORUM">
+<tt class="descname">EACH_QUORUM</tt><a class="headerlink" href="#pycassa.pycassa.ConsistencyLevel.EACH_QUORUM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Requres a quorum of replicas in each datacenter</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pycassa.pycassa.ConsistencyLevel.TWO">
+<tt class="descname">TWO</tt><a class="headerlink" href="#pycassa.pycassa.ConsistencyLevel.TWO" title="Permalink to this definition">¶</a></dt>
+<dd><p>Two replicas must respond to consider the operation a success</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pycassa.pycassa.ConsistencyLevel.THREE">
+<tt class="descname">THREE</tt><a class="headerlink" href="#pycassa.pycassa.ConsistencyLevel.THREE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Three replicas must respond to consider the operation a success</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">API Documentation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pycassa/pool.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">pycassa.pool</span></tt> &#8211; Connection Pooling</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/pycassa.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pycassa/pool.html" title="pycassa.pool – Connection Pooling"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="API Documentation"
+             >previous</a> |</li>
+        <li><a href="../index.html">pycassa v1.7.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.pool – Connection Pooling &mdash; pycassa v1.6.0 documentation</title>
+    <title>pycassa.pool – Connection Pooling &mdash; pycassa v1.7.0 documentation</title>
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.6.0',
+        VERSION:     '1.7.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,10 +23,10 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../../_static/favicon.ico"/>
-    <link rel="top" title="pycassa v1.6.0 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v1.7.0 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.columnfamily – Column Family" href="columnfamily.html" />
-    <link rel="prev" title="API Documentation" href="../index.html" /> 
+    <link rel="prev" title="pycassa - Exceptions and Enums" href="../pycassa.html" /> 
   </head>
   <body>
     <div class="related">
@@ -42,9 +42,9 @@
           <a href="columnfamily.html" title="pycassa.columnfamily – Column Family"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="../index.html" title="API Documentation"
+          <a href="../pycassa.html" title="pycassa - Exceptions and Enums"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.6.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.7.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -135,8 +135,8 @@ be replaced when checked back in to the pool.  This may be set to
 <dl class="attribute">
 <dt id="pycassa.pool.ConnectionPool.max_retries">
 <tt class="descname">max_retries</tt><a class="headerlink" href="#pycassa.pool.ConnectionPool.max_retries" title="Permalink to this definition">¶</a></dt>
-<dd><p>When an operation on a connection fails due to an <tt class="xref py py-exc docutils literal"><span class="pre">TimedOutException</span></tt>
-or <tt class="xref py py-exc docutils literal"><span class="pre">UnavailableException</span></tt>, which tend to indicate single or
+<dd><p>When an operation on a connection fails due to an <a class="reference internal" href="../pycassa.html#pycassa.TimedOutException" title="pycassa.TimedOutException"><tt class="xref py py-exc docutils literal"><span class="pre">TimedOutException</span></tt></a>
+or <a class="reference internal" href="../pycassa.html#pycassa.UnavailableException" title="pycassa.UnavailableException"><tt class="xref py py-exc docutils literal"><span class="pre">UnavailableException</span></tt></a>, which tend to indicate single or
 multiple node failure, the operation will be retried on different nodes
 up to <cite>max_retries</cite> times before an <a class="reference internal" href="#pycassa.pool.MaximumRetryException" title="pycassa.pool.MaximumRetryException"><tt class="xref py py-exc docutils literal"><span class="pre">MaximumRetryException</span></tt></a> is raised.
 Setting this to 0 disables retries and setting to -1 allows unlimited retries.
@@ -412,8 +412,8 @@ pool will choose from.</p>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="../index.html"
-                        title="previous chapter">API Documentation</a></p>
+  <p class="topless"><a href="../pycassa.html"
+                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa</span></tt> - Exceptions and Enums</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="columnfamily.html"
                         title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.columnfamily</span></tt> &#8211; Column Family</a></p>
@@ -452,9 +452,9 @@ pool will choose from.</p>
           <a href="columnfamily.html" title="pycassa.columnfamily – Column Family"
              >next</a> |</li>
         <li class="right" >
-          <a href="../index.html" title="API Documentation"
+          <a href="../pycassa.html" title="pycassa - Exceptions and Enums"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.6.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.7.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

@@ -68,7 +68,7 @@ This connects to a local instance of Cassandra and creates a keyspace
 named 'Keyspace1' with a column family named 'ColumnFamily1'.
 
 You can find further `documentation for the CLI online
-<http://www.datastax.com/docs/1.0/dml/using_cli>`_.
+<http://www.datastax.com/docs/1.1/dml/using_cli>`_.
 
 Using pycassaShell
 ^^^^^^^^^^^^^^^^^^
@@ -249,7 +249,7 @@ with keys 'row_key1' through 'row_key9', we can do this:
 .. note:: Cassandra must be using an OrderPreservingPartitioner for you to be
           able to get a meaningful range of rows; the default, RandomPartitioner,
           stores rows in the order of the MD5 hash of their keys. See
-          http://www.datastax.com/docs/1.0/cluster_architecture/partitioning.
+          http://www.datastax.com/docs/1.1/cluster_architecture/partitioning.
 
 The last way to get multiple rows at a time is to take advantage of
 secondary indexes by using :meth:`~pycassa.columnfamily.ColumnFamily.get_indexed_slices()`,

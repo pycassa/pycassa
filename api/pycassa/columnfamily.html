@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.columnfamily – Column Family &mdash; pycassa v1.6.0 documentation</title>
+    <title>pycassa.columnfamily – Column Family &mdash; pycassa v1.7.0 documentation</title>
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.6.0',
+        VERSION:     '1.7.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../../_static/favicon.ico"/>
-    <link rel="top" title="pycassa v1.6.0 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v1.7.0 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.columnfamilymap – Maps Classes to Column Families" href="columnfamilymap.html" />
     <link rel="prev" title="pycassa.pool – Connection Pooling" href="pool.html" /> 
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="pool.html" title="pycassa.pool – Connection Pooling"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.6.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.7.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -214,7 +214,7 @@ neccessary.</p>
 
 <dl class="method">
 <dt id="pycassa.columnfamily.ColumnFamily.get">
-<tt class="descname">get</tt><big>(</big><em>key[, columns][, column_start][, column_finish][, column_count][, column_reversed][, include_timestamp][, super_column][, read_consistency_level]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.get" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get</tt><big>(</big><em>key[, columns][, column_start][, column_finish][, column_reversed][, column_count][, include_timestamp][, super_column][, read_consistency_level]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fetches all or part of the row with key <cite>key</cite>.</p>
 <p>The columns fetched may be limited to a specified list of column names
 using <cite>columns</cite>.</p>
@@ -245,7 +245,7 @@ the super column name will be excluded and the results are of the form
 
 <dl class="method">
 <dt id="pycassa.columnfamily.ColumnFamily.multiget">
-<tt class="descname">multiget</tt><big>(</big><em>keys[, columns][, column_start][, column_finish][, column_count][, column_reversed][, include_timestamp][, super_column][, read_consistency_level]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.multiget" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">multiget</tt><big>(</big><em>keys[, columns][, column_start][, column_finish][, column_reversed][, column_count][, include_timestamp][, super_column][, read_consistency_level]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.multiget" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fetch multiple rows from a Cassandra server.</p>
 <p><cite>keys</cite> should be a list of keys to fetch.</p>
 <p><cite>buffer_size</cite> is the number of rows from the total list to fetch at a time.
@@ -254,6 +254,16 @@ If left as <tt class="xref docutils literal"><span class="pre">None</span></tt>,
 be passed in.</p>
 <p>Results will be returned in the form: <tt class="docutils literal"><span class="pre">{key:</span> <span class="pre">{column_name:</span> <span class="pre">column_value}}</span></tt>. If
 an OrderedDict is used, the rows will have the same order as <cite>keys</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.columnfamily.ColumnFamily.xget">
+<tt class="descname">xget</tt><big>(</big><em>key[, column_start][, column_finish][, column_reversed][, column_count][, include_timestamp][, read_consistency_level][, buffer_size]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.xget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.get" title="pycassa.columnfamily.ColumnFamily.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a>, but creates a generator that pages over the columns
+automatically.</p>
+<p>The number of columns fetched at once can be controlled with the
+<cite>buffer_size</cite> parameter. The default is <tt class="xref py py-attr docutils literal"><span class="pre">column_buffer_size</span></tt>.</p>
+<p>The generator returns <cite>(name, value)</cite> tuples.</p>
 </dd></dl>
 
 <dl class="method">
@@ -399,7 +409,7 @@ result complete data deletion from this column family. Internally,
 however, disk space will not be immediatily released, as with all
 deletes in Cassandra, this one only marks the data as deleted.</p>
 <p>The operation succeeds only if all hosts in the cluster at available
-and will throw an <tt class="xref py py-exc docutils literal"><span class="pre">UnavailableException</span></tt> if some hosts are
+and will throw an <a class="reference internal" href="../pycassa.html#pycassa.UnavailableException" title="pycassa.UnavailableException"><tt class="xref py py-exc docutils literal"><span class="pre">UnavailableException</span></tt></a> if some hosts are
 down.</p>
 </dd></dl>
 
@@ -465,7 +475,7 @@ operations using as few roundtrips as possible.</p>
         <li class="right" >
           <a href="pool.html" title="pycassa.pool – Connection Pooling"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.6.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.7.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

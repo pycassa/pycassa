@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial &mdash; pycassa v1.6.0 documentation</title>
+    <title>Tutorial &mdash; pycassa v1.7.0 documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.6.0',
+        VERSION:     '1.7.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-    <link rel="top" title="pycassa v1.6.0 documentation" href="index.html" />
+    <link rel="top" title="pycassa v1.7.0 documentation" href="index.html" />
     <link rel="next" title="Twissandra Example" href="example/index.html" />
     <link rel="prev" title="Installing" href="installation.html" /> 
   </head>
@@ -43,7 +43,7 @@
         <li class="right" >
           <a href="installation.html" title="Installing"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">pycassa v1.6.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v1.7.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -112,7 +112,7 @@ user@~ $
 </div>
 <p>This connects to a local instance of Cassandra and creates a keyspace
 named &#8216;Keyspace1&#8217; with a column family named &#8216;ColumnFamily1&#8217;.</p>
-<p>You can find further <a class="reference external" href="http://www.datastax.com/docs/1.0/dml/using_cli">documentation for the CLI online</a>.</p>
+<p>You can find further <a class="reference external" href="http://www.datastax.com/docs/1.1/dml/using_cli">documentation for the CLI online</a>.</p>
 </div>
 <div class="section" id="using-pycassashell">
 <h3>Using pycassaShell<a class="headerlink" href="#using-pycassashell" title="Permalink to this headline">¶</a></h3>
@@ -268,7 +268,7 @@ with keys &#8216;row_key1&#8217; through &#8216;row_key9&#8217;, we can do this:
 <p class="last">Cassandra must be using an OrderPreservingPartitioner for you to be
 able to get a meaningful range of rows; the default, RandomPartitioner,
 stores rows in the order of the MD5 hash of their keys. See
-<a class="reference external" href="http://www.datastax.com/docs/1.0/cluster_architecture/partitioning">http://www.datastax.com/docs/1.0/cluster_architecture/partitioning</a>.</p>
+<a class="reference external" href="http://www.datastax.com/docs/1.1/cluster_architecture/partitioning">http://www.datastax.com/docs/1.1/cluster_architecture/partitioning</a>.</p>
 </div>
 <p>The last way to get multiple rows at a time is to take advantage of
 secondary indexes by using <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_indexed_slices" title="pycassa.columnfamily.ColumnFamily.get_indexed_slices"><tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt></a>,
@@ -444,7 +444,7 @@ on other servers until it succeeds or a maximum number of failures is reached.</
         <li class="right" >
           <a href="installation.html" title="Installing"
              >previous</a> |</li>
-        <li><a href="index.html">pycassa v1.6.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa v1.7.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

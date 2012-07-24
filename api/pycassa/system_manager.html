@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.system_manager – Manage Schema Definitions &mdash; pycassa v1.6.0 documentation</title>
+    <title>pycassa.system_manager – Manage Schema Definitions &mdash; pycassa v1.7.0 documentation</title>
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.6.0',
+        VERSION:     '1.7.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../../_static/favicon.ico"/>
-    <link rel="top" title="pycassa v1.6.0 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v1.7.0 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.index – Secondary Index Tools" href="index.html" />
     <link rel="prev" title="pycassa.columnfamilymap – Maps Classes to Column Families" href="columnfamilymap.html" /> 
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="columnfamilymap.html" title="pycassa.columnfamilymap – Maps Classes to Column Families"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.6.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.7.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -122,7 +122,7 @@ be stored as a dictionary where the keys are column names instead of a list.</p>
 <dt id="pycassa.system_manager.SystemManager.get_keyspace_properties">
 <tt class="descname">get_keyspace_properties</tt><big>(</big><em>keyspace</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.get_keyspace_properties" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets a keyspace&#8217;s properties.</p>
-<p>Returns a <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> with &#8216;strategy_class&#8217; and 
+<p>Returns a <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> with &#8216;strategy_class&#8217; and
 &#8216;strategy_options&#8217; as keys.</p>
 </dd></dl>
 
@@ -170,7 +170,7 @@ be stored as a dictionary where the keys are column names instead of a list.</p>
 
 <dl class="method">
 <dt id="pycassa.system_manager.SystemManager.create_keyspace">
-<tt class="descname">create_keyspace</tt><big>(</big><em>name</em>, <em>replication_strategy='SimpleStrategy'</em>, <em>strategy_options=None</em>, <em>durable_writes=True</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.create_keyspace" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">create_keyspace</tt><big>(</big><em>name</em>, <em>replication_strategy='SimpleStrategy'</em>, <em>strategy_options=None</em>, <em>durable_writes=True</em>, <em>**ks_kwargs</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.create_keyspace" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a new keyspace.  Column families may be added to this keyspace
 after it is created using <a class="reference internal" href="#pycassa.system_manager.SystemManager.create_column_family" title="pycassa.system_manager.SystemManager.create_column_family"><tt class="xref py py-meth docutils literal"><span class="pre">create_column_family()</span></tt></a>.</p>
 <p><cite>replication_strategy</cite> determines how replicas are chosen for this keyspace.
@@ -197,7 +197,7 @@ For SimpleStrategy, you can specify the replication factor as follows:
 
 <dl class="method">
 <dt id="pycassa.system_manager.SystemManager.alter_keyspace">
-<tt class="descname">alter_keyspace</tt><big>(</big><em>keyspace</em>, <em>replication_strategy=None</em>, <em>strategy_options=None</em>, <em>durable_writes=None</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.alter_keyspace" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">alter_keyspace</tt><big>(</big><em>keyspace</em>, <em>replication_strategy=None</em>, <em>strategy_options=None</em>, <em>durable_writes=None</em>, <em>**ks_kwargs</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.alter_keyspace" title="Permalink to this definition">¶</a></dt>
 <dd><p>Alters an existing keyspace.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
@@ -214,150 +214,19 @@ For SimpleStrategy, you can specify the replication factor as follows:
 
 <dl class="method">
 <dt id="pycassa.system_manager.SystemManager.create_column_family">
-<tt class="descname">create_column_family</tt><big>(</big><em>keyspace</em>, <em>name</em>, <em>super=False</em>, <em>comparator_type=None</em>, <em>subcomparator_type=None</em>, <em>column_validation_classes=None</em>, <em>key_cache_size=None</em>, <em>row_cache_size=None</em>, <em>gc_grace_seconds=None</em>, <em>read_repair_chance=None</em>, <em>default_validation_class=None</em>, <em>key_validation_class=None</em>, <em>min_compaction_threshold=None</em>, <em>max_compaction_threshold=None</em>, <em>key_cache_save_period_in_seconds=None</em>, <em>row_cache_save_period_in_seconds=None</em>, <em>replicate_on_write=None</em>, <em>merge_shards_chance=None</em>, <em>row_cache_provider=None</em>, <em>key_alias=None</em>, <em>compaction_strategy=None</em>, <em>compaction_strategy_options=None</em>, <em>row_cache_keys_to_save=None</em>, <em>compression_options=None</em>, <em>comment=None</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.create_column_family" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">create_column_family</tt><big>(</big><em>keyspace</em>, <em>name</em>, <em>column_validation_classes=None</em>, <em>**cf_kwargs</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.create_column_family" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a new column family in a given keyspace.  If a value is not
 supplied for any of optional parameters, Cassandra will use a reasonable
 default value.</p>
 <p><cite>keyspace</cite> should be the name of the keyspace the column family will
 be created in. <cite>name</cite> gives the name of the column family.</p>
-<p>Column family options follow:</p>
-<table border="1" class="docutils">
-<colgroup>
-<col width="46%" />
-<col width="54%" />
-</colgroup>
-<thead valign="bottom">
-<tr><th class="head">Name</th>
-<th class="head">Description</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr><td>super</td>
-<td>Whether or not this column family is
-a super column family</td>
-</tr>
-<tr><td>comparator_type</td>
-<td>What type the column names will be,
-which affects their sort order. This
-should be an instance of
-<a class="reference internal" href="types.html#pycassa.types.CassandraType" title="pycassa.types.CassandraType"><tt class="xref py py-class docutils literal"><span class="pre">CassandraType</span></tt></a></td>
-</tr>
-<tr><td>subcomparator_type</td>
-<td>Like <cite>comparator_type</cite>, but if this
-is a super column family, this
-applies to the subcolumn names</td>
-</tr>
-<tr><td>column_validation_classes</td>
-<td>A dictionary mapping column names to
-column value types. The types should
-be expressed as instances of
-<a class="reference internal" href="types.html#pycassa.types.CassandraType" title="pycassa.types.CassandraType"><tt class="xref py py-class docutils literal"><span class="pre">CassandraType</span></tt></a></td>
-</tr>
-<tr><td>default_validation_class</td>
-<td>The data type for all column values
-in the column family</td>
-</tr>
-<tr><td>key_validation_class</td>
-<td>The data type for row keys</td>
-</tr>
-<tr><td>key_cache_size</td>
-<td>The size of the key cache, either in
-a percentage of total keys (0.15, for
-example) or an absolute number of
-keys (2000, for example)</td>
-</tr>
-<tr><td>row_cache_size</td>
-<td>Like <cite>key_cache_size</cite>, but for the
-row cache</td>
-</tr>
-<tr><td>gc_grace_seconds</td>
-<td>Number of seconds before tombstones
-are removed during compactions</td>
-</tr>
-<tr><td>read_repair_chance</td>
-<td>Probability (as a float from 0 to 1)
-of read repair occurring</td>
-</tr>
-<tr><td>min_compaction_threshold</td>
-<td>Number of similarly sized SSTables
-that must be present for a compaction
-to occur. Does not apply to
-<tt class="docutils literal"><span class="pre">LeveledCompactionStrategy</span></tt>.</td>
-</tr>
-<tr><td>max_compaction_threshold</td>
-<td>The maximum number of SSTables that
-may be included in a single
-compaction. Does not apply to
-<tt class="docutils literal"><span class="pre">LeveledCompactionStrategy</span></tt>.</td>
-</tr>
-<tr><td>key_cache_save_period_in_seconds</td>
-<td>How often the key cache should be
-saved. This helps to avoid high
-latency reads from a cold cache
-after restarts.</td>
-</tr>
-<tr><td>row_cache_save_period_in_seconds</td>
-<td>Same as the above, but for row cache</td>
-</tr>
-<tr><td>replicate_on_write</td>
-<td>Whether counter operations are
-replicated at write-time</td>
-</tr>
-<tr><td>merge_shards_chance</td>
-<td>The probability that counter shards
-will be merged</td>
-</tr>
-<tr><td>row_cache_provider</td>
-<td>The class that will be used to store
-the row cache</td>
-</tr>
-<tr><td>key_alias</td>
-<td>A &#8220;column name&#8221; to be used for the
-key. This currently only matters for
-CQL.</td>
-</tr>
-<tr><td>compaction_strategy</td>
-<td>The name of the compaction
-strategy class. Current choices are
-<tt class="docutils literal"><span class="pre">SizeTieredCompactoinStrategy</span></tt> and
-<tt class="docutils literal"><span class="pre">LeveledCompactionStrategy</span></tt>.</td>
-</tr>
-<tr><td>compaction_strategy_options</td>
-<td>A <tt class="docutils literal"><span class="pre">dict</span></tt> of options for the
-compaction strategy</td>
-</tr>
-<tr><td>row_cache_keys_to_save</td>
-<td>A list of keys to be saved in the row
-cache; <tt class="xref py py-const xref docutils literal"><span class="pre">None</span></tt> allows any row
-to be cached</td>
-</tr>
-<tr><td>compression_options</td>
-<td>A dict of options for compression.
-Available keys include
-<tt class="docutils literal"><span class="pre">sstable_compression</span></tt>, which may be
-<tt class="xref py py-const xref docutils literal"><span class="pre">None</span></tt> for no compression,
-<tt class="docutils literal"><span class="pre">SnappyCompressor</span></tt>,
-<tt class="docutils literal"><span class="pre">DeflateCompressor</span></tt>, or a custom
-compressor, and <tt class="docutils literal"><span class="pre">chunk_length_kb</span></tt>,
-which must be a power of 2.</td>
-</tr>
-<tr><td>comment</td>
-<td>A human readable comment describing
-the column family</td>
-</tr>
-</tbody>
-</table>
-<p class="versionadded">
-<span class="versionmodified">New in version 1.4.0: </span>The <cite>column_validation_classes</cite> parameter.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pycassa.system_manager.SystemManager.alter_column_family">
-<tt class="descname">alter_column_family</tt><big>(</big><em>keyspace</em>, <em>column_family</em>, <em>key_cache_size=None</em>, <em>row_cache_size=None</em>, <em>gc_grace_seconds=None</em>, <em>read_repair_chance=None</em>, <em>default_validation_class=None</em>, <em>column_validation_classes=None</em>, <em>min_compaction_threshold=None</em>, <em>max_compaction_threshold=None</em>, <em>key_cache_save_period_in_seconds=None</em>, <em>row_cache_save_period_in_seconds=None</em>, <em>replicate_on_write=None</em>, <em>merge_shards_chance=None</em>, <em>row_cache_provider=None</em>, <em>key_alias=None</em>, <em>compaction_strategy=None</em>, <em>compaction_strategy_options=None</em>, <em>row_cache_keys_to_save=None</em>, <em>compression_options=None</em>, <em>comment=None</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.alter_column_family" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">alter_column_family</tt><big>(</big><em>keyspace</em>, <em>column_family</em>, <em>column_validation_classes=None</em>, <em>**cf_kwargs</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.alter_column_family" title="Permalink to this definition">¶</a></dt>
 <dd><p>Alters an existing column family.</p>
-<p>Parameter meanings are the same as for <a class="reference internal" href="#pycassa.system_manager.SystemManager.create_column_family" title="pycassa.system_manager.SystemManager.create_column_family"><tt class="xref py py-meth docutils literal"><span class="pre">create_column_family()</span></tt></a>,
-but column family attributes which may not be modified are not
-included here.</p>
+<p>Parameter meanings are the same as for <a class="reference internal" href="#pycassa.system_manager.SystemManager.create_column_family" title="pycassa.system_manager.SystemManager.create_column_family"><tt class="xref py py-meth docutils literal"><span class="pre">create_column_family()</span></tt></a>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -423,7 +292,7 @@ for the index.</p>
                         title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.columnfamilymap</span></tt> &#8211; Maps Classes to Column Families</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="index.html"
-                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">pycassa.index</span></tt> &#8211; Secondary Index Tools</a></p>
+                        title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.index</span></tt> &#8211; Secondary Index Tools</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../_sources/api/pycassa/system_manager.txt"
@@ -461,7 +330,7 @@ for the index.</p>
         <li class="right" >
           <a href="columnfamilymap.html" title="pycassa.columnfamilymap – Maps Classes to Column Families"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.6.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.7.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

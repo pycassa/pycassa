@@ -1,0 +1,183 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Development &mdash; pycassa v1.7.0 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="top" title="pycassa v1.7.0 documentation" href="index.html" />
+    <link rel="prev" title="Using with multiprocessing" href="using_with/multiprocessing.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="using_with/multiprocessing.html" title="Using with multiprocessing"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">pycassa v1.7.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="development">
+<h1>Development<a class="headerlink" href="#development" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="new-thrift-api">
+<h2>New thrift API<a class="headerlink" href="#new-thrift-api" title="Permalink to this headline">¶</a></h2>
+<p>pycassa includes Cassandra&#8217;s Python Thrift API in <cite>pycassa.cassandra</cite>.
+Since Cassandra 1.1.0, the generated Thrift definitions are fully backwards
+compatible, allowing you to use attributes that have been deprecated or
+removed in recent versions of Cassandra. So, even though the code is
+generated from a Cassandra 1.1.0 definition, you can use the resulting code
+with 0.7 and still have full access to attributes that were removed after
+0.7, such as the memtable flush thresholds.</p>
+<p>The following explains the procedure using Mac OS Lion as an example. Other
+Linux and BSD versions should work in similar ways. Of course you need to
+have a supported Java JDK installed, the Apple provided JDK is fine. This
+approach doesn&#8217;t install any of the tools globally but keeps them isolated.
+As such we are using <cite>virtualenv &lt;http://pypi.python.org/pypi/virtualenv&gt;</cite>.</p>
+<p>First you need some prerequisites, installed via macports or some other
+package management system:</p>
+<div class="highlight-python"><pre>sudo port install boost libevent</pre>
+</div>
+<p>Download and unpack thrift (<a class="reference external" href="http://thrift.apache.org/download/">http://thrift.apache.org/download/</a>):</p>
+<div class="highlight-python"><pre>wget http://apache.osuosl.org/thrift/0.8.0/thrift-0.8.0.tar.gz
+tar xzf thrift-0.8.0.tar.gz</pre>
+</div>
+<p>Create a virtualenv and tell thrift to install into it:</p>
+<div class="highlight-python"><pre>cd thrift-0.8.0
+virtualenv-2.7 .
+export PY_PREFIX=$PWD</pre>
+</div>
+<p>Configure and build thrift with the minimal functionality we need:</p>
+<div class="highlight-python"><pre>./configure --prefix=$PWD --disable-static --with-boost=/opt/local \
+    --with-libevent=/opt/local --without-csharp --without-cpp \
+    --without-java --without-erlang --without-perl --without-php \
+    --without-php_extension --without-ruby --without-haskell --without-go
+make
+make install</pre>
+</div>
+<p>You can test the successful install:</p>
+<div class="highlight-python"><pre>bin/thrift -version
+bin/python -c "from thrift.protocol import fastbinary; print(fastbinary)"</pre>
+</div>
+<p>Next up is Cassandra. Clone the Git repository:</p>
+<div class="highlight-python"><pre>cd ..
+git clone http://git-wip-us.apache.org/repos/asf/cassandra.git
+cd cassandra</pre>
+</div>
+<p>We will build the Thrift API for the 1.1.1 release, so checkout the tag
+(instructions simplified from build.xml <cite>gen-thrift-py</cite>):</p>
+<div class="highlight-python"><pre>git checkout cassandra-1.1.1
+cd interface
+../../thrift-0.8.0/bin/thrift --gen py:new_style -o thrift/ \
+    cassandra.thrift</pre>
+</div>
+<p>We are only interested in the generated Python modules:</p>
+<div class="highlight-python"><pre>ls thrift/gen-py/cassandra/*.py</pre>
+</div>
+<p>These should replace the python files in <cite>pycassa/cassandra</cite>, allowing you
+to use the latest Thrift methods and object definitions, such as CfDef (which
+controls what attributes you may set when creating or updating a column
+family). Don&#8217;t forget to review the documentation.</p>
+<p>Make sure you run the tests, especially if adjusting the default protocol
+version or introducing backwards incompatible API changes.</p>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="http://thrift.apache.org/docs/install/">http://thrift.apache.org/docs/install/</a></li>
+<li><a class="reference external" href="http://wiki.apache.org/cassandra/HowToContribute">http://wiki.apache.org/cassandra/HowToContribute</a></li>
+<li><a class="reference external" href="http://wiki.apache.org/cassandra/InstallThrift">http://wiki.apache.org/cassandra/InstallThrift</a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Development</a><ul>
+<li><a class="reference internal" href="#new-thrift-api">New thrift API</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="using_with/multiprocessing.html"
+                        title="previous chapter">Using with <tt class="docutils literal"><span class="pre">multiprocessing</span></tt></a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/development.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="using_with/multiprocessing.html" title="Using with multiprocessing"
+             >previous</a> |</li>
+        <li><a href="index.html">pycassa v1.7.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
