@@ -79,6 +79,7 @@ class ColumnFamily(object):
     of rows. The default is 1024. """
 
     column_buffer_size = 1024
+    """ The number of columns fetched at once for :meth:`xget()` """
 
     read_consistency_level = ConsistencyLevel.ONE
     """ The default consistency level for every read operation, such as
