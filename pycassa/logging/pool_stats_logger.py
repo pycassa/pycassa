@@ -21,16 +21,32 @@ def sync(lock_name):
 
 class StatsLogger(object):
     """
-    Basic stats logger, just increment counts, you can then plot as COUNTER or DERIVED (RRD)
-    or apply derivative (graphite). Except for 'opened' which tracks the currently opened connections.
+    Basic stats logger that increment counts. You can plot these as `COUNTER` or
+    `DERIVED` (RRD) or apply derivative (graphite) except for ``opened``, which tracks
+    the currently opened connections.
 
-    Usage:
+    Usage::
 
-    pool = ConnectionPool(...)
-    stats_logger = StatsLogger()
-    pool.add_listener(stats_logger)
+        >>> pool = ConnectionPool(...)
+        >>> stats_logger = StatsLogger()
+        >>> pool.add_listener(stats_logger)
+        >>>
+        >>> # use the pool for a while...
+        >>> import pprint
+        >>> pprint.pprint(pool.stats)
+        {'at_max': 0,
+         'checked_in': 401,
+         'checked_out': 403,
+         'created': {'failure': 0, 'success': 0},
+         'disposed': {'failure': 0, 'success': 0},
+         'failed': 1,
+         'list': 0,
+         'opened': {'current': 2, 'max': 2},
+         'recycled': 0}
 
-    get your stats by calling stats_logger.stats and push them to your metrics system
+
+    Get your stats as ``stats_logger.stats`` and push them to your metrics
+    system.
     """
 
     def __init__(self):
