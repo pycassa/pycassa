@@ -1,3 +1,56 @@
+Changes in Version 1.7.0
+
+    This release has a few relatively large changes in it: a new connection
+    pool stats collector, compatibility with Cassandra 0.7 through 1.1, and a
+    change in timezone behavior for datetimes.
+
+    Before upgrading, take special care to make sure datetimes that you pass to
+    pycassa (for TimeUUIDType or DateType data) are in UTC, and make sure your code
+    expects to get UTC datetimes back in return.
+
+    Likewise, the SystemManager changes should be backwards compatible, but there
+    may be minor differences, mostly in create_column_family() and
+    alter_column_family(). Be sure to test any code that works programmatically
+    with these.
+
+    Features
+
+      * Added StatsLogger for tracking ConnectionPool metrics
+      * Full Cassandra 1.1 compatibility in SystemManager. To support this, all
+        column family or keyspace attributes that have existed since Cassandra 0.7 may
+        be used as keyword arguments for create_column_family() and
+        alter_column_family(). It is up to the user to know which attributes are
+        available and valid for their version of Cassandra. As part of this change, the
+        version-specific thrift-generated cassandra modules (pycassa.cassandra.c07,
+        pycassa.cassandra.c08, and pycassa.cassandra.c10) have been replaced by
+        pycassa.cassandra. A minor related change is that individual connections now
+        now longer ask for the node’s API version, and that information is no longer
+        stored as an attribute of the ConnectionWrapper.
+
+    Bug Fixes
+
+      * Fix xget() paging for non-string comparators
+      * Add batch_insert() to ColumnFamilyMap
+      * Use setattr instead of directly updating the object’s __dict__ in
+      * ColumnFamilyMap to avoid breaking descriptors
+      * Fix single-column counter increments with ColumnFamily.insert()
+      * Include AuthenticationException and AuthorizationException in the pycassa module
+      * Support counters in xget()
+      * Sort column families in pycassaShell for display
+      * Raise TypeError when bad keyword arguments are used when creating a ColumnFamily object
+
+    Other
+
+        All datetime objects create by pycassa now use UTC as their timezone
+        rather than the local timezone. Likewise, naive datetime objects that
+        are passed to pycassa are now assumed to be in UTC time, but tz_info is
+        respected if set.
+
+        Specifically, the types of data that you may need to make adjustments
+        for when upgrading are TimeUUIDType and DateType (including OldPycassaDateType
+        and IntermediateDateType).
+
+
 Changes in Version 1.6.0
 
     This release adds a few minor features and several important bug fixes.
