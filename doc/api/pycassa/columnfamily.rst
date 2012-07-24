@@ -17,19 +17,21 @@
 
         .. autoattribute:: autopack_keys
 
-        .. autoattribute:: column_name_class     
+        .. autoattribute:: column_name_class
 
-        .. autoattribute:: super_column_name_class     
+        .. autoattribute:: super_column_name_class
 
-        .. autoattribute:: default_validation_class     
+        .. autoattribute:: default_validation_class
 
-        .. autoattribute:: column_validators     
+        .. autoattribute:: column_validators
 
-        .. autoattribute:: key_validation_class     
+        .. autoattribute:: key_validation_class
 
         .. autoattribute:: dict_class
 
         .. autoattribute:: buffer_size
+
+        .. autoattribute:: column_buffer_size
 
         .. autoattribute:: timestamp
 
