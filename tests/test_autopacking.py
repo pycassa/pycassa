@@ -147,6 +147,18 @@ class TestCFs(unittest.TestCase):
 
             # Test xget paging
             assert_equal(list(cf.xget(KEYS[0], buffer_size=2)), gdict.items())
+            assert_equal(list(cf.xget(KEYS[0], column_reversed=True, buffer_size=2)),
+                         list(reversed(gdict.items())))
+            assert_equal(list(cf.xget(KEYS[0], column_start=gcols[0], buffer_size=2)),
+                         gdict.items())
+            assert_equal(list(cf.xget(KEYS[0], column_finish=gcols[2], buffer_size=2)),
+                         gdict.items())
+            assert_equal(list(cf.xget(KEYS[0], column_start=gcols[2], column_finish=gcols[0],
+                                      column_reversed=True, buffer_size=2)),
+                         list(reversed(gdict.items())))
+            assert_equal(list(cf.xget(KEYS[0], column_start=gcols[1], column_finish=gcols[1],
+                                      column_reversed=True, buffer_size=2)),
+                         [(gcols[1], VALS[1])])
 
             # Test removing rows
             cf.remove(KEYS[0], columns=gcols[:1])

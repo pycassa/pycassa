@@ -533,9 +533,13 @@ class ColumnFamily(object):
         count = i = 0
         last_name = finish = ""
         if column_start != "":
-            last_name = self._pack_name(column_start)
+            last_name = self._pack_name(column_start,
+                    is_supercol_name=self.super,
+                    slice_start=(not column_reversed))
         if column_finish != "":
-            finish = self._pack_name(column_finish)
+            finish = self._pack_name(column_finish,
+                    is_supercol_name=self.super,
+                    slice_start=column_reversed)
 
         while True:
             if column_count is not None:
