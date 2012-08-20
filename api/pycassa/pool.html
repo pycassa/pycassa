@@ -3,13 +3,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.pool – Connection Pooling &mdash; pycassa v1.7.0 documentation</title>
+    <title>pycassa.pool – Connection Pooling &mdash; pycassa 1.7.0 documentation</title>
+    
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
@@ -23,7 +26,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../../_static/favicon.ico"/>
-    <link rel="top" title="pycassa v1.7.0 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa 1.7.0 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.columnfamily – Column Family" href="columnfamily.html" />
     <link rel="prev" title="pycassa - Exceptions and Enums" href="../pycassa.html" /> 
@@ -44,7 +47,7 @@
         <li class="right" >
           <a href="../pycassa.html" title="pycassa - Exceptions and Enums"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.7.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa 1.7.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -70,13 +73,13 @@ The list will be randomly shuffled before being drawn from sequentially.
 be supplied.  This should be a dictionary containing &#8216;username&#8217; and
 &#8216;password&#8217; keys with appropriate string values.</p>
 <p><cite>timeout</cite> specifies in seconds how long individual connections will
-block before timing out. If set to <tt class="xref docutils literal"><span class="pre">None</span></tt>, connections will never
+block before timing out. If set to <tt class="docutils literal"><span class="pre">None</span></tt>, connections will never
 timeout.</p>
-<p>If <cite>use_threadlocal</cite> is set to <tt class="xref docutils literal"><span class="pre">True</span></tt>, repeated calls to
+<p>If <cite>use_threadlocal</cite> is set to <tt class="docutils literal"><span class="pre">True</span></tt>, repeated calls to
 <a class="reference internal" href="#pycassa.pool.ConnectionPool.get" title="pycassa.pool.ConnectionPool.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a> within the same application thread will
 return the same <a class="reference internal" href="#pycassa.pool.ConnectionWrapper" title="pycassa.pool.ConnectionWrapper"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionWrapper</span></tt></a> object if one is
 already checked out from the pool.  Be careful when setting <cite>use_threadlocal</cite>
-to <tt class="xref docutils literal"><span class="pre">False</span></tt> in a multithreaded application, especially with retries enabled.
+to <tt class="docutils literal"><span class="pre">False</span></tt> in a multithreaded application, especially with retries enabled.
 Synchronization may be required to prevent the connection from changing while
 another thread is using it.</p>
 <p>The pool will keep up <cite>pool_size</cite> open connections in the pool
@@ -92,7 +95,7 @@ either overflow occurs, a connection is recycled, or a connection
 fails. Similarly, if a multiple of <tt class="docutils literal"><span class="pre">len(server_list)</span></tt> is not chosen,
 those same servers would have a decreased load. By default, overflow
 is disabled.</p>
-<p>If <cite>prefill</cite> is set to <tt class="xref docutils literal"><span class="pre">True</span></tt>, <cite>pool_size</cite> connections will be opened
+<p>If <cite>prefill</cite> is set to <tt class="docutils literal"><span class="pre">True</span></tt>, <cite>pool_size</cite> connections will be opened
 when the pool is created.</p>
 <p>Example Usage:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">pycassa</span><span class="o">.</span><span class="n">ConnectionPool</span><span class="p">(</span><span class="n">keyspace</span><span class="o">=</span><span class="s">&#39;Keyspace1&#39;</span><span class="p">,</span> <span class="n">server_list</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;10.0.0.4:9160&#39;</span><span class="p">,</span> <span class="s">&#39;10.0.0.5:9160&#39;</span><span class="p">],</span> <span class="n">prefill</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
@@ -114,7 +117,7 @@ overflow limit. The default value is 0, which does not allow for overflow.</p>
 
 <dl class="attribute">
 <dt id="pycassa.pool.ConnectionPool.pool_timeout">
-<tt class="descname">pool_timeout</tt><a class="headerlink" href="#pycassa.pool.ConnectionPool.pool_timeout" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">pool_timeout</tt><em class="property"> = 30</em><a class="headerlink" href="#pycassa.pool.ConnectionPool.pool_timeout" title="Permalink to this definition">¶</a></dt>
 <dd><p>If <tt class="docutils literal"><span class="pre">pool_size</span> <span class="pre">+</span> <span class="pre">max_overflow</span></tt> connections have already been checked
 out, an attempt to retrieve a new connection from the pool will wait
 up to <cite>pool_timeout</cite> seconds for a connection to be returned to the
@@ -126,7 +129,7 @@ The default value is 30.</p>
 
 <dl class="attribute">
 <dt id="pycassa.pool.ConnectionPool.recycle">
-<tt class="descname">recycle</tt><a class="headerlink" href="#pycassa.pool.ConnectionPool.recycle" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">recycle</tt><em class="property"> = 10000</em><a class="headerlink" href="#pycassa.pool.ConnectionPool.recycle" title="Permalink to this definition">¶</a></dt>
 <dd><p>After performing <cite>recycle</cite> number of operations, connections will
 be replaced when checked back in to the pool.  This may be set to
 -1 to disable connection recycling. The default value is 10,000.</p>
@@ -134,7 +137,7 @@ be replaced when checked back in to the pool.  This may be set to
 
 <dl class="attribute">
 <dt id="pycassa.pool.ConnectionPool.max_retries">
-<tt class="descname">max_retries</tt><a class="headerlink" href="#pycassa.pool.ConnectionPool.max_retries" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">max_retries</tt><em class="property"> = 5</em><a class="headerlink" href="#pycassa.pool.ConnectionPool.max_retries" title="Permalink to this definition">¶</a></dt>
 <dd><p>When an operation on a connection fails due to an <a class="reference internal" href="../pycassa.html#pycassa.TimedOutException" title="pycassa.TimedOutException"><tt class="xref py py-exc docutils literal"><span class="pre">TimedOutException</span></tt></a>
 or <a class="reference internal" href="../pycassa.html#pycassa.UnavailableException" title="pycassa.UnavailableException"><tt class="xref py py-exc docutils literal"><span class="pre">UnavailableException</span></tt></a>, which tend to indicate single or
 multiple node failure, the operation will be retried on different nodes
@@ -145,7 +148,7 @@ The default value is 5.</p>
 
 <dl class="attribute">
 <dt id="pycassa.pool.ConnectionPool.logging_name">
-<tt class="descname">logging_name</tt><a class="headerlink" href="#pycassa.pool.ConnectionPool.logging_name" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">logging_name</tt><em class="property"> = None</em><a class="headerlink" href="#pycassa.pool.ConnectionPool.logging_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>By default, each pool identifies itself in the logs using <tt class="docutils literal"><span class="pre">id(self)</span></tt>.
 If multiple pools are in use for different purposes, setting <cite>logging_name</cite> will
 help individual pools to be identified in the logs.</p>
@@ -270,7 +273,7 @@ Pool&#8217;s <a class="reference internal" href="#pycassa.pool.ConnectionPool.ge
 <dt id="pycassa.pool.ConnectionWrapper.get_keyspace_description">
 <tt class="descname">get_keyspace_description</tt><big>(</big><em>keyspace=None</em>, <em>use_dict_for_col_metadata=False</em><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionWrapper.get_keyspace_description" title="Permalink to this definition">¶</a></dt>
 <dd><p>Describes the given keyspace.</p>
-<p>If <cite>use_dict_for_col_metadata</cite> is <tt class="xref docutils literal"><span class="pre">True</span></tt>, the column metadata will be stored
+<p>If <cite>use_dict_for_col_metadata</cite> is <tt class="docutils literal"><span class="pre">True</span></tt>, the column metadata will be stored
 as a dictionary instead of a list</p>
 <p>A dictionary of the form <tt class="docutils literal"><span class="pre">{column_family_name:</span> <span class="pre">CfDef}</span></tt> is returned.</p>
 </dd></dl>
@@ -425,7 +428,7 @@ pool will choose from.</p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -454,12 +457,12 @@ pool will choose from.</p>
         <li class="right" >
           <a href="../pycassa.html" title="pycassa - Exceptions and Enums"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.7.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa 1.7.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

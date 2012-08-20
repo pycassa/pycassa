@@ -3,13 +3,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Changelog &mdash; pycassa v1.7.0 documentation</title>
+    <title>Changelog &mdash; pycassa 1.7.0 documentation</title>
+    
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
@@ -23,7 +26,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-    <link rel="top" title="pycassa v1.7.0 documentation" href="index.html" />
+    <link rel="top" title="pycassa 1.7.0 documentation" href="index.html" />
     <link rel="next" title="Assorted Cassandra and pycassa Functionality" href="assorted/index.html" />
     <link rel="prev" title="pycassa.logging.pool_stats_logger – Connection Pool Stats" href="api/pycassa/logging/pool_stats_logger.html" /> 
   </head>
@@ -43,7 +46,7 @@
         <li class="right" >
           <a href="api/pycassa/logging/pool_stats_logger.html" title="pycassa.logging.pool_stats_logger – Connection Pool Stats"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">pycassa v1.7.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa 1.7.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -151,7 +154,7 @@ has been applied</li>
 <a class="reference internal" href="api/pycassa/util.html#pycassa.util.convert_time_to_uuid" title="pycassa.util.convert_time_to_uuid"><tt class="xref py py-func docutils literal"><span class="pre">pycassa.util.convert_time_to_uuid()</span></tt></a></li>
 <li>Make default slice ends inclusive when using <tt class="docutils literal"><span class="pre">CompositeType</span></tt> comparator
 Previously, the end of the slice was exclusive by default (as was the start
-of the slice when <tt class="docutils literal"><span class="pre">column_reversed</span></tt> was <tt class="xref docutils literal"><span class="pre">True</span></tt>)</li>
+of the slice when <tt class="docutils literal"><span class="pre">column_reversed</span></tt> was <tt class="docutils literal"><span class="pre">True</span></tt>)</li>
 </ul>
 </div>
 </div>
@@ -249,7 +252,7 @@ when the specified supercolumn was 0 or other &#8220;falsey&#8221; values</li>
 <li>Don&#8217;t request an extra row when reading fewer than <cite>buffer_size</cite>
 rows with <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_range" title="pycassa.columnfamily.ColumnFamily.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a> or
 <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_indexed_slices" title="pycassa.columnfamily.ColumnFamily.get_indexed_slices"><tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt></a>.</li>
-<li>Remove <cite>pool_type</cite> from logs, which showed up as <tt class="xref docutils literal"><span class="pre">None</span></tt> in
+<li>Remove <cite>pool_type</cite> from logs, which showed up as <tt class="docutils literal"><span class="pre">None</span></tt> in
 recent versions</li>
 <li>Logs were erroneously showing the same server for retries
 of failed operations even when the actual server being
@@ -322,7 +325,7 @@ three versions.</p>
 <h3>Features<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>The <cite>filter_empty</cite> parameter was added to
-<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_range" title="pycassa.columnfamily.ColumnFamily.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a> with a default of <tt class="xref docutils literal"><span class="pre">True</span></tt>; this
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.get_range" title="pycassa.columnfamily.ColumnFamily.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a> with a default of <tt class="docutils literal"><span class="pre">True</span></tt>; this
 allows empty rows to be kept if desired</li>
 </ul>
 </div>
@@ -395,7 +398,7 @@ and these rows will not count towards the supplied <cite>row_count</cite>.</li>
 <h3>Bug Fixes<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Add connections to <a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a> more readily
-when <cite>prefill</cite> is <tt class="xref docutils literal"><span class="pre">False</span></tt>.
+when <cite>prefill</cite> is <tt class="docutils literal"><span class="pre">False</span></tt>.
 Before this change, if the ConnectionPool was created with
 <tt class="docutils literal"><span class="pre">prefill=False</span></tt>, connections would only be added to the pool
 when there was concurrent demand for connections.
@@ -406,7 +409,7 @@ being added to the pool.</li>
 connection count after a <tt class="xref py py-exc docutils literal"><span class="pre">TApplicationException</span></tt>. This
 exception generally indicates programmer error, so it&#8217;s not
 extremely common.</li>
-<li>Handle typed keys that evaluate to <tt class="xref docutils literal"><span class="pre">False</span></tt></li>
+<li>Handle typed keys that evaluate to <tt class="docutils literal"><span class="pre">False</span></tt></li>
 </ul>
 </div>
 <div class="section" id="id12">
@@ -518,7 +521,7 @@ the effective overflow limit was raised to <tt class="docutils literal"><span cl
 <li>Overflow is now disabled by default in <a class="reference internal" href="api/pycassa/pool.html#pycassa.pool.ConnectionPool" title="pycassa.pool.ConnectionPool"><tt class="xref py py-class docutils literal"><span class="pre">ConnectionPool</span></tt></a>.</li>
 <li><a class="reference internal" href="api/pycassa/columnfamilymap.html#pycassa.columnfamilymap.ColumnFamilyMap" title="pycassa.columnfamilymap.ColumnFamilyMap"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamilyMap</span></tt></a> now sets the underlying <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily" title="pycassa.columnfamily.ColumnFamily"><tt class="xref py py-class docutils literal"><span class="pre">ColumnFamily</span></tt></a>&#8216;s
 <a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.autopack_names" title="pycassa.columnfamily.ColumnFamily.autopack_names"><tt class="xref py py-attr docutils literal"><span class="pre">autopack_names</span></tt></a> and
-<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.autopack_values" title="pycassa.columnfamily.ColumnFamily.autopack_values"><tt class="xref py py-attr docutils literal"><span class="pre">autopack_values</span></tt></a> attributes to <tt class="xref docutils literal"><span class="pre">False</span></tt> upon
+<a class="reference internal" href="api/pycassa/columnfamily.html#pycassa.columnfamily.ColumnFamily.autopack_values" title="pycassa.columnfamily.ColumnFamily.autopack_values"><tt class="xref py py-attr docutils literal"><span class="pre">autopack_values</span></tt></a> attributes to <tt class="docutils literal"><span class="pre">False</span></tt> upon
 construction.</li>
 <li>Documentation and tests will no longer be included in the
 packaged tarballs.</li>
@@ -912,7 +915,7 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -941,11 +944,11 @@ and <a class="reference internal" href="api/pycassa/index.html#module-pycassa.in
         <li class="right" >
           <a href="api/pycassa/logging/pool_stats_logger.html" title="pycassa.logging.pool_stats_logger – Connection Pool Stats"
              >previous</a> |</li>
-        <li><a href="index.html">pycassa v1.7.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pycassa 1.7.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

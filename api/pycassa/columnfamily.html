@@ -3,13 +3,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.columnfamily – Column Family &mdash; pycassa v1.7.0 documentation</title>
+    <title>pycassa.columnfamily – Column Family &mdash; pycassa 1.7.0 documentation</title>
+    
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
@@ -23,7 +26,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../../_static/favicon.ico"/>
-    <link rel="top" title="pycassa v1.7.0 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa 1.7.0 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.columnfamilymap – Maps Classes to Column Families" href="columnfamilymap.html" />
     <link rel="prev" title="pycassa.pool – Connection Pooling" href="pool.html" /> 
@@ -44,7 +47,7 @@
         <li class="right" >
           <a href="pool.html" title="pycassa.pool – Connection Pooling"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.7.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa 1.7.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -82,7 +85,7 @@ want to use in Cassandra. Note that the keyspace to be used is
 determined by the pool.</p>
 <dl class="attribute">
 <dt id="pycassa.columnfamily.ColumnFamily.read_consistency_level">
-<tt class="descname">read_consistency_level</tt><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.read_consistency_level" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">read_consistency_level</tt><em class="property"> = 1</em><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.read_consistency_level" title="Permalink to this definition">¶</a></dt>
 <dd><p>The default consistency level for every read operation, such as
 <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.get" title="pycassa.columnfamily.ColumnFamily.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a> or <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.get_range" title="pycassa.columnfamily.ColumnFamily.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a>. This may be overridden per-operation. This should be
 an instance of <tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt>.
@@ -91,7 +94,7 @@ The default level is <tt class="docutils literal"><span class="pre">ONE</span></
 
 <dl class="attribute">
 <dt id="pycassa.columnfamily.ColumnFamily.write_consistency_level">
-<tt class="descname">write_consistency_level</tt><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.write_consistency_level" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">write_consistency_level</tt><em class="property"> = 1</em><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.write_consistency_level" title="Permalink to this definition">¶</a></dt>
 <dd><p>The default consistency level for every write operation, such as
 <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.insert" title="pycassa.columnfamily.ColumnFamily.insert"><tt class="xref py py-meth docutils literal"><span class="pre">insert()</span></tt></a> or <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.remove" title="pycassa.columnfamily.ColumnFamily.remove"><tt class="xref py py-meth docutils literal"><span class="pre">remove()</span></tt></a>. This may be overridden per-operation. This should be
 an instance of <tt class="xref py py-class docutils literal"><span class="pre">ConsistencyLevel</span></tt>.
@@ -100,31 +103,31 @@ The default level is <tt class="docutils literal"><span class="pre">ONE</span></
 
 <dl class="attribute">
 <dt id="pycassa.columnfamily.ColumnFamily.autopack_names">
-<tt class="descname">autopack_names</tt><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.autopack_names" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">autopack_names</tt><em class="property"> = True</em><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.autopack_names" title="Permalink to this definition">¶</a></dt>
 <dd><p>Controls whether column names are automatically converted to or from
 their natural type to the binary string format that Cassandra uses.
 The data type used is controlled by <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.column_name_class" title="pycassa.columnfamily.ColumnFamily.column_name_class"><tt class="xref py py-attr docutils literal"><span class="pre">column_name_class</span></tt></a> for
 column names and <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.super_column_name_class" title="pycassa.columnfamily.ColumnFamily.super_column_name_class"><tt class="xref py py-attr docutils literal"><span class="pre">super_column_name_class</span></tt></a> for super column names.
-By default, this is <tt class="xref py py-const xref docutils literal"><span class="pre">True</span></tt>.</p>
+By default, this is <tt class="xref py py-const docutils literal"><span class="pre">True</span></tt>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="pycassa.columnfamily.ColumnFamily.autopack_values">
-<tt class="descname">autopack_values</tt><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.autopack_values" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">autopack_values</tt><em class="property"> = True</em><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.autopack_values" title="Permalink to this definition">¶</a></dt>
 <dd><p>Whether column values are automatically converted to or from
 their natural type to the binary string format that Cassandra uses.
 The data type used is controlled by <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.default_validation_class" title="pycassa.columnfamily.ColumnFamily.default_validation_class"><tt class="xref py py-attr docutils literal"><span class="pre">default_validation_class</span></tt></a>
 and <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.column_validators" title="pycassa.columnfamily.ColumnFamily.column_validators"><tt class="xref py py-attr docutils literal"><span class="pre">column_validators</span></tt></a>.
-By default, this is <tt class="xref py py-const xref docutils literal"><span class="pre">True</span></tt>.</p>
+By default, this is <tt class="xref py py-const docutils literal"><span class="pre">True</span></tt>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="pycassa.columnfamily.ColumnFamily.autopack_keys">
-<tt class="descname">autopack_keys</tt><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.autopack_keys" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">autopack_keys</tt><em class="property"> = True</em><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.autopack_keys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Whether row keys are automatically converted to or from
 their natural type to the binary string format that Cassandra uses.
 The data type used is controlled by <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.key_validation_class" title="pycassa.columnfamily.ColumnFamily.key_validation_class"><tt class="xref py py-attr docutils literal"><span class="pre">key_validation_class</span></tt></a>.
-By default, this is <tt class="xref py py-const xref docutils literal"><span class="pre">True</span></tt>.</p>
+By default, this is <tt class="xref py py-const docutils literal"><span class="pre">True</span></tt>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -178,7 +181,7 @@ such as <tt class="docutils literal"><span class="pre">LongType()</span></tt>.</
 
 <dl class="attribute">
 <dt id="pycassa.columnfamily.ColumnFamily.dict_class">
-<tt class="descname">dict_class</tt><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.dict_class" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">dict_class</tt><em class="property"> = &lt;class 'collections.OrderedDict'&gt;</em><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.dict_class" title="Permalink to this definition">¶</a></dt>
 <dd><p>Results are returned as dictionaries. By default, python 2.7&#8217;s
 <tt class="xref py py-class docutils literal"><span class="pre">collections.OrderedDict</span></tt> is used if available, otherwise
 <a class="reference internal" href="util.html#pycassa.util.OrderedDict" title="pycassa.util.OrderedDict"><tt class="xref py py-class docutils literal"><span class="pre">OrderedDict</span></tt></a> is used so that order is maintained.
@@ -188,7 +191,7 @@ this.</p>
 
 <dl class="attribute">
 <dt id="pycassa.columnfamily.ColumnFamily.buffer_size">
-<tt class="descname">buffer_size</tt><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.buffer_size" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">buffer_size</tt><em class="property"> = 1024</em><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.buffer_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>When calling <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.get_range" title="pycassa.columnfamily.ColumnFamily.get_range"><tt class="xref py py-meth docutils literal"><span class="pre">get_range()</span></tt></a> or <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.get_indexed_slices" title="pycassa.columnfamily.ColumnFamily.get_indexed_slices"><tt class="xref py py-meth docutils literal"><span class="pre">get_indexed_slices()</span></tt></a>,
 the intermediate results need to be buffered if we are fetching many
 rows, otherwise performance may suffer and the Cassandra server may
@@ -198,13 +201,13 @@ of rows. The default is 1024.</p>
 
 <dl class="attribute">
 <dt id="pycassa.columnfamily.ColumnFamily.column_buffer_size">
-<tt class="descname">column_buffer_size</tt><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.column_buffer_size" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">column_buffer_size</tt><em class="property"> = 1024</em><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.column_buffer_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>The number of columns fetched at once for <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.xget" title="pycassa.columnfamily.ColumnFamily.xget"><tt class="xref py py-meth docutils literal"><span class="pre">xget()</span></tt></a></p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="pycassa.columnfamily.ColumnFamily.timestamp">
-<tt class="descname">timestamp</tt><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.timestamp" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">timestamp</tt><em class="property"> = &lt;unbound method ColumnFamily.gm_timestamp&gt;</em><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.timestamp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Each <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.insert" title="pycassa.columnfamily.ColumnFamily.insert"><tt class="xref py py-meth docutils literal"><span class="pre">insert()</span></tt></a> or <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.remove" title="pycassa.columnfamily.ColumnFamily.remove"><tt class="xref py py-meth docutils literal"><span class="pre">remove()</span></tt></a> sends a timestamp with every
 column. This attribute is a function that is used to get
 this timestamp when needed.  The default function is <a class="reference internal" href="#pycassa.columnfamily.gm_timestamp" title="pycassa.columnfamily.gm_timestamp"><tt class="xref py py-meth docutils literal"><span class="pre">gm_timestamp()</span></tt></a>.</p>
@@ -233,14 +236,14 @@ empty string, the slice will begin with the start of the row; leaving
 <cite>column_finish</cite> blank will cause the slice to extend to the end of the row.
 Note that <cite>column_count</cite> defaults to 100, so rows over this size will not be
 completely fetched by default.</p>
-<p>If <cite>column_reversed</cite> is <tt class="xref docutils literal"><span class="pre">True</span></tt>, columns are fetched in reverse sorted order,
+<p>If <cite>column_reversed</cite> is <tt class="docutils literal"><span class="pre">True</span></tt>, columns are fetched in reverse sorted order,
 beginning with <cite>column_start</cite>.  In this case, if <cite>column_start</cite> is the empty
 string, the slice will begin with the end of the row.</p>
 <p>You may fetch all or part of only a single super column by setting <cite>super_column</cite>.
 If this is set, <cite>column_start</cite>, <cite>column_finish</cite>, <cite>column_count</cite>, and <cite>column_reversed</cite>
 will apply to the subcolumns of <cite>super_column</cite>.</p>
 <p>To include every column&#8217;s timestamp in the result set, set <cite>include_timestamp</cite> to
-<tt class="xref docutils literal"><span class="pre">True</span></tt>.  Results will include a <tt class="docutils literal"><span class="pre">(value,</span> <span class="pre">timestamp)</span></tt> tuple for each column.</p>
+<tt class="docutils literal"><span class="pre">True</span></tt>.  Results will include a <tt class="docutils literal"><span class="pre">(value,</span> <span class="pre">timestamp)</span></tt> tuple for each column.</p>
 <p>If this is a standard column family, the return type is of the form
 <tt class="docutils literal"><span class="pre">{column_name:</span> <span class="pre">column_value}</span></tt>.  If this is a super column family and <cite>super_column</cite>
 is not specified, the results are of the form
@@ -251,11 +254,11 @@ the super column name will be excluded and the results are of the form
 
 <dl class="method">
 <dt id="pycassa.columnfamily.ColumnFamily.multiget">
-<tt class="descname">multiget</tt><big>(</big><em>keys[, columns][, column_start][, column_finish][, column_reversed][, column_count][, include_timestamp][, super_column][, read_consistency_level]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.multiget" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">multiget</tt><big>(</big><em>keys[, columns][, column_start][, column_finish][, column_reversed][, column_count][, include_timestamp][, super_column][, read_consistency_level][, buffer_size]</em><big>)</big><a class="headerlink" href="#pycassa.columnfamily.ColumnFamily.multiget" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fetch multiple rows from a Cassandra server.</p>
 <p><cite>keys</cite> should be a list of keys to fetch.</p>
 <p><cite>buffer_size</cite> is the number of rows from the total list to fetch at a time.
-If left as <tt class="xref docutils literal"><span class="pre">None</span></tt>, the ColumnFamily&#8217;s <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.buffer_size" title="pycassa.columnfamily.ColumnFamily.buffer_size"><tt class="xref py py-attr docutils literal"><span class="pre">buffer_size</span></tt></a> will be used.</p>
+If left as <tt class="docutils literal"><span class="pre">None</span></tt>, the ColumnFamily&#8217;s <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.buffer_size" title="pycassa.columnfamily.ColumnFamily.buffer_size"><tt class="xref py py-attr docutils literal"><span class="pre">buffer_size</span></tt></a> will be used.</p>
 <p>All other parameters are the same as <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.get" title="pycassa.columnfamily.ColumnFamily.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a>, except that a list of keys may
 be passed in.</p>
 <p>Results will be returned in the form: <tt class="docutils literal"><span class="pre">{key:</span> <span class="pre">{column_name:</span> <span class="pre">column_value}}</span></tt>. If
@@ -294,7 +297,7 @@ set <cite>max_count</cite>.</p>
 of keys may be used. A dictionary of the form <tt class="docutils literal"><span class="pre">{key:</span> <span class="pre">int}</span></tt> is
 returned.</p>
 <p><cite>buffer_size</cite> is the number of rows from the total list to count at a time.
-If left as <tt class="xref docutils literal"><span class="pre">None</span></tt>, the ColumnFamily&#8217;s <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.buffer_size" title="pycassa.columnfamily.ColumnFamily.buffer_size"><tt class="xref py py-attr docutils literal"><span class="pre">buffer_size</span></tt></a> will be used.</p>
+If left as <tt class="docutils literal"><span class="pre">None</span></tt>, the ColumnFamily&#8217;s <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.buffer_size" title="pycassa.columnfamily.ColumnFamily.buffer_size"><tt class="xref py py-attr docutils literal"><span class="pre">buffer_size</span></tt></a> will be used.</p>
 <p>To put an upper bound on the number of columns that are counted,
 set <cite>max_count</cite>.</p>
 </dd></dl>
@@ -309,14 +312,14 @@ Note that if RandomPartitioner is used, rows are stored in the
 order of the MD5 hash of their keys, so getting a lexicographical range
 of keys is not feasible.</p>
 <p>The <cite>row_count</cite> parameter limits the total number of rows that may be
-returned. If left as <tt class="xref docutils literal"><span class="pre">None</span></tt>, the number of rows that may be returned
+returned. If left as <tt class="docutils literal"><span class="pre">None</span></tt>, the number of rows that may be returned
 is unlimted (this is the default).</p>
 <p>When calling <cite>get_range()</cite>, the intermediate results need to be
 buffered if we are fetching many rows, otherwise the Cassandra
 server will overallocate memory and fail. <cite>buffer_size</cite> is the
-size of that buffer in number of rows. If left as <tt class="xref docutils literal"><span class="pre">None</span></tt>, the
+size of that buffer in number of rows. If left as <tt class="docutils literal"><span class="pre">None</span></tt>, the
 ColumnFamily&#8217;s <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.buffer_size" title="pycassa.columnfamily.ColumnFamily.buffer_size"><tt class="xref py py-attr docutils literal"><span class="pre">buffer_size</span></tt></a> attribute will be used.</p>
-<p>When <cite>filter_empty</cite> is left as <tt class="xref docutils literal"><span class="pre">True</span></tt>, empty rows (including
+<p>When <cite>filter_empty</cite> is left as <tt class="docutils literal"><span class="pre">True</span></tt>, empty rows (including
 <a class="reference external" href="http://wiki.apache.org/cassandra/FAQ#range_ghosts">range ghosts</a>)
 will be skipped and will not count towards <cite>row_count</cite>.</p>
 <p>All other parameters are the same as those of <a class="reference internal" href="#pycassa.columnfamily.ColumnFamily.get" title="pycassa.columnfamily.ColumnFamily.get"><tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt></a>.</p>
@@ -390,7 +393,7 @@ to a counter column. By default, <cite>value</cite> is 1.</p>
 <p>A single super column may be deleted by setting <cite>super_column</cite>. If
 <cite>super_column</cite> is specified, <cite>columns</cite> will apply to the subcolumns
 of <cite>super_column</cite>.</p>
-<p>If <cite>columns</cite> and <cite>super_column</cite> are both <tt class="xref docutils literal"><span class="pre">None</span></tt>, the entire row is
+<p>If <cite>columns</cite> and <cite>super_column</cite> are both <tt class="docutils literal"><span class="pre">None</span></tt>, the entire row is
 removed.</p>
 <p>The timestamp used for the mutation is returned.</p>
 </dd></dl>
@@ -440,7 +443,7 @@ operations using as few roundtrips as possible.</p>
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="pool.html"
-                        title="previous chapter"><tt class="docutils literal"><span class="pre">pycassa.pool</span></tt> &#8211; Connection Pooling</a></p>
+                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">pycassa.pool</span></tt> &#8211; Connection Pooling</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="columnfamilymap.html"
                         title="next chapter"><tt class="docutils literal"><span class="pre">pycassa.columnfamilymap</span></tt> &#8211; Maps Classes to Column Families</a></p>
@@ -452,7 +455,7 @@ operations using as few roundtrips as possible.</p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -481,12 +484,12 @@ operations using as few roundtrips as possible.</p>
         <li class="right" >
           <a href="pool.html" title="pycassa.pool – Connection Pooling"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.7.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa 1.7.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>
