@@ -3,20 +3,17 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.system_manager – Manage Schema Definitions &mdash; pycassa 1.7.0 documentation</title>
-    
+    <title>pycassa.system_manager – Manage Schema Definitions &mdash; pycassa v1.7.1 documentation</title>
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.7.0',
+        VERSION:     '1.7.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,7 +23,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../../_static/favicon.ico"/>
-    <link rel="top" title="pycassa 1.7.0 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v1.7.1 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.index – Secondary Index Tools" href="index.html" />
     <link rel="prev" title="pycassa.columnfamilymap – Maps Classes to Column Families" href="columnfamilymap.html" /> 
@@ -47,7 +44,7 @@
         <li class="right" >
           <a href="columnfamilymap.html" title="pycassa.columnfamilymap – Maps Classes to Column Families"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa 1.7.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.7.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -61,26 +58,26 @@
 <span id="pycassa-system-manager-manage-schema-definitions"></span><h1><a class="reference internal" href="#module-pycassa.system_manager" title="pycassa.system_manager"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.system_manager</span></tt></a> &#8211; Manage Schema Definitions<a class="headerlink" href="#module-pycassa.system_manager" title="Permalink to this headline">¶</a></h1>
 <dl class="data">
 <dt id="pycassa.system_manager.SIMPLE_STRATEGY">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">SIMPLE_STRATEGY</tt><em class="property"> = 'SimpleStrategy'</em><a class="headerlink" href="#pycassa.system_manager.SIMPLE_STRATEGY" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">SIMPLE_STRATEGY</tt><a class="headerlink" href="#pycassa.system_manager.SIMPLE_STRATEGY" title="Permalink to this definition">¶</a></dt>
 <dd><p>Replication strategy that simply chooses consecutive nodes in the ring for replicas</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="pycassa.system_manager.NETWORK_TOPOLOGY_STRATEGY">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">NETWORK_TOPOLOGY_STRATEGY</tt><em class="property"> = 'NetworkTopologyStrategy'</em><a class="headerlink" href="#pycassa.system_manager.NETWORK_TOPOLOGY_STRATEGY" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">NETWORK_TOPOLOGY_STRATEGY</tt><a class="headerlink" href="#pycassa.system_manager.NETWORK_TOPOLOGY_STRATEGY" title="Permalink to this definition">¶</a></dt>
 <dd><p>Replication strategy that puts a number of replicas in each datacenter</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="pycassa.system_manager.OLD_NETWORK_TOPOLOGY_STRATEGY">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">OLD_NETWORK_TOPOLOGY_STRATEGY</tt><em class="property"> = 'OldNetworkTopologyStrategy'</em><a class="headerlink" href="#pycassa.system_manager.OLD_NETWORK_TOPOLOGY_STRATEGY" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">OLD_NETWORK_TOPOLOGY_STRATEGY</tt><a class="headerlink" href="#pycassa.system_manager.OLD_NETWORK_TOPOLOGY_STRATEGY" title="Permalink to this definition">¶</a></dt>
 <dd><p>Original replication strategy for putting a number of replicas in each datacenter.
 This was originally called &#8216;RackAwareStrategy&#8217;.</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="pycassa.system_manager.KEYS_INDEX">
-<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">KEYS_INDEX</tt><em class="property"> = 0</em><a class="headerlink" href="#pycassa.system_manager.KEYS_INDEX" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">KEYS_INDEX</tt><a class="headerlink" href="#pycassa.system_manager.KEYS_INDEX" title="Permalink to this definition">¶</a></dt>
 <dd><p>A secondary index type where each indexed value receives its own row</p>
 </dd></dl>
 
@@ -116,7 +113,7 @@ the modification.</p>
 <tt class="descname">get_keyspace_column_families</tt><big>(</big><em>keyspace</em>, <em>use_dict_for_col_metadata=False</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.get_keyspace_column_families" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a raw description of the keyspace, which is more useful for use
 in programs than <tt class="xref py py-meth docutils literal"><span class="pre">describe_keyspace()</span></tt>.</p>
-<p>If <cite>use_dict_for_col_metadata</cite> is <tt class="docutils literal"><span class="pre">True</span></tt>, the CfDef&#8217;s column_metadata will
+<p>If <cite>use_dict_for_col_metadata</cite> is <tt class="xref docutils literal"><span class="pre">True</span></tt>, the CfDef&#8217;s column_metadata will
 be stored as a dictionary where the keys are column names instead of a list.</p>
 <p>Returns a dictionary of the form <tt class="docutils literal"><span class="pre">{column_family_name:</span> <span class="pre">CfDef}</span></tt></p>
 </dd></dl>
@@ -304,7 +301,7 @@ for the index.</p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" size="18" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -333,12 +330,12 @@ for the index.</p>
         <li class="right" >
           <a href="columnfamilymap.html" title="pycassa.columnfamilymap – Maps Classes to Column Families"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa 1.7.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.7.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
     </div>
   </body>
 </html>

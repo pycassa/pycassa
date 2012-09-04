@@ -3,20 +3,17 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.batch – Batch Operations &mdash; pycassa 1.7.0 documentation</title>
-    
+    <title>pycassa.batch – Batch Operations &mdash; pycassa v1.7.1 documentation</title>
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.7.0',
+        VERSION:     '1.7.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,7 +23,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../../_static/favicon.ico"/>
-    <link rel="top" title="pycassa 1.7.0 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v1.7.1 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.types – Data Type Descriptions" href="types.html" />
     <link rel="prev" title="pycassa.index – Secondary Index Tools" href="index.html" /> 
@@ -47,7 +44,7 @@
         <li class="right" >
           <a href="index.html" title="pycassa.index – Secondary Index Tools"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa 1.7.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.7.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -73,7 +70,7 @@ large number of operations while reducing number of RPC roundtrips.</p>
 </div>
 <p>One can use the <cite>queue_size</cite> argument to control how many mutations will be
 queued before an automatic <tt class="xref py py-meth docutils literal"><span class="pre">send()</span></tt> is performed. This allows simple streaming
-of updates. If set to <tt class="docutils literal"><span class="pre">None</span></tt>, automatic checkpoints are disabled. Default is 100.</p>
+of updates. If set to <tt class="xref docutils literal"><span class="pre">None</span></tt>, automatic checkpoints are disabled. Default is 100.</p>
 <p>Supercolumns are supported:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">batch</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&#39;key1&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;supercol1&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;colA&#39;</span><span class="p">:</span><span class="s">&#39;value1a&#39;</span><span class="p">,</span> <span class="s">&#39;colB&#39;</span><span class="p">:</span><span class="s">&#39;value1b&#39;</span><span class="p">}</span>
@@ -190,7 +187,7 @@ that all operations will be executed on.</p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" size="18" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -219,12 +216,12 @@ that all operations will be executed on.</p>
         <li class="right" >
           <a href="index.html" title="pycassa.index – Secondary Index Tools"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa 1.7.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.7.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
     </div>
   </body>
 </html>

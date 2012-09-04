@@ -11,6 +11,7 @@
 .. autoclass:: pycassa.types.IntegerType()
 .. autoclass:: pycassa.types.DoubleType()
 .. autoclass:: pycassa.types.FloatType()
+.. autoclass:: pycassa.types.DecimalType()
 .. autoclass:: pycassa.types.DateType()
 .. autoclass:: pycassa.types.TimeUUIDType()
 .. autoclass:: pycassa.types.LexicalUUIDType()
