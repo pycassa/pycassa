@@ -8,6 +8,8 @@ import sys
 import os
 sys.path.append(os.path.abspath('..'))
 
+import pycassa
+
 # -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
@@ -31,9 +33,9 @@ project = 'pycassa'
 # built documents.
 #
 # The short X.Y version.
-version = '1.7'
+version = pycassa.__version__
 # The full version, including alpha/beta/rc tags.
-release = '1.7.0'
+release = pycassa.__version__
 
 # List of documents that shouldn't be included in the build.
 unused_docs = []
