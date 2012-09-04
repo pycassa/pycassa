@@ -1,3 +1,23 @@
+Changes in Version 1.7.1
+
+    This release has few changes, and should make for a smooth upgrade
+    from 1.7.0.
+
+    Features
+
+      * Add support for DecimalType
+
+    Bug Fixes
+
+      * Fix bad slice ends when using xget() with composite columns and a
+        column_finish parameter
+      * Fix bad documentation paths in debian packaging scripts
+
+    Other
+
+      * Add __version__ and __version_info__ attributes to the pycassa module
+
+
 Changes in Version 1.7.0
 
     This release has a few relatively large changes in it: a new connection
