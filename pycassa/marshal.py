@@ -7,6 +7,7 @@ import uuid
 import struct
 import calendar
 from datetime import datetime
+from decimal import Decimal
 
 import pycassa.util as util
 
@@ -26,17 +27,18 @@ else:
 
         return Struct()
 
-_bool_packer   = make_packer('>B')
-_float_packer  = make_packer('>f')
+_bool_packer = make_packer('>B')
+_float_packer = make_packer('>f')
 _double_packer = make_packer('>d')
 _long_packer = make_packer('>q')
 _int_packer = make_packer('>i')
 _short_packer = make_packer('>H')
 
-_BASIC_TYPES = ['BytesType', 'LongType', 'IntegerType', 'UTF8Type',
+_BASIC_TYPES = ('BytesType', 'LongType', 'IntegerType', 'UTF8Type',
                 'AsciiType', 'LexicalUUIDType', 'TimeUUIDType',
                 'CounterColumnType', 'FloatType', 'DoubleType',
-                'DateType', 'BooleanType', 'UUIDType', 'Int32Type']
+                'DateType', 'BooleanType', 'UUIDType', 'Int32Type',
+                'DecimalType')
 
 def extract_type_name(typestr):
     if typestr is None:
@@ -50,7 +52,7 @@ def extract_type_name(typestr):
 
     index = typestr.rfind('.')
     if index != -1:
-        typestr = typestr[index + 1: ]
+        typestr = typestr[index + 1:]
     if typestr not in _BASIC_TYPES:
         typestr = 'BytesType'
     return typestr
@@ -59,7 +61,7 @@ def _get_inner_type(typestr):
     """ Given a str like 'org.apache...ReversedType(LongType)',
     return just 'LongType' """
     first_paren = typestr.find('(')
-    return typestr[first_paren + 1 : -1]
+    return typestr[first_paren + 1:-1]
 
 def _get_inner_types(typestr):
     """ Given a str like 'org.apache...CompositeType(LongType, DoubleType)',
@@ -75,7 +77,7 @@ def _to_timestamp(v):
     # Expects Value to be either date or datetime
     try:
         converted = calendar.timegm(v.utctimetuple())
-        converted = converted * 1e3 + getattr(v, 'microsecond', 0)/1e3
+        converted = converted * 1e3 + getattr(v, 'microsecond', 0) / 1e3
     except AttributeError:
         # Ints and floats are valid timestamps too
         if type(v) not in _number_types:
@@ -90,7 +92,7 @@ def get_composite_packer(typestr=None, composite_type=None):
     if typestr:
         packers = map(packer_for, _get_inner_types(typestr))
     elif composite_type:
-        packers = [c.pack for c in composite_type.components] 
+        packers = [c.pack for c in composite_type.components]
 
     len_packer = _short_packer.pack
 
@@ -143,8 +145,8 @@ def get_composite_unpacker(typestr=None, composite_type=None):
         while bytestr:
             unpacker = i.next()
             length = len_unpacker(bytestr[:2])
-            components.append(unpacker(bytestr[2:2+length]))
-            bytestr = bytestr[3+length:]
+            components.append(unpacker(bytestr[2:2 + length]))
+            bytestr = bytestr[3 + length:]
         return tuple(components)
 
     return unpack_composite
@@ -180,6 +182,17 @@ def packer_for(typestr):
         def pack_float(v, _=None):
             return _float_packer.pack(v)
         return pack_float
+
+    elif data_type == 'DecimalType':
+        def pack_decimal(dec, _=None):
+            sign, digits, exponent = dec.as_tuple()
+            unscaled = int(''.join(map(str, digits)))
+            if sign:
+                unscaled *= -1
+            scale = _int_packer.pack(-exponent)
+            unscaled = encode_int(unscaled)
+            return scale + unscaled
+        return pack_decimal
 
     elif data_type == 'LongType':
         def pack_long(v, _=None):
@@ -259,6 +272,13 @@ def unpacker_for(typestr):
 
     elif data_type == 'FloatType':
         return lambda v: _float_packer.unpack(v)[0]
+
+    elif data_type == 'DecimalType':
+        def unpack_decimal(v):
+            scale = _int_packer.unpack(v[:4])[0]
+            unscaled = decode_int(v[4:])
+            return Decimal('%de%d' % (unscaled, -scale))
+        return unpack_decimal
 
     elif data_type == 'LongType':
         return lambda v: _long_packer.unpack(v)[0]

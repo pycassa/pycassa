@@ -6,7 +6,7 @@ from pycassa.system_manager import SystemManager
 from pycassa.types import (LongType, IntegerType, TimeUUIDType, LexicalUUIDType,
                            AsciiType, UTF8Type, BytesType, CompositeType,
                            OldPycassaDateType, IntermediateDateType, DateType,
-                           BooleanType, CassandraType)
+                           BooleanType, CassandraType, DecimalType)
 from pycassa.index import create_index_expression, create_index_clause
 import pycassa.marshal as marshal
 
@@ -16,6 +16,7 @@ from nose.tools import (assert_raises, assert_equal, assert_almost_equal,
 
 from datetime import date, datetime
 from uuid import uuid1
+from decimal import Decimal
 import uuid
 import unittest
 import time
@@ -46,6 +47,7 @@ class TestCFs(unittest.TestCase):
         sys.create_column_family(TEST_KS, 'StdLong', comparator_type=LongType())
         sys.create_column_family(TEST_KS, 'StdInteger', comparator_type=IntegerType())
         sys.create_column_family(TEST_KS, 'StdBigInteger', comparator_type=IntegerType())
+        sys.create_column_family(TEST_KS, 'StdDecimal', comparator_type=DecimalType())
         sys.create_column_family(TEST_KS, 'StdTimeUUID', comparator_type=TimeUUIDType())
         sys.create_column_family(TEST_KS, 'StdLexicalUUID', comparator_type=LexicalUUIDType())
         sys.create_column_family(TEST_KS, 'StdAscii', comparator_type=AsciiType())
@@ -58,6 +60,7 @@ class TestCFs(unittest.TestCase):
         cls.cf_long = ColumnFamily(pool, 'StdLong')
         cls.cf_int = ColumnFamily(pool, 'StdInteger')
         cls.cf_big_int = ColumnFamily(pool, 'StdBigInteger')
+        cls.cf_decimal = ColumnFamily(pool, 'StdDecimal')
         cls.cf_time = ColumnFamily(pool, 'StdTimeUUID')
         cls.cf_lex = ColumnFamily(pool, 'StdLexicalUUID')
         cls.cf_ascii = ColumnFamily(pool, 'StdAscii')
@@ -99,6 +102,11 @@ class TestCFs(unittest.TestCase):
                         2 + int(time.time() * 10 ** 6),
                         3 + int(time.time() * 10 ** 6)]
         type_groups.append(self.make_group(TestCFs.cf_big_int, big_int_cols))
+
+        decimal_cols = [Decimal('1.123456789123456789'),
+                        Decimal('2.123456789123456789'),
+                        Decimal('3.123456789123456789')]
+        type_groups.append(self.make_group(TestCFs.cf_decimal, decimal_cols))
 
         time_cols = [TIME1, TIME2, TIME3]
         type_groups.append(self.make_group(TestCFs.cf_time, time_cols))

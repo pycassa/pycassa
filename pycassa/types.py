@@ -28,7 +28,7 @@ import pycassa.marshal as marshal
 
 __all__ = ('CassandraType', 'BytesType', 'LongType', 'IntegerType',
            'AsciiType', 'UTF8Type', 'TimeUUIDType', 'LexicalUUIDType',
-           'CounterColumnType', 'DoubleType', 'FloatType',
+           'CounterColumnType', 'DoubleType', 'FloatType', 'DecimalType',
            'BooleanType', 'DateType', 'OldPycassaDateType',
            'IntermediateDateType', 'CompositeType')
 
@@ -109,7 +109,14 @@ class DoubleType(CassandraType):
     pass
 
 class FloatType(CassandraType):
-    """ Stores data as an 4 byte float """
+    """ Stores data as a 4 byte float """
+    pass
+
+class DecimalType(CassandraType):
+    """
+    Stores an unlimited precision decimal number.  `decimal.Decimal`
+    objects are used by pycassa to represent these objects.
+    """
     pass
 
 class BooleanType(CassandraType):

@@ -34,6 +34,7 @@ LEXICAL_UUID_TYPE = types.LexicalUUIDType()
 COUNTER_COLUMN_TYPE = types.CounterColumnType()
 DOUBLE_TYPE = types.DoubleType()
 FLOAT_TYPE = types.FloatType()
+DECIMAL_TYPE = types.DecimalType()
 BOOLEAN_TYPE = types.BooleanType()
 DATE_TYPE = types.DateType()
 
