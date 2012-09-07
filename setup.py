@@ -22,7 +22,8 @@ except ImportError:
     from distutils.core import setup
 
 from distutils.cmd import Command
-import pycassa
+
+__version__ = "1.7.1"
 
 long_description = """pycassa is a python client library for Apache Cassandra with the following features:
 
@@ -81,7 +82,7 @@ class doc(Command):
             path = "doc/_build/doctest"
             mode = "doctest"
         else:
-            path = "doc/_build/%s" % pycassa.__version__
+            path = "doc/_build/%s" % __version__
             mode = "html"
 
             try:
@@ -108,7 +109,7 @@ Please ask in the user forums for help.
 
 setup(
       name = 'pycassa',
-      version = pycassa.__version__,
+      version = __version__,
       author = 'Jonathan Hseu',
       author_email = 'vomjom AT vomjom.net',
       maintainer = 'Tyler Hobbs',
@@ -116,7 +117,7 @@ setup(
       description = 'Python client library for Apache Cassandra',
       long_description = long_description,
       url = 'http://github.com/pycassa/pycassa',
-      download_url = 'http://github.com/downloads/pycassa/pycassa/pycassa-%s.tar.gz' % pycassa.__version__,
+      download_url = 'http://github.com/downloads/pycassa/pycassa/pycassa-%s.tar.gz' % __version__,
       keywords = 'cassandra client db distributed thrift',
       packages = ['pycassa',
                   'pycassa.cassandra',
