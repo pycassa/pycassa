@@ -1,5 +1,6 @@
 import time
 
+from thrift.transport.TTransport import TFramedTransport
 from pycassa.connection import Connection
 from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef,\
                                      SchemaDisagreementException
@@ -65,9 +66,9 @@ class SystemManager(object):
 
     """
 
-    def __init__(self, server='localhost:9160', credentials=None, framed_transport=True,
-                 timeout=_DEFAULT_TIMEOUT):
-        self._conn = Connection(None, server, framed_transport, timeout, credentials)
+    def __init__(self, server='localhost:9160', credentials=None,
+            transport_factory=TFramedTransport, timeout=_DEFAULT_TIMEOUT):
+        self._conn = Connection(None, server, timeout, credentials, transport_factory)
 
     def close(self):
         """ Closes the underlying connection """

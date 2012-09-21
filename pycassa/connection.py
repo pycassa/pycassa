@@ -1,5 +1,9 @@
-from thrift.transport import TTransport
-from thrift.transport import TSocket
+import struct
+from cStringIO import StringIO
+
+from thrift.transport import TTransport, TSocket
+from thrift.transport.TTransport import (TTransportBase, CReadableTransport,
+        TTransportException)
 from thrift.protocol import TBinaryProtocol
 
 from pycassa.cassandra import Cassandra
@@ -11,8 +15,8 @@ DEFAULT_PORT = 9160
 class Connection(Cassandra.Client):
     """Encapsulation of a client session."""
 
-    def __init__(self, keyspace, server, framed_transport=True, timeout=None,
-                 credentials=None, api_version=None):
+    def __init__(self, keyspace, server, timeout=None,
+                 credentials=None, transport_factory=TTransport.TFramedTransport):
         self.keyspace = None
         self.server = server
         server = server.split(':')
@@ -24,10 +28,7 @@ class Connection(Cassandra.Client):
         socket = TSocket.TSocket(host, int(port))
         if timeout is not None:
             socket.setTimeout(timeout * 1000.0)
-        if framed_transport:
-            self.transport = TTransport.TFramedTransport(socket)
-        else:
-            self.transport = TTransport.TBufferedTransport(socket)
+        self.transport = transport_factory(socket)
         protocol = TBinaryProtocol.TBinaryProtocolAccelerated(self.transport)
         Cassandra.Client.__init__(self, protocol)
         self.transport.open()
@@ -45,3 +46,117 @@ class Connection(Cassandra.Client):
 
     def close(self):
         self.transport.close()
+
+
+class TSaslClientTransport(TTransportBase, CReadableTransport):
+
+    START = 1
+    OK = 2
+    BAD = 3
+    ERROR = 4
+    COMPLETE = 5
+
+    def __init__(self, transport, sasl_host, sasl_service,
+            mechanism='GSSAPI', **sasl_kwargs):
+
+        from puresasl.client import SASLClient
+
+        self.transport = transport
+        self.sasl = SASLClient(
+                sasl_host, sasl_service, mechanism, **sasl_kwargs)
+
+        self.__wbuf = StringIO()
+        self.__rbuf = StringIO()
+
+    def open(self):
+        if not self.transport.isOpen():
+            self.transport.open()
+
+        self.send_sasl_msg(self.START, self.sasl.mechanism)
+        self.send_sasl_msg(self.OK, self.sasl.process())
+
+        while True:
+            status, challenge = self.recv_sasl_msg()
+            if status == self.OK:
+                self.send_sasl_msg(self.OK, self.sasl.process(challenge))
+            elif status == self.COMPLETE:
+                if not self.sasl.complete:
+                    raise TTransportException("The server erroneously indicated "
+                            "that SASL negotiation was complete")
+                else:
+                    break
+            else:
+                raise TTransportException("Bad SASL negotiation status: %d (%s)"
+                        % (status, challenge))
+
+    def send_sasl_msg(self, status, body):
+        header = struct.pack(">BI", status, len(body))
+        self.transport.write(header + body)
+        self.transport.flush()
+
+    def recv_sasl_msg(self):
+        header = self.transport.readAll(5)
+        status, length = struct.unpack(">BI", header)
+        if length > 0:
+            payload = self.transport.readAll(length)
+        else:
+            payload = ""
+        return status, payload
+
+    def write(self, data):
+        self.__wbuf.write(data)
+
+    def flush(self):
+        data = self.__wbuf.getvalue()
+        encoded = self.sasl.wrap(data)
+        # Note stolen from TFramedTransport:
+        # N.B.: Doing this string concatenation is WAY cheaper than making
+        # two separate calls to the underlying socket object. Socket writes in
+        # Python turn out to be REALLY expensive, but it seems to do a pretty
+        # good job of managing string buffer operations without excessive copies
+        self.transport.write(''.join((struct.pack("!i", len(encoded)), encoded)))
+        self.transport.flush()
+        self.__wbuf = StringIO()
+
+    def read(self, sz):
+        ret = self.__rbuf.read(sz)
+        if len(ret) != 0:
+            return ret
+
+        self._read_frame()
+        return self.__rbuf.read(sz)
+
+    def _read_frame(self):
+        header = self.transport.readAll(4)
+        length, = struct.unpack('!i', header)
+        encoded = self.transport.readAll(length)
+        self.__rbuf = StringIO(self.sasl.unwrap(encoded))
+
+    def close(self):
+        self.sasl.dispose()
+        self.transport.close()
+
+    # Implement the CReadableTransport interface.
+    # Stolen shamelessly from TFramedTransport
+    @property
+    def cstringio_buf(self):
+        return self.__rbuf
+
+    def cstringio_refill(self, prefix, reqlen):
+        # self.__rbuf will already be empty here because fastbinary doesn't
+        # ask for a refill until the previous buffer is empty.  Therefore,
+        # we can start reading new frames immediately.
+        while len(prefix) < reqlen:
+            self._read_frame()
+            prefix += self.__rbuf.getvalue()
+        self.__rbuf = StringIO(prefix)
+        return self.__rbuf
+
+
+def make_sasl_transport_factory(*sasl_args, **sasl_kwargs):
+
+    def transport_factory(tsocket):
+        sasl_transport = TSaslClientTransport(tsocket, *sasl_args, **sasl_kwargs)
+        return TTransport.TFramedTransport(sasl_transport)
+
+    return transport_factory

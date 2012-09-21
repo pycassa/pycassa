@@ -12,7 +12,7 @@ else:
     import Queue
 
 from thrift import Thrift
-from thrift.transport.TTransport import TTransportException
+from thrift.transport.TTransport import TTransportException, TFramedTransport
 from connection import Connection
 from logging.pool_logger import PoolLogger
 from util import as_interface
@@ -229,7 +229,7 @@ class ConnectionPool(object):
     up to `pool_timeout` seconds for a connection to be returned to the
     pool before giving up. Note that this setting is only meaningful when you
     are accessing the pool concurrently, such as with multiple threads.
-    This may be set to 0 to fail immediately or -1 to wait forever. 
+    This may be set to 0 to fail immediately or -1 to wait forever.
     The default value is 30. """
 
     recycle = 10000
@@ -242,13 +242,18 @@ class ConnectionPool(object):
     or :exc:`~.UnavailableException`, which tend to indicate single or
     multiple node failure, the operation will be retried on different nodes
     up to `max_retries` times before an :exc:`~.MaximumRetryException` is raised.
-    Setting this to 0 disables retries and setting to -1 allows unlimited retries. 
+    Setting this to 0 disables retries and setting to -1 allows unlimited retries.
     The default value is 5. """
 
     logging_name = None
     """ By default, each pool identifies itself in the logs using ``id(self)``.
     If multiple pools are in use for different purposes, setting `logging_name` will
     help individual pools to be identified in the logs. """
+
+    transport_factory = TFramedTransport
+    """ A function that creates the transport for each connection in the pool.
+    This function should take one argument, a TSocket object for the transport
+    to wrap. By default, this is ``TTransport.TFramedTransport``. """
 
     def __init__(self, keyspace,
                  server_list=['localhost:9160'],
@@ -257,6 +262,7 @@ class ConnectionPool(object):
                  use_threadlocal=True,
                  pool_size=5,
                  prefill=True,
+                 transport_factory=TFramedTransport,
                  **kwargs):
         """
         All connections in the pool will be opened to `keyspace`.
@@ -315,6 +321,7 @@ class ConnectionPool(object):
         self.keyspace = keyspace
         self.credentials = credentials
         self.timeout = timeout
+        self.transport_factory = transport_factory
         if use_threadlocal:
             self._tlocal = threading.local()
 
@@ -429,9 +436,9 @@ class ConnectionPool(object):
     def _get_new_wrapper(self, server):
         return ConnectionWrapper(self, self.max_retries,
                                  self.keyspace, server,
-                                 framed_transport=True,
                                  timeout=self.timeout,
-                                 credentials=self.credentials)
+                                 credentials=self.credentials,
+                                 transport_factory=self.transport_factory)
 
     def _replace_wrapper(self):
         """Try to replace the connection."""
