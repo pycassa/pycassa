@@ -14,7 +14,7 @@ before_install:
     - sudo service cassandra status
 
 install:
-    - bin/python setup.py develop
+    - python setup.py develop
 
 script:
-    - bin/nosetests -v
+    - nosetests -v
