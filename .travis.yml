@@ -1,0 +1,21 @@
+language: python
+python:
+    - "2.5"
+    - "2.6"
+    - "2.7"
+
+notifications:
+  email:
+    - hanno@hannosch.eu
+
+before_install:
+    - sudo apt-get install cassandra
+    - sudo service cassandra start
+    - sleep 3
+    - sudo service cassandra status
+
+install:
+    - bin/python setup.py develop
+
+script:
+    - bin/nosetests -v
