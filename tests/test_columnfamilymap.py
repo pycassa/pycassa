@@ -88,7 +88,7 @@ class TestColumnFamilyMap(unittest.TestCase):
         instance = self.instance()
         assert_raises(NotFoundException, self.map.get, instance.key)
         ts = self.map.insert(instance)
-        assert_true(isinstance(ts, long))
+        assert_true(isinstance(ts, (int, long)))
         assert_equal(self.map.get(instance.key), instance)
 
     def test_insert_get_omitting_columns(self):
