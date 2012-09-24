@@ -116,15 +116,18 @@ class IndexOperator(object):
 class IndexType(object):
   KEYS = 0
   CUSTOM = 1
+  COMPOSITES = 2
 
   _VALUES_TO_NAMES = {
     0: "KEYS",
     1: "CUSTOM",
+    2: "COMPOSITES",
   }
 
   _NAMES_TO_VALUES = {
     "KEYS": 0,
     "CUSTOM": 1,
+    "COMPOSITES": 2,
   }
 
 class Compression(object):
@@ -798,10 +801,24 @@ class UnavailableException(TException):
 class TimedOutException(TException):
   """
   RPC timeout was exceeded.  either a node failed mid-operation, or load was too high, or the requested op was too large.
+
+  Attributes:
+   - acknowledged_by: if a write operation was acknowledged by some replicas but not by enough to
+  satisfy the required ConsistencyLevel, the number of successful
+  replies will be given here. In case of atomic_batch_mutate method this field
+  will be set to -1 if the batch was written to the batchlog and to 0 if it wasn't.
+   - acknowledged_by_batchlog: in case of atomic_batch_mutate method this field tells if the batch was written to the batchlog.
   """
 
   thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'acknowledged_by', None, None, ), # 1
+    (2, TType.BOOL, 'acknowledged_by_batchlog', None, None, ), # 2
   )
+
+  def __init__(self, acknowledged_by=None, acknowledged_by_batchlog=None,):
+    self.acknowledged_by = acknowledged_by
+    self.acknowledged_by_batchlog = acknowledged_by_batchlog
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -812,6 +829,16 @@ class TimedOutException(TException):
       (fname, ftype, fid) = iprot.readFieldBegin()
       if ftype == TType.STOP:
         break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.acknowledged_by = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.BOOL:
+          self.acknowledged_by_batchlog = iprot.readBool();
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -822,6 +849,14 @@ class TimedOutException(TException):
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
     oprot.writeStructBegin('TimedOutException')
+    if self.acknowledged_by is not None:
+      oprot.writeFieldBegin('acknowledged_by', TType.I32, 1)
+      oprot.writeI32(self.acknowledged_by)
+      oprot.writeFieldEnd()
+    if self.acknowledged_by_batchlog is not None:
+      oprot.writeFieldBegin('acknowledged_by_batchlog', TType.BOOL, 2)
+      oprot.writeBool(self.acknowledged_by_batchlog)
+      oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
 
@@ -979,6 +1014,9 @@ class AuthorizationException(TException):
 
 class SchemaDisagreementException(TException):
   """
+  NOTE: This up outdated exception left for backward compatibility reasons,
+  no actual schema agreement validation is done starting from Cassandra 1.2
+
   schemas are not in agreement across all nodes
   """
 
