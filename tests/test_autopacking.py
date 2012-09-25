@@ -886,6 +886,15 @@ class TestComposites(unittest.TestCase):
         cf.insert(key, {(123123, u1): 'foo', (-1, u2): 'bar', (-123123123, u1): 'baz'})
         assert_equal(cf.get(key), {(123123, u1): 'foo', (-1, u2): 'bar', (-123123123, u1): 'baz'})
 
+    def test_single_component_composite(self):
+        sys = SystemManager()
+        sys.create_column_family(TEST_KS, 'SingleComposite',
+                comparator_type=CompositeType(IntegerType()))
+
+        cf = ColumnFamily(pool, 'SingleComposite')
+        cf.insert('key', {(123456,): 'val'})
+        assert_equal(cf.get('key'), {(123456,): 'val'})
+
 class TestBigInt(unittest.TestCase):
 
     @classmethod

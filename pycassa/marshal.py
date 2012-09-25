@@ -100,6 +100,7 @@ def get_composite_packer(typestr=None, composite_type=None):
         last_index = len(items) - 1
         s = ''
         for i, (item, packer) in enumerate(zip(items, packers)):
+            eoc = '\x00'
             if isinstance(item, tuple):
                 item, inclusive = item
                 if inclusive:
@@ -117,8 +118,6 @@ def get_composite_packer(typestr=None, composite_type=None):
                     eoc = '\xff'
                 elif slice_start is False:
                     eoc = '\x01'
-            else:
-                eoc = '\x00'
 
             packed = packer(item)
             s += ''.join((len_packer(len(packed)), packed, eoc))
