@@ -12,8 +12,8 @@ else:
     import Queue
 
 from thrift import Thrift
-from thrift.transport.TTransport import TTransportException, TFramedTransport
-from connection import Connection
+from thrift.transport.TTransport import TTransportException
+from connection import Connection, default_transport_factory
 from logging.pool_logger import PoolLogger
 from util import as_interface
 from cassandra.ttypes import TimedOutException, UnavailableException
@@ -250,10 +250,14 @@ class ConnectionPool(object):
     If multiple pools are in use for different purposes, setting `logging_name` will
     help individual pools to be identified in the logs. """
 
-    transport_factory = TFramedTransport
+    transport_factory = default_transport_factory
     """ A function that creates the transport for each connection in the pool.
-    This function should take one argument, a TSocket object for the transport
-    to wrap. By default, this is ``TTransport.TFramedTransport``. """
+    This function should take three arguments: `tsocket`, a TSocket object for the
+    transport, `host`, the host the connection is being made to, and `port`,
+    the destination port.
+
+    By default, this is function is :func:`~connection.default_transport_factory`.
+    """
 
     def __init__(self, keyspace,
                  server_list=['localhost:9160'],
@@ -262,7 +266,7 @@ class ConnectionPool(object):
                  use_threadlocal=True,
                  pool_size=5,
                  prefill=True,
-                 transport_factory=TFramedTransport,
+                 transport_factory=default_transport_factory,
                  **kwargs):
         """
         All connections in the pool will be opened to `keyspace`.

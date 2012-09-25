@@ -12,11 +12,19 @@ from pycassa.cassandra.ttypes import AuthenticationRequest
 DEFAULT_SERVER = 'localhost:9160'
 DEFAULT_PORT = 9160
 
+
+def default_transport_factory(tsocket, host, port):
+    """
+    Returns a normal :class:`TFramedTransport` instance wrapping `tsocket`.
+    """
+    return TTransport.TFramedTransport(tsocket)
+
+
 class Connection(Cassandra.Client):
     """Encapsulation of a client session."""
 
     def __init__(self, keyspace, server, timeout=None,
-                 credentials=None, transport_factory=TTransport.TFramedTransport):
+                 credentials=None, transport_factory=default_transport_factory):
         self.keyspace = None
         self.server = server
         server = server.split(':')
@@ -28,7 +36,7 @@ class Connection(Cassandra.Client):
         socket = TSocket.TSocket(host, int(port))
         if timeout is not None:
             socket.setTimeout(timeout * 1000.0)
-        self.transport = transport_factory(socket)
+        self.transport = transport_factory(socket, host, port)
         protocol = TBinaryProtocol.TBinaryProtocolAccelerated(self.transport)
         Cassandra.Client.__init__(self, protocol)
         self.transport.open()
@@ -153,10 +161,29 @@ class TSaslClientTransport(TTransportBase, CReadableTransport):
         return self.__rbuf
 
 
-def make_sasl_transport_factory(*sasl_args, **sasl_kwargs):
+def make_sasl_transport_factory(credential_factory):
+    """
+    A convenience function for creating a SASL transport factory.
 
-    def transport_factory(tsocket):
-        sasl_transport = TSaslClientTransport(tsocket, *sasl_args, **sasl_kwargs)
+    `credential_factory` should be a function taking two args: `host` and
+    `port`.  It should return a ``dict`` of kwargs that will be passed
+    to :func:`puresasl.client.SASLClient.__init__()`.
+
+    Example usage::
+
+        >>> def make_credentials(host, port):
+        ...    return {'sasl_host': host,
+        ...            'sasl_service': 'cassandra',
+        ...            'mechanism': 'GSSAPI'}
+        >>>
+        >>> factory = make_sasl_transport_factory(make_credentials)
+        >>> pool = ConnectionPool(..., transport_factory=factory)
+
+    """
+
+    def sasl_transport_factory(tsocket, host, port):
+        sasl_kwargs = credential_factory(host, port)
+        sasl_transport = TSaslClientTransport(tsocket, **sasl_kwargs)
         return TTransport.TFramedTransport(sasl_transport)
 
-    return transport_factory
+    return sasl_transport_factory
