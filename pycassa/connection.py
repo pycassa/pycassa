@@ -64,14 +64,13 @@ class TSaslClientTransport(TTransportBase, CReadableTransport):
     ERROR = 4
     COMPLETE = 5
 
-    def __init__(self, transport, sasl_host, sasl_service,
+    def __init__(self, transport, host, service,
             mechanism='GSSAPI', **sasl_kwargs):
 
         from puresasl.client import SASLClient
 
         self.transport = transport
-        self.sasl = SASLClient(
-                sasl_host, sasl_service, mechanism, **sasl_kwargs)
+        self.sasl = SASLClient(host, service, mechanism, **sasl_kwargs)
 
         self.__wbuf = StringIO()
         self.__rbuf = StringIO()
@@ -172,8 +171,9 @@ def make_sasl_transport_factory(credential_factory):
     Example usage::
 
         >>> def make_credentials(host, port):
-        ...    return {'sasl_host': host,
-        ...            'sasl_service': 'cassandra',
+        ...    return {'host': host,
+        ...            'service': 'cassandra',
+        ...            'principal': 'user/role@FOO.EXAMPLE.COM',
         ...            'mechanism': 'GSSAPI'}
         >>>
         >>> factory = make_sasl_transport_factory(make_credentials)

@@ -8,8 +8,8 @@ from pycassa.system_manager import SystemManager
 def make_creds(host, port):
     # typically, you would use the passed-in host, but my kerberos test setup
     # is not that sophisticated
-    return {'sasl_host': 'thobbs-laptop',
-            'sasl_service': 'host',
+    return {'host': 'thobbs-laptop2',
+            'service': 'host',
             'mechanism': 'GSSAPI'}
 
 transport_factory = make_sasl_transport_factory(make_creds)
