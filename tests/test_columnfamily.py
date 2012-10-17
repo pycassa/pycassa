@@ -1,11 +1,12 @@
+import unittest
+
+from nose.tools import assert_raises, assert_equal, assert_true
+
 from pycassa import index, ColumnFamily, ConnectionPool,\
                     NotFoundException, SystemManager
 from pycassa.util import OrderedDict
 
-from nose.tools import assert_raises, assert_equal, assert_true
-from nose.plugins.skip import SkipTest
-
-import unittest
+from tests.util import requireOPP
 
 pool = cf = scf = indexed_cf = counter_cf = counter_scf = sys_man = None
 
@@ -28,10 +29,15 @@ def teardown_module():
     counter_scf.truncate()
     pool.dispose()
 
+
 class TestDict(dict):
     pass
 
+
 class TestColumnFamily(unittest.TestCase):
+
+    def setUp(self):
+        self.sys_man = sys_man
 
     def tearDown(self):
         for key, columns in cf.get_range():
@@ -128,10 +134,8 @@ class TestColumnFamily(unittest.TestCase):
         result = cf.multiget_count(keys, column_start='1', column_reversed=True)
         assert_equal([result[k] for k in keys], [1 for key in keys])
 
+    @requireOPP
     def test_insert_get_range(self):
-        if sys_man.describe_partitioner() == 'RandomPartitioner':
-            raise SkipTest('Cannot use RandomPartitioner for this test')
-
         keys = ['TestColumnFamily.test_insert_get_range%s' % i for i in xrange(5)]
         columns = {'1': 'val1', '2': 'val2'}
         for key in keys:
@@ -143,10 +147,8 @@ class TestColumnFamily(unittest.TestCase):
             assert_equal(k, keys[i])
             assert_equal(c, columns)
 
+    @requireOPP
     def test_get_range_batching(self):
-        if sys_man.describe_partitioner() == 'RandomPartitioner':
-            raise SkipTest('Cannot use RandomPartitioner for this test')
-
         cf.truncate()
 
         keys = []
@@ -561,8 +563,8 @@ class TestSuperColumnFamily(unittest.TestCase):
         assert_equal(scf.get_count(key, column_finish='1'), 1)
 
     def test_multiget_count_super_column(self):
-        key1 = 'TestSuperColumnFamily.test_multiget_count_super_column'
-        key2 = 'TestSuperColumnFamily.test_multiget_count_super_column'
+        key1 = 'TestSuperColumnFamily.test_multiget_count_super_column1'
+        key2 = 'TestSuperColumnFamily.test_multiget_count_super_column2'
         keys = [key1, key2]
         subcolumns = {'sub1': 'val1', 'sub2': 'val2', 'sub3': 'val3'}
         columns = {'1': subcolumns}
@@ -574,8 +576,8 @@ class TestSuperColumnFamily(unittest.TestCase):
         assert_equal(scf.multiget_count(keys, super_column='1', column_finish='sub1'), {key1: 1, key2: 1})
 
     def test_multiget_count_super_columns(self):
-        key1 = 'TestSuperColumnFamily.test_multiget_count_super_columns'
-        key2 = 'TestSuperColumnFamily.test_multiget_count_super_columns'
+        key1 = 'TestSuperColumnFamily.test_multiget_count_super_columns1'
+        key2 = 'TestSuperColumnFamily.test_multiget_count_super_columns2'
         keys = [key1, key2]
         columns = {'1': {'sub1': 'val1'}, '2': {'sub2': 'val2'}, '3': {'sub3': 'val3'}}
         scf.insert(key1, columns)

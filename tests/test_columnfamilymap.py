@@ -2,12 +2,14 @@ from datetime import datetime
 import unittest
 import uuid
 
-import pycassa.types as types
-from pycassa import index, ColumnFamily, ConnectionPool, \
-    ColumnFamilyMap, NotFoundException, SystemManager
 from nose.tools import assert_raises, assert_equal, assert_true
 from nose.plugins.skip import SkipTest
 
+import pycassa.types as types
+from pycassa import index, ColumnFamily, ConnectionPool, \
+    ColumnFamilyMap, NotFoundException, SystemManager
+
+from tests.util import requireOPP
 
 CF = 'Standard1'
 SCF = 'Super1'
@@ -60,6 +62,7 @@ class TestEmpty(object):
 class TestColumnFamilyMap(unittest.TestCase):
 
     def setUp(self):
+        self.sys_man = sys_man
         self.map = ColumnFamilyMap(TestUTF8, pool, CF)
         self.indexed_map = ColumnFamilyMap(TestIndex, pool, INDEXED_CF)
         self.empty_map = ColumnFamilyMap(TestEmpty, pool, CF, raw_columns=True)
@@ -155,10 +158,8 @@ class TestColumnFamilyMap(unittest.TestCase):
         assert_equal(rows[instance2.key], instance2)
         assert_true(missing_key not in rows)
 
+    @requireOPP
     def test_insert_get_range(self):
-        if sys_man.describe_partitioner() == 'RandomPartitioner':
-            raise SkipTest('Cannot use RandomPartitioner for this test')
-
         instances = [self.instance() for i in range(5)]
         instances = sorted(instances, key=lambda instance: instance.key)
         for instance in instances:
