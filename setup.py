@@ -23,7 +23,7 @@ except ImportError:
 
 from distutils.cmd import Command
 
-__version__ = "1.7.1"
+__version__ = "1.7.2"
 
 long_description = """pycassa is a python client library for Apache Cassandra with the following features:
 

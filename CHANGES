@@ -1,3 +1,20 @@
+Changes in Version 1.7.2
+
+    This release fixes a minor bug and upgrades the bundled Cassandra
+    Thrift client interface to 19.34.0, matching Cassandra 1.2.0-beta1.
+    This doesn't affect any existing Thrift methods, only adds new ones
+    (that aren't yet utilized by pycassa), so there should not be any
+    breakage.
+
+    Bug Fixes
+
+      * Fix single-component composite packing
+      * Avoid cyclic imports during installation in setup.py
+
+    Other
+
+      * Travis CI integration
+
 Changes in Version 1.7.1
 
     This release has few changes, and should make for a smooth upgrade
