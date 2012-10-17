@@ -12,7 +12,8 @@ pool = cf = scf = indexed_cf = counter_cf = counter_scf = sys_man = None
 def setup_module():
     global pool, cf, scf, indexed_cf, counter_cf, counter_scf, sys_man
     credentials = {'username': 'jsmith', 'password': 'havebadpass'}
-    pool = ConnectionPool(keyspace='PycassaTestKeyspace', credentials=credentials)
+    pool = ConnectionPool(keyspace='PycassaTestKeyspace',
+            credentials=credentials, timeout=1.0)
     cf = ColumnFamily(pool, 'Standard1', dict_class=TestDict)
     scf = ColumnFamily(pool, 'Super1', dict_class=dict)
     indexed_cf = ColumnFamily(pool, 'Indexed1')

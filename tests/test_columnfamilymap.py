@@ -18,7 +18,8 @@ sys_man = None
 def setup_module():
     global pool, sys_man
     credentials = {'username': 'jsmith', 'password': 'havebadpass'}
-    pool = ConnectionPool(keyspace='PycassaTestKeyspace', credentials=credentials)
+    pool = ConnectionPool(keyspace='PycassaTestKeyspace',
+            credentials=credentials, timeout=1.0)
     sys_man = SystemManager()
 
 def teardown_module():

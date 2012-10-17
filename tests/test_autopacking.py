@@ -34,7 +34,7 @@ TEST_KS = 'PycassaTestKeyspace'
 def setup_module():
     global pool
     credentials = {'username': 'jsmith', 'password': 'havebadpass'}
-    pool = ConnectionPool(TEST_KS, pool_size=10, credentials=credentials)
+    pool = ConnectionPool(TEST_KS, pool_size=10, credentials=credentials, timeout=1.0)
 
 def teardown_module():
     pool.dispose()
