@@ -49,7 +49,7 @@ Fetching CompositeType Data
 .. code-block:: python
 
     >>> cf.get("key")
-    {(1234, "abc"): "colval"})
+    {(1234, "abc"): "colval"}
 
 When fetching a slice of columns, slice ends are specified using tuples as
 well.  However, you are only required to supply at least the first component
