@@ -7,6 +7,7 @@ python:
 notifications:
   email:
     - hanno@hannosch.eu
+    - pycassa.maintainer@gmail.com
 
 before_install:
     - sudo service cassandra start
