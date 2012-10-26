@@ -50,6 +50,13 @@ class StatsLogger(object):
     """
 
     def __init__(self):
+        #some callbacks are already locked by pool_lock, it's just simpler to have a global here for all operations
+        self.lock = threading.Lock()
+        self.reset()
+
+    @sync('lock')
+    def reset(self):
+        """ Reset all counters to 0 """
         self._stats = {
             'created': {
                 'success': 0,
@@ -71,8 +78,6 @@ class StatsLogger(object):
             'at_max': 0
         }
 
-        #some callbacks are already locked by pool_lock, it's just simpler to have a global here for all operations
-        self.lock = threading.Lock()
 
     def name_changed(self, new_logger):
         self.logger = new_logger
