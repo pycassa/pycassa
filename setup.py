@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 
-import os
+import os, sys
 
 try:
     import subprocess
@@ -33,6 +33,12 @@ long_description = """pycassa is a python client library for Apache Cassandra wi
 4. Simplified version of the Thrift interface
 5. A method to map an existing class to a Cassandra column family
 """
+
+if sys.version_info < (2, 6):
+    install_requires = ['thrift < 0.9.0']
+else:
+    install_requires = ['thrift']
+
 
 class rpm(Command):
 
@@ -122,7 +128,7 @@ setup(
       packages = ['pycassa',
                   'pycassa.cassandra',
                   'pycassa.logging'],
-      install_requires = ['thrift'],
+      install_requires = install_requires,
       py_modules=['ez_setup'],
       scripts=['pycassaShell'],
       cmdclass={"doc": doc, "rpm": rpm},
