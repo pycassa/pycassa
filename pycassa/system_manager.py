@@ -1,6 +1,6 @@
 import time
 
-from pycassa.connection import Connection
+from pycassa.connection import Connection, default_socket_factory
 from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef,\
                                      SchemaDisagreementException
 import pycassa.marshal as marshal
@@ -66,8 +66,8 @@ class SystemManager(object):
     """
 
     def __init__(self, server='localhost:9160', credentials=None, framed_transport=True,
-                 timeout=_DEFAULT_TIMEOUT):
-        self._conn = Connection(None, server, framed_transport, timeout, credentials)
+                 timeout=_DEFAULT_TIMEOUT, socket_factory=default_socket_factory):
+        self._conn = Connection(None, server, framed_transport, timeout, credentials, socket_factory)
 
     def close(self):
         """ Closes the underlying connection """
