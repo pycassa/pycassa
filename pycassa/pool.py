@@ -13,7 +13,8 @@ else:
 
 from thrift import Thrift
 from thrift.transport.TTransport import TTransportException
-from connection import Connection
+from connection import (Connection, default_socket_factory,
+        default_transport_factory)
 from logging.pool_logger import PoolLogger
 from util import as_interface
 from cassandra.ttypes import TimedOutException, UnavailableException
@@ -229,7 +230,7 @@ class ConnectionPool(object):
     up to `pool_timeout` seconds for a connection to be returned to the
     pool before giving up. Note that this setting is only meaningful when you
     are accessing the pool concurrently, such as with multiple threads.
-    This may be set to 0 to fail immediately or -1 to wait forever. 
+    This may be set to 0 to fail immediately or -1 to wait forever.
     The default value is 30. """
 
     recycle = 10000
@@ -242,13 +243,30 @@ class ConnectionPool(object):
     or :exc:`~.UnavailableException`, which tend to indicate single or
     multiple node failure, the operation will be retried on different nodes
     up to `max_retries` times before an :exc:`~.MaximumRetryException` is raised.
-    Setting this to 0 disables retries and setting to -1 allows unlimited retries. 
+    Setting this to 0 disables retries and setting to -1 allows unlimited retries.
     The default value is 5. """
 
     logging_name = None
     """ By default, each pool identifies itself in the logs using ``id(self)``.
     If multiple pools are in use for different purposes, setting `logging_name` will
     help individual pools to be identified in the logs. """
+
+    socket_factory = default_socket_factory
+    """ A function that creates the socket for each connection in the pool.
+    This function should take two arguments: `host`, the host the connection is
+    being made to, and `port`, the destination port.
+
+    By default, this is function is :func:`~connection.default_socket_factory`.
+    """
+
+    transport_factory = default_transport_factory
+    """ A function that creates the transport for each connection in the pool.
+    This function should take three arguments: `tsocket`, a TSocket object for the
+    transport, `host`, the host the connection is being made to, and `port`,
+    the destination port.
+
+    By default, this is function is :func:`~connection.default_transport_factory`.
+    """
 
     def __init__(self, keyspace,
                  server_list=['localhost:9160'],
@@ -257,6 +275,8 @@ class ConnectionPool(object):
                  use_threadlocal=True,
                  pool_size=5,
                  prefill=True,
+                 socket_factory=default_socket_factory,
+                 transport_factory=default_transport_factory,
                  **kwargs):
         """
         All connections in the pool will be opened to `keyspace`.
@@ -315,6 +335,8 @@ class ConnectionPool(object):
         self.keyspace = keyspace
         self.credentials = credentials
         self.timeout = timeout
+        self.socket_factory = socket_factory
+        self.transport_factory = transport_factory
         if use_threadlocal:
             self._tlocal = threading.local()
 
@@ -429,9 +451,10 @@ class ConnectionPool(object):
     def _get_new_wrapper(self, server):
         return ConnectionWrapper(self, self.max_retries,
                                  self.keyspace, server,
-                                 framed_transport=True,
                                  timeout=self.timeout,
-                                 credentials=self.credentials)
+                                 credentials=self.credentials,
+                                 socket_factory=self.socket_factory,
+                                 transport_factory=self.transport_factory)
 
     def _replace_wrapper(self):
         """Try to replace the connection."""
