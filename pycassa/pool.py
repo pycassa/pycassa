@@ -13,7 +13,8 @@ else:
 
 from thrift import Thrift
 from thrift.transport.TTransport import TTransportException
-from connection import Connection, default_socket_factory
+from connection import (Connection, default_socket_factory,
+        default_transport_factory)
 from logging.pool_logger import PoolLogger
 from util import as_interface
 from cassandra.ttypes import TimedOutException, UnavailableException
@@ -258,6 +259,15 @@ class ConnectionPool(object):
     By default, this is function is :func:`~connection.default_socket_factory`.
     """
 
+    transport_factory = default_transport_factory
+    """ A function that creates the transport for each connection in the pool.
+    This function should take three arguments: `tsocket`, a TSocket object for the
+    transport, `host`, the host the connection is being made to, and `port`,
+    the destination port.
+
+    By default, this is function is :func:`~connection.default_transport_factory`.
+    """
+
     def __init__(self, keyspace,
                  server_list=['localhost:9160'],
                  credentials=None,
@@ -266,6 +276,7 @@ class ConnectionPool(object):
                  pool_size=5,
                  prefill=True,
                  socket_factory=default_socket_factory,
+                 transport_factory=default_transport_factory,
                  **kwargs):
         """
         All connections in the pool will be opened to `keyspace`.
@@ -325,6 +336,7 @@ class ConnectionPool(object):
         self.credentials = credentials
         self.timeout = timeout
         self.socket_factory = socket_factory
+        self.transport_factory = transport_factory
         if use_threadlocal:
             self._tlocal = threading.local()
 
@@ -439,10 +451,10 @@ class ConnectionPool(object):
     def _get_new_wrapper(self, server):
         return ConnectionWrapper(self, self.max_retries,
                                  self.keyspace, server,
-                                 framed_transport=True,
                                  timeout=self.timeout,
                                  credentials=self.credentials,
-                                 socket_factory=self.socket_factory)
+                                 socket_factory=self.socket_factory,
+                                 transport_factory=self.transport_factory)
 
     def _replace_wrapper(self):
         """Try to replace the connection."""
