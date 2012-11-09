@@ -9,6 +9,8 @@ notifications:
     - pycassa.maintainer@gmail.com
 
 before_install:
+    - sudo apt-get install libjna-java
+    - sudo ln -s /usr/share/java/jna.jar /usr/local/cassandra/lib/
     - sudo service cassandra start
     - sleep 3
     - sudo service cassandra status
