@@ -7,7 +7,7 @@ exploring Cassandra, especially for those who are just beginning.
 
 Requirements
 ------------
-Python 2.4 or later is required.
+Python 2.6 or later is required.
 
 Make sure you have **pycassa** installed as shown in :ref:`installing`.
 

@@ -45,7 +45,7 @@ on multiple column families:
 
 .. note:: If a single operation in a batch fails, the whole batch fails.
 
-In Python >= 2.5, mutators can be used as context managers, where an implicit
+In addition mutators can be used as context managers, where an implicit
 :meth:`send` will be called upon exit.
 
 .. code-block:: python
