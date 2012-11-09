@@ -10,5 +10,5 @@ from pycassa.cassandra.ttypes import AuthenticationException,\
 
 from pycassa.logging.pycassa_logger import *
 
-__version_info__ = (1, 7, 2)
+__version_info__ = (1, 8, '0-SNAPSHOT')
 __version__ = '.'.join(map(str, __version_info__))
