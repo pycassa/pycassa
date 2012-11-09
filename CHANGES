@@ -1,3 +1,10 @@
+Changes in Version 1.8.0
+
+    This release requires either Python 2.6 or 2.7. Python 2.4 and 2.5
+    are no longer supported. There are no concrete plans for Python 3
+    compatibility yet.
+
+
 Changes in Version 1.7.2
 
     This release fixes a minor bug and upgrades the bundled Cassandra

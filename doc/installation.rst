@@ -3,6 +3,10 @@
 Installing
 ==========
 
+Requirements
+------------
+You need to have either Python 2.6 or 2.7 installed.
+
 Installing from PyPi
 --------------------
 If you have :file:`pip` installed, you can simply do:

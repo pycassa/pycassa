@@ -13,19 +13,9 @@ import pycassa.util as util
 
 _number_types = frozenset((int, long, float))
 
-if hasattr(struct, 'Struct'): # new in Python 2.5
-    def make_packer(fmt_string):
-        return struct.Struct(fmt_string)
-else:
-    def make_packer(fmt_string):
-        class Struct(object):
-            def pack(self, v):
-                return struct.pack(fmt_string, v)
 
-            def unpack(self, v):
-                return struct.unpack(fmt_string, v)
-
-        return Struct()
+def make_packer(fmt_string):
+    return struct.Struct(fmt_string)
 
 _bool_packer = make_packer('>B')
 _float_packer = make_packer('>f')
