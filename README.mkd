@@ -1,6 +1,8 @@
 pycassa
 =======
 
+[![Build Status](https://secure.travis-ci.org/pycassa/pycassa.png?branch=master)](http://travis-ci.org/pycassa/pycassa)
+
 *pycassa* is a python client library for [Apache Cassandra](http://cassandra.apache.org)
 with the following features:
 
