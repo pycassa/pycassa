@@ -14,6 +14,7 @@ useful when you have one "object" per row.
 from pycassa.types import CassandraType
 from pycassa.columnfamily import ColumnFamily
 import pycassa.util as util
+import inspect
 
 __all__ = ['ColumnFamilyMap']
 
@@ -51,7 +52,7 @@ class ColumnFamilyMap(ColumnFamily):
         self.dict_class = util.OrderedDict
         self.defaults = {}
         self.fields = []
-        for name, val_type in self.cls.__dict__.iteritems():
+        for name, val_type in inspect.getmembers(self.cls):
             if name != 'key' and isinstance(val_type, CassandraType):
                 self.fields.append(name)
                 self.column_validators[name] = val_type
