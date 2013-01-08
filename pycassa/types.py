@@ -30,7 +30,8 @@ __all__ = ('CassandraType', 'BytesType', 'LongType', 'IntegerType',
            'AsciiType', 'UTF8Type', 'TimeUUIDType', 'LexicalUUIDType',
            'CounterColumnType', 'DoubleType', 'FloatType', 'DecimalType',
            'BooleanType', 'DateType', 'OldPycassaDateType',
-           'IntermediateDateType', 'CompositeType')
+           'IntermediateDateType', 'CompositeType',
+           'UUIDType', 'DynamicCompositeType')
 
 class CassandraType(object):
     """
@@ -90,6 +91,10 @@ class AsciiType(CassandraType):
 
 class UTF8Type(CassandraType):
     """ Stores data as UTF8 encoded text """
+    pass
+
+class UUIDType(CassandraType):
+    """ Stores data as a type 1 or type 4 UUID """
     pass
 
 class TimeUUIDType(CassandraType):
@@ -251,3 +256,34 @@ class CompositeType(CassandraType):
     @property
     def unpack(self):
         return marshal.get_composite_unpacker(composite_type=self)
+
+class DynamicCompositeType(CassandraType):
+    """
+    A type composed of one or more components, each of
+    which have their own type.  When sorted, items are
+    primarily sorted by their first component, secondarily
+    by their second component, and so on.
+
+    Unlike CompositeType, DynamicCompositeType columns
+    need not all be of the same structure. Each column
+    can be composed of different component types.
+
+    Components are specified using a 2-tuple made up of
+    a comparator type and value. Aliases for comparator
+    types can optionally be specified with a dictionary 
+    during instantiation.
+
+    """
+
+    def __init__(self, *aliases):
+        self.aliases = {}
+        for alias in aliases:
+            if isinstance(alias, dict):
+                self.aliases.update(alias)
+
+    def __str__(self):
+        aliases = []
+        for k, v in self.aliases.iteritems():
+            aliases.append(k + '=>' + str(v))
+        return "DynamicCompositeType(" + ", ".join(aliases) + ")"
+
