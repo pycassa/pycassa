@@ -34,6 +34,9 @@ def extract_type_name(typestr):
     if typestr is None:
         return 'BytesType'
 
+    if "DynamicCompositeType" in typestr:
+        return _get_composite_name(typestr)
+
     if "CompositeType" in typestr:
         return _get_composite_name(typestr)
 
@@ -140,9 +143,92 @@ def get_composite_unpacker(typestr=None, composite_type=None):
 
     return unpack_composite
 
+def get_dynamic_composite_packer(typestr):
+    cassandra_types = {}
+    for inner_type in _get_inner_types(typestr):
+        alias, cassandra_type = inner_type.split('=>')
+        cassandra_types[alias] = cassandra_type
+
+    len_packer = _short_packer.pack
+
+    def pack_dynamic_composite(items, slice_start=None):
+        last_index = len(items) - 1
+        s = ''
+        i = 0
+        for (alias, item) in items:
+            eoc = '\x00'
+            if isinstance(alias, tuple):
+                inclusive = item
+                alias, item = alias
+                if inclusive:
+                    if slice_start:
+                        eoc = '\xff'
+                    elif slice_start is False:
+                        eoc = '\x01'
+                else:
+                    if slice_start:
+                        eoc = '\x01'
+                    elif slice_start is False:
+                        eoc = '\xff'
+            elif i == last_index:
+                if slice_start:
+                    eoc = '\xff'
+                elif slice_start is False:
+                    eoc = '\x01'
+            if isinstance(alias, str) and len(alias) == 1:
+                header = '\x80' + alias
+                packer = packer_for(cassandra_types[alias])
+            else:
+                cassandra_type = str(alias).split('(')[0]
+                header = len_packer(len(cassandra_type)) + cassandra_type
+                packer = packer_for(cassandra_type)
+            i += 1
+
+            packed = packer(item)
+            s += ''.join((header, len_packer(len(packed)), packed, eoc))
+        return s
+
+    return pack_dynamic_composite
+
+def get_dynamic_composite_unpacker(typestr):
+    cassandra_types = {}
+    for inner_type in _get_inner_types(typestr):
+        alias, cassandra_type = inner_type.split('=>')
+        cassandra_types[alias] = cassandra_type
+
+    len_unpacker = lambda v: _short_packer.unpack(v)[0]
+
+    def unpack_dynamic_composite(bytestr):
+        # The composite format for each component is:
+        # <header>     <len>      <value>     <eoc>
+        # ? bytes  |  2 bytes  |  ? bytes  |  1 byte
+        types = []
+        components = []
+        while bytestr:
+            header = len_unpacker(bytestr[:2])
+            if header & 0x8000:
+                alias = bytestr[1]
+                types.append(alias)
+                unpacker = unpacker_for(cassandra_types[alias])
+                bytestr = bytestr[2:]
+            else:
+                cassandra_type = bytestr[2:2 + header]
+                types.append(cassandra_type)
+                unpacker = unpacker_for(cassandra_type)
+                bytestr = bytestr[2 + header:]
+            length = len_unpacker(bytestr[:2])
+            components.append(unpacker(bytestr[2:2 + length]))
+            bytestr = bytestr[3 + length:]
+        return tuple(zip(types, components))
+
+    return unpack_dynamic_composite
+
 def packer_for(typestr):
     if typestr is None:
         return lambda v: v
+
+    if "DynamicCompositeType" in typestr:
+        return get_dynamic_composite_packer(typestr)
 
     if "CompositeType" in typestr:
         return get_composite_packer(typestr)
@@ -237,6 +323,9 @@ def packer_for(typestr):
 def unpacker_for(typestr):
     if typestr is None:
         return lambda v: v
+
+    if "DynamicCompositeType" in typestr:
+        return get_dynamic_composite_unpacker(typestr)
 
     if "CompositeType" in typestr:
         return get_composite_unpacker(typestr)

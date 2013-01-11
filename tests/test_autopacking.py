@@ -6,7 +6,8 @@ from pycassa.system_manager import SystemManager
 from pycassa.types import (LongType, IntegerType, TimeUUIDType, LexicalUUIDType,
                            AsciiType, UTF8Type, BytesType, CompositeType,
                            OldPycassaDateType, IntermediateDateType, DateType,
-                           BooleanType, CassandraType, DecimalType)
+                           BooleanType, CassandraType, DecimalType,
+                           FloatType, Int32Type, UUIDType, DoubleType, DynamicCompositeType)
 from pycassa.index import create_index_expression, create_index_clause
 import pycassa.marshal as marshal
 
@@ -20,6 +21,7 @@ from decimal import Decimal
 import uuid
 import unittest
 import time
+from collections import namedtuple
 
 TIME1 = uuid.UUID(hex='ddc6118e-a003-11df-8abf-00234d21610a')
 TIME2 = uuid.UUID(hex='40ad6d4c-a004-11df-8abf-00234d21610a')
@@ -55,6 +57,13 @@ class TestCFs(unittest.TestCase):
         sys.create_column_family(TEST_KS, 'StdBytes', comparator_type=BytesType())
         sys.create_column_family(TEST_KS, 'StdComposite',
                                  comparator_type=CompositeType(LongType(), BytesType()))
+        sys.create_column_family(TEST_KS, 'StdDynamicComposite',
+                                 comparator_type=DynamicCompositeType({'a': AsciiType(),
+                                 'b': BytesType(), 'c': DecimalType(), 'd': DateType(),
+                                 'f': FloatType(), 'i': IntegerType(), 'l': LongType(),
+                                 'n': Int32Type(), 's': UTF8Type(), 't': TimeUUIDType(),
+                                 'u': UUIDType(), 'w': DoubleType(), 'x': LexicalUUIDType(),
+                                 'y': BooleanType()}))
         sys.close()
 
         cls.cf_long = ColumnFamily(pool, 'StdLong')
@@ -67,10 +76,11 @@ class TestCFs(unittest.TestCase):
         cls.cf_utf8 = ColumnFamily(pool, 'StdUTF8')
         cls.cf_bytes = ColumnFamily(pool, 'StdBytes')
         cls.cf_composite = ColumnFamily(pool, 'StdComposite')
+        cls.cf_dynamic_composite = ColumnFamily(pool, 'StdDynamicComposite')
 
         cls.cfs = [cls.cf_long, cls.cf_int, cls.cf_time, cls.cf_lex,
-                   cls.cf_ascii, cls.cf_utf8, cls.cf_bytes,
-                   cls.cf_composite]
+                   cls.cf_ascii, cls.cf_utf8, cls.cf_bytes, cls.cf_composite, 
+                   cls.cf_dynamic_composite]
 
     def tearDown(self):
         for cf in TestCFs.cfs:
@@ -128,7 +138,17 @@ class TestCFs(unittest.TestCase):
         composite_cols = [(1, 'foo'), (2, 'bar'), (3, 'baz')]
         type_groups.append(self.make_group(TestCFs.cf_composite, composite_cols))
 
-        # Begin the actual inserting and getting
+        dynamic_composite_cols = [(('LongType', 1), ('BytesType', 'foo')), 
+                                  (('LongType', 2), ('BytesType', 'bar')), 
+                                  (('LongType', 3), ('BytesType', 'baz'))]
+        type_groups.append(self.make_group(TestCFs.cf_dynamic_composite, dynamic_composite_cols))
+
+        dynamic_composite_alias_cols = [(('l', 1), ('b', 'foo')), 
+                                        (('l', 2), ('b', 'bar')), 
+                                        (('l', 3), ('b', 'baz'))]
+        type_groups.append(self.make_group(TestCFs.cf_dynamic_composite, dynamic_composite_alias_cols))
+
+        # Begin the actual inserting and getting	
         for group in type_groups:
             cf = group.get('cf')
             gdict = group.get('dict')
@@ -895,6 +915,118 @@ class TestComposites(unittest.TestCase):
         cf.insert('key', {(123456,): 'val'})
         assert_equal(cf.get('key'), {(123456,): 'val'})
 
+class TestDynamicComposites(unittest.TestCase):
+
+    @classmethod
+    def setup_class(cls):
+        sys = SystemManager()
+        sys.create_column_family(TEST_KS, 'StaticDynamicComposite',
+                                 comparator_type=DynamicCompositeType({'l': LongType(),
+                                                                       'i': IntegerType(),
+                                                                       'T': TimeUUIDType(reversed=True),
+                                                                       'x': LexicalUUIDType(reversed=False),
+                                                                       'a': AsciiType(),
+                                                                       's': UTF8Type(),
+                                                                       'b': BytesType()}))
+
+    @classmethod
+    def teardown_class(cls):
+        sys = SystemManager()
+        sys.drop_column_family(TEST_KS, 'StaticDynamicComposite')
+
+    def setUp(self):
+        global a, b, i, I, x, l, t, T, s
+
+        component = namedtuple('DynamicComponent', ['type','value'])
+        ascii_alias = component('a', None)
+        bytes_alias = component('b', None)
+        integer_alias = component('i', None)
+        integer_rev_alias = component('I', None)
+        lexicaluuid_alias = component('x', None)
+        long_alias = component('l', None)
+        timeuuid_alias = component('t', None)
+        timeuuid_rev_alias = component('T', None)
+        utf8_alias = component('s', None)
+
+        _r = lambda t, v: t._replace(value=v) 
+        a = lambda v: _r(ascii_alias, v)
+        b = lambda v: _r(bytes_alias, v)
+        i = lambda v: _r(integer_alias, v)
+        I = lambda v: _r(integer_rev_alias, v)
+        x = lambda v: _r(lexicaluuid_alias, v)
+        l = lambda v: _r(long_alias, v)
+        t = lambda v: _r(timeuuid_alias, v)
+        T = lambda v: _r(timeuuid_rev_alias, v)
+        s = lambda v: _r(utf8_alias, v)
+
+    def test_static_composite_basic(self):
+        cf = ColumnFamily(pool, 'StaticDynamicComposite')
+        colname = (l(127312831239123123), i(1), T(uuid.uuid1()), x(uuid.uuid4()), a('foo'), s(u'ba\u0254r'), b('baz'))
+        cf.insert('key', {colname: 'val'})
+        assert_equal(cf.get('key'), {colname: 'val'})
+
+    def test_static_composite_slicing(self):
+        cf = ColumnFamily(pool, 'StaticDynamicComposite')
+        u1 = uuid.uuid1()
+        u4 = uuid.uuid4()
+        col0 = (l(0), i(1), T(u1), x(u4), a(''), s(''), b(''))
+        col1 = (l(1), i(1), T(u1), x(u4), a(''), s(''), b(''))
+        col2 = (l(1), i(2), T(u1), x(u4), a(''), s(''), b(''))
+        col3 = (l(1), i(3), T(u1), x(u4), a(''), s(''), b(''))
+        col4 = (l(2), i(1), T(u1), x(u4), a(''), s(''), b(''))
+        cf.insert('key2', {col0: '', col1: '', col2: '', col3: '', col4: ''})
+
+        result = cf.get('key2', column_start=((l(1), True),), column_finish=((l(1), True),))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        result = cf.get('key2', column_start=(l(1),), column_finish=((l(2), False), ))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        result = cf.get('key2', column_start=((l(1), True),), column_finish=((l(2), False), ))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        result = cf.get('key2', column_start=(l(1), ), column_finish=((l(2), False), ))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        result = cf.get('key2', column_start=((l(0), False), ), column_finish=((l(2), False), ))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        result = cf.get('key2', column_start=(l(1), i(1)), column_finish=(l(1), i(3)))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        result = cf.get('key2', column_start=(l(1), i(1)), column_finish=(l(1), (i(3), True)))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+        result = cf.get('key2', column_start=(l(1), (i(1), True)), column_finish=((l(2), False), ))
+        assert_equal(result, {col1: '', col2: '', col3: ''})
+
+    def test_static_composite_get_partial_composite(self):
+        cf = ColumnFamily(pool, 'StaticDynamicComposite')
+        cf.insert('key3', {(l(123123), i(1)): 'val'})
+        assert_equal(cf.get('key3'), {(l(123123), i(1)): 'val'})
+
+    def test_uuid_composites(self):
+        sys = SystemManager()
+        sys.create_column_family(TEST_KS, 'UUIDDynamicComposite',
+                comparator_type=DynamicCompositeType({'I': IntegerType(reversed=True), 't': TimeUUIDType()}),
+                key_validation_class=TimeUUIDType(),
+                default_validation_class=UTF8Type())
+
+        key, u1, u2 = uuid.uuid1(), uuid.uuid1(), uuid.uuid1()
+        cf = ColumnFamily(pool, 'UUIDDynamicComposite')
+        cf.insert(key, {(I(123123), t(u1)): 'foo'})
+        cf.insert(key, {(I(123123), t(u1)): 'foo', (I(-1), t(u2)): 'bar', (I(-123123123), t(u1)): 'baz'})
+        assert_equal(cf.get(key), {(I(123123), t(u1)): 'foo', (I(-1), t(u2)): 'bar', (I(-123123123), t(u1)): 'baz'})
+
+    def test_single_component_composite(self):
+        sys = SystemManager()
+        sys.create_column_family(TEST_KS, 'SingleDynamicComposite',
+                comparator_type=DynamicCompositeType({'i': IntegerType()}))
+
+        cf = ColumnFamily(pool, 'SingleDynamicComposite')
+        cf.insert('key', {(i(123456),): 'val'})
+        assert_equal(cf.get('key'), {(i(123456),): 'val'})
+
 class TestBigInt(unittest.TestCase):
 
     @classmethod
@@ -1237,3 +1369,4 @@ class TestCustomComposite(unittest.TestCase):
         check(((dt2, False),), ((dt0, False),), True)
         check(((dt2, False),),  (dt1,),         True)
         check((dt1,),          ((dt0, False),), True)
+
