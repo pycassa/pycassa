@@ -18,3 +18,4 @@ Pycassa Modules
    pycassa/util
    pycassa/logging/pycassa_logger
    pycassa/logging/pool_stats_logger
+   pycassa/contrib/stubs
