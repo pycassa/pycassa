@@ -105,6 +105,12 @@ def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
             node = 0x808080808080L # 48 bits
         else:
             # Make the highest value UUID with the same timestamp
+
+            # uuid timestamps have 100ns precision, while the timestamp
+            # we have only has microsecond precision; to create the highest
+            # uuid for the same microsecond, add 900ns
+            timestamp = int(timestamp + 9)
+
             clock_seq_low = 0x7fL
             clock_seq_hi_variant = 0xbfL # The two most significant bits will
                                          # 10 for the variant
