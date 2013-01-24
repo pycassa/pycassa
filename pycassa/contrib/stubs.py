@@ -109,7 +109,7 @@ class ColumnFamilyStub(object):
 
     """
 
-    def __init__(self, pool=None, column_family=None, rows=None):
+    def __init__(self, pool=None, column_family=None, rows=None, **kwargs):
         rows = rows or OrderedDict()
         for r in rows.itervalues():
             if not isinstance(r, OrderedDictWithTime):
@@ -125,8 +125,7 @@ class ColumnFamilyStub(object):
     def __contains__(self, obj):
         return self.rows.__contains__(obj)
 
-    def get(self, key, columns=None, include_timestamp=False,
-            suppress_exceptions=False, **kwargs):
+    def get(self, key, columns=None, include_timestamp=False, **kwargs):
         """Get a value from the column family stub."""
 
         my_columns = self.rows.get(key)
@@ -135,10 +134,7 @@ class ColumnFamilyStub(object):
         else:
             get_value = lambda x: x[0]
         if not my_columns:
-            if not suppress_exceptions:
-                raise NotFoundException()
-            else:
-                return OrderedDict()
+            raise NotFoundException()
 
         return OrderedDict((k, get_value(v)) for (k, v)
                            in my_columns.iteritems()
@@ -152,8 +148,7 @@ class ColumnFamilyStub(object):
                 key,
                 columns,
                 include_timestamp,
-                suppress_exceptions=True
-            )) for key in keys)
+            )) for key in keys if key in self.rows)
 
     def batch(self, **kwargs):
         """Returns itself."""
@@ -170,6 +165,8 @@ class ColumnFamilyStub(object):
 
         for column in columns:
             self.rows[key].__setitem__(column, columns[column], timestamp)
+
+        return self.rows[key][columns.keys()[0]][1]
 
     def get_indexed_slices(self, index_clause, **kwargs):
         """Grabs rows that match a pycassa index clause.
@@ -197,7 +194,10 @@ class ColumnFamilyStub(object):
             del self.rows[key]
         else:
             for c in columns:
-                del self.rows[key][c]
+                if c in self.rows[key]:
+                    del self.rows[key][c]
+            if not self.rows[key]:
+                del self.rows[key]
 
 
     def get_range(self, include_timestamp=False, columns=None, **kwargs):
