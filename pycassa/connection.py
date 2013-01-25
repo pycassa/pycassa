@@ -50,11 +50,11 @@ class Connection(Cassandra.Client):
         Cassandra.Client.__init__(self, protocol)
         self.transport.open()
 
-        self.set_keyspace(keyspace)
-
         if credentials is not None:
             request = AuthenticationRequest(credentials=credentials)
             self.login(request)
+
+        self.set_keyspace(keyspace)
 
     def set_keyspace(self, keyspace):
         if keyspace != self.keyspace:
