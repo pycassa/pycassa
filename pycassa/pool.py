@@ -576,7 +576,7 @@ class ConnectionPool(object):
             conn = self.get()
             return getattr(conn, f)(*args, **kwargs)
         finally:
-            if conn:
+            if conn and conn.transport.isOpen():
                 self.put(conn)
 
     def dispose(self):
