@@ -23,7 +23,7 @@ except ImportError:
 
 from distutils.cmd import Command
 
-__version__ = "1.8.0"
+__version__ = "1.8.1-SNAPSHOT"
 
 long_description = """pycassa is a python client library for Apache Cassandra with the following features:
 
@@ -122,7 +122,8 @@ setup(
       keywords = 'cassandra client db distributed thrift',
       packages = ['pycassa',
                   'pycassa.cassandra',
-                  'pycassa.logging'],
+                  'pycassa.logging',
+                  'pycassa.contrib'],
       install_requires = ['thrift'],
       py_modules=['ez_setup'],
       scripts=['pycassaShell'],
