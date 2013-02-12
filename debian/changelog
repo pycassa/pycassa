@@ -1,3 +1,11 @@
+pycassa (1.8.0) unstable; urgency=low
+
+  * Cassandra 1.2 compatibility
+  * Drop support for Python 2.4, 2.5
+  * Bugfixes
+
+ -- Tyler Hobbs <tyler@datastax.com>  Tue, 12 Feb 2013 16:59:27 -0600
+
 pycassa (1.7.0) unstable; urgency=low
 
   * Cassandra 1.1 compatibility

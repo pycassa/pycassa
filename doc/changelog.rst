@@ -7,6 +7,35 @@ This release requires either Python 2.6 or 2.7. Python 2.4 and 2.5
 are no longer supported. There are no concrete plans for Python 3
 compatibility yet.
 
+Features
+~~~~~~~~
+- Add configurable ``socket_factory`` attribute and constructor parameter
+  to :class:`~.ConnectionPool` and :class:`~.SystemManager`.
+- Add SSL support via the new ``socket_factory`` attribute.
+- Add support for :class:`~.DynamicCompositeType`
+- Add mock support through a new :mod:`pycassa.contrib.stubs` module
+
+Bug Fixes
+~~~~~~~~~
+- Don't return closed connections to the pool. This was primarily a
+  problem when operations failed after retrying up to the limit,
+  resulting in a :exc:`~.MaximumRetryException` or
+  :exc:`~.AllServersUnavailable`.
+- Set keyspace for connection after logging in instead of before.
+  This fixes authentication against Cassandra 1.2, which requires
+  logging in prior to setting a keyspace.
+- Specify correct UUID variant when creating v1 :class:`uuid.UUID` objects
+  from datetimes or timestamps
+- Add 900ns to v1 :class:`uuid.UUID` timestamps when the "max" TimeUUID for
+  a specific datetime or timestamp is requested, such as a
+  column slice end
+- Also look at attributes of parent classes when creating
+  columns from attributes in :class:`~.ColumnFamilyMap`
+
+Other
+~~~~~
+- Upgrade bundled Thrift-generated python to 19.35.0, generated
+  with Thrift 0.9.0.
 
 Changes in Version 1.7.2
 ------------------------
