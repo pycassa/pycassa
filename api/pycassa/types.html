@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.types – Data Type Descriptions &mdash; pycassa v1.7.2 documentation</title>
+    <title>pycassa.types – Data Type Descriptions &mdash; pycassa v1.8.0 documentation</title>
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.7.2',
+        VERSION:     '1.8.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../../_static/favicon.ico"/>
-    <link rel="top" title="pycassa v1.7.2 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v1.8.0 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.util – Utilities" href="util.html" />
     <link rel="prev" title="pycassa.batch – Batch Operations" href="batch.html" /> 
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="batch.html" title="pycassa.batch – Batch Operations"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.7.2 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.8.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -155,6 +155,12 @@ automatically converted to UTC for storage in Cassandra.</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="pycassa.types.UUIDType">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">UUIDType</tt><a class="headerlink" href="#pycassa.types.UUIDType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores data as a type 1 or type 4 UUID</p>
+</dd></dl>
+
+<dl class="class">
 <dt id="pycassa.types.TimeUUIDType">
 <em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">TimeUUIDType</tt><a class="headerlink" href="#pycassa.types.TimeUUIDType" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stores data as a version 1 UUID</p>
@@ -218,6 +224,22 @@ a subclass of <a class="reference internal" href="#pycassa.types.CassandraType" 
 </div>
 </dd></dl>
 
+<dl class="class">
+<dt id="pycassa.types.DynamicCompositeType">
+<em class="property">class </em><tt class="descclassname">pycassa.types.</tt><tt class="descname">DynamicCompositeType</tt><big>(</big><em>*aliases</em><big>)</big><a class="headerlink" href="#pycassa.types.DynamicCompositeType" title="Permalink to this definition">¶</a></dt>
+<dd><p>A type composed of one or more components, each of
+which have their own type.  When sorted, items are
+primarily sorted by their first component, secondarily
+by their second component, and so on.</p>
+<p>Unlike CompositeType, DynamicCompositeType columns
+need not all be of the same structure. Each column
+can be composed of different component types.</p>
+<p>Components are specified using a 2-tuple made up of
+a comparator type and value. Aliases for comparator
+types can optionally be specified with a dictionary 
+during instantiation.</p>
+</dd></dl>
+
 </div>
 
 
@@ -269,7 +291,7 @@ a subclass of <a class="reference internal" href="#pycassa.types.CassandraType" 
         <li class="right" >
           <a href="batch.html" title="pycassa.batch – Batch Operations"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.7.2 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.8.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.pool – Connection Pooling &mdash; pycassa v1.7.2 documentation</title>
+    <title>pycassa.pool – Connection Pooling &mdash; pycassa v1.8.0 documentation</title>
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.7.2',
+        VERSION:     '1.8.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../../_static/favicon.ico"/>
-    <link rel="top" title="pycassa v1.7.2 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v1.8.0 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.columnfamily – Column Family" href="columnfamily.html" />
     <link rel="prev" title="pycassa - Exceptions and Enums" href="../pycassa.html" /> 
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="../pycassa.html" title="pycassa - Exceptions and Enums"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.7.2 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.8.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -59,7 +59,7 @@
 <p>Connection pooling for Cassandra connections.</p>
 <dl class="class">
 <dt id="pycassa.pool.ConnectionPool">
-<em class="property">class </em><tt class="descclassname">pycassa.pool.</tt><tt class="descname">ConnectionPool</tt><big>(</big><em>keyspace, server_list=['localhost:9160'], credentials=None, timeout=0.5, use_threadlocal=True, pool_size=5, prefill=True, **kwargs</em><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">pycassa.pool.</tt><tt class="descname">ConnectionPool</tt><big>(</big><em>keyspace, server_list=['localhost:9160'], credentials=None, timeout=0.5, use_threadlocal=True, pool_size=5, prefill=True, socket_factory=&lt;function default_socket_factory at 0x168a410&gt;, transport_factory=&lt;function default_transport_factory at 0x16c9500&gt;, **kwargs</em><big>)</big><a class="headerlink" href="#pycassa.pool.ConnectionPool" title="Permalink to this definition">¶</a></dt>
 <dd><p>A pool that maintains a queue of open connections.</p>
 <p>All connections in the pool will be opened to <cite>keyspace</cite>.</p>
 <p><cite>server_list</cite> is a sequence of servers in the form <tt class="docutils literal"><span class="pre">&quot;host:port&quot;</span></tt> that
@@ -454,7 +454,7 @@ pool will choose from.</p>
         <li class="right" >
           <a href="../pycassa.html" title="pycassa - Exceptions and Enums"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.7.2 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.8.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

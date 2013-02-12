@@ -1,0 +1,220 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pycassa.contrib.stubs – Pycassa Stubs &mdash; pycassa v1.8.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.8.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+    <link rel="top" title="pycassa v1.8.0 documentation" href="../../../index.html" />
+    <link rel="up" title="API Documentation" href="../../index.html" />
+    <link rel="next" title="Changelog" href="../../../changelog.html" />
+    <link rel="prev" title="pycassa.logging.pool_stats_logger – Connection Pool Stats" href="../logging/pool_stats_logger.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../changelog.html" title="Changelog"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../logging/pool_stats_logger.html" title="pycassa.logging.pool_stats_logger – Connection Pool Stats"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">pycassa v1.8.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-pycassa.contrib.stubs">
+<span id="pycassa-contrib-stubs-pycassa-stubs"></span><h1><a class="reference internal" href="#module-pycassa.contrib.stubs" title="pycassa.contrib.stubs"><tt class="xref py py-mod docutils literal"><span class="pre">pycassa.contrib.stubs</span></tt></a> &#8211; Pycassa Stubs<a class="headerlink" href="#module-pycassa.contrib.stubs" title="Permalink to this headline">¶</a></h1>
+<p>A functional set of stubs to be used for unit testing.</p>
+<p>Projects that use pycassa and need to run an automated unit test suite on a
+system like Jenkins can use these stubs to emulate interactions with Cassandra
+without spinning up a cluster locally.</p>
+<dl class="class">
+<dt id="pycassa.contrib.stubs.ColumnFamilyStub">
+<em class="property">class </em><tt class="descclassname">pycassa.contrib.stubs.</tt><tt class="descname">ColumnFamilyStub</tt><big>(</big><em>pool=None</em>, <em>column_family=None</em>, <em>rows=None</em><big>)</big><a class="headerlink" href="#pycassa.contrib.stubs.ColumnFamilyStub" title="Permalink to this definition">¶</a></dt>
+<dd><p>Functional ColumnFamily stub object.</p>
+<p>Acts very similar to a remote column family, supporting a basic version of
+the API. When instantiated, it registers itself with the supplied (stub)
+connection pool.</p>
+<dl class="method">
+<dt id="pycassa.contrib.stubs.ColumnFamilyStub.get">
+<tt class="descname">get</tt><big>(</big><em>key[, columns][, include_timestamp]</em><big>)</big><a class="headerlink" href="#pycassa.contrib.stubs.ColumnFamilyStub.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a value from the column family stub.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.contrib.stubs.ColumnFamilyStub.multiget">
+<tt class="descname">multiget</tt><big>(</big><em>keys[, columns][, include_timestamp]</em><big>)</big><a class="headerlink" href="#pycassa.contrib.stubs.ColumnFamilyStub.multiget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get multiple key values from the column family stub.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.contrib.stubs.ColumnFamilyStub.get_range">
+<tt class="descname">get_range</tt><big>(</big><em>[columns][, include_timestamp]</em><big>)</big><a class="headerlink" href="#pycassa.contrib.stubs.ColumnFamilyStub.get_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Currently just gets all values from the column family.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.contrib.stubs.ColumnFamilyStub.get_indexed_slices">
+<tt class="descname">get_indexed_slices</tt><big>(</big><em>index_clause[, columns], include_timestamp]</em><big>)</big><a class="headerlink" href="#pycassa.contrib.stubs.ColumnFamilyStub.get_indexed_slices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Grabs rows that match a pycassa index clause.</p>
+<p>See <a class="reference internal" href="../index.html#pycassa.index.create_index_clause" title="pycassa.index.create_index_clause"><tt class="xref py py-meth docutils literal"><span class="pre">pycassa.index.create_index_clause()</span></tt></a> for creating such an
+index clause.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.contrib.stubs.ColumnFamilyStub.insert">
+<tt class="descname">insert</tt><big>(</big><em>key</em>, <em>columns</em><span class="optional">[</span>, <em>timestamp</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#pycassa.contrib.stubs.ColumnFamilyStub.insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert data to the column family stub.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.contrib.stubs.ColumnFamilyStub.remove">
+<tt class="descname">remove</tt><big>(</big><em>key</em><span class="optional">[</span>, <em>columns</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#pycassa.contrib.stubs.ColumnFamilyStub.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a key from the column family stub.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.contrib.stubs.ColumnFamilyStub.truncate">
+<tt class="descname">truncate</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.contrib.stubs.ColumnFamilyStub.truncate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears all data from the column family stub.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.contrib.stubs.ColumnFamilyStub.batch">
+<tt class="descname">batch</tt><big>(</big><em>self</em><big>)</big><a class="headerlink" href="#pycassa.contrib.stubs.ColumnFamilyStub.batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns itself.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.contrib.stubs.ConnectionPoolStub">
+<em class="property">class </em><tt class="descclassname">pycassa.contrib.stubs.</tt><tt class="descname">ConnectionPoolStub</tt><a class="headerlink" href="#pycassa.contrib.stubs.ConnectionPoolStub" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connection pool stub.</p>
+<p>Notes created column families in <tt class="xref py py-attr docutils literal"><span class="pre">self.column_families</span></tt>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pycassa.contrib.stubs.SystemManagerStub">
+<em class="property">class </em><tt class="descclassname">pycassa.contrib.stubs.</tt><tt class="descname">SystemManagerStub</tt><a class="headerlink" href="#pycassa.contrib.stubs.SystemManagerStub" title="Permalink to this definition">¶</a></dt>
+<dd><p>Functional System Manager stub object.</p>
+<p>Records when column families, columns, and indexes have been created. To
+see what has been recorded, look at <tt class="xref py py-attr docutils literal"><span class="pre">self.column_families</span></tt>.</p>
+<dl class="method">
+<dt id="pycassa.contrib.stubs.SystemManagerStub.create_column_family">
+<tt class="descname">create_column_family</tt><big>(</big><em>keyspace</em>, <em>table_name</em><big>)</big><a class="headerlink" href="#pycassa.contrib.stubs.SystemManagerStub.create_column_family" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a column family and record its existence.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.contrib.stubs.SystemManagerStub.alter_column">
+<tt class="descname">alter_column</tt><big>(</big><em>keyspace</em>, <em>table_name</em>, <em>column_name</em>, <em>column_type</em><big>)</big><a class="headerlink" href="#pycassa.contrib.stubs.SystemManagerStub.alter_column" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alter a column, recording its name and type.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.contrib.stubs.SystemManagerStub.create_index">
+<tt class="descname">create_index</tt><big>(</big><em>keyspace</em>, <em>table_name</em>, <em>column_name</em>, <em>column_type</em><big>)</big><a class="headerlink" href="#pycassa.contrib.stubs.SystemManagerStub.create_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an index, recording its name and type.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.contrib.stubs.SystemManagerStub.describe_schema_versions">
+<tt class="descname">describe_schema_versions</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.contrib.stubs.SystemManagerStub.describe_schema_versions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Describes the schema based on a hash of the stub system state.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../logging/pool_stats_logger.html"
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">pycassa.logging.pool_stats_logger</span></tt> &#8211; Connection Pool Stats</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../../../changelog.html"
+                        title="next chapter">Changelog</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/api/pycassa/contrib/stubs.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../changelog.html" title="Changelog"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../logging/pool_stats_logger.html" title="pycassa.logging.pool_stats_logger – Connection Pool Stats"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">pycassa v1.8.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
