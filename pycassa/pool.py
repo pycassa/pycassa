@@ -512,6 +512,30 @@ class ConnectionPool(object):
         self._q.put_nowait(conn)
         return conn
 
+    def _new_if_required(self, max_conns):
+        """ Creates new connection if there is room """
+        try:
+            self._pool_lock.acquire()
+            if self._current_conns < max_conns:
+                new_conn = True
+                self._current_conns += 1
+            else:
+                new_conn = False
+        finally:
+            self._pool_lock.release()
+
+        if new_conn:
+            try:
+                return self._create_connection()
+            except:
+                try:
+                    self._pool_lock.acquire()
+                    self._current_conns -= 1
+                    raise
+                finally:
+                    self._pool_lock.release()
+        return None
+
     def get(self):
         """ Gets a connection from the pool. """
         conn = None
@@ -523,15 +547,8 @@ class ConnectionPool(object):
                     return conn
             except AttributeError:
                 pass
-        try:
-            self._pool_lock.acquire()
-            if self._current_conns < self._pool_size:
-                # The pool was not prefilled, and we need to add connections to reach pool_size
-                conn = self._create_connection()
-                self._current_conns += 1
-        finally:
-            self._pool_lock.release()
 
+        conn = self._new_if_required(self._pool_size)
         if not conn:
             try:
                 # We don't want to waste time blocking if overflow is not enabled; similarly,
@@ -549,14 +566,7 @@ class ConnectionPool(object):
                 conn = self._q.get(block, timeout)
                 conn._checkout()
             except Queue.Empty:
-                try:
-                    self._pool_lock.acquire()
-                    if self._current_conns < self._max_conns:
-                        conn = self._create_connection()
-                        self._current_conns += 1
-                finally:
-                    self._pool_lock.release()
-
+                conn = self._new_if_required(self._max_conns)
                 if not conn:
                     self._notify_on_pool_max(pool_max=self._max_conns)
                     size_msg = "size %d" % (self._pool_size, )
