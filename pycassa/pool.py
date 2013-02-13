@@ -514,9 +514,9 @@ class ConnectionPool(object):
 
     def get(self):
         """ Gets a connection from the pool. """
+        conn = None
         if self._pool_threadlocal:
             try:
-                conn = None
                 if self._tlocal.current:
                     conn = self._tlocal.current
                 if conn:
@@ -529,36 +529,42 @@ class ConnectionPool(object):
                 # The pool was not prefilled, and we need to add connections to reach pool_size
                 conn = self._create_connection()
                 self._current_conns += 1
-            else:
-                try:
-                    # We don't want to waste time blocking if overflow is not enabled; similarly,
-                    # if we're not at the max overflow, we can fail quickly and create a new
-                    # connection
-                    timeout = self.pool_timeout
-                    if timeout == -1:
-                        timeout = None
-                        block = self._current_conns >= self._max_conns
-                    elif timeout == 0:
-                        block = False
-                    else:
-                        block = self._current_conns >= self._max_conns
+        finally:
+            self._pool_lock.release()
 
-                    conn = self._q.get(block, timeout)
-                    conn._checkout()
-                except Queue.Empty:
+        if not conn:
+            try:
+                # We don't want to waste time blocking if overflow is not enabled; similarly,
+                # if we're not at the max overflow, we can fail quickly and create a new
+                # connection
+                timeout = self.pool_timeout
+                if timeout == -1:
+                    timeout = None
+                    block = self._current_conns >= self._max_conns
+                elif timeout == 0:
+                    block = False
+                else:
+                    block = self._current_conns >= self._max_conns
+
+                conn = self._q.get(block, timeout)
+                conn._checkout()
+            except Queue.Empty:
+                try:
+                    self._pool_lock.acquire()
                     if self._current_conns < self._max_conns:
                         conn = self._create_connection()
                         self._current_conns += 1
-                    else:
-                        self._notify_on_pool_max(pool_max=self._max_conns)
-                        size_msg = "size %d" % (self._pool_size, )
-                        if self._overflow_enabled:
-                            size_msg += "overflow %d" % (self._max_overflow)
-                        message = "ConnectionPool limit of %s reached, unable to obtain connection after %d seconds" \
-                                  % (size_msg, self.pool_timeout)
-                        raise NoConnectionAvailable(message)
-        finally:
-            self._pool_lock.release()
+                finally:
+                    self._pool_lock.release()
+
+                if not conn:
+                    self._notify_on_pool_max(pool_max=self._max_conns)
+                    size_msg = "size %d" % (self._pool_size, )
+                    if self._overflow_enabled:
+                        size_msg += "overflow %d" % (self._max_overflow)
+                    message = "ConnectionPool limit of %s reached, unable to obtain connection after %d seconds" \
+                              % (size_msg, self.pool_timeout)
+                    raise NoConnectionAvailable(message)
 
         if self._pool_threadlocal:
             self._tlocal.current = conn
