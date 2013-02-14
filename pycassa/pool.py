@@ -566,16 +566,17 @@ class ConnectionPool(object):
                 conn = self._q.get(block, timeout)
             except Queue.Empty:
                 conn = self._new_if_required(self._max_conns)
-                if not conn:
-                    self._notify_on_pool_max(pool_max=self._max_conns)
-                    size_msg = "size %d" % (self._pool_size, )
-                    if self._overflow_enabled:
-                        size_msg += "overflow %d" % (self._max_overflow)
-                    message = "ConnectionPool limit of %s reached, unable to obtain connection after %d seconds" \
-                              % (size_msg, self.pool_timeout)
-                    raise NoConnectionAvailable(message)
             else:
                 conn._checkout()
+
+        if not conn:
+             self._notify_on_pool_max(pool_max=self._max_conns)
+             size_msg = "size %d" % (self._pool_size, )
+             if self._overflow_enabled:
+                 size_msg += "overflow %d" % (self._max_overflow)
+             message = "ConnectionPool limit of %s reached, unable to obtain connection after %d seconds" \
+                       % (size_msg, self.pool_timeout)
+             raise NoConnectionAvailable(message)
 
         if self._pool_threadlocal:
             self._tlocal.current = conn
