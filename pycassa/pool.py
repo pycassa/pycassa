@@ -512,11 +512,11 @@ class ConnectionPool(object):
         self._q.put_nowait(conn)
         return conn
 
-    def _new_if_required(self, max_conns):
+    def _new_if_required(self, max_conns, check_empty_queue=False):
         """ Creates new connection if there is room """
         try:
             self._pool_lock.acquire()
-            if self._current_conns < max_conns:
+            if (not check_empty_queue or self._q.empty()) and self._current_conns < max_conns:
                 new_conn = True
                 self._current_conns += 1
             else:
@@ -550,33 +550,27 @@ class ConnectionPool(object):
 
         conn = self._new_if_required(self._pool_size)
         if not conn:
-            # We don't want to waste time blocking if overflow is not enabled; similarly,
-            # if we're not at the max overflow, we can fail quickly and create a new
-            # connection
+            # if queue is empty and max_overflow is not reached, create new conn
+            conn = self._new_if_required(self._max_conns, check_empty_queue=True)
+
+        if not conn:
+            # We will have to fetch from the queue, and maybe block
             timeout = self.pool_timeout
             if timeout == -1:
                 timeout = None
-                block = self._current_conns >= self._max_conns
-            elif timeout == 0:
-                block = False
-            else:
-                block = self._current_conns >= self._max_conns
 
             try:
-                conn = self._q.get(block, timeout)
+                conn = self._q.get(timeout=timeout)
             except Queue.Empty:
-                conn = self._new_if_required(self._max_conns)
+                self._notify_on_pool_max(pool_max=self._max_conns)
+                size_msg = "size %d" % (self._pool_size, )
+                if self._overflow_enabled:
+                    size_msg += "overflow %d" % (self._max_overflow)
+                message = "ConnectionPool limit of %s reached, unable to obtain connection after %d seconds" \
+                          % (size_msg, self.pool_timeout)
+                raise NoConnectionAvailable(message)
             else:
                 conn._checkout()
-
-        if not conn:
-             self._notify_on_pool_max(pool_max=self._max_conns)
-             size_msg = "size %d" % (self._pool_size, )
-             if self._overflow_enabled:
-                 size_msg += "overflow %d" % (self._max_overflow)
-             message = "ConnectionPool limit of %s reached, unable to obtain connection after %d seconds" \
-                       % (size_msg, self.pool_timeout)
-             raise NoConnectionAvailable(message)
 
         if self._pool_threadlocal:
             self._tlocal.current = conn
