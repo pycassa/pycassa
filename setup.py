@@ -118,7 +118,6 @@ setup(
       description = 'Python client library for Apache Cassandra',
       long_description = long_description,
       url = 'http://github.com/pycassa/pycassa',
-      download_url = 'http://github.com/pycassa/pycassa/archive/v%s.tar.gz' % __version__,
       keywords = 'cassandra client db distributed thrift',
       packages = ['pycassa',
                   'pycassa.cassandra',
