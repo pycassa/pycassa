@@ -132,7 +132,7 @@ are included in the default schema file:
   >>> from pycassa.columnfamily import ColumnFamily
   >>>
   >>> pool = ConnectionPool('Keyspace1')
-  >>> col_fam = pycassa.ColumnFamily(pool, 'ColumnFamily1')
+  >>> col_fam = ColumnFamily(pool, 'ColumnFamily1')
 
 If you get an error about the keyspace or column family not
 existing, make sure you created the keyspace and column family as
