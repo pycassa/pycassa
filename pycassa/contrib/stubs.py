@@ -125,7 +125,7 @@ class ColumnFamilyStub(object):
     def __contains__(self, obj):
         return self.rows.__contains__(obj)
 
-    def get(self, key, columns=None, include_timestamp=False, **kwargs):
+    def get(self, key, columns=None, column_start=None, column_finish=None, include_timestamp=False, **kwargs):
         """Get a value from the column family stub."""
 
         my_columns = self.rows.get(key)
@@ -138,7 +138,13 @@ class ColumnFamilyStub(object):
 
         return OrderedDict((k, get_value(v)) for (k, v)
                            in my_columns.iteritems()
-                           if not columns or k in columns)
+                           if self._is_column_in_range(k, columns, column_start, column_finish))
+
+    def _is_column_in_range(self, k, columns, column_start, column_finish):
+        if columns:
+            return k in columns
+        return (not column_start or k >= column_start) and (not column_finish or k <= column_finish)
+
 
     def multiget(self, keys, columns=None, include_timestamp=False, **kwargs):
         """Get multiple key values from the column family stub."""

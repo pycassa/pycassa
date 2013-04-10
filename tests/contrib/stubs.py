@@ -66,6 +66,34 @@ class TestColumnFamilyStub(unittest.TestCase):
             assert_true(isinstance(ts, (int, long)))
             assert_equal(test_cf.get(key), columns)
 
+    def test_insert_get_column_start(self):
+        key = 'TestColumnFamily.test_insert_get_column_start'
+        columns = {'1': 'val1', '2': 'val2', '3': 'val3'}
+        for test_cf in (cf, cf_stub):
+            assert_raises(NotFoundException, test_cf.get, key)
+            ts = test_cf.insert(key, columns)
+            assert_true(isinstance(ts, (int, long)))
+            assert_equal(test_cf.get(key, column_start='2'), {'2': 'val2', '3': 'val3'})
+
+
+    def test_insert_get_column_finish(self):
+        key = 'TestColumnFamily.test_insert_get_column_finish'
+        columns = {'a': 'val1', 'b': 'val2', 'c': 'val3'}
+        for test_cf in (cf, cf_stub):
+            assert_raises(NotFoundException, test_cf.get, key)
+            ts = test_cf.insert(key, columns)
+            assert_true(isinstance(ts, (int, long)))
+            assert_equal(test_cf.get(key, column_finish='b'), {'a': 'val1', 'b': 'val2'})
+
+
+    def test_insert_get_column_start_and_finish(self):
+        key = 'TestColumnFamily.test_insert_get_column_start_and_finish'
+        columns = {'a': 'val1', 'b': 'val2', 'c': 'val3', 'd': 'val4'}
+        for test_cf in (cf, cf_stub):
+            assert_raises(NotFoundException, test_cf.get, key)
+            ts = test_cf.insert(key, columns)
+            assert_true(isinstance(ts, (int, long)))
+            assert_equal(test_cf.get(key, column_start='b', column_finish='c'), {'b': 'val2', 'c': 'val3'})
 
     def test_insert_multiget(self):
         key1 = 'TestColumnFamily.test_insert_multiget1'
