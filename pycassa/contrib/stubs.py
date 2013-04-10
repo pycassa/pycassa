@@ -146,13 +146,15 @@ class ColumnFamilyStub(object):
         return (not column_start or k >= column_start) and (not column_finish or k <= column_finish)
 
 
-    def multiget(self, keys, columns=None, include_timestamp=False, **kwargs):
+    def multiget(self, keys, columns=None, column_start=None, column_finish=None, include_timestamp=False, **kwargs):
         """Get multiple key values from the column family stub."""
 
         return OrderedDict(
             (key, self.get(
                 key,
                 columns,
+                column_start,
+                column_finish,
                 include_timestamp,
             )) for key in keys if key in self.rows)
 

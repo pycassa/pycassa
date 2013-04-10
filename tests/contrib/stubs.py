@@ -66,26 +66,6 @@ class TestColumnFamilyStub(unittest.TestCase):
             assert_true(isinstance(ts, (int, long)))
             assert_equal(test_cf.get(key), columns)
 
-    def test_insert_get_column_start(self):
-        key = 'TestColumnFamily.test_insert_get_column_start'
-        columns = {'1': 'val1', '2': 'val2', '3': 'val3'}
-        for test_cf in (cf, cf_stub):
-            assert_raises(NotFoundException, test_cf.get, key)
-            ts = test_cf.insert(key, columns)
-            assert_true(isinstance(ts, (int, long)))
-            assert_equal(test_cf.get(key, column_start='2'), {'2': 'val2', '3': 'val3'})
-
-
-    def test_insert_get_column_finish(self):
-        key = 'TestColumnFamily.test_insert_get_column_finish'
-        columns = {'a': 'val1', 'b': 'val2', 'c': 'val3'}
-        for test_cf in (cf, cf_stub):
-            assert_raises(NotFoundException, test_cf.get, key)
-            ts = test_cf.insert(key, columns)
-            assert_true(isinstance(ts, (int, long)))
-            assert_equal(test_cf.get(key, column_finish='b'), {'a': 'val1', 'b': 'val2'})
-
-
     def test_insert_get_column_start_and_finish(self):
         key = 'TestColumnFamily.test_insert_get_column_start_and_finish'
         columns = {'a': 'val1', 'b': 'val2', 'c': 'val3', 'd': 'val4'}
@@ -94,6 +74,7 @@ class TestColumnFamilyStub(unittest.TestCase):
             ts = test_cf.insert(key, columns)
             assert_true(isinstance(ts, (int, long)))
             assert_equal(test_cf.get(key, column_start='b', column_finish='c'), {'b': 'val2', 'c': 'val3'})
+
 
     def test_insert_multiget(self):
         key1 = 'TestColumnFamily.test_insert_multiget1'
@@ -111,6 +92,21 @@ class TestColumnFamilyStub(unittest.TestCase):
             assert_equal(rows[key2], columns2)
             assert_true(missing_key not in rows)
 
+    def test_insert_multiget_column_start_and_finish(self):
+        key1 = 'TestColumnFamily.test_insert_multiget_column_start_and_finish1'
+        columns1 = {'1': 'val1', '2': 'val2'}
+        key2 = 'TestColumnFamily.test_insert_multiget_column_start_and_finish2'
+        columns2 = {'3': 'val1', '4': 'val2'}
+        missing_key = 'key3'
+
+        for test_cf in (cf, cf_stub):
+            test_cf.insert(key1, columns1)
+            test_cf.insert(key2, columns2)
+            rows = test_cf.multiget([key1, key2, missing_key], column_start='2', column_finish='3')
+            assert_equal(len(rows), 2)
+            assert_equal(rows[key1], {'2': 'val2'})
+            assert_equal(rows[key2], {'3': 'val1'})
+            assert_true(missing_key not in rows)
 
     def insert_insert_get_indexed_slices(self):
         columns = {'birthdate': 1L}
