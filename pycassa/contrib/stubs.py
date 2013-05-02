@@ -137,7 +137,7 @@ class ColumnFamilyStub(object):
         return self.rows.__contains__(obj)
 
     def get(self, key, columns=None, column_start=None, column_finish=None,
-            column_count=100, include_timestamp=False, **kwargs):
+            column_reversed=False, column_count=100, include_timestamp=False, **kwargs):
         """Get a value from the column family stub."""
 
         my_columns = self.rows.get(key)
@@ -151,17 +151,26 @@ class ColumnFamilyStub(object):
         items = my_columns.items()
         items.sort()
 
-        return OrderedDict([(k, get_value(v)) for (k, v) in items
-                            if self._is_column_in_range(k, columns, column_start, column_finish)][:column_count])
+        if column_reversed:
+            items.reverse()
 
-    def _is_column_in_range(self, k, columns, column_start, column_finish):
+        sliced_items = [(k, get_value(v)) for (k, v) in items
+                        if self._is_column_in_range(k, columns,
+                                                    column_start, column_finish, column_reversed)][:column_count]
+
+        return OrderedDict(sliced_items)
+
+    def _is_column_in_range(self, k, columns, column_start, column_finish, column_reversed):
+        lower_bound = column_start if not column_reversed else column_finish
+        upper_bound = column_finish if not column_reversed else column_start
+
         if columns:
             return k in columns
-        return (not column_start or k >= column_start) and (not column_finish or k <= column_finish)
+        return (not lower_bound or k >= lower_bound) and (not upper_bound or k <= upper_bound)
 
 
     def multiget(self, keys, columns=None, column_start=None, column_finish=None,
-                 column_count=100, include_timestamp=False, **kwargs):
+                 column_reversed=False, column_count=100, include_timestamp=False, **kwargs):
         """Get multiple key values from the column family stub."""
 
         return OrderedDict(
@@ -170,6 +179,7 @@ class ColumnFamilyStub(object):
                 columns=columns,
                 column_start=column_start,
                 column_finish=column_finish,
+                column_reversed=column_reversed,
                 column_count=column_count,
                 include_timestamp=include_timestamp,
             )) for key in keys if key in self.rows)

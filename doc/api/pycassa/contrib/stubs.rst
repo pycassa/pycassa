@@ -5,9 +5,9 @@
 
     .. autoclass:: pycassa.contrib.stubs.ColumnFamilyStub(pool=None, column_family=None, rows=None)
 
-        .. automethod:: get(key[, columns][, column_start][, column_finish][, column_count][, include_timestamp])
+        .. automethod:: get(key[, columns][, column_start][, column_finish][, column_reversed][, column_count][, include_timestamp])
 
-        .. automethod:: multiget(keys[, columns][, column_start][, column_finish][, column_count][, include_timestamp])
+        .. automethod:: multiget(keys[, columns][, column_start][, column_finish][, column_reversed][, column_count][, include_timestamp])
 
         .. automethod:: get_range([columns][, include_timestamp])
 
