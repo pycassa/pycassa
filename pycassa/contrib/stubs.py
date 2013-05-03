@@ -8,8 +8,7 @@ without spinning up a cluster locally.
 
 import operator
 
-from functools import partial
-
+from collections import MutableMapping
 from pycassa import NotFoundException
 from pycassa.util import OrderedDict
 from pycassa.columnfamily import gm_timestamp
@@ -18,17 +17,30 @@ from pycassa.index import EQ, GT, GTE, LT, LTE
 
 __all__ = ['ConnectionPoolStub', 'ColumnFamilyStub', 'SystemManagerStub']
 
-class OrderedDictWithTime(OrderedDict):
+
+class DictWithTime(MutableMapping):
     def __init__(self, *args, **kwargs):
         self.__timestamp = kwargs.pop('timestamp', None)
-        super(OrderedDictWithTime, self).__init__(*args, **kwargs)
+        self.store = dict()
+        self.update(dict(*args, **kwargs))
+
+    def __getitem__(self, key):
+        return self.store[key]
 
     def __setitem__(self, key, value, timestamp=None):
         if timestamp is None:
             timestamp = self.__timestamp or gm_timestamp()
 
-        super(OrderedDictWithTime, self).__setitem__(key, (value, timestamp))
+        self.store[key] = (value, timestamp)
 
+    def __delitem__(self, key):
+        del self.store[key]
+
+    def __iter__(self):
+        return iter(self.store)
+
+    def __len__(self):
+        return len(self.store)
 
 operator_dict = {
     EQ: operator.eq,
@@ -37,7 +49,6 @@ operator_dict = {
     LT: operator.lt,
     LTE: operator.le,
 }
-
 
 class ConnectionPoolStub(object):
     """Connection pool stub.
@@ -112,8 +123,8 @@ class ColumnFamilyStub(object):
     def __init__(self, pool=None, column_family=None, rows=None, **kwargs):
         rows = rows or OrderedDict()
         for r in rows.itervalues():
-            if not isinstance(r, OrderedDictWithTime):
-                r = OrderedDictWithTime(r)
+            if not isinstance(r, DictWithTime):
+                r = DictWithTime(r)
         self.rows = rows
 
         if pool is not None:
@@ -125,7 +136,8 @@ class ColumnFamilyStub(object):
     def __contains__(self, obj):
         return self.rows.__contains__(obj)
 
-    def get(self, key, columns=None, column_start=None, column_finish=None, include_timestamp=False, **kwargs):
+    def get(self, key, columns=None, column_start=None, column_finish=None,
+            column_reversed=False, column_count=100, include_timestamp=False, **kwargs):
         """Get a value from the column family stub."""
 
         my_columns = self.rows.get(key)
@@ -136,26 +148,40 @@ class ColumnFamilyStub(object):
         if not my_columns:
             raise NotFoundException()
 
-        return OrderedDict((k, get_value(v)) for (k, v)
-                           in my_columns.iteritems()
-                           if self._is_column_in_range(k, columns, column_start, column_finish))
+        items = my_columns.items()
+        items.sort()
 
-    def _is_column_in_range(self, k, columns, column_start, column_finish):
+        if column_reversed:
+            items.reverse()
+
+        sliced_items = [(k, get_value(v)) for (k, v) in items
+                        if self._is_column_in_range(k, columns,
+                                                    column_start, column_finish, column_reversed)][:column_count]
+
+        return OrderedDict(sliced_items)
+
+    def _is_column_in_range(self, k, columns, column_start, column_finish, column_reversed):
+        lower_bound = column_start if not column_reversed else column_finish
+        upper_bound = column_finish if not column_reversed else column_start
+
         if columns:
             return k in columns
-        return (not column_start or k >= column_start) and (not column_finish or k <= column_finish)
+        return (not lower_bound or k >= lower_bound) and (not upper_bound or k <= upper_bound)
 
 
-    def multiget(self, keys, columns=None, column_start=None, column_finish=None, include_timestamp=False, **kwargs):
+    def multiget(self, keys, columns=None, column_start=None, column_finish=None,
+                 column_reversed=False, column_count=100, include_timestamp=False, **kwargs):
         """Get multiple key values from the column family stub."""
 
         return OrderedDict(
             (key, self.get(
                 key,
-                columns,
-                column_start,
-                column_finish,
-                include_timestamp,
+                columns=columns,
+                column_start=column_start,
+                column_finish=column_finish,
+                column_reversed=column_reversed,
+                column_count=column_count,
+                include_timestamp=include_timestamp,
             )) for key in keys if key in self.rows)
 
     def batch(self, **kwargs):
@@ -169,7 +195,7 @@ class ColumnFamilyStub(object):
         """Insert data to the column family stub."""
 
         if key not in self.rows:
-            self.rows[key] = OrderedDictWithTime([], timestamp=timestamp)
+            self.rows[key] = DictWithTime([], timestamp=timestamp)
 
         for column in columns:
             self.rows[key].__setitem__(column, columns[column], timestamp)
