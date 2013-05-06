@@ -337,16 +337,21 @@ class ColumnFamily(object):
         else:
             self.key_validation_class = 'BytesType'
 
-    def _col_to_dict(self, column, include_timestamp):
+    def _col_to_dict(self, column, include_timestamp, include_ttl):
         value = self._unpack_value(column.value, column.name)
-        if include_timestamp:
+        if include_timestamp and include_ttl:
+            return (value, column.timestamp, column.ttl)
+        elif include_timestamp:
             return (value, column.timestamp)
-        return value
+        elif include_ttl:
+            return (value, column.ttl)
+        else:
+            return value
 
-    def _scol_to_dict(self, super_column, include_timestamp):
+    def _scol_to_dict(self, super_column, include_timestamp, include_ttl):
         ret = self.dict_class()
         for column in super_column.columns:
-            ret[self._unpack_name(column.name)] = self._col_to_dict(column, include_timestamp)
+            ret[self._unpack_name(column.name)] = self._col_to_dict(column, include_timestamp, include_ttl)
         return ret
 
     def _scounter_to_dict(self, counter_super_column):
@@ -355,18 +360,18 @@ class ColumnFamily(object):
             ret[self._unpack_name(counter.name)] = counter.value
         return ret
 
-    def _cosc_to_dict(self, list_col_or_super, include_timestamp):
+    def _cosc_to_dict(self, list_col_or_super, include_timestamp, include_ttl):
         ret = self.dict_class()
         for cosc in list_col_or_super:
             if cosc.column:
                 col = cosc.column
-                ret[self._unpack_name(col.name)] = self._col_to_dict(col, include_timestamp)
+                ret[self._unpack_name(col.name)] = self._col_to_dict(col, include_timestamp, include_ttl)
             elif cosc.counter_column:
                 counter = cosc.counter_column
                 ret[self._unpack_name(counter.name)] = counter.value
             elif cosc.super_column:
                 scol = cosc.super_column
-                ret[self._unpack_name(scol.name, True)] = self._scol_to_dict(scol, include_timestamp)
+                ret[self._unpack_name(scol.name, True)] = self._scol_to_dict(scol, include_timestamp, include_ttl)
             else:
                 scounter = cosc.counter_super_column
                 ret[self._unpack_name(scounter.name, True)] = self._scounter_to_dict(scounter)
@@ -512,7 +517,7 @@ class ColumnFamily(object):
 
     def xget(self, key, column_start="", column_finish="", column_reversed=False,
              column_count=None, include_timestamp=False, read_consistency_level=None,
-             buffer_size=None):
+             buffer_size=None, include_ttl=False):
         """
         Like :meth:`get()`, but creates a generator that pages over the columns
         automatically.
@@ -564,13 +569,13 @@ class ColumnFamily(object):
                         scol = cosc.counter_super_column
                     else:
                         scol = cosc.super_column
-                    yield (self._unpack_name(scol.name, True), self._scol_to_dict(scol, include_timestamp))
+                    yield (self._unpack_name(scol.name, True), self._scol_to_dict(scol, include_timestamp, include_ttl))
                 else:
                     if self._have_counters:
                         col = cosc.counter_column
                     else:
                         col = cosc.column
-                    yield (self._unpack_name(col.name, False), self._col_to_dict(col, include_timestamp))
+                    yield (self._unpack_name(col.name, False), self._col_to_dict(col, include_timestamp, include_ttl))
 
                 count += 1
                 if column_count is not None and count >= column_count:
@@ -593,7 +598,7 @@ class ColumnFamily(object):
 
     def get(self, key, columns=None, column_start="", column_finish="",
             column_reversed=False, column_count=100, include_timestamp=False,
-            super_column=None, read_consistency_level=None):
+            super_column=None, read_consistency_level=None, include_ttl=False):
         """
         Fetches all or part of the row with key `key`.
 
@@ -621,6 +626,9 @@ class ColumnFamily(object):
         To include every column's timestamp in the result set, set `include_timestamp` to
         ``True``.  Results will include a ``(value, timestamp)`` tuple for each column.
 
+        To include every column's ttl in the result set, set `include_ttl` to
+        ``True``.  Results will include a ``(value, ttl)`` tuple for each column.
+
         If this is a standard column family, the return type is of the form
         ``{column_name: column_value}``.  If this is a super column family and `super_column`
         is not specified, the results are of the form
@@ -642,7 +650,7 @@ class ColumnFamily(object):
             cp = self._column_path(super_column, column)
             col_or_super = self.pool.execute('get', packed_key, cp,
                     read_consistency_level or self.read_consistency_level)
-            return self._cosc_to_dict([col_or_super], include_timestamp)
+            return self._cosc_to_dict([col_or_super], include_timestamp, include_ttl)
         else:
             cp = self._column_parent(super_column)
             sp = self._slice_predicate(columns, column_start, column_finish,
@@ -653,11 +661,11 @@ class ColumnFamily(object):
 
             if len(list_col_or_super) == 0:
                 raise NotFoundException()
-            return self._cosc_to_dict(list_col_or_super, include_timestamp)
+            return self._cosc_to_dict(list_col_or_super, include_timestamp, include_ttl)
 
     def get_indexed_slices(self, index_clause, columns=None, column_start="", column_finish="",
                            column_reversed=False, column_count=100, include_timestamp=False,
-                           read_consistency_level=None, buffer_size=None):
+                           read_consistency_level=None, buffer_size=None, include_ttl=False):
         """
         Similar to :meth:`get_range()`, but an :class:`~pycassa.cassandra.ttypes.IndexClause`
         is used instead of a key range.
@@ -720,7 +728,7 @@ class ColumnFamily(object):
                     continue
                 unpacked_key = self._unpack_key(key_slice.key)
                 yield (unpacked_key,
-                       self._cosc_to_dict(key_slice.columns, include_timestamp))
+                       self._cosc_to_dict(key_slice.columns, include_timestamp, include_ttl))
 
                 count += 1
                 if row_count is not None and count >= row_count:
@@ -733,7 +741,7 @@ class ColumnFamily(object):
 
     def multiget(self, keys, columns=None, column_start="", column_finish="",
                  column_reversed=False, column_count=100, include_timestamp=False,
-                 super_column=None, read_consistency_level=None, buffer_size=None):
+                 super_column=None, read_consistency_level=None, buffer_size=None, include_ttl=False):
         """
         Fetch multiple rows from a Cassandra server.
 
@@ -775,7 +783,7 @@ class ColumnFamily(object):
         for packed_key, columns in keymap.iteritems():
             unpacked_key = self._unpack_key(packed_key)
             if len(columns) > 0:
-                ret[unpacked_key] = self._cosc_to_dict(columns, include_timestamp)
+                ret[unpacked_key] = self._cosc_to_dict(columns, include_timestamp, include_ttl)
             else:
                 empty_keys.append(unpacked_key)
 
@@ -870,7 +878,7 @@ class ColumnFamily(object):
                   column_finish="", column_reversed=False, column_count=100,
                   row_count=None, include_timestamp=False,
                   super_column=None, read_consistency_level=None,
-                  buffer_size=None, filter_empty=True):
+                  buffer_size=None, filter_empty=True, include_ttl=False):
         """
         Get an iterator over rows in a specified key range.
 
@@ -934,7 +942,7 @@ class ColumnFamily(object):
                 if filter_empty and not key_slice.columns:
                     continue
                 yield (self._unpack_key(key_slice.key),
-                       self._cosc_to_dict(key_slice.columns, include_timestamp))
+                       self._cosc_to_dict(key_slice.columns, include_timestamp, include_ttl))
                 count += 1
                 if row_count is not None and count >= row_count:
                     return
