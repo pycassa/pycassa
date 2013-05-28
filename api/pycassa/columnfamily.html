@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.columnfamily – Column Family &mdash; pycassa v1.8.0 documentation</title>
+    <title>pycassa.columnfamily – Column Family &mdash; pycassa v1.9.0 documentation</title>
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.8.0',
+        VERSION:     '1.9.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../../_static/favicon.ico"/>
-    <link rel="top" title="pycassa v1.8.0 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa v1.9.0 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.columnfamilymap – Maps Classes to Column Families" href="columnfamilymap.html" />
     <link rel="prev" title="pycassa.pool – Connection Pooling" href="pool.html" /> 
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="pool.html" title="pycassa.pool – Connection Pooling"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.8.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.9.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -241,6 +241,8 @@ If this is set, <cite>column_start</cite>, <cite>column_finish</cite>, <cite>col
 will apply to the subcolumns of <cite>super_column</cite>.</p>
 <p>To include every column&#8217;s timestamp in the result set, set <cite>include_timestamp</cite> to
 <tt class="xref docutils literal"><span class="pre">True</span></tt>.  Results will include a <tt class="docutils literal"><span class="pre">(value,</span> <span class="pre">timestamp)</span></tt> tuple for each column.</p>
+<p>To include every column&#8217;s ttl in the result set, set <cite>include_ttl</cite> to
+<tt class="xref docutils literal"><span class="pre">True</span></tt>.  Results will include a <tt class="docutils literal"><span class="pre">(value,</span> <span class="pre">ttl)</span></tt> tuple for each column.</p>
 <p>If this is a standard column family, the return type is of the form
 <tt class="docutils literal"><span class="pre">{column_name:</span> <span class="pre">column_value}</span></tt>.  If this is a super column family and <cite>super_column</cite>
 is not specified, the results are of the form
@@ -440,7 +442,7 @@ operations using as few roundtrips as possible.</p>
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="pool.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">pycassa.pool</span></tt> &#8211; Connection Pooling</a></p>
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">pycassa.pool</span></tt> &#8211; Connection Pooling</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="columnfamilymap.html"
                         title="next chapter"><tt class="docutils literal"><span class="pre">pycassa.columnfamilymap</span></tt> &#8211; Maps Classes to Column Families</a></p>
@@ -481,7 +483,7 @@ operations using as few roundtrips as possible.</p>
         <li class="right" >
           <a href="pool.html" title="pycassa.pool – Connection Pooling"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.8.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa v1.9.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>

@@ -1,6 +1,25 @@
 Changelog
 =========
 
+Changes in Version 1.9.0
+------------------------
+This release adds a couple of minor new features and improves multithreaded
+locking behavior in :class:`~.ConnectionPool`.  There should be no
+backwards-compatibility concerns.
+
+Features
+~~~~~~~~
+- Full support for ``column_start``, ``column_finish``, ``column_count``, and
+  ``column_reversed`` parameters in :mod:`~.contrib.stubs`
+- Addition of an ``include_ttl`` parameter to :class:`~.ColumnFamily` fetching
+  methods which works like the existing ``include_timestamp`` parameter.
+
+Bug Fixes
+~~~~~~~~~
+- Reduce the locked critical section in :class:`~.ConnectionPool`, primarily
+  to make sure lock aquisition time is not ignored outside of the pool's
+  ``timeout`` setting.
+
 Changes in Version 1.8.0
 ------------------------
 This release requires either Python 2.6 or 2.7. Python 2.4 and 2.5
