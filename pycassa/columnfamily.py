@@ -61,7 +61,7 @@ class ColumnValidatorDict(DictMixin):
         return map(self.name_unpacker, self.type_map.keys())
 
 def gm_timestamp():
-    """ Gets the current GMT timestamp in microseconds. """
+    """ Returns the number of microseconds since the Unix Epoch. """
     return int(time.time() * 1e6)
 
 class ColumnFamily(object):
