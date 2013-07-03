@@ -481,14 +481,21 @@ class ConnectionPool(object):
             else:
                 conn = None
         if conn:
+            conn._retry_count = 0
+            if conn._is_in_queue_or_disposed():
+                raise InvalidRequestError("Connection was already checked in or disposed")
+
+            if self.recycle > -1 and conn.operation_count > self.recycle:
+                new_conn = self._create_connection()
+                self._notify_on_recycle(conn, new_conn)
+                conn._dispose_wrapper(reason="recyling connection")
+                conn = new_conn
+            conn._checkin()
+            self._notify_on_checkin(conn)
+
             try:
-                conn._retry_count = 0
-                if conn._is_in_queue_or_disposed():
-                    raise InvalidRequestError("Connection was already checked in or disposed")
-                conn = self._put_conn(conn)
-                self._notify_on_checkin(conn)
+                self._q.put_nowait(conn)
             except Queue.Full:
-                self._notify_on_checkin(conn)
                 conn._dispose_wrapper(reason="pool is already full")
                 self._decrement_overflow()
     return_conn = put
@@ -497,20 +504,6 @@ class ConnectionPool(object):
         self._pool_lock.acquire()
         self._current_conns -= 1
         self._pool_lock.release()
-
-    def _put_conn(self, conn):
-        """
-        Put a connection in the queue, recycling first if needed.
-        This method does not handle the pool queue being full.
-        """
-        if self.recycle > -1 and conn.operation_count > self.recycle:
-            new_conn = self._create_connection()
-            self._notify_on_recycle(conn, new_conn)
-            conn._dispose_wrapper(reason="recyling connection")
-            conn = new_conn
-        conn._checkin()
-        self._q.put_nowait(conn)
-        return conn
 
     def _new_if_required(self, max_conns, check_empty_queue=False):
         """ Creates new connection if there is room """
