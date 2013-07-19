@@ -399,7 +399,8 @@ def encode_int(x, *args):
     return ''.join(reversed(out))
 
 def decode_int(term, *args):
-    val = int(term.encode('hex'), 16)
-    if (ord(term[0]) & 128) != 0:
-        val = val - (1 << (len(term) * 8))
-    return val
+    if term != "":
+        val = int(term.encode('hex'), 16)
+        if (ord(term[0]) & 128) != 0:
+            val = val - (1 << (len(term) * 8))
+        return val
