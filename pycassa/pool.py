@@ -66,7 +66,8 @@ class ConnectionWrapper(Connection):
         on the wrapper.
 
         """
-        self._pool.put(self)
+        if self.transport.isOpen():
+            self._pool.put(self)
 
     def _checkin(self):
         if self._state == ConnectionWrapper._IN_QUEUE:
@@ -459,13 +460,17 @@ class ConnectionPool(object):
     def _replace_wrapper(self):
         """Try to replace the connection."""
         if not self._q.full():
+            conn = self._create_connection()
+            conn._checkin()
+
             try:
-                conn = self._create_connection()
-                conn._checkin()
                 self._q.put(conn, False)
-                self._current_conns += 1
             except Queue.Full:
-                pass
+                conn._dispose_wrapper(reason="pool is already full")
+            else:
+                self._pool_lock.acquire()
+                self._current_conns += 1
+                self._pool_lock.release()
 
     def _clear_current(self):
         """ If using threadlocal, clear our threadlocal current conn. """
@@ -581,8 +586,8 @@ class ConnectionPool(object):
             conn = self.get()
             return getattr(conn, f)(*args, **kwargs)
         finally:
-            if conn and conn.transport.isOpen():
-                self.put(conn)
+            if conn:
+                conn.return_to_pool()
 
     def dispose(self):
         """ Closes all checked in connections in the pool. """
