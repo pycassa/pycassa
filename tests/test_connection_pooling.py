@@ -94,7 +94,7 @@ class PoolingCase(unittest.TestCase):
         assert_equal(stats_logger.stats['disposed']['success'], 10)
 
         print "in test:", id(conns[-1])
-        assert_raises(InvalidRequestError, conns[-1].return_to_pool)
+        conns[-1].return_to_pool()
         assert_equal(stats_logger.stats['checked_in'], 20)
         assert_equal(stats_logger.stats['disposed']['success'], 10)
 
@@ -218,7 +218,7 @@ class PoolingCase(unittest.TestCase):
         assert_equal(stats_logger.stats['checked_in'], 20)
         assert_equal(stats_logger.stats['disposed']['success'], 10)
 
-        assert_raises(InvalidRequestError, conns[-1].return_to_pool)
+        conns[-1].return_to_pool()
         assert_equal(stats_logger.stats['checked_in'], 20)
         assert_equal(stats_logger.stats['disposed']['success'], 10)
 
