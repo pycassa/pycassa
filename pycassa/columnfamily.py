@@ -909,7 +909,6 @@ class ColumnFamily(object):
         To convert this to a list, use ``list()`` on the result.
 
         """
-
         cl = read_consistency_level or self.read_consistency_level
         cp = self._column_parent(super_column)
         sp = self._slice_predicate(columns, column_start, column_finish,
@@ -918,6 +917,12 @@ class ColumnFamily(object):
         kr_args = {}
         count = 0
         i = 0
+
+        if start_token and (start or finish):
+            raise ValueError(
+                "ColumnFamily.get_range() received incompatible arguments: "
+                "'start_token' may not be used with 'start' or 'finish'")
+
         if not start_token:
             kr_args['start_key'] = self._pack_key(start)
         else:
@@ -930,7 +935,6 @@ class ColumnFamily(object):
 
         if buffer_size is None:
             buffer_size = self.buffer_size
-        kr_args['count'] = buffer_size
         while True:
             if row_count is not None:
                 if i == 0 and row_count <= buffer_size:
@@ -938,6 +942,7 @@ class ColumnFamily(object):
                     buffer_size = row_count
                 else:
                     buffer_size = min(row_count - count + 1, buffer_size)
+            kr_args['count'] = buffer_size
             key_range = KeyRange(**kr_args)
             key_slices = self.pool.execute('get_range_slices', cp, sp, key_range, cl)
             # This may happen if nothing was ever inserted
