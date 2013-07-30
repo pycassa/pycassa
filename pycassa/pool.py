@@ -66,8 +66,7 @@ class ConnectionWrapper(Connection):
         on the wrapper.
 
         """
-        if self.transport.isOpen():
-            self._pool.put(self)
+        self._pool.put(self)
 
     def _checkin(self):
         if self._state == ConnectionWrapper._IN_QUEUE:
@@ -479,6 +478,9 @@ class ConnectionPool(object):
 
     def put(self, conn):
         """ Returns a connection to the pool. """
+        if not conn.transport.isOpen():
+            return
+
         if self._pool_threadlocal:
             if hasattr(self._tlocal, 'current') and self._tlocal.current:
                 conn = self._tlocal.current
