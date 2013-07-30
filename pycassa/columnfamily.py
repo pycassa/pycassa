@@ -879,7 +879,7 @@ class ColumnFamily(object):
                   row_count=None, include_timestamp=False,
                   super_column=None, read_consistency_level=None,
                   buffer_size=None, filter_empty=True, include_ttl=False,
-                  tokens=False):
+                  start_token=None, finish_token=None):
         """
         Get an iterator over rows in a specified key range.
 
@@ -915,16 +915,22 @@ class ColumnFamily(object):
         sp = self._slice_predicate(columns, column_start, column_finish,
                                    column_reversed, column_count, super_column)
 
+        kr_args = {}
         count = 0
         i = 0
-        if not tokens:
-            last_key = self._pack_key(start)
-            finish = self._pack_key(finish)
+        if not start_token:
+            kr_args['start_key'] = self._pack_key(start)
         else:
-            last_key = start
+            kr_args['start_token'] = start_token
+
+        if not finish_token:
+            kr_args['end_key'] = self._pack_key(finish)
+        else:
+            kr_args['end_token'] = finish_token
 
         if buffer_size is None:
             buffer_size = self.buffer_size
+        kr_args['count'] = buffer_size
         while True:
             if row_count is not None:
                 if i == 0 and row_count <= buffer_size:
@@ -932,10 +938,7 @@ class ColumnFamily(object):
                     buffer_size = row_count
                 else:
                     buffer_size = min(row_count - count + 1, buffer_size)
-            if tokens:
-                key_range = KeyRange(start_token=last_key, end_token=finish, count=buffer_size)
-            else:
-                key_range = KeyRange(start_key=last_key, end_key=finish, count=buffer_size)
+            key_range = KeyRange(**kr_args)
             key_slices = self.pool.execute('get_range_slices', cp, sp, key_range, cl)
             # This may happen if nothing was ever inserted
             if key_slices is None:
@@ -955,7 +958,9 @@ class ColumnFamily(object):
 
             if len(key_slices) != buffer_size:
                 return
-            last_key = key_slices[-1].key
+            if 'start_token' in kr_args:
+                del kr_args['start_token']
+            kr_args['start_key'] = key_slices[-1].key
             i += 1
 
     def insert(self, key, columns, timestamp=None, ttl=None,
