@@ -909,6 +909,7 @@ class ColumnFamily(object):
         To convert this to a list, use ``list()`` on the result.
 
         """
+
         cl = read_consistency_level or self.read_consistency_level
         cp = self._column_parent(super_column)
         sp = self._slice_predicate(columns, column_start, column_finish,
