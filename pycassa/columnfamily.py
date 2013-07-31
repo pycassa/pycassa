@@ -889,6 +889,13 @@ class ColumnFamily(object):
         order of the MD5 hash of their keys, so getting a lexicographical range
         of keys is not feasible.
 
+        In place of `start` and `finish`, you may use `start_token` and
+        `end_token` or a combination of `start` and `end_token`.  In this
+        case, you are specifying a token range to fetch instead of a key
+        range.  This can be useful for fetching all data owned
+        by a node or for parallelizing a full data set scan. Otherwise,
+        you should typically just use `start` and `finish`.
+
         The `row_count` parameter limits the total number of rows that may be
         returned. If left as ``None``, the number of rows that may be returned
         is unlimted (this is the default).
