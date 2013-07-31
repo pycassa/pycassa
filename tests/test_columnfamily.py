@@ -245,6 +245,25 @@ class TestColumnFamily(unittest.TestCase):
 
         cf.truncate()
 
+    @requireOPP
+    def test_get_range_tokens(self):
+        cf.truncate()
+        columns = {'c': 'v'}
+        for i in range(100, 201):
+            cf.insert('key%d' % i, columns)
+
+        results = list(cf.get_range(start_token="key100".encode('hex'), finish_token="key200".encode('hex')))
+        assert_equal(100, len(results))
+
+        results = list(cf.get_range(start_token="key100".encode('hex'), finish_token="key200".encode('hex'), buffer_size=10))
+        assert_equal(100, len(results))
+
+        results = list(cf.get_range(start_token="key100".encode('hex'), buffer_size=10))
+        assert_equal(100, len(results))
+
+        results = list(cf.get_range(finish_token="key201".encode('hex'), buffer_size=10))
+        assert_equal(101, len(results))
+
     def insert_insert_get_indexed_slices(self):
         indexed_cf = ColumnFamily(pool, 'Indexed1')
 

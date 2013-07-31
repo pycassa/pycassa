@@ -890,11 +890,12 @@ class ColumnFamily(object):
         of keys is not feasible.
 
         In place of `start` and `finish`, you may use `start_token` and
-        `end_token` or a combination of `start` and `end_token`.  In this
+        `finish_token` or a combination of `start` and `finish_token`.  In this
         case, you are specifying a token range to fetch instead of a key
         range.  This can be useful for fetching all data owned
         by a node or for parallelizing a full data set scan. Otherwise,
-        you should typically just use `start` and `finish`.
+        you should typically just use `start` and `finish`.  Both `start_token`
+        and `finish_token` must be specified as hex-encoded strings.
 
         The `row_count` parameter limits the total number of rows that may be
         returned. If left as ``None``, the number of rows that may be returned
@@ -938,12 +939,12 @@ class ColumnFamily(object):
 
         if start_token is not None:
             kr_args['start_token'] = start_token
-        else:
+            kr_args['end_token'] = "" if finish_token is None else finish_token
+        elif finish_token is not None:
             kr_args['start_key'] = self._pack_key(start)
-
-        if finish_token is not None:
             kr_args['end_token'] = finish_token
         else:
+            kr_args['start_key'] = self._pack_key(start)
             kr_args['end_key'] = self._pack_key(finish)
 
         if buffer_size is None:
