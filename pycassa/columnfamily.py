@@ -936,15 +936,15 @@ class ColumnFamily(object):
                 "ColumnFamily.get_range() received incompatible arguments: "
                 "'finish_token' may not be used with 'finish'")
 
-        if not start_token:
-            kr_args['start_key'] = self._pack_key(start)
-        else:
+        if start_token is not None:
             kr_args['start_token'] = start_token
-
-        if not finish_token:
-            kr_args['end_key'] = self._pack_key(finish)
         else:
+            kr_args['start_key'] = self._pack_key(start)
+
+        if finish_token is not None:
             kr_args['end_token'] = finish_token
+        else:
+            kr_args['end_key'] = self._pack_key(finish)
 
         if buffer_size is None:
             buffer_size = self.buffer_size
