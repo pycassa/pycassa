@@ -10,6 +10,6 @@ def requireOPP(f):
         partitioner = self.sys_man.describe_partitioner()
         if partitioner in ('RandomPartitioner', 'Murmur3Partitioner'):
             raise SkipTest('Must use order preserving partitioner for this test')
-        return f(*args, **kwargs)
+        return f(self, *args, **kwargs)
 
     return wrapper
