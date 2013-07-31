@@ -919,10 +919,15 @@ class ColumnFamily(object):
         count = 0
         i = 0
 
-        if start_token and (start or finish):
+        if start_token is not None and (start not in ("", None) or finish not in ("", None)):
             raise ValueError(
                 "ColumnFamily.get_range() received incompatible arguments: "
                 "'start_token' may not be used with 'start' or 'finish'")
+
+        if finish_token is not None and finish not in ("", None):
+            raise ValueError(
+                "ColumnFamily.get_range() received incompatible arguments: "
+                "'finish_token' may not be used with 'finish'")
 
         if not start_token:
             kr_args['start_key'] = self._pack_key(start)
