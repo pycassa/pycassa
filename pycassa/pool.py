@@ -585,10 +585,10 @@ class ConnectionPool(object):
                 conn = self._q.get(False)
                 conn._dispose_wrapper(
                         reason="Pool %s is being disposed" % id(self))
+                self._decrement_overflow()
             except Queue.Empty:
                 break
 
-        self._overflow = 0 - self.size()
         self._notify_on_pool_dispose()
 
     def size(self):
