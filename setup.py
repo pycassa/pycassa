@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#
 
 import os
 
@@ -9,6 +8,7 @@ try:
     has_subprocess = True
 except:
     has_subprocess = False
+
 
 try:
     from ez_setup import use_setuptools
@@ -23,7 +23,7 @@ except ImportError:
 
 from distutils.cmd import Command
 
-__version__ = "1.9.0"
+__version__ = "1.9.1"
 
 long_description = """pycassa is a python client library for Apache Cassandra with the following features:
 
@@ -118,11 +118,12 @@ setup(
       description = 'Python client library for Apache Cassandra',
       long_description = long_description,
       url = 'http://github.com/pycassa/pycassa',
-      keywords = 'cassandra client db distributed thrift',
+      keywords = ['pycassa', 'cassandra', 'client', 'driver', 'db', 'distributed', 'thrift'],
       packages = ['pycassa',
                   'pycassa.cassandra',
                   'pycassa.logging',
                   'pycassa.contrib'],
+      tests_require = ['nose'],
       install_requires = ['thrift'],
       py_modules=['ez_setup'],
       scripts=['pycassaShell'],

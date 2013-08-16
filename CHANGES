@@ -1,3 +1,21 @@
+Changes in Version 1.9.1
+
+    This release fixes a few edge cases around connection pooling that can affect
+    long-running applications. It also adds token range support to
+    ColumnFamily.get_range(), which can be useful for parallelizing full-ring
+    scans.
+
+    Features
+
+      * Add token range support to ColumnFamily.get_range()
+
+    Bug Fixes
+
+      * Prevent possible double connection disposal when recycling connections
+      * Handle empty strings for IntegerType values
+      * Prevent closed connections from being returned to the pool.
+      * Ensure connection count is decremented when pool is disposed
+
 Changes in Version 1.9.0
 
     This release adds a couple of minor new features and improves multithreaded
