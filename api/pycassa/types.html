@@ -1,19 +1,20 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.types – Data Type Descriptions &mdash; pycassa v1.9.0 documentation</title>
+    <title>pycassa.types – Data Type Descriptions &mdash; pycassa 1.9.1 documentation</title>
+    
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.9.0',
+        VERSION:     '1.9.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +24,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../../_static/favicon.ico"/>
-    <link rel="top" title="pycassa v1.9.0 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa 1.9.1 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.util – Utilities" href="util.html" />
     <link rel="prev" title="pycassa.batch – Batch Operations" href="batch.html" /> 
@@ -44,7 +45,7 @@
         <li class="right" >
           <a href="batch.html" title="pycassa.batch – Batch Operations"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.9.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa 1.9.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -117,9 +118,10 @@ does not contain a column corresponding to this item.</p>
 is a more compact format for storing small integers
 than <a class="reference internal" href="#pycassa.types.LongType" title="pycassa.types.LongType"><tt class="xref py py-class docutils literal"><span class="pre">LongType</span></tt></a>, and the limits
 on the size of the integer are much higher.</p>
-<p class="versionchanged">
-<span class="versionmodified">Changed in version 1.2.0: </span>Prior to 1.2.0, this was always stored as a 4 byte
+<div class="versionchanged">
+<p><span>Changed in version 1.2.0: </span>Prior to 1.2.0, this was always stored as a 4 byte
 integer.</p>
+</div>
 </dd></dl>
 
 <dl class="class">
@@ -147,11 +149,12 @@ objects are used by pycassa to represent these objects.</p>
 <dd><p>An 8 byte timestamp. This will be returned
 as a <tt class="xref py py-class docutils literal"><span class="pre">datetime.datetime</span></tt> instance by pycassa. Either
 <tt class="xref py py-class docutils literal"><span class="pre">datetime</span></tt> instances or timestamps will be accepted.</p>
-<p class="versionchanged">
-<span class="versionmodified">Changed in version 1.7.0: </span>Prior to 1.7.0, datetime objects were expected to be in
+<div class="versionchanged">
+<p><span>Changed in version 1.7.0: </span>Prior to 1.7.0, datetime objects were expected to be in
 local time. In 1.7.0 and beyond, naive datetimes are
 assumed to be in UTC and tz-aware objects will be
 automatically converted to UTC for storage in Cassandra.</p>
+</div>
 </dd></dl>
 
 <dl class="class">
@@ -181,11 +184,12 @@ used by pycassa versions 1.2.0 to 1.5.0.</p>
 unix epoch, rather than the number of milliseconds, which
 is what cassandra-cli and other clients supporting DateType
 use.</p>
-<p class="versionchanged">
-<span class="versionmodified">Changed in version 1.7.0: </span>Prior to 1.7.0, datetime objects were expected to be in
+<div class="versionchanged">
+<p><span>Changed in version 1.7.0: </span>Prior to 1.7.0, datetime objects were expected to be in
 local time. In 1.7.0 and beyond, naive datetimes are
 assumed to be in UTC and tz-aware objects will be
 automatically converted to UTC for storage in Cassandra.</p>
+</div>
 </dd></dl>
 
 <dl class="class">
@@ -202,11 +206,12 @@ the new format.</p>
 <p>It almost certainly <em>should not be used</em> for row keys,
 column names (if you care about the sorting), or column
 values that have a secondary index on them.</p>
-<p class="versionchanged">
-<span class="versionmodified">Changed in version 1.7.0: </span>Prior to 1.7.0, datetime objects were expected to be in
+<div class="versionchanged">
+<p><span>Changed in version 1.7.0: </span>Prior to 1.7.0, datetime objects were expected to be in
 local time. In 1.7.0 and beyond, naive datetimes are
 assumed to be in UTC and tz-aware objects will be
 automatically converted to UTC for storage in Cassandra.</p>
+</div>
 </dd></dl>
 
 <dl class="class">
@@ -218,7 +223,7 @@ primarily sorted by their first component, secondarily
 by their second component, and so on.</p>
 <p>Each of <cite>*components</cite> should be an instance of
 a subclass of <a class="reference internal" href="#pycassa.types.CassandraType" title="pycassa.types.CassandraType"><tt class="xref py py-class docutils literal"><span class="pre">CassandraType</span></tt></a>.</p>
-<div class="admonition-see-also admonition seealso">
+<div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference internal" href="../../assorted/composite_types.html#composite-types"><em>Composite Types</em></a></p>
 </div>
@@ -250,7 +255,7 @@ during instantiation.</p>
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="batch.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.batch</span></tt> &#8211; Batch Operations</a></p>
+                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal docutils literal"><span class="pre">pycassa.batch</span></tt> &#8211; Batch Operations</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="util.html"
                         title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">pycassa.util</span></tt> &#8211; Utilities</a></p>
@@ -262,7 +267,7 @@ during instantiation.</p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -291,12 +296,12 @@ during instantiation.</p>
         <li class="right" >
           <a href="batch.html" title="pycassa.batch – Batch Operations"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.9.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa 1.9.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
     </div>
   </body>
 </html>

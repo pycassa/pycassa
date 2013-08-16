@@ -1,19 +1,20 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa.util – Utilities &mdash; pycassa v1.9.0 documentation</title>
+    <title>pycassa.util – Utilities &mdash; pycassa 1.9.1 documentation</title>
+    
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.9.0',
+        VERSION:     '1.9.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +24,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../../_static/favicon.ico"/>
-    <link rel="top" title="pycassa v1.9.0 documentation" href="../../index.html" />
+    <link rel="top" title="pycassa 1.9.1 documentation" href="../../index.html" />
     <link rel="up" title="API Documentation" href="../index.html" />
     <link rel="next" title="pycassa.logging.pycassa_logger – Pycassa Logging" href="logging/pycassa_logger.html" />
     <link rel="prev" title="pycassa.types – Data Type Descriptions" href="types.html" /> 
@@ -44,7 +45,7 @@
         <li class="right" >
           <a href="types.html" title="pycassa.types – Data Type Descriptions"
              accesskey="P">previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.9.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa 1.9.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -75,7 +76,7 @@ can be set to their lowest or highest possible values.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>datetime</strong> (<tt class="xref py py-class docutils literal"><span class="pre">datetime</span></tt> or timestamp) &#8211; The time to use for the timestamp portion of the UUID.
 Expected inputs to this would either be a <tt class="xref py py-class docutils literal"><span class="pre">datetime</span></tt>
 object or a timestamp with the same precision produced by
@@ -90,16 +91,17 @@ is true.</li>
 </ul>
 </td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><tt class="xref py py-class docutils literal"><span class="pre">uuid.UUID</span></tt></p>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><tt class="xref py py-class docutils literal"><span class="pre">uuid.UUID</span></tt></p>
 </td>
 </tr>
 </tbody>
 </table>
-<p class="versionchanged">
-<span class="versionmodified">Changed in version 1.7.0: </span>Prior to 1.7.0, datetime objects were expected to be in
+<div class="versionchanged">
+<p><span>Changed in version 1.7.0: </span>Prior to 1.7.0, datetime objects were expected to be in
 local time. In 1.7.0 and beyond, naive datetimes are
 assumed to be in UTC and tz-aware objects will be
 automatically converted to UTC.</p>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -112,9 +114,9 @@ results of queries returning a v1 <tt class="xref py py-class docutils literal">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>uuid_arg</strong> &#8211; a version 1 <tt class="xref py py-class docutils literal"><span class="pre">UUID</span></tt></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>uuid_arg</strong> &#8211; a version 1 <tt class="xref py py-class docutils literal"><span class="pre">UUID</span></tt></td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">timestamp</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">timestamp</td>
 </tr>
 </tbody>
 </table>
@@ -137,10 +139,10 @@ results of queries returning a v1 <tt class="xref py py-class docutils literal">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="types.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.types</span></tt> &#8211; Data Type Descriptions</a></p>
+                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal docutils literal"><span class="pre">pycassa.types</span></tt> &#8211; Data Type Descriptions</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="logging/pycassa_logger.html"
-                        title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">pycassa.logging.pycassa_logger</span></tt> &#8211; Pycassa Logging</a></p>
+                        title="next chapter"><tt class="docutils literal docutils literal docutils literal docutils literal"><span class="pre">pycassa.logging.pycassa_logger</span></tt> &#8211; Pycassa Logging</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../_sources/api/pycassa/util.txt"
@@ -149,7 +151,7 @@ results of queries returning a v1 <tt class="xref py py-class docutils literal">
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -178,12 +180,12 @@ results of queries returning a v1 <tt class="xref py py-class docutils literal">
         <li class="right" >
           <a href="types.html" title="pycassa.types – Data Type Descriptions"
              >previous</a> |</li>
-        <li><a href="../../index.html">pycassa v1.9.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pycassa 1.9.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
     </div>
   </body>
 </html>
