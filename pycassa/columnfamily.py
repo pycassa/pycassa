@@ -19,7 +19,7 @@ from pycassa.batch import CfMutator
 try:
     from collections import OrderedDict
 except ImportError:
-    from pycassa.util import OrderedDict
+    from pycassa.util import OrderedDict # NOQA
 
 __all__ = ['gm_timestamp', 'ColumnFamily', 'PooledColumnFamily']
 
@@ -894,8 +894,11 @@ class ColumnFamily(object):
         case, you are specifying a token range to fetch instead of a key
         range.  This can be useful for fetching all data owned
         by a node or for parallelizing a full data set scan. Otherwise,
-        you should typically just use `start` and `finish`.  Both `start_token`
-        and `finish_token` must be specified as hex-encoded strings.
+        you should typically just use `start` and `finish`.  When using
+        RandomPartitioner or Murmur3Partitioner, `start_token`
+        and `finish_token` should be string versions of the numeric tokens;
+        for ByteOrderedPartitioner, they should be hex-encoded string versions
+        of the token.
 
         The `row_count` parameter limits the total number of rows that may be
         returned. If left as ``None``, the number of rows that may be returned
