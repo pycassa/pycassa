@@ -148,5 +148,3 @@ assert cf.get('3') == ROWS['3']"""
         batch.send(atomic=True)
         for key, cols in ROWS.items():
             assert cf.get(key) == cols
-
-
