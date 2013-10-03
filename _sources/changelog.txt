@@ -1,6 +1,17 @@
 Changelog
 =========
 
+Changes in Version 1.10.0
+-------------------------
+This release only adds one feature: support for Cassandra
+1.2's atomic batches.
+
+Features
+~~~~~~~~
+- Add support for Cassandra 1.2+ atomic batches through a new
+  ``atomic`` parameter for :class:`.batch.Mutator`,
+  :class:`.batch.CfMutator`, and :meth:`.ColumnFamily.batch()`.
+
 Changes in Version 1.9.1
 ------------------------
 This release fixes a few edge cases around connection pooling that
