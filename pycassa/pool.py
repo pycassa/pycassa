@@ -192,7 +192,8 @@ class ConnectionWrapper(Connection):
 
 retryable = ('get', 'get_slice', 'multiget_slice', 'get_count', 'multiget_count',
              'get_range_slices', 'get_indexed_slices', 'batch_mutate', 'add',
-             'insert', 'remove', 'remove_counter', 'truncate', 'describe_keyspace')
+             'insert', 'remove', 'remove_counter', 'truncate', 'describe_keyspace',
+             'atomic_batch_mutate')
 for fname in retryable:
     new_f = ConnectionWrapper._retry(getattr(Connection, fname))
     setattr(ConnectionWrapper, fname, new_f)

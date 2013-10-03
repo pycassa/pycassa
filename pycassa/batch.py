@@ -60,6 +60,22 @@ Calls to :meth:`insert` and :meth:`remove` can also be chained:
 
     >>> cf.batch().remove('foo').remove('bar').send()
 
+To use atomic batches (supported in Cassandra 1.2 and later), pass the atomic
+option in when creating the batch:
+
+.. code-block:: python
+
+    >>> cf.batch(atomic=True)
+
+or when sending it:
+
+.. code-block:: python
+
+    >>> b = cf.batch()
+    >>> b.insert('key1', {'col1':'val2'})
+    >>> b.insert('key2', {'col1':'val2'})
+    >>> b.send(atomic=True)
+
 """
 
 import threading
@@ -75,7 +91,7 @@ class Mutator(object):
     is full or `send` is called explicitly.
     """
 
-    def __init__(self, pool, queue_size=100, write_consistency_level=None, allow_retries=True):
+    def __init__(self, pool, queue_size=100, write_consistency_level=None, allow_retries=True, atomic=False):
         """
         `pool` is the :class:`~pycassa.pool.ConnectionPool` that will be used
         for operations.
@@ -88,6 +104,7 @@ class Mutator(object):
         self.pool = pool
         self.limit = queue_size
         self.allow_retries = allow_retries
+        self.atomic = atomic
         if write_consistency_level is None:
             self.write_consistency_level = ConsistencyLevel.ONE
         else:
@@ -110,10 +127,12 @@ class Mutator(object):
             self._lock.release()
         return self
 
-    def send(self, write_consistency_level=None):
+    def send(self, write_consistency_level=None, atomic=None):
         """ Sends all operations currently in the batch and clears the batch. """
         if write_consistency_level is None:
             write_consistency_level = self.write_consistency_level
+        if atomic is None:
+            atomic = self.atomic
         mutations = {}
         conn = None
         self._lock.acquire()
@@ -122,8 +141,9 @@ class Mutator(object):
                 mutations.setdefault(key, {}).setdefault(column_family, []).extend(cols)
             if mutations:
                 conn = self.pool.get()
-                conn.batch_mutate(mutations, write_consistency_level,
-                                  allow_retries=self.allow_retries)
+                mutatefn = conn.atomic_batch_mutate if atomic else conn.batch_mutate
+                mutatefn(mutations, write_consistency_level,
+                         allow_retries=self.allow_retries)
             self._buffer = []
         finally:
             if conn:
@@ -179,13 +199,13 @@ class CfMutator(Mutator):
     """
 
     def __init__(self, column_family, queue_size=100, write_consistency_level=None,
-                 allow_retries=True):
+                 allow_retries=True, atomic=False):
         """
         `column_family` is the :class:`~pycassa.columnfamily.ColumnFamily`
         that all operations will be executed on.
         """
         wcl = write_consistency_level or column_family.write_consistency_level
-        Mutator.__init__(self, column_family.pool, queue_size, wcl, allow_retries)
+        Mutator.__init__(self, column_family.pool, queue_size, wcl, allow_retries, atomic)
         self._column_family = column_family
 
     def insert(self, key, cols, timestamp=None, ttl=None):

@@ -1107,7 +1107,7 @@ class ColumnFamily(object):
         self.pool.execute('remove_counter', packed_key, cp,
                           write_consistency_level or self.write_consistency_level)
 
-    def batch(self, queue_size=100, write_consistency_level=None):
+    def batch(self, queue_size=100, write_consistency_level=None, atomic=None):
         """
         Create batch mutator for doing multiple insert, update, and remove
         operations using as few roundtrips as possible.
@@ -1120,7 +1120,8 @@ class ColumnFamily(object):
 
         return CfMutator(self, queue_size,
                          write_consistency_level or self.write_consistency_level,
-                         allow_retries=self._allow_retries)
+                         allow_retries=self._allow_retries,
+                         atomic=atomic)
 
     def truncate(self):
         """

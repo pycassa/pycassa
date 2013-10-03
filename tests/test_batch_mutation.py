@@ -132,3 +132,21 @@ assert cf.get('3') == ROWS['3']"""
         batch.send()
         assert cf.get('2') == ROWS['2']
         assert_raises(NotFoundException, cf.get, '1')
+
+    def test_atomic_insert_at_mutator_creation(self):
+        batch = cf.batch(atomic=True)
+        for key, cols in ROWS.iteritems():
+            batch.insert(key, cols)
+        batch.send()
+        for key, cols in ROWS.items():
+            assert cf.get(key) == cols
+
+    def test_atomic_insert_at_send(self):
+        batch = cf.batch(atomic=True)
+        for key, cols in ROWS.iteritems():
+            batch.insert(key, cols)
+        batch.send(atomic=True)
+        for key, cols in ROWS.items():
+            assert cf.get(key) == cols
+
+
