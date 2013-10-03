@@ -1,3 +1,9 @@
+pycassa (1.10.0) unstable; urgency=low
+
+  * Add support for atomic batches 
+
+ -- Tyler Hobbs <tyler@datastax.com>  Thu, 03 Oct 2013 14:35:32 -0500
+
 pycassa (1.9.0-1) unstable; urgency=low
 
   * Add include_ttl support
