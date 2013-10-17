@@ -7,10 +7,12 @@ without spinning up a cluster locally.
 """
 
 import operator
+import datetime
+from uuid import UUID
 
 from collections import MutableMapping
 from pycassa import NotFoundException
-from pycassa.util import OrderedDict
+from pycassa.util import OrderedDict, convert_uuid_to_time, convert_time_to_uuid
 from pycassa.columnfamily import gm_timestamp
 from pycassa.index import EQ, GT, GTE, LT, LTE
 
@@ -111,6 +113,27 @@ class SystemManagerStub(object):
         return {self._schema(): ['1.1.1.1']}
 
 
+def _uuid_to_datetime(col):
+    if isinstance(col, tuple):
+        out = []
+        for x in col:
+            out.append(datetime.datetime.fromtimestamp(convert_uuid_to_time(x)) if isinstance(x, UUID) else x)
+        return tuple(out)
+    elif isinstance(col, UUID):
+        return datetime.datetime.fromtimestamp(convert_uuid_to_time(col))
+    return col
+    
+def _datetime_to_uuid(col):
+    if isinstance(col, tuple):
+        out = []
+        for x in col:
+            out.append(convert_time_to_uuid(int(x.strftime('%s')))
+                       if isinstance(x, datetime.datetime) else x)
+        return tuple(out)
+    if isinstance(col, datetime.datetime):
+        return convert_time_to_uuid(int(col.strftime('%s')))
+    
+        
 class ColumnFamilyStub(object):
     """Functional ColumnFamily stub object.
 
@@ -148,13 +171,13 @@ class ColumnFamilyStub(object):
         if not my_columns:
             raise NotFoundException()
 
-        items = my_columns.items()
+        items = [_uuid_to_datetime(x) for x in my_columns.items()]
         items.sort()
 
         if column_reversed:
             items.reverse()
 
-        sliced_items = [(k, get_value(v)) for (k, v) in items
+        sliced_items = [(_datetime_to_uuid(k), get_value(v)) for (k, v) in items
                         if self._is_column_in_range(k, columns,
                                                     column_start, column_finish, column_reversed)][:column_count]
 
