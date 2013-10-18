@@ -11,7 +11,7 @@ import sys
 if 'gevent.monkey' in sys.modules:
     from gevent import queue as Queue
 else:
-    import Queue
+    import Queue  # noqa
 
 from thrift import Thrift
 from thrift.transport.TTransport import TTransportException
@@ -127,11 +127,11 @@ class ConnectionWrapper(Connection):
                 result = f(self, *args, **kwargs)
                 self._retry_count = 0 # reset the count after a success
                 return result
-            except Thrift.TApplicationException, app_exc:
+            except Thrift.TApplicationException:
                 self.close()
                 self._pool._decrement_overflow()
                 self._pool._clear_current()
-                raise app_exc
+                raise
             except (TimedOutException, UnavailableException,
                     TTransportException,
                     socket.error, IOError, EOFError), exc:
