@@ -232,6 +232,7 @@ class ColumnFamilyStub(object):
                     del self.rows[key][c]
             if not self.rows[key]:
                 del self.rows[key]
+        return gm_timestamp()
 
 
     def get_range(self, include_timestamp=False, columns=None, **kwargs):
