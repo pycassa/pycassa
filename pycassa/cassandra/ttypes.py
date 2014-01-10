@@ -45,6 +45,7 @@ class ConsistencyLevel(object):
     TWO          Ensure that the write has been written to at least 2 node's commit log and memory table
     THREE        Ensure that the write has been written to at least 3 node's commit log and memory table
     QUORUM       Ensure that the write has been written to <ReplicationFactor> / 2 + 1 nodes
+    LOCAL_ONE    Ensure that the write has been written to 1 node within the local datacenter (requires NetworkTopologyStrategy)
     LOCAL_QUORUM Ensure that the write has been written to <ReplicationFactor> / 2 + 1 nodes, within the local datacenter (requires NetworkTopologyStrategy)
     EACH_QUORUM  Ensure that the write has been written to <ReplicationFactor> / 2 + 1 nodes in each datacenter (requires NetworkTopologyStrategy)
     ALL          Ensure that the write is written to <code>&lt;ReplicationFactor&gt;</code> nodes before responding to the client.
@@ -55,6 +56,7 @@ class ConsistencyLevel(object):
     TWO          Returns the record with the most recent timestamp once two replicas have replied.
     THREE        Returns the record with the most recent timestamp once three replicas have replied.
     QUORUM       Returns the record with the most recent timestamp once a majority of replicas have replied.
+    LOCAL_ONE    Returns the record with the most recent timestamp once a single replica within the local datacenter have replied.
     LOCAL_QUORUM Returns the record with the most recent timestamp once a majority of replicas within the local datacenter have replied.
     EACH_QUORUM  Returns the record with the most recent timestamp once a majority of replicas within each datacenter have replied.
     ALL          Returns the record with the most recent timestamp once all replicas have replied (implies no replica may be down)..
@@ -67,6 +69,7 @@ class ConsistencyLevel(object):
   ANY = 6
   TWO = 7
   THREE = 8
+  LOCAL_ONE = 11
 
   _VALUES_TO_NAMES = {
     1: "ONE",
@@ -77,6 +80,7 @@ class ConsistencyLevel(object):
     6: "ANY",
     7: "TWO",
     8: "THREE",
+    11: "LOCAL_ONE",
   }
 
   _NAMES_TO_VALUES = {
@@ -88,6 +92,7 @@ class ConsistencyLevel(object):
     "ANY": 6,
     "TWO": 7,
     "THREE": 8,
+    "LOCAL_ONE": 11,
   }
 
 class IndexOperator(object):
@@ -2564,6 +2569,7 @@ class CfDef(object):
    - bloom_filter_fp_chance
    - caching
    - dclocal_read_repair_chance
+   - populate_io_cache_on_flush
    - row_cache_size: @deprecated
    - key_cache_size: @deprecated
    - row_cache_save_period_in_seconds: @deprecated
@@ -2615,9 +2621,10 @@ class CfDef(object):
     None, # 35
     None, # 36
     (37, TType.DOUBLE, 'dclocal_read_repair_chance', None, 0, ), # 37
+    (38, TType.BOOL, 'populate_io_cache_on_flush', None, None, ), # 38
   )
 
-  def __init__(self, keyspace=None, name=None, column_type=thrift_spec[3][4], comparator_type=thrift_spec[5][4], subcomparator_type=None, comment=None, read_repair_chance=None, column_metadata=None, gc_grace_seconds=None, default_validation_class=None, id=None, min_compaction_threshold=None, max_compaction_threshold=None, replicate_on_write=None, key_validation_class=None, key_alias=None, compaction_strategy=None, compaction_strategy_options=None, compression_options=None, bloom_filter_fp_chance=None, caching=thrift_spec[34][4], dclocal_read_repair_chance=thrift_spec[37][4], row_cache_size=None, key_cache_size=None, row_cache_save_period_in_seconds=None, key_cache_save_period_in_seconds=None, memtable_flush_after_mins=None, memtable_throughput_in_mb=None, memtable_operations_in_millions=None, merge_shards_chance=None, row_cache_provider=None, row_cache_keys_to_save=None,):
+  def __init__(self, keyspace=None, name=None, column_type=thrift_spec[3][4], comparator_type=thrift_spec[5][4], subcomparator_type=None, comment=None, read_repair_chance=None, column_metadata=None, gc_grace_seconds=None, default_validation_class=None, id=None, min_compaction_threshold=None, max_compaction_threshold=None, replicate_on_write=None, key_validation_class=None, key_alias=None, compaction_strategy=None, compaction_strategy_options=None, compression_options=None, bloom_filter_fp_chance=None, caching=thrift_spec[34][4], dclocal_read_repair_chance=thrift_spec[37][4], populate_io_cache_on_flush=None, row_cache_size=None, key_cache_size=None, row_cache_save_period_in_seconds=None, key_cache_save_period_in_seconds=None, memtable_flush_after_mins=None, memtable_throughput_in_mb=None, memtable_operations_in_millions=None, merge_shards_chance=None, row_cache_provider=None, row_cache_keys_to_save=None,):
     self.keyspace = keyspace
     self.name = name
     self.column_type = column_type
@@ -2640,6 +2647,7 @@ class CfDef(object):
     self.bloom_filter_fp_chance = bloom_filter_fp_chance
     self.caching = caching
     self.dclocal_read_repair_chance = dclocal_read_repair_chance
+    self.populate_io_cache_on_flush = populate_io_cache_on_flush
     self.row_cache_size = row_cache_size
     self.key_cache_size = key_cache_size
     self.row_cache_save_period_in_seconds = row_cache_save_period_in_seconds
@@ -2786,6 +2794,11 @@ class CfDef(object):
       elif fid == 37:
         if ftype == TType.DOUBLE:
           self.dclocal_read_repair_chance = iprot.readDouble();
+        else:
+          iprot.skip(ftype)
+      elif fid == 38:
+        if ftype == TType.BOOL:
+          self.populate_io_cache_on_flush = iprot.readBool();
         else:
           iprot.skip(ftype)
       elif fid == 9:
@@ -2986,6 +2999,10 @@ class CfDef(object):
     if self.dclocal_read_repair_chance is not None:
       oprot.writeFieldBegin('dclocal_read_repair_chance', TType.DOUBLE, 37)
       oprot.writeDouble(self.dclocal_read_repair_chance)
+      oprot.writeFieldEnd()
+    if self.populate_io_cache_on_flush is not None:
+      oprot.writeFieldBegin('populate_io_cache_on_flush', TType.BOOL, 38)
+      oprot.writeBool(self.populate_io_cache_on_flush)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
