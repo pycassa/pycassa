@@ -57,6 +57,11 @@
 
         Requres a quorum of replicas in the local datacenter
 
+    .. data:: LOCAL_ONE
+
+        Has the same behavior as ONE, except that Only replicas in the local
+        datacenter are sent queries
+
     .. data:: EACH_QUORUM
 
         Requres a quorum of replicas in each datacenter
