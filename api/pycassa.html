@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pycassa - Exceptions and Enums &mdash; pycassa 1.10.0 documentation</title>
+    <title>pycassa - Exceptions and Enums &mdash; pycassa 1.11.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.10.0',
+        VERSION:     '1.11.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
-    <link rel="top" title="pycassa 1.10.0 documentation" href="../index.html" />
+    <link rel="top" title="pycassa 1.11.0 documentation" href="../index.html" />
     <link rel="up" title="API Documentation" href="index.html" />
     <link rel="next" title="pycassa.pool – Connection Pooling" href="pycassa/pool.html" />
     <link rel="prev" title="API Documentation" href="index.html" /> 
@@ -45,7 +45,7 @@
         <li class="right" >
           <a href="index.html" title="API Documentation"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">pycassa 1.10.0 documentation</a> &raquo;</li>
+        <li><a href="../index.html">pycassa 1.11.0 documentation</a> &raquo;</li>
           <li><a href="index.html" accesskey="U">API Documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -135,6 +135,13 @@ stores a hint to replay later. Valid only for writes.</p>
 </dd></dl>
 
 <dl class="data">
+<dt id="pycassa.pycassa.ConsistencyLevel.LOCAL_ONE">
+<tt class="descname">LOCAL_ONE</tt><a class="headerlink" href="#pycassa.pycassa.ConsistencyLevel.LOCAL_ONE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Has the same behavior as ONE, except that Only replicas in the local
+datacenter are sent queries</p>
+</dd></dl>
+
+<dl class="data">
 <dt id="pycassa.pycassa.ConsistencyLevel.EACH_QUORUM">
 <tt class="descname">EACH_QUORUM</tt><a class="headerlink" href="#pycassa.pycassa.ConsistencyLevel.EACH_QUORUM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Requres a quorum of replicas in each datacenter</p>
@@ -205,7 +212,7 @@ stores a hint to replay later. Valid only for writes.</p>
         <li class="right" >
           <a href="index.html" title="API Documentation"
              >previous</a> |</li>
-        <li><a href="../index.html">pycassa 1.10.0 documentation</a> &raquo;</li>
+        <li><a href="../index.html">pycassa 1.11.0 documentation</a> &raquo;</li>
           <li><a href="index.html" >API Documentation</a> &raquo;</li> 
       </ul>
     </div>
