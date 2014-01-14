@@ -1,6 +1,24 @@
 Changelog
 =========
 
+Changes in Version 1.11.0
+-------------------------
+
+Features
+~~~~~~~~
+- Upgrade Thrift interface to 19.36.1, which adds support for the
+  ``LOCAL_ONE consistency`` level and the ``populate_io_cache_on_flush``
+  column family attribute.
+
+Bug Fixes
+~~~~~~~~~
+- Return timestamp from ``remove()`` in stub ColumnFamily
+
+Miscellaneous
+~~~~~~~~~~~~~
+- Upgrade bundled ``ez_setup.py``
+
+
 Changes in Version 1.10.0
 -------------------------
 This release only adds one feature: support for Cassandra
