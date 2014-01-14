@@ -31,7 +31,7 @@ __all__ = ('CassandraType', 'BytesType', 'LongType', 'IntegerType',
            'CounterColumnType', 'DoubleType', 'FloatType', 'DecimalType',
            'BooleanType', 'DateType', 'OldPycassaDateType',
            'IntermediateDateType', 'CompositeType',
-           'UUIDType', 'DynamicCompositeType')
+           'UUIDType', 'DynamicCompositeType', 'TimestampType')
 
 class CassandraType(object):
     """
@@ -141,6 +141,9 @@ class DateType(CassandraType):
         automatically converted to UTC for storage in Cassandra.
     """
     pass
+
+TimestampType = DateType
+
 
 def _to_timestamp(v, use_micros=False):
     # Expects Value to be either date or datetime

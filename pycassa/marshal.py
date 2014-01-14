@@ -28,7 +28,7 @@ _BASIC_TYPES = ('BytesType', 'LongType', 'IntegerType', 'UTF8Type',
                 'AsciiType', 'LexicalUUIDType', 'TimeUUIDType',
                 'CounterColumnType', 'FloatType', 'DoubleType',
                 'DateType', 'BooleanType', 'UUIDType', 'Int32Type',
-                'DecimalType')
+                'DecimalType', 'TimestampType')
 
 def extract_type_name(typestr):
     if typestr is None:
@@ -238,7 +238,7 @@ def packer_for(typestr):
 
     data_type = extract_type_name(typestr)
 
-    if data_type == 'DateType':
+    if data_type in ('DateType', 'TimestampType'):
         def pack_date(v, _=None):
             return _long_packer.pack(_to_timestamp(v))
         return pack_date
@@ -338,7 +338,7 @@ def unpacker_for(typestr):
     if data_type == 'BytesType':
         return lambda v: v
 
-    elif data_type == 'DateType':
+    elif data_type in ('DateType', 'TimestampType'):
         return lambda v: datetime.utcfromtimestamp(
                 _long_packer.unpack(v)[0] / 1e3)
 
