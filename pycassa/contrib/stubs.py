@@ -7,6 +7,8 @@ without spinning up a cluster locally.
 """
 
 import operator
+import datetime
+from uuid import UUID
 
 from collections import MutableMapping
 from pycassa import NotFoundException
@@ -110,7 +112,7 @@ class SystemManagerStub(object):
 
         return {self._schema(): ['1.1.1.1']}
 
-
+        
 class ColumnFamilyStub(object):
     """Functional ColumnFamily stub object.
 
@@ -148,9 +150,21 @@ class ColumnFamilyStub(object):
         if not my_columns:
             raise NotFoundException()
 
-        items = my_columns.items()
-        items.sort()
 
+        items = my_columns.items()
+        if isinstance(items[0], UUID) and items[0].version==1:
+            items.sort(key=lambda uuid: uuid.time)
+        elif isinstance(items[0], tuple) and any([isinstance(x, UUID) for x in items[0]]):
+            isuid = [isinstance(x, UUID) and x.version==1 for x in items[0]]
+            def sortuuid(tup):
+                return [x.time if y else x for x, y in zip(tup, isuid)]
+            items.sort(key=sortuuid)
+        else:
+            items.sort()
+            
+
+            
+            
         if column_reversed:
             items.reverse()
 
