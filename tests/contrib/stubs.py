@@ -1,5 +1,5 @@
 import unittest
-import datetime
+import time
 
 from nose.tools import assert_raises, assert_equal, assert_true
 
@@ -9,7 +9,7 @@ from pycassa import index, ColumnFamily, ConnectionPool,\
 from pycassa.contrib.stubs import ColumnFamilyStub, ConnectionPoolStub, \
                                   SystemManagerStub
 
-from pycassa.util import OrderedDict
+from pycassa.util import OrderedDict, convert_time_to_uuid
 
 pool = cf = None
 pool_stub = cf_stub = None
