@@ -4,15 +4,12 @@ import time
 from nose.tools import assert_raises, assert_equal, assert_true
 
 from pycassa import index, ColumnFamily, ConnectionPool,\
-                    NotFoundException, SystemManager
+                    NotFoundException
+from pycassa.contrib.stubs import ColumnFamilyStub, ConnectionPoolStub
+from pycassa.util import convert_time_to_uuid
 
-from pycassa.contrib.stubs import ColumnFamilyStub, ConnectionPoolStub, \
-                                  SystemManagerStub
-
-from pycassa.util import OrderedDict, convert_time_to_uuid
-
-pool = cf = None
-pool_stub = cf_stub = None
+pool = cf = indexed_cf = None
+pool_stub = cf_stub = indexed_cf_stub = None
 
 
 def setup_module():
@@ -76,7 +73,7 @@ class TestColumnFamilyStub(unittest.TestCase):
             assert_raises(NotFoundException, test_cf.get, key)
             ts = test_cf.insert(key, columns)
             assert_true(isinstance(ts, (int, long)))
-            row = test_cf.get(key, column_reversed=True)
+            test_cf.get(key, column_reversed=True)
 
     def test_insert_get_column_start_and_finish(self):
         key = 'TestColumnFamily.test_insert_get_column_start_and_finish'
@@ -113,7 +110,7 @@ class TestColumnFamilyStub(unittest.TestCase):
 
         for test_cf in (cf, cf_stub):
             assert_raises(NotFoundException, test_cf.get, key)
-            ts = test_cf.insert(key, dict(key_value for key_value in keys_and_values))
+            test_cf.insert(key, dict(key_value for key_value in keys_and_values))
             assert_equal(test_cf.get(key), dict([key_value for key_value in keys_and_values][:100]))
 
     def test_insert_multiget(self):
@@ -231,11 +228,10 @@ class TestColumnFamilyStub(unittest.TestCase):
 
     def test_insert_get_tuuids(self):
         key = 'TestColumnFamily.test_insert_get'
-        columns = ( (convert_time_to_uuid(time.time()-1000, randomize=True), 'val1'),
-                    (convert_time_to_uuid(time.time(), randomize=True), 'val2') )
+        columns = ((convert_time_to_uuid(time.time() - 1000, randomize=True), 'val1'),
+                   (convert_time_to_uuid(time.time(), randomize=True), 'val2'))
         for test_cf in (cf, cf_stub):
             assert_raises(NotFoundException, test_cf.get, key)
             ts = test_cf.insert(key, dict(columns))
             assert_true(isinstance(ts, (int, long)))
             assert_equal(test_cf.get(key).keys(), [x[0] for x in columns])
-    

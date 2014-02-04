@@ -7,7 +7,6 @@ without spinning up a cluster locally.
 """
 
 import operator
-import datetime
 from uuid import UUID
 
 from collections import MutableMapping
@@ -51,6 +50,7 @@ operator_dict = {
     LT: operator.lt,
     LTE: operator.le,
 }
+
 
 class ConnectionPoolStub(object):
     """Connection pool stub.
@@ -112,7 +112,7 @@ class SystemManagerStub(object):
 
         return {self._schema(): ['1.1.1.1']}
 
-        
+
 class ColumnFamilyStub(object):
     """Functional ColumnFamily stub object.
 
@@ -150,21 +150,18 @@ class ColumnFamilyStub(object):
         if not my_columns:
             raise NotFoundException()
 
-
         items = my_columns.items()
-        if isinstance(items[0], UUID) and items[0].version==1:
+        if isinstance(items[0], UUID) and items[0].version == 1:
             items.sort(key=lambda uuid: uuid.time)
-        elif isinstance(items[0], tuple) and any([isinstance(x, UUID) for x in items[0]]):
-            isuid = [isinstance(x, UUID) and x.version==1 for x in items[0]]
+        elif isinstance(items[0], tuple) and any(isinstance(x, UUID) for x in items[0]):
+            are_components_uuids = [isinstance(x, UUID) and x.version == 1 for x in items[0]]
+
             def sortuuid(tup):
-                return [x.time if y else x for x, y in zip(tup, isuid)]
+                return [x.time if is_uuid else x for x, is_uuid in zip(tup, are_components_uuids)]
             items.sort(key=sortuuid)
         else:
             items.sort()
-            
 
-            
-            
         if column_reversed:
             items.reverse()
 
@@ -181,7 +178,6 @@ class ColumnFamilyStub(object):
         if columns:
             return k in columns
         return (not lower_bound or k >= lower_bound) and (not upper_bound or k <= upper_bound)
-
 
     def multiget(self, keys, columns=None, column_start=None, column_finish=None,
                  column_reversed=False, column_count=100, include_timestamp=False, **kwargs):
@@ -247,7 +243,6 @@ class ColumnFamilyStub(object):
             if not self.rows[key]:
                 del self.rows[key]
         return gm_timestamp()
-
 
     def get_range(self, include_timestamp=False, columns=None, **kwargs):
         """Currently just gets all values from the column family."""
