@@ -1,4 +1,5 @@
 import unittest
+import datetime
 
 from nose.tools import assert_raises, assert_equal, assert_true
 
@@ -227,3 +228,14 @@ class TestColumnFamilyStub(unittest.TestCase):
 
             test_cf.remove(key)
             assert_raises(NotFoundException, test_cf.get, key)
+
+    def test_insert_get_tuuids(self):
+        key = 'TestColumnFamily.test_insert_get'
+        columns = ( (convert_time_to_uuid(time.time()-1000, randomize=True), 'val1'),
+                    (convert_time_to_uuid(time.time(), randomize=True), 'val2') )
+        for test_cf in (cf, cf_stub):
+            assert_raises(NotFoundException, test_cf.get, key)
+            ts = test_cf.insert(key, dict(columns))
+            assert_true(isinstance(ts, (int, long)))
+            assert_equal(test_cf.get(key).keys(), [x[0] for x in columns])
+    
