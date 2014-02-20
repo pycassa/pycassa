@@ -124,6 +124,10 @@ class SystemManager(object):
         """ Describes the Cassandra cluster """
         return self._conn.describe_ring(keyspace)
 
+    def describe_token_map(self):
+        """ List tokens and their node assignments. """
+        return self._conn.describe_token_map()
+
     def describe_cluster_name(self):
         """ Gives the cluster name """
         return self._conn.describe_cluster_name()
