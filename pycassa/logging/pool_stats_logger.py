@@ -33,7 +33,7 @@ class StatsLogger(object):
         >>>
         >>> # use the pool for a while...
         >>> import pprint
-        >>> pprint.pprint(pool.stats)
+        >>> pprint.pprint(stats_logger.stats)
         {'at_max': 0,
          'checked_in': 401,
          'checked_out': 403,
