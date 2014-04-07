@@ -1,9 +1,13 @@
 Source: pycassa
 Section: python
 Priority: optional
-Maintainer: paul cannon <paul@datastax.com>
-Build-Depends: debhelper (>= 7.0.50~), python-all, cdbs, python-support, python-sphinx, python-thrift (>= 0.5.0), python-setuptools
-Standards-Version: 3.9.1
+Maintainer: Paul Cannon <paul@datastax.com>
+Uploaders: Tyler Hobbs <tyler@datastax.com>
+Build-Depends: debhelper (>= 7.0.50~), python-all, python-support, python-sphinx, python-thrift (>= 0.5.0), python-setuptools
+Homepage: http://pycassa.github.io/pycassa/
+Vcs-Git: git://github.com/pycassa/pycassa.git
+Vcs-Browser: https://github.com/pycassa/pycassa/
+Standards-Version: 3.9.5
 
 Package: python-pycassa
 Architecture: all
