@@ -1,6 +1,14 @@
+pycassa (1.11.0) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Return timestamp from remove() in stub ColumnFamily
+  * Upgrade Thrift (adds LOCAL_ONE and populate_io_cache_on_flush)
+
+ -- Sebastien Badia <seb@sebian.fr>  Mon, 07 Apr 2014 14:51:27 +0200
+
 pycassa (1.10.0) unstable; urgency=low
 
-  * Add support for atomic batches 
+  * Add support for atomic batches
 
  -- Tyler Hobbs <tyler@datastax.com>  Thu, 03 Oct 2013 14:35:32 -0500
 
