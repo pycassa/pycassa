@@ -1,0 +1,12 @@
+Document: pycassa
+Title: Pycassa Documentation
+Section: Programming/Python
+Abstract: pycassa is a Thrift-based Python client library
+ for Apache Cassandra with the following features: Automatic
+ failover and operation retries; Connection pooling; Multithreading
+ support; A batch interface; A class for mapping classes to Cassandra
+ column families.
+
+Format: HTML
+Index: /usr/share/doc/pycassa-doc/manual/index.html
+Files: /usr/share/doc/pycassa-doc/manual/*.html
