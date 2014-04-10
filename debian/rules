@@ -10,6 +10,7 @@ override_dh_auto_build:
 override_dh_install:
 	dh_install
 	rm debian/pycassa-doc/usr/share/doc/pycassa-doc/manual/_static/jquery.js
+	rm debian/pycassa-doc/usr/share/doc/pycassa-doc/manual/_static/underscore.js
 	ln -s /usr/share/javascript/jquery/jquery.js debian/pycassa-doc/usr/share/doc/pycassa-doc/manual/_static/
 
 override_dh_auto_install:

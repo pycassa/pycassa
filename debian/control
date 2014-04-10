@@ -29,7 +29,7 @@ Description: Client library for Apache Cassandra
 Package: pycassa-doc
 Architecture: all
 Section: doc
-Depends: libjs-jquery (>= 1.4.2), ${misc:Depends}
+Depends: libjs-jquery (>= 1.4.2), libjs-underscore (>= 1.1.6), ${misc:Depends}
 Suggests: python-pycassa
 Description: Documentation for the Pycassa library
  Pycassa is a client library for Apache Cassandra with the following
