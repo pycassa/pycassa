@@ -1,10 +1,10 @@
-pycassa (1.11.0) unstable; urgency=low
+pycassa (1.11.0-1) unstable; urgency=low
 
-  * Non-maintainer upload.
   * Return timestamp from remove() in stub ColumnFamily
   * Upgrade Thrift (adds LOCAL_ONE and populate_io_cache_on_flush)
+  * Initial release (Closes: #744164)
 
- -- Sebastien Badia <seb@sebian.fr>  Mon, 07 Apr 2014 14:51:27 +0200
+ -- Sebastien Badia <seb@sebian.fr>  Fri, 11 Apr 2014 01:07:55 +0200
 
 pycassa (1.10.0) unstable; urgency=low
 

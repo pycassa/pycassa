@@ -2,7 +2,7 @@ Source: pycassa
 Section: python
 Priority: optional
 Maintainer: Paul Cannon <paul@datastax.com>
-Uploaders: Tyler Hobbs <tyler@datastax.com>
+Uploaders: Tyler Hobbs <tyler@datastax.com>, Sebastien Badia <seb@sebian.fr>
 Build-Depends: debhelper (>= 7.0.50~),
                python-all,
                python-setuptools,
