@@ -1,0 +1,3 @@
+version=3
+opts=filenamemangle=s/.+\/v?(\d\S*)\.tar\.gz/pycassa-$1\.tar\.gz/ \
+  https://github.com/pycassa/pycassa/tags .*/v?(\d\S*)\.tar\.gz

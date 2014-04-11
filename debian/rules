@@ -1,17 +1,11 @@
 #!/usr/bin/make -f
 
 %:
-	dh $@
+	dh $@ --with python2,sphinxdoc
 
 override_dh_auto_build:
 	dh_auto_build
 	python setup.py doc
-
-override_dh_install:
-	dh_install
-	rm debian/pycassa-doc/usr/share/doc/pycassa-doc/manual/_static/jquery.js
-	rm debian/pycassa-doc/usr/share/doc/pycassa-doc/manual/_static/underscore.js
-	ln -s /usr/share/javascript/jquery/jquery.js debian/pycassa-doc/usr/share/doc/pycassa-doc/manual/_static/
 
 override_dh_auto_install:
 	dh_auto_install -ppython-pycassa --destdir=debian/python-pycassa
@@ -22,6 +16,18 @@ override_dh_installchangelogs:
 override_dh_compress:
 	dh_compress -X pycassa-doc/manual
 
-override_dh_clean:
-	dh_clean
-	$(RM) -r doc/_build
+PACKAGE = pycassa
+SRC_VERSION := $(shell dpkg-parsechangelog | sed -ne 's/^Version: \(\([0-9]\+\):\)\?\(.*\)-.*/\3/p')
+TARBALL = $(PACKAGE)_$(SRC_VERSION).orig.tar.gz
+get-orig-source:
+	rm -rf get-orig-source $(TARBALL)
+	mkdir get-orig-source
+	git clone git://github.com/$(PACKAGE)/$(PACKAGE).git get-orig-source/$(PACKAGE)-$(SRC_VERSION).orig
+	cd get-orig-source/$(PACKAGE)-$(SRC_VERSION).orig ; git reset --hard v$(SRC_VERSION)
+	rm -rf get-orig-source/$(PACKAGE)-$(SRC_VERSION).orig/.git
+	rm -rf get-orig-source/$(PACKAGE)-$(SRC_VERSION).orig/debian
+	GZIP=--best tar czf $(TARBALL) -C get-orig-source $(PACKAGE)-$(SRC_VERSION).orig
+	rm -rf get-orig-source
+	echo "  "$(TARBALL)" created; move it to the right destination to build the package"
+
+.PHONY: get-orig-source
