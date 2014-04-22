@@ -24,7 +24,7 @@ This example creates a column family with column names that have two components.
 The first component is a :class:`~.LongType`, sorted in reverse order; the
 second is a normally sorted :class:`~.AsciiType`.
 
-You may put an aribtrary number of components in a :class:`~.CompositeType`,
+You may put an arbitrary number of components in a :class:`~.CompositeType`,
 and each component may be reversed or not.
 
 Insert CompositeType Data
@@ -83,7 +83,7 @@ for that slice end. This means that if you give a ``column_finish`` of
 and ``(123, "b" 123098123012)`` would all be returned.
 
 With composite types, you have the option to make the slice start and
-finish exlusive.  To do so, replace the final component in your slice end
+finish exclusive.  To do so, replace the final component in your slice end
 with a tuple like ``(value, False)``. (Think of the ``False`` as being
 short for ``inclusive=False``. You can also explicitly specify ``True``,
 but this is redundant.)  Now, if you gave a ``column_finish`` of
