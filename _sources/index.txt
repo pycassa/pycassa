@@ -6,7 +6,7 @@ pycassa is a Thrift-based Python client for
 pycassa does not support CQL or Cassandra's native protocol, which are a
 replacement for the Thrift interface that pycassa is based on. If you are
 starting a new project, *it is highly recommended that you use the newer*
-`DataStax python driver <https://github.com/datastax/python-driver>_ instead
+`DataStax python driver <https://github.com/datastax/python-driver>`_ instead
 of pycassa.
 
 pycassa is open source under the `MIT license <http://www.opensource.org/licenses/mit-license.php>`_.
