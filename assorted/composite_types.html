@@ -75,7 +75,7 @@ the other types in <a class="reference internal" href="../api/pycassa/types.html
 <p>This example creates a column family with column names that have two components.
 The first component is a <a class="reference internal" href="../api/pycassa/types.html#pycassa.types.LongType" title="pycassa.types.LongType"><tt class="xref py py-class docutils literal"><span class="pre">LongType</span></tt></a>, sorted in reverse order; the
 second is a normally sorted <a class="reference internal" href="../api/pycassa/types.html#pycassa.types.AsciiType" title="pycassa.types.AsciiType"><tt class="xref py py-class docutils literal"><span class="pre">AsciiType</span></tt></a>.</p>
-<p>You may put an aribtrary number of components in a <a class="reference internal" href="../api/pycassa/types.html#pycassa.types.CompositeType" title="pycassa.types.CompositeType"><tt class="xref py py-class docutils literal"><span class="pre">CompositeType</span></tt></a>,
+<p>You may put an arbitrary number of components in a <a class="reference internal" href="../api/pycassa/types.html#pycassa.types.CompositeType" title="pycassa.types.CompositeType"><tt class="xref py py-class docutils literal"><span class="pre">CompositeType</span></tt></a>,
 and each component may be reversed or not.</p>
 </div>
 <div class="section" id="insert-compositetype-data">
@@ -124,7 +124,7 @@ for that slice end. This means that if you give a <tt class="docutils literal"><
 <tt class="docutils literal"><span class="pre">(123,</span> <span class="pre">&quot;b&quot;)</span></tt>, then columns named <tt class="docutils literal"><span class="pre">(123,</span> <span class="pre">&quot;a&quot;,</span> <span class="pre">2011)</span></tt>, <tt class="docutils literal"><span class="pre">(123,</span> <span class="pre">&quot;b&quot;,</span> <span class="pre">0)</span></tt>,
 and <tt class="docutils literal"><span class="pre">(123,</span> <span class="pre">&quot;b&quot;</span> <span class="pre">123098123012)</span></tt> would all be returned.</p>
 <p>With composite types, you have the option to make the slice start and
-finish exlusive.  To do so, replace the final component in your slice end
+finish exclusive.  To do so, replace the final component in your slice end
 with a tuple like <tt class="docutils literal"><span class="pre">(value,</span> <span class="pre">False)</span></tt>. (Think of the <tt class="docutils literal"><span class="pre">False</span></tt> as being
 short for <tt class="docutils literal"><span class="pre">inclusive=False</span></tt>. You can also explicitly specify <tt class="docutils literal"><span class="pre">True</span></tt>,
 but this is redundant.)  Now, if you gave a <tt class="docutils literal"><span class="pre">column_finish</span></tt> of

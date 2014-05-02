@@ -84,7 +84,7 @@ This was originally called &#8216;RackAwareStrategy&#8217;.</p>
 
 <dl class="class">
 <dt id="pycassa.system_manager.SystemManager">
-<em class="property">class </em><tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">SystemManager</tt><big>(</big><em>server='localhost:9160'</em>, <em>credentials=None</em>, <em>framed_transport=True</em>, <em>timeout=30</em>, <em>socket_factory=&lt;function default_socket_factory at 0x286d1b8&gt;</em>, <em>transport_factory=&lt;function default_transport_factory at 0x289d2a8&gt;</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">pycassa.system_manager.</tt><tt class="descname">SystemManager</tt><big>(</big><em>server='localhost:9160'</em>, <em>credentials=None</em>, <em>framed_transport=True</em>, <em>timeout=30</em>, <em>socket_factory=&lt;function default_socket_factory at 0x2862668&gt;</em>, <em>transport_factory=&lt;function default_transport_factory at 0x28cc758&gt;</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager" title="Permalink to this definition">¶</a></dt>
 <dd><p>Lets you examine and modify schema definitions as well as get basic
 information about the cluster.</p>
 <p>This class is mainly designed to be used manually in a python shell,
@@ -137,6 +137,12 @@ be stored as a dictionary where the keys are column names instead of a list.</p>
 <dt id="pycassa.system_manager.SystemManager.describe_ring">
 <tt class="descname">describe_ring</tt><big>(</big><em>keyspace</em><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.describe_ring" title="Permalink to this definition">¶</a></dt>
 <dd><p>Describes the Cassandra cluster</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pycassa.system_manager.SystemManager.describe_token_map">
+<tt class="descname">describe_token_map</tt><big>(</big><big>)</big><a class="headerlink" href="#pycassa.system_manager.SystemManager.describe_token_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>List tokens and their node assignments.</p>
 </dd></dl>
 
 <dl class="method">
