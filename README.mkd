@@ -3,19 +3,15 @@ pycassa
 
 [![Build Status](https://secure.travis-ci.org/pycassa/pycassa.png?branch=master)](http://travis-ci.org/pycassa/pycassa)
 
-*pycassa* is a Thrift-based python client library for [Apache Cassandra](http://cassandra.apache.org)
-with the following features:
+pycassa is a Thrift-based python client library for [Apache Cassandra](http://cassandra.apache.org)
 
-* Automatic failover and operation retries
-* Connection pooling
-* Multithreading support
-* A batch interface
-* A class for mapping classes to Cassandra column families
+pycassa does not support CQL or Cassandra's native protocol, which are a
+replacement for the Thrift interface that pycassa is based on. If you are
+starting a new project, *it is highly recommended that you use the newer*
+[DataStax python driver](https://github.com/datastax/python-driver) instead
+of pycassa.
 
-pycassa does not support CQL or Cassandra's native protocol.  If you would like to use those,
-you should use the newer [DataStax python driver](https://github.com/datastax/python-driver).
-
-*pycassa* is open source under the [MIT license](http://www.opensource.org/licenses/mit-license.php).
+pycassa is open source under the [MIT license](http://www.opensource.org/licenses/mit-license.php).
 
 Documentation
 -------------

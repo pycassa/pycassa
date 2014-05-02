@@ -1,9 +1,13 @@
 pycassa |release| Documentation
 ===============================
-pycassa is a Python client for
+pycassa is a Thrift-based Python client for
 `Apache Cassandra <http://cassandra.apache.org>`_.
-The latest release of pycassa is fully compatible with Cassandra 0.8 to
-1.1, and is compatible with the data API of Cassandra 0.7.
+
+pycassa does not support CQL or Cassandra's native protocol, which are a
+replacement for the Thrift interface that pycassa is based on. If you are
+starting a new project, *it is highly recommended that you use the newer*
+`DataStax python driver <https://github.com/datastax/python-driver>_ instead
+of pycassa.
 
 pycassa is open source under the `MIT license <http://www.opensource.org/licenses/mit-license.php>`_.
 The source code repository for pycassa can be found on `Github <http://github.com/pycassa/pycassa>`_.
