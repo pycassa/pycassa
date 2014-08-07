@@ -902,7 +902,7 @@ class ColumnFamily(object):
 
         The `row_count` parameter limits the total number of rows that may be
         returned. If left as ``None``, the number of rows that may be returned
-        is unlimted (this is the default).
+        is unlimited (this is the default).
 
         When calling `get_range()`, the intermediate results need to be
         buffered if we are fetching many rows, otherwise the Cassandra
@@ -1129,7 +1129,7 @@ class ColumnFamily(object):
 
         From the user's perspective, a successful call to ``truncate`` will
         result complete data deletion from this column family. Internally,
-        however, disk space will not be immediatily released, as with all
+        however, disk space will not be immediately released, as with all
         deletes in Cassandra, this one only marks the data as deleted.
 
         The operation succeeds only if all hosts in the cluster at available
