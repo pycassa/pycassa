@@ -301,9 +301,9 @@ class ConnectionPool(object):
         Synchronization may be required to prevent the connection from changing while
         another thread is using it.
 
-        The pool will keep up `pool_size` open connections in the pool
+        The pool will keep up to `pool_size` open connections in the pool
         at any time.  When a connection is returned to the pool, the
-        connection will be discarded is the pool already contains `pool_size`
+        connection will be discarded if the pool already contains `pool_size`
         connections.  The total number of simultaneous connections the pool will
         allow is ``pool_size + max_overflow``,
         and the number of "sleeping" connections the pool will allow is ``pool_size``.
