@@ -1,6 +1,19 @@
 Changelog
 =========
 
+Changes in Version 1.11.1
+-------------------------
+
+Features
+~~~~~~~~
+- Add describe_token_map() to SystemManager
+
+Miscellaneous
+~~~~~~~~~~~~~
+- Add TimestampType alias for DateType
+- Match Cassandra's sorting of TimeUUIDs in stubs
+
+
 Changes in Version 1.11.0
 -------------------------
 
