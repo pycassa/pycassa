@@ -124,7 +124,7 @@ setup(
                   'pycassa.logging',
                   'pycassa.contrib'],
       tests_require = ['nose'],
-      install_requires = ['thrift'],
+      install_requires = ['thrift==0.9.3'],
       py_modules=['ez_setup'],
       scripts=['pycassaShell'],
       cmdclass={"doc": doc, "rpm": rpm},
