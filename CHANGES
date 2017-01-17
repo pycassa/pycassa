@@ -1,3 +1,10 @@
+Changes in Version 1.11.2
+
+    Bug Fixes
+
+      * Pin Thrift dependency to 0.9.3 to avoid problems with Thrift 0.10.0
+        (fixes Github issue #245)
+
 Changes in Version 1.11.1
 
     Features:
